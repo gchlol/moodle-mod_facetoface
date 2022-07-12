@@ -4239,20 +4239,14 @@ class facetoface_mycandidate_selector extends user_selector_base {
     public function find_users($search) {
         global $USER, $DB;
 
-        $posid = $DB->get_record('user_info_field', array('shortname' => 'posid'));
-        $repdel = $DB->get_record('user_info_field', array('shortname' => 'repdel'));
-        $reportsto = $DB->get_record('user_info_field', array('shortname' => 'reportsto'));
-        $termination = $DB->get_record('user_info_field', array('shortname' => 'termination'));
-        $leave = $DB->get_record('user_info_field', array('shortname' => 'leave'));
-
         // All non-signed up system user.
         list($wherecondition, $params) = $this->search_sql($search, 'u');
-/*
+
         [
             'joins' => $myusersjoins,
             'where' => $myuserswhere,
             'params' => $myusersparams
-        ] = api::get_myusers_sql($user->id);
+        ] = api::get_myusers_sql($USER->id, true);
         if (!empty($myusersjoins)) {
             $joins[] = $myusersjoins;
         }
@@ -4267,32 +4261,16 @@ class facetoface_mycandidate_selector extends user_selector_base {
         $joinsstring = implode("\n", $joins);
         $where = implode(' AND ', $wheres);
 
-        $sql = "SELECT DISTINCT u.id
-                      FROM $joinsstring
-                     WHERE $where";
-        */
 
-        $fields      = 'SELECT ' . $this->required_fields_sql('u');
+
+        $fields      = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
         $countfields = 'SELECT COUNT(u.id)';
-        $userid = $USER->id;
+
         $sql = "
 				  FROM {user} u
-				  LEFT JOIN {user_info_data} ab
-					ON ab.userid = $userid AND ab.fieldid = $posid->id
-
-				  LEFT JOIN {user_info_data} ae
-					ON ae.userid = $userid AND ae.fieldid = $repdel->id
-
-				  INNER JOIN {user_info_data} aa
-					ON u.ID = aa.userid AND aa.fieldid = $reportsto->id AND (aa.data=ab.data OR aa.userid=$userid OR 
-					CASE WHEN ae.data >1 THEN aa.data=ae.data END)
-
-				  left JOIN {user_info_data} ac
-					ON u.ID = ac.userid AND ac.fieldid = $termination->id
-				  left JOIN {user_info_data} ad
-					ON u.ID = ad.userid AND ad.fieldid = $leave->id
+				  $joinsstring
 				 
-				WHERE u.suspended=0 AND $wherecondition
+				WHERE u.suspended=0 AND $where
 				   AND u.id NOT IN
 					   (
 					   SELECT u2.id
@@ -4304,6 +4282,8 @@ class facetoface_mycandidate_selector extends user_selector_base {
 						  AND ss.superceded = 0
 					   )
 			   "; //GCH-LOL do not list suspended users
+
+
 
         $order = " ORDER BY u.lastname ASC, u.firstname ASC";
         $params = array_merge($params,
