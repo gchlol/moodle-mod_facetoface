@@ -28,6 +28,8 @@
  * @author     Francois Marier <francois@catalyst.net.nz>
  */
 
+use tool_organisation\api;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/gradelib.php');
@@ -4245,6 +4247,30 @@ class facetoface_mycandidate_selector extends user_selector_base {
 
         // All non-signed up system user.
         list($wherecondition, $params) = $this->search_sql($search, 'u');
+/*
+        [
+            'joins' => $myusersjoins,
+            'where' => $myuserswhere,
+            'params' => $myusersparams
+        ] = api::get_myusers_sql($user->id);
+        if (!empty($myusersjoins)) {
+            $joins[] = $myusersjoins;
+        }
+        if (!empty($myuserswhere)) {
+            $wheres[] = $myuserswhere;
+        }
+        if (!empty($myusersparams)) {
+            $params = array_merge($params, $myusersparams);
+        }
+
+        // Prepare final values.
+        $joinsstring = implode("\n", $joins);
+        $where = implode(' AND ', $wheres);
+
+        $sql = "SELECT DISTINCT u.id
+                      FROM $joinsstring
+                     WHERE $where";
+        */
 
         $fields      = 'SELECT ' . $this->required_fields_sql('u');
         $countfields = 'SELECT COUNT(u.id)';
