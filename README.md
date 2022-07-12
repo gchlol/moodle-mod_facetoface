@@ -1,7 +1,12 @@
 [![3.11 and higher branch test](https://github.com/catalyst/moodle-mod_facetoface/actions/workflows/311-master.yml/badge.svg)](https://github.com/catalyst/moodle-mod_facetoface/actions/workflows/311-master.yml)
 
+Custom Branch
+------------
+This Branch is a custom branch of MOODLE_34_STABLE for use with LOL sites.
+
 Description
 ------------
+
 
 Face-to-face activities are used to keep track of in-person trainings which
 require advance booking.
