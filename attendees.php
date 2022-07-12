@@ -84,11 +84,19 @@ $canviewcancellations = has_capability('mod/facetoface:viewcancellations', $cont
 $canviewsession = $canviewattendees || $cantakeattendance || $canviewcancellations;
 $canapproverequests = false;
 
+//GCHLOL - PB - add capability check add attendees and add my attendees
+$can_add_attendees = has_capability('mod/facetoface:addattendees', $context);
+$can_add_my_attendees = has_capability('mod/facetoface:addmyattendees', $context);
+
 $requests = [];
 $declines = [];
 
 // If a user can take attendance, they can approve staff's booking requests.
-if ($cantakeattendance) {
+// GCHLOL: PB Change to if they can add attendees
+if ($can_add_attendees) {
+    $requests = facetoface_get_requests($session->id);
+}
+if ($can_add_my_attendees) {
     $requests = facetoface_get_requests($session->id);
 }
 
@@ -249,7 +257,9 @@ if ($canviewattendees || $cantakeattendance) {
         $table = new html_table();
         $table->head = [get_string('name')];
         $table->align = ['left'];
+        /* GCHLOL: Fix issue on IE.
         $table->size = ['100%'];
+        */
 
         if ($takeattendance) {
             $table->head[] = get_string('currentstatus', 'facetoface');
@@ -320,9 +330,12 @@ if ($canviewattendees || $cantakeattendance) {
         }
     }
 
+    // GCHLOL - can add or remove 'my' attendees
     if (!$takeattendance
         && (has_capability('mod/facetoface:addattendees', $context)
-        || has_capability('mod/facetoface:removeattendees', $context))) {
+        || has_capability('mod/facetoface:removeattendees', $context)
+        || has_capability('mod/facetoface:addmyattendees', $context)
+        || has_capability('mod/facetoface:removemyattendees', $context))) {
         // Add/remove attendees.
         $editattendeeslink = new moodle_url('editattendees.php', ['s' => $session->id, 'backtoallsessions' => $backtoallsessions]);
         echo html_writer::link($editattendeeslink, get_string('addremoveattendees', 'facetoface')) . ' - ';

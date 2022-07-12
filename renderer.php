@@ -32,6 +32,8 @@ class mod_facetoface_renderer extends plugin_renderer_base {
 
     /**
      * Builds session list table given an array of sessions
+     *
+     * GCHLOL - MF - Added $deletesessions to parameters
      */
     public function print_session_list_table(
         $customfields,
@@ -39,7 +41,8 @@ class mod_facetoface_renderer extends plugin_renderer_base {
         $viewattendees,
         $editsessions,
         $signuplinks = true,
-        $uploadbookings = false
+        $uploadbookings = false,
+        $deletesessions = false
     ) {
         $output = '';
 
@@ -163,12 +166,17 @@ class mod_facetoface_renderer extends plugin_renderer_base {
                 $options .= $this->output->action_icon(new moodle_url('sessions.php', ['s' => $session->id]),
                         new pix_icon('t/edit', get_string('edit', 'facetoface')), null,
                         ['title' => get_string('editsession', 'facetoface')]) . ' ';
-                $options .= $this->output->action_icon(new moodle_url('sessions.php', ['s' => $session->id, 'c' => 1]),
+                $options .= $this->output->action_icon(new moodle_url('sessions.php', [
+                        's' => $session->id,
+                        'c' => 1
+                    ]),
                         new pix_icon('t/copy', get_string('copy', 'facetoface')), null,
-                        ['title' => get_string('copysession', 'facetoface')]) . ' ';
-                $options .= $this->output->action_icon(new moodle_url('sessions.php', ['s' => $session->id, 'd' => 1]),
-                        new pix_icon('t/delete', get_string('delete', 'facetoface')), null,
-                        ['title' => get_string('deletesession', 'facetoface')]) . ' ';
+                        [ 'title' => get_string('copysession', 'facetoface') ]) . ' ';
+                if ($deletesessions) { // GCHLOL: check if has capability.
+                    $options .= $this->output->action_icon(new moodle_url('sessions.php', ['s' => $session->id, 'd' => 1]),
+                            new pix_icon('t/delete', get_string('delete', 'facetoface')), null,
+                            ['title' => get_string('deletesession', 'facetoface')]) . ' ';
+                }
             }
             if ($viewattendees) {
                 $options .= html_writer::link('attendees.php?s='.$session->id.'&backtoallsessions='.$session->facetoface,

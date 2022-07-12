@@ -56,7 +56,7 @@ define('MDL_F2F_CANCEL_TEXT', 10);    // Send just a plan email 8+2.
 define('MDL_F2F_CANCEL_ICAL', 9);     // Send just a combined text/ical message 8+1.
 
 // Name of the custom field where the manager's email address is stored.
-define('F2F_MDL_MANAGERSEMAIL_FIELD', 'managersemail');
+define('F2F_MDL_MANAGERSEMAIL_FIELD', 'linemanager'); // GCHLOL: Change custom field name.
 
 // Custom field related constants.
 define('CUSTOMFIELD_DELIMITER', '##SEPARATOR##');
@@ -320,6 +320,7 @@ function facetoface_add_instance($facetoface) {
     global $DB;
 
     $facetoface->timemodified = time();
+    $facetoface->confirmationmessage = $facetoface->confirmationmessage['text'];
     facetoface_fix_settings($facetoface);
     if ($facetoface->id = $DB->insert_record('facetoface', $facetoface)) {
         facetoface_grade_item_update($facetoface);
@@ -346,6 +347,7 @@ function facetoface_update_instance($facetoface, $instanceflag = true) {
     if ($instanceflag) {
         $facetoface->id = $facetoface->instance;
     }
+    $facetoface->confirmationmessage = $facetoface->confirmationmessage['text'];
 
     facetoface_fix_settings($facetoface);
     if ($return = $DB->update_record('facetoface', $facetoface)) {
@@ -429,8 +431,9 @@ function facetoface_cleanup_session_data($session) {
     // Only numbers allowed here.
     $session->capacity = preg_replace('/[^\d]/', '', $session->capacity);
     $maxcap = 100000;
-    if ($session->capacity < 1) {
-        $session->capacity = 1;
+    // GCHLOL: Change capacity to 0.
+    if ($session->capacity < 0) {
+        $session->capacity = 0;
     } else if ($session->capacity > $maxcap) {
         $session->capacity = $maxcap;
     }
@@ -1163,6 +1166,7 @@ function facetoface_get_grade($userid, $courseid, $facetofaceid) {
 function facetoface_get_attendees($sessionid) {
     global $CFG, $DB;
 
+    // GCHLOL: Change sort order.
     $usernamefields = facetoface_get_all_user_name_fields(true, 'u');
     return $DB->get_records_sql("
         SELECT u.id, {$usernamefields},
@@ -1212,6 +1216,8 @@ function facetoface_get_attendees($sessionid) {
         AND ss.superceded != 1
         AND ss.statuscode >= ?
         ORDER BY
+            u.firstname,
+            u.lastname,
             sign.timecreated ASC,
             ss.timecreated ASC
     ", [$sessionid, MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED, $sessionid, MDL_F2F_STATUS_APPROVED]);
@@ -2127,11 +2133,24 @@ function facetoface_update_signup_status($signupid, $statuscode, $createdby, $no
     global $DB;
     $timenow = time();
 
+    // GCHLOL PB set time to be session time
+    $sql = "SELECT DISTINCT fsd.timefinish
+		      FROM {facetoface_sessions_dates} fsd
+		      JOIN {facetoface_signups} fs
+		        ON fs.sessionid = fsd.sessionid AND fs.id = ?";
+
+    $sessiontime = $DB->get_record_sql($sql, array($signupid));
+    if ($statuscode == 80 OR $statuscode == 90 OR $statuscode == 100) {
+        $sessiontimes = $sessiontime->timefinish;
+    } else {
+        $sessiontimes = $timenow;
+    }
+
     $signupstatus = new stdclass;
     $signupstatus->signupid = $signupid;
     $signupstatus->statuscode = $statuscode;
     $signupstatus->createdby = $createdby;
-    $signupstatus->timecreated = $timenow;
+    $signupstatus->timecreated = $sessiontimes; // GCHLOL: PB change from $timenow to $sessiontimes
     $signupstatus->note = $note;
     $signupstatus->grade = $grade;
     $signupstatus->superceded = 0;
@@ -2203,10 +2222,11 @@ function facetoface_user_cancel($session, $userid=false, $forcecancel=false, &$e
  * @param class $facetoface record from the facetoface table
  * @param class $session record from the facetoface_sessions table
  * @param integer $userid ID of the recipient of the email
+ * @param string $htmlmessage Html message
  * @returns string Error message (or empty string if successful)
  */
 function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
-                                $notificationtype, $facetoface, $session, $userid) {
+                                $notificationtype, $facetoface, $session, $userid, $htmlmessage) {
     global $CFG, $DB;
 
     $user = $DB->get_record('user', ['id' => $userid]);
@@ -2296,7 +2316,9 @@ function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
         foreach ($icalattachments as $attachment) {
             if (!email_to_user($user, $from, $attachment['subject'], $attachment['body'],
                     '', $attachment['filename'], $attachmentfilename)) {
+                /* GCHLOL: remove error as many users have invalid emails set.
                 return 'error:cannotsendconfirmationuser';
+                */
             }
             unlink($CFG->dataroot . '/' . $attachment['filename']);
         }
@@ -2305,7 +2327,9 @@ function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
     // Send plain text email.
     if ($notificationtype & MDL_F2F_TEXT
         && !email_to_user($user, $from, $postsubject, $posttext)) {
+        /* GCHLOL: remove error as many users have invalid emails set.
         return 'error:cannotsendconfirmationuser';
+        */
     }
 
     // Manager notification.
@@ -2367,6 +2391,9 @@ function facetoface_send_confirmation_notice($facetoface, $session, $userid, $no
 
     // Set invite bit.
     $notificationtype |= MDL_F2F_INVITE;
+
+    // Set HTML Body.
+    $htmlmessage = $facetoface->confirmationmessage;
 
     return facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
                                   $notificationtype, $facetoface, $session, $userid);
@@ -2653,7 +2680,8 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
     global $USER, $CFG, $DB;
 
     $timenow = time();
-    $record = $DB->get_record_sql("SELECT f.*, s.userid
+    // GCHLOL: Add sessionid to SELECT.
+    $record = $DB->get_record_sql("SELECT f.*, s.userid, fs.id AS sessionid
                                 FROM {facetoface_signups} s
                                 JOIN {facetoface_sessions} fs ON s.sessionid = fs.id
                                 JOIN {facetoface} f ON f.id = fs.facetoface
@@ -2680,6 +2708,30 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
         $cm = get_coursemodule_from_instance('facetoface', $record->id, $course->id);
         if ($completion->is_enabled($cm)) {
             $completion->update_state($cm, COMPLETION_UNKNOWN, $record->userid, false);
+        }
+    }
+
+    // GCHLOL
+    if ($record->completionpass) {
+        $cm = get_coursemodule_from_instance('facetoface', $record->id);
+        $sql = 'SELECT timefinish
+                  FROM {facetoface_sessions_dates}
+                 WHERE sessionid = ?
+              ORDER BY timefinish DESC
+                 LIMIT 1';
+        $sessiondate = $DB->get_record_sql($sql, array($record->sessionid));
+
+        $course = get_course($record->course);
+
+        $completion = new completion_info($course);
+        if ($completion->is_enabled($cm)) {
+            $completion->update_state($cm, COMPLETION_COMPLETE);
+        }
+
+        $status = $DB->get_record('facetoface_signups_status', array('signupid' => $submissionid, 'superceded' => 0));
+
+        if ($status->statuscode == 100) {
+            facetoface_mark_complete($record, $cm->id, $record->userid, $sessiondate->timefinish);
         }
     }
 
@@ -2892,6 +2944,9 @@ function facetoface_cm_info_view(cm_info $coursemodule) {
                 $sessionobject->date = $sessiondate;
                 $sessionobject->multidate = $multidate;
 
+                // GCHLOL: Include session id in sessionobject.
+                $sessionobject->id = $session->id;
+
                 if ($session->datetimeknown
                     && (facetoface_has_session_started($session, $timenow))
                     && facetoface_is_session_in_progress($session, $timenow)) {
@@ -2908,13 +2963,25 @@ function facetoface_cm_info_view(cm_info $coursemodule) {
                 }
             }
 
+            // GCHLOL: Get session facility data.
+            $facilityfield = $DB->get_record('facetoface_session_field', array('shortname' => 'facility'));
+
             if (!empty($sessionsinprogress)) {
                 $output .= html_writer::start_tag('div', ['class' => 'f2fsessiongroup']);
                 $output .= html_writer::tag('span', get_string('sessioninprogress', 'facetoface'), ['class' => 'f2fsessionnotice']);
 
                 foreach ($sessionsinprogress as $session) {
+                    // GCHLOL: Include facility.
+                    $sessioninfo = $session->date.$session->multidate;
+                    if ($facilityfield) {
+                        if ($facility = $DB->get_record('facetoface_session_data', array('fieldid' => $facilityfield->id, 'sessionid' => $session->id))) {
+                            if (!empty($facility->data)) {
+                                $sessioninfo = $facilityfield->name . ': ' . $facility->data . html_writer::tag('p', $session->date.$session->multidate);
+                            }
+                        }
+                    }
                     $output .= html_writer::start_tag('div', ['class' => 'f2fsession f2finprogress'])
-                        . html_writer::tag('span', $session->date.$session->multidate, ['class' => 'f2fsessiontime'])
+                        . html_writer::tag('span', $sessioninfo, ['class' => 'f2fsessiontime'])
                         . html_writer::end_tag('div');
                 }
                 $output .= html_writer::end_tag('div');
@@ -2943,8 +3010,17 @@ function facetoface_cm_info_view(cm_info $coursemodule) {
                 }
 
                 foreach ($futuresessions as $session) {
+                    // GCHLOL: Include facility.
+                    $sessioninfo = $session->date.$session->multidate;
+                    if ($facilityfield) {
+                        if ($facility = $DB->get_record('facetoface_session_data', array('fieldid' => $facilityfield->id, 'sessionid' => $session->id))) {
+                            if (!empty($facility->data)) {
+                                $sessioninfo = $facilityfield->name . ': ' . $facility->data . html_writer::tag('p', $session->date.$session->multidate);
+                            }
+                        }
+                    }
                     $output .= html_writer::start_tag('div', ['class' => 'f2fsession f2ffuture'])
-                            . html_writer::tag('div', $session->date.$session->multidate, ['class' => 'f2fsessiontime']);
+                            . html_writer::tag('div', $sessioninfo, ['class' => 'f2fsessiontime']);
 
                     if ($facetoface->multiplesignupmethod == MOD_FACETOFACE_SIGNUP_MULTIPLE_PER_SESSION) {
                         $output .= html_writer::tag('div', $session->options . $session->moreinfolink, ['class' => 'f2foptions']);
@@ -3071,6 +3147,7 @@ function facetoface_get_ical_attachment($method, $facetoface, $session, $user) {
 
         // The extra newline at the bottom is so multiple events start on their
         // own lines. The very last one is trimmed outside the loop.
+        // GCHLOL: Change CLASS:PRIVATE to CLASS:PUBLIC.
         $vevents .= <<<EOF
 BEGIN:VEVENT
 UID:{$uid}
@@ -3081,7 +3158,7 @@ SEQUENCE:{$sequence}
 SUMMARY:{$summary}
 LOCATION:{$location}
 DESCRIPTION:{$description}
-CLASS:PRIVATE
+CLASS:PUBLIC
 TRANSP:OPAQUE{$cancelstatus}
 ORGANIZER;CN={$organiseremail}:MAILTO:{$organiseremail}
 ATTENDEE;CUTYPE=INDIVIDUAL;ROLE={$role};PARTSTAT=NEEDS-ACTION;
@@ -3949,7 +4026,7 @@ function facetoface_get_trainer_roles() {
     // Parse roles.
     $cleanroles = clean_param($config->session_roles, PARAM_SEQUENCE);
     $roles = explode(',', $cleanroles);
-    list($rolesql, $params) = $DB->get_in_or_equal($roles);
+    [$rolesql, $params] = $DB->get_in_or_equal($roles);
 
     // Load role names.
     $rolenames = $DB->get_records_sql("
@@ -4135,7 +4212,7 @@ function facetoface_get_cancellations($sessionid) {
     $fullname = $DB->sql_fullname('u.firstname', 'u.lastname');
     $usernamefields = facetoface_get_all_user_name_fields(true, 'u');
     $instatus = [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED, MDL_F2F_STATUS_REQUESTED];
-    list($insql, $inparams) = $DB->get_in_or_equal($instatus);
+    [$insql, $inparams] = $DB->get_in_or_equal($instatus);
 
     // Nasty SQL follows:
     // Load currently cancelled users, include most recent booked/waitlisted time also.
@@ -4329,8 +4406,9 @@ class facetoface_candidate_selector extends user_selector_base {
         global $DB;
 
         // All non-signed up system user.
-        list($wherecondition, $params) = $this->search_sql($search, 'u');
+        [$wherecondition, $params] = $this->search_sql($search, 'u');
 
+        // GCHLOL: Do not list suspended users.
         $fields      = 'SELECT ' . $this->required_fields_sql('u');
         $countfields = 'SELECT COUNT(u.id)';
 
@@ -4345,6 +4423,7 @@ class facetoface_candidate_selector extends user_selector_base {
                   FROM {user} u
                     $limitsql
                 WHERE $wherecondition
+                   AND u.suspended = 0
                    AND u.id NOT IN
                        (
                        SELECT u2.id
@@ -4409,7 +4488,7 @@ class facetoface_existing_selector extends user_selector_base {
         global $DB;
 
         // By default wherecondition retrieves all users except the deleted, not confirmed and guest.
-        list($wherecondition, $whereparams) = $this->search_sql($search, 'u');
+        [$wherecondition, $whereparams] = $this->search_sql($search, 'u');
 
         $fields  = 'SELECT ' . $this->required_fields_sql('u');
         $fields .= ', su.id AS submissionid, s.discountcost, su.discountcode, su.notificationtype, f.id AS facetofaceid,
@@ -4484,4 +4563,324 @@ class facetoface_existing_selector extends user_selector_base {
         $options['file'] = 'mod/facetoface/lib.php';
         return $options;
     }
+}
+
+/*
+ * facetoface assignment candidates
+ * GCHLOL add 'my' attendees
+ */
+class facetoface_mycandidate_selector extends user_selector_base {
+    protected $sessionid;
+
+    public function __construct($name, $options) {
+        $this->sessionid = $options['sessionid'];
+        parent::__construct($name, $options);
+    }
+
+    /*
+     * Candidate users
+     * @param <type> $search
+     * @return array
+     */
+    public function find_users($search) {
+        global $USER, $DB;
+
+        $posid = $DB->get_record('user_info_field', array('shortname' => 'posid'));
+        $repdel = $DB->get_record('user_info_field', array('shortname' => 'repdel'));
+        $reportsto = $DB->get_record('user_info_field', array('shortname' => 'reportsto'));
+        $termination = $DB->get_record('user_info_field', array('shortname' => 'termination'));
+        $leave = $DB->get_record('user_info_field', array('shortname' => 'leave'));
+
+        // All non-signed up system user.
+        [$wherecondition, $params] = $this->search_sql($search, 'u');
+
+        $fields      = 'SELECT ' . $this->required_fields_sql('u');
+        $countfields = 'SELECT COUNT(u.id)';
+        $userid = $USER->id;
+        $sql = "
+				  FROM {user} u
+				  LEFT JOIN {user_info_data} ab
+					ON ab.userid = $userid AND ab.fieldid = $posid->id
+
+				  LEFT JOIN {user_info_data} ae
+					ON ae.userid = $userid AND ae.fieldid = $repdel->id
+
+				  INNER JOIN {user_info_data} aa
+					ON u.ID = aa.userid AND aa.fieldid = $reportsto->id AND (aa.data=ab.data OR aa.userid=$userid OR 
+					CASE WHEN ae.data >1 THEN aa.data=ae.data END)
+
+				  left JOIN {user_info_data} ac
+					ON u.ID = ac.userid AND ac.fieldid = $termination->id
+				  left JOIN {user_info_data} ad
+					ON u.ID = ad.userid AND ad.fieldid = $leave->id
+				 
+				WHERE u.suspended=0 AND $wherecondition
+				   AND u.id NOT IN
+					   (
+					   SELECT u2.id
+						 FROM {facetoface_signups} s
+						 JOIN {facetoface_signups_status} ss ON s.id = ss.signupid
+						 JOIN {user} u2 ON u2.id = s.userid
+						WHERE s.sessionid = :sessid
+						  AND ss.statuscode >= :statuswaitlisted
+						  AND ss.superceded = 0
+					   )
+			   "; //GCH-LOL do not list suspended users
+
+        $order = " ORDER BY u.lastname ASC, u.firstname ASC";
+        $params = array_merge($params,
+            array(
+                'sessid' => $this->sessionid,
+                'statuswaitlisted' => MDL_F2F_STATUS_WAITLISTED
+            ));
+
+        if (!$this->is_validating()) {
+            $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
+            if ($potentialmemberscount > 100) {
+                return $this->too_many_results($search, $potentialmemberscount);
+            }
+        }
+
+        $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
+
+        if (empty($availableusers)) {
+            return array();
+        }
+
+        $groupname = get_string('potentialusers', 'role', count($availableusers));
+
+        return array($groupname => $availableusers);
+    }
+
+    protected function get_options() {
+        $options = parent::get_options();
+        $options['sessionid'] = $this->sessionid;
+        $options['file'] = 'mod/facetoface/lib.php';
+        return $options;
+    }
+}
+
+/**
+ * Facetoface assignment candidates
+ * GCHLOL add 'my' attendees
+ */
+class facetoface_myexisting_selector extends user_selector_base {
+    protected $sessionid;
+
+    public function __construct($name, $options) {
+        $this->sessionid = $options['sessionid'];
+        parent::__construct($name, $options);
+    }
+
+    /**
+     * Candidate users
+     * @param <type> $search
+     * @return array
+     */
+    public function find_users($search) {
+        global $USER, $DB;
+
+        $posid = $DB->get_record('user_info_field', array('shortname' => 'posid'));
+        $repdel = $DB->get_record('user_info_field', array('shortname' => 'repdel'));
+        $reportsto = $DB->get_record('user_info_field', array('shortname' => 'reportsto'));
+        $termination = $DB->get_record('user_info_field', array('shortname' => 'termination'));
+        $leave = $DB->get_record('user_info_field', array('shortname' => 'leave'));
+
+        // By default wherecondition retrieves all users except the deleted, not confirmed and guest.
+        [$wherecondition, $whereparams] = $this->search_sql($search, 'u');
+
+        $fields  = 'SELECT ' . $this->required_fields_sql('u');
+        $fields .= ', su.id AS submissionid, s.discountcost, su.discountcode, su.notificationtype, f.id AS facetofaceid,
+            f.course, ss.grade, ss.statuscode, sign.timecreated';
+        $countfields = 'SELECT COUNT(1)';
+        $userid = $USER->id;
+        $sql = "
+            FROM
+                {facetoface} f
+            JOIN
+                {facetoface_sessions} s
+             ON s.facetoface = f.id
+            JOIN
+                {facetoface_signups} su
+             ON s.id = su.sessionid
+            JOIN
+                {facetoface_signups_status} ss
+             ON su.id = ss.signupid
+            LEFT JOIN
+                (
+                SELECT
+                    ss.signupid,
+                    MAX(ss.timecreated) AS timecreated
+                FROM
+                    {facetoface_signups_status} ss
+                INNER JOIN
+                    {facetoface_signups} s
+                 ON s.id = ss.signupid
+                AND s.sessionid = :sessid1
+                WHERE
+                    ss.statuscode IN (:statusbooked, :statuswaitlisted)
+                GROUP BY
+                    ss.signupid
+                ) sign
+             ON su.id = sign.signupid
+            JOIN
+                {user} u
+             ON u.id = su.userid
+			 LEFT JOIN {user_info_data} ab
+					ON ab.userid = $userid AND ab.fieldid = $posid->id
+
+				  LEFT JOIN {user_info_data} ae
+					ON ae.userid = $userid AND ae.fieldid = $repdel->id
+
+				  INNER JOIN {user_info_data} aa
+					ON u.id = aa.userid AND aa.fieldid = $reportsto->id AND (aa.data=ab.data OR aa.userid = $userid OR
+					CASE WHEN ae.data > 1 THEN aa.data = ae.data END)
+
+				  LEFT JOIN {user_info_data} ac
+					ON u.id = ac.userid AND ac.fieldid = $termination->id
+				  LEFT JOIN {user_info_data} ad
+					ON u.id = ad.userid AND ad.fieldid = $leave->id
+	            WHERE
+                $wherecondition
+            AND s.id = :sessid2
+            AND ss.superceded != 1
+            AND ss.statuscode >= :statusapproved
+        ";
+        $order = " ORDER BY sign.timecreated ASC, ss.timecreated ASC";
+        $params = array ('sessid1' => $this->sessionid, 'statusbooked' => MDL_F2F_STATUS_BOOKED, 'statuswaitlisted' => MDL_F2F_STATUS_WAITLISTED);
+        $params = array_merge($params, $whereparams);
+        $params['sessid2'] = $this->sessionid;
+        $params['statusapproved'] = MDL_F2F_STATUS_APPROVED;
+        if (!$this->is_validating()) {
+            $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
+            if ($potentialmemberscount > 100) {
+                return $this->too_many_results($search, $potentialmemberscount);
+            }
+        }
+
+        $availableusers = $DB->get_records_sql($fields . $sql . $order, $params);
+        if (empty($availableusers)) {
+            return array();
+        }
+
+        $groupname = get_string('existingusers', 'role', count($availableusers));
+        return array($groupname => $availableusers);
+    }
+
+    protected function get_options() {
+        $options = parent::get_options();
+        $options['sessionid'] = $this->sessionid;
+        $options['file'] = 'mod/facetoface/lib.php';
+        return $options;
+    }
+}
+
+/**
+ * Mark the facetoface module and criteria complete
+ * with the date of the attended session.
+ *
+ * @param stdClass $facetoface
+ * @param int      $cmid
+ * @param int      $userid
+ * @param int      $timecompleted
+ * @return bool
+ */
+function facetoface_mark_complete($facetoface, $cmid, $userid, $timecompleted) {
+    global $DB;
+
+    $result = true;
+
+    $conditions = array('coursemoduleid' => $cmid, 'userid' => $userid);
+    if ($modulecompletion = $DB->get_record('course_modules_completion', $conditions)) {
+        $modulecompletion->timemodified = $timecompleted;
+
+        if (!$DB->update_record('course_modules_completion', $modulecompletion)) {
+            $result = false;
+        }
+    } else {
+        $modulecompletion = new stdClass();
+
+        $modulecompletion->coursemoduleid = $cmid;
+        $modulecompletion->userid = $userid;
+        $modulecompletion->completionstate = 2;
+        $modulecompletion->viewed = 0;
+        $modulecompletion->timemodified = $timecompleted;
+
+        if (!$DB->insert_record('course_modules_completion', $modulecompletion)) {
+            $result = false;
+        }
+    }
+
+    $conditions = array('course' => $facetoface->course, 'criteriatype' => 4, 'moduleinstance' => $cmid);
+    if ($criteria = $DB->get_record('course_completion_criteria', $conditions)) {
+        $conditions = array('userid' => $userid, 'course' => $facetoface->course, 'criteriaid' => $criteria->id);
+        if ($criteriacompletion = $DB->get_record('course_completion_crit_compl', $conditions)) {
+            if ($timecompleted > $criteriacompletion->timecompleted) {
+                $criteriacompletion->timecompleted = $timecompleted;
+
+                if (!$DB->update_record('course_completion_crit_compl', $criteriacompletion)) {
+                    $result = false;
+                }
+            }
+        } else {
+            $criteriacompletion = new stdClass();
+            $criteriacompletion->userid        = $userid;
+            $criteriacompletion->course        = $facetoface->course;
+            $criteriacompletion->criteriaid    = $criteria->id;
+            $criteriacompletion->timecompleted = $timecompleted;
+
+            if (!$DB->insert_record('course_completion_crit_compl', $criteriacompletion)) {
+                $result = false;
+            }
+        }
+    }
+
+    $sql = "SELECT *
+              FROM {course_completions}
+             WHERE userid = $userid
+                   AND course = $facetoface->course
+                   AND timecompleted IS NULL";
+    if ($completion = $DB->get_record_sql($sql)) {
+        $completion->reaggregate = $timecompleted;
+
+        $DB->update_record('course_completions', $completion);
+    }
+
+    return $result;
+}
+
+/**
+ * Obtains the automatic completion state for this quiz on any conditions
+ * in quiz settings, such as if all attempts are used or a certain grade is achieved.
+ *
+ * GCHLOL
+ *
+ * @param object $course Course
+ * @param object $cm     Course-module
+ * @param int    $userid User ID
+ * @param bool   $type   Type of comparison (or/and; can be used as return value if no conditions)
+ * @return bool True if completed, false if not. (If no conditions, then return
+ *   value depends on comparison type)
+ */
+function facetoface_get_completion_state($course, $cm, $userid, $type) {
+    global $CFG, $DB;
+
+    $facetoface = $DB->get_record('facetoface', array('id' => $cm->instance), '*', MUST_EXIST);
+    if (!$facetoface->completionpass) {
+        return $type;
+    }
+
+    // Check for passing grade.
+    if ($facetoface->completionpass) {
+        require_once($CFG->libdir . '/gradelib.php');
+        $item = grade_item::fetch(array('courseid' => $course->id, 'itemtype' => 'mod',
+            'itemmodule' => 'facetoface', 'iteminstance' => $cm->instance, 'outcomeid' => null));
+        if ($item) {
+            $grades = grade_grade::fetch_users_grades($item, array($userid), false);
+            if (!empty($grades[$userid])) {
+                return $grades[$userid]->is_passed($item);
+            }
+        }
+    }
+    return false;
 }
