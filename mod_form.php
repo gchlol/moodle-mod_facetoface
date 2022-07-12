@@ -122,13 +122,9 @@ class mod_facetoface_mod_form extends moodleform_mod {
         $mform->setType('confirmationsubject', PARAM_TEXT);
         $mform->setDefault('confirmationsubject', get_string('setting:defaultconfirmationsubjectdefault', 'facetoface'));
 
-        $editoroptions = ['trusttext' => true];
-        $mform->addElement('editor', 'confirmationmessage', get_string('email:message', 'facetoface'), null, $editoroptions);
-        $mform->setType('confirmationmessage', PARAM_RAW);
-        $confirmationmessagedata = [
-            'text' => get_string('setting:defaultconfirmationmessagedefault2', 'facetoface'),
-            'format' => FORMAT_HTML
-        ];
+        $mform->addElement('textarea', 'confirmationmessage', get_string('email:message', 'facetoface'), 'wrap="virtual" rows="15" cols="70"');
+        $mform->setDefault('confirmationmessage', get_string('setting:defaultconfirmationmessagedefault', 'facetoface'));
+
         $mform->addElement('checkbox', 'emailmanagerconfirmation', get_string('emailmanager', 'facetoface'));
         $mform->addHelpButton('emailmanagerconfirmation', 'emailmanagerconfirmation', 'facetoface');
 
@@ -193,10 +189,7 @@ class mod_facetoface_mod_form extends moodleform_mod {
         $mform->addHelpButton('cancellationinstrmngr', 'cancellationinstrmngr', 'facetoface');
         $mform->disabledIf('cancellationinstrmngr', 'emailmanagercancellation');
         $mform->setDefault('cancellationinstrmngr', get_string('setting:defaultcancellationinstrmngrdefault', 'facetoface'));
-        $data = (object) [
-            'confirmationmessage' => $confirmationmessagedata
-        ];
-        $this->set_data($data);
+
         $features = new stdClass;
         $features->groups = false;
         $features->groupings = false;
@@ -210,7 +203,6 @@ class mod_facetoface_mod_form extends moodleform_mod {
     }
 
     public function data_preprocessing(&$defaultvalues) {
-        global $CFG;
 
         // Fix manager emails.
         if (empty($defaultvalues['confirmationinstrmngr'])) {
@@ -230,30 +222,34 @@ class mod_facetoface_mod_form extends moodleform_mod {
         } else {
             $defaultvalues['emailmanagercancellation'] = 1;
         }
+    }
 
-        if ($this->current->instance) {
-            $draftitemid = file_get_submitted_draft_itemid('confirmationmessage');
-            $defaultvalues['confirmationmessage'] = [
-                'format' => FORMAT_HTML,
-                'text' => file_prepare_draft_area(
-                    $draftitemid,
-                    $this->context->id,
-                    'mod_facetoface',
-                    'confirmationmessage',
-                    0,
-                    [
-                        'subdirs' => 1,
-                        'maxbytes' => $CFG->maxbytes,
-                        'maxfiles' => 0,
-                        'changeformat' => false,
-                        'context' => $this->context,
-                        'noclean' => true,
-                        'trusttext' => false,
-                    ],
-                    $defaultvalues['confirmationmessage']
-                ),
-                'itemid' => $draftitemid,
-            ];
-        }
+    /**
+     * GCHLOL: Display module-specific activity completion rules.
+     * Part of the API defined by moodleform_mod
+     * @return array Array of string IDs of added items, empty array if none
+     */
+    public function add_completion_rules() {
+        $mform = $this->_form;
+        $items = array();
+
+        $group = array();
+        $group[] = $mform->createElement('advcheckbox', 'completionpass', null, get_string('completionpass', 'quiz'),
+            array('group' => 'cpass'));
+        $mform->disabledIf('completionpass', 'notchecked');
+        $mform->addGroup($group, 'completionpassgroup', get_string('completionpass', 'quiz'), ' &nbsp; ', false);
+        $mform->addHelpButton('completionpassgroup', 'completionpass', 'quiz');
+        $items[] = 'completionpassgroup';
+        return $items;
+    }
+
+    /**
+     * GCHLOL: Called during validation. Indicates whether a module-specific completion rule is selected.
+     *
+     * @param array $data Input data (not yet validated)
+     * @return bool True if one or more rules is enabled, false if none are.
+     */
+    public function completion_rule_enabled($data) {
+        return !empty($data['completionpass']);
     }
 }

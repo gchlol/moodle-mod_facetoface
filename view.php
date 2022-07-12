@@ -107,7 +107,7 @@ if (empty($cm->visible) and !has_capability('mod/facetoface:viewemptyactivities'
     notice(get_string('activityiscurrentlyhidden'));
 }
 echo $OUTPUT->box_start();
-echo $OUTPUT->heading(get_string('allsessionsin', 'facetoface', format_string($facetoface->name)), 2);
+echo $OUTPUT->heading(get_string('allsessionsin', 'facetoface', $facetoface->name), 2);
 
 if ($facetoface->intro) {
     echo $OUTPUT->box_start('generalbox', 'description');
@@ -153,6 +153,7 @@ function print_session_list($courseid, $facetofaceid, $location) {
     $context = context_course::instance($courseid);
     $viewattendees = has_capability('mod/facetoface:viewattendees', $context);
     $editsessions = has_capability('mod/facetoface:editsessions', $context);
+    $deletesessions = has_capability('mod/facetoface:deletesessions', $context); // GCHLOL - MF - Delete permission
 
     $bookedsession = null;
     if ($submissions = facetoface_get_user_submissions($facetofaceid, $USER->id)) {
@@ -211,7 +212,7 @@ function print_session_list($courseid, $facetofaceid, $location) {
         print_string('noupcoming', 'facetoface');
     } else {
         $upcomingarray = array_merge($upcomingarray, $upcomingtbdarray);
-        echo $f2frenderer->print_session_list_table($customfields, $upcomingarray, $viewattendees, $editsessions);
+        echo $f2frenderer->print_session_list_table($customfields, $upcomingarray, $viewattendees, $editsessions, $deletesessions); // GCHLOL - MF - Added $deletesessions
     }
 
     if ($editsessions) {
@@ -224,8 +225,10 @@ function print_session_list($courseid, $facetofaceid, $location) {
 
     // Previous sessions.
     if (!empty($previousarray)) {
+        // GCHLOL - PB previous list reversed.
+        $previousreverse = array_reverse($previousarray);
         echo $OUTPUT->heading(get_string('previoussessions', 'facetoface'));
-        echo $f2frenderer->print_session_list_table($customfields, $previousarray, $viewattendees, $editsessions);
+        echo $f2frenderer->print_session_list_table($customfields, $previousreverse, $viewattendees, $editsessions, $deletesessions); // GCHLOL - MF - Added $deletesessions
     }
 }
 
@@ -238,7 +241,7 @@ function print_session_list($courseid, $facetofaceid, $location) {
 function get_locations($facetofaceid) {
     global $CFG, $DB;
 
-    $locationfieldid = $DB->get_field('facetoface_session_field', 'id', array('shortname' => 'location'));
+    $locationfieldid = $DB->get_field('facetoface_session_field', 'id', array('shortname' => 'facility')); // GCHLOL: Change field to facility.
     if (!$locationfieldid) {
         return array();
     }

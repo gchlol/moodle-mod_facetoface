@@ -176,4 +176,25 @@ $capabilities = array(
             'manager' => CAP_ALLOW
         ),
     ),
+
+    // GCHLOL - PB - Ability to add attendees to a session.
+    'mod/facetoface:addmyattendees' => array(
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COURSE,
+    ),
+
+    // GCHLOL - PB - Ability to remove attendees from a session.
+    'mod/facetoface:removemyattendees' => array(
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COURSE,
+    ),
+
+    // GCHLOL MF Ability to delete a session.
+    'mod/facetoface:deletesessions' => array(
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => array(
+            'manager' => CAP_ALLOW
+        )
+    ),
 );

@@ -34,8 +34,10 @@ class mod_facetoface_renderer extends plugin_renderer_base {
 
     /**
      * Builds session list table given an array of sessions
+     * 
+     * GCHLOL - MF - Added $deletesessions to parameters
      */
-    public function print_session_list_table($customfields, $sessions, $viewattendees, $editsessions) {
+    public function print_session_list_table($customfields, $sessions, $viewattendees, $editsessions, $deletesessions = false) {
         $output = '';
 
         $tableheader = array();
@@ -148,9 +150,11 @@ class mod_facetoface_renderer extends plugin_renderer_base {
                 $options .= $this->output->action_icon(new moodle_url('sessions.php', array('s' => $session->id, 'c' => 1)),
                         new pix_icon('t/copy', get_string('copy', 'facetoface')), null,
                         array('title' => get_string('copysession', 'facetoface'))) . ' ';
-                $options .= $this->output->action_icon(new moodle_url('sessions.php', array('s' => $session->id, 'd' => 1)),
-                        new pix_icon('t/delete', get_string('delete', 'facetoface')), null,
-                        array('title' => get_string('deletesession', 'facetoface'))) . ' ';
+                if ($deletesessions) { // GCHLOL: check if has capability.
+                    $options .= $this->output->action_icon(new moodle_url('sessions.php', array('s' => $session->id, 'd' => 1)),
+                            new pix_icon('t/delete', get_string('delete', 'facetoface')), null,
+                            array('title' => get_string('deletesession', 'facetoface'))) . ' ';
+                }
                 $options .= html_writer::empty_tag('br');
             }
             if ($viewattendees) {

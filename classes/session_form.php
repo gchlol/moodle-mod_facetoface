@@ -83,7 +83,7 @@ class mod_facetoface_session_form extends moodleform {
             html_writer::tag('span', get_string('datetimeknownhinttext', 'facetoface'), array('class' => 'hint-text')));
         $mform->addGroup($formarray, 'datetimeknown_group', get_string('sessiondatetimeknown', 'facetoface'), array(' '), false);
         $mform->addGroupRule('datetimeknown_group', null, 'required', null, 'client');
-        $mform->setDefault('datetimeknown', false);
+        $mform->setDefault('datetimeknown', true); // PB GCHLOL - set default date time known to true
         $mform->addHelpButton('datetimeknown_group', 'sessiondatetimeknown', 'facetoface');
 
         $repeatarray = array();

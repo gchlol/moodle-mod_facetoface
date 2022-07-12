@@ -69,10 +69,12 @@ class mod_facetoface_signup_form extends moodleform {
             MDL_F2F_TEXT => get_string('notificationemail', 'facetoface'),
             MDL_F2F_ICAL => get_string('notificationical', 'facetoface')
         );
-        $mform->addElement('select', 'notificationtype', get_string('notificationtype', 'facetoface'), $options);
+        // GCHLOL Change to hidden
+        $mform->addElement('hidden', 'notificationtype', get_string('notificationtype', 'facetoface'), $options);
         $mform->addHelpButton('notificationtype', 'notificationtype', 'facetoface');
         $mform->addRule('notificationtype', null, 'required', null, 'client');
-        $mform->setDefault('notificationtype', 0);
+        $mform->setDefault('notificationtype', 1); // GCHLOL change default to 1
+        $mform->setType('notificationtype', PARAM_INT); // GCHLOL: Set notificationtype type.
 
         $this->add_action_buttons(true, get_string('signup', 'facetoface'));
     }

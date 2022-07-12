@@ -70,14 +70,27 @@ $strfacetoface = get_string('modulename', 'facetoface');
 $errors = array();
 
 // Get the user_selector we will need.
-$potentialuserselector = new facetoface_candidate_selector('addselect', array('sessionid' => $session->id));
-$existinguserselector = new facetoface_existing_selector('removeselect', array('sessionid' => $session->id));
+// GCHLOL: - PB - introduce "my" attendees
+if (has_capability('mod/facetoface:addattendees', $context)) {
+    $potentialuserselector = new facetoface_candidate_selector('addselect', array('sessionid' => $session->id));
+} else if (has_capability('mod/facetoface:addmyattendees', $context)) {
+    $potentialuserselector = new facetoface_mycandidate_selector('addselect', array('sessionid' => $session->id));
+}
+if (has_capability('mod/facetoface:removeattendees', $context)) {
+    $existinguserselector = new facetoface_existing_selector('removeselect', array('sessionid' => $session->id));
+} else if (has_capability('mod/facetoface:removemyattendees', $context)) {
+    $existinguserselector = new facetoface_myexisting_selector('removeselect', array('sessionid' => $session->id));
+}
 
 // Process incoming user assignments.
 if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
+    /* GCHLOL: Remove add attendees capability check.
     require_capability('mod/facetoface:addattendees', $context);
+    */
     $userstoassign = $potentialuserselector->get_selected_users();
     if (!empty($userstoassign)) {
+        // GCHLOL: Get manual enrolment.
+        $enrol = $DB->get_record('enrol', ['enrol' => 'manual', 'status' => 0, 'courseid' => $course->id]);
         foreach ($userstoassign as $adduser) {
             if (!$adduser = clean_param($adduser->id, PARAM_INT)) {
                 continue; // Invalid userid.
@@ -88,11 +101,11 @@ if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
                 $user = $DB->get_record('user', array('id' => $adduser));
                 // Make sure that the user is enroled in the course.
                 if (!is_enrolled($context, $user)) {
-                    $defaultroleid = null;
-                    // Get default role ID for manual enrollment.
-                    $conditions = array ('courseid' => $course->id, 'enrol' => 'manual');
-                    $defaultroleid = $DB->get_field('enrol', 'roleid', $conditions, IGNORE_MISSING);
-                    if (!enrol_try_internal_enrol($course->id, $user->id, $defaultroleid)) {
+                    // GCHLOL: Enrol user with default manual enrolment role.
+                    if (!$enrol) {
+                        continue;
+                    }
+                    if (!enrol_try_internal_enrol($course->id, $user->id, $enrol->roleid)) {
                         $errors[] = get_string('error:enrolmentfailed', 'facetoface', fullname($user));
                         $errors[] = get_string('error:addattendee', 'facetoface', fullname($user));
                         continue; // Don't sign the user up.
@@ -115,7 +128,8 @@ if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
                 } else {
                     $status = MDL_F2F_STATUS_WAITLISTED;
                 }
-                if (!facetoface_user_signup($session, $facetoface, $course, '', MDL_F2F_BOTH,
+                // GCHLOL: Change notification type to ICAL.
+                if (!facetoface_user_signup($session, $facetoface, $course, '', MDL_F2F_ICAL,
                 $status, $adduser, !$suppressemail)) {
                     $erruser = $DB->get_record('user', array('id' => $adduser), "id, {$usernamefields}");
                     $errors[] = get_string('error:addattendee', 'facetoface', fullname($erruser));
@@ -129,7 +143,9 @@ if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
 
 // Process removing user assignments from session.
 if (optional_param('remove', false, PARAM_BOOL) && confirm_sesskey()) {
+    /* GCHLOL: Remove removeattendees capability check.
     require_capability('mod/facetoface:removeattendees', $context);
+    */
     $userstoremove = $existinguserselector->get_selected_users();
     if (!empty($userstoremove)) {
         foreach ($userstoremove as $removeuser) {
