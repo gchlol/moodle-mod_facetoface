@@ -29,6 +29,7 @@
  */
 
 use tool_organisation\api;
+use mod_facetoface\custom_capability_checker;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -2548,6 +2549,7 @@ function facetoface_format_session_times($start, $end, $tz) {
 function facetoface_cm_info_view(cm_info $coursemodule) {
     global $USER, $DB;
     $output = '';
+    $capability_checker = new custom_capability_checker();
 
     if (!($facetoface = $DB->get_record('facetoface', array('id' => $coursemodule->instance)))) {
         return null;
@@ -2560,11 +2562,11 @@ function facetoface_cm_info_view(cm_info $coursemodule) {
         return null; // Not allowed to view this activity.
     }
     // Can view attendees.
-    $viewattendees = has_capability('mod/facetoface:viewattendees', $contextmodule);
+    $viewattendees = (has_capability('mod/facetoface:viewattendees', $contextmodule) || $capability_checker->manager_permissions);
     // Can see "view all sessions" link even if activity is hidden/currently unavailable.
-    $iseditor = has_any_capability(array('mod/facetoface:viewattendees', 'mod/facetoface:editsessions',
+    $iseditor = (has_any_capability(array('mod/facetoface:viewattendees', 'mod/facetoface:editsessions',
         'mod/facetoface:addattendees', 'mod/facetoface:addattendees',
-        'mod/facetoface:takeattendance'), $contextmodule);
+        'mod/facetoface:takeattendance'), $contextmodule) || $capability_checker->manager_permissions);
 
     $timenow = time();
 
