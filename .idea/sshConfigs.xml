@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig connectionConfig="{&quot;proxyParams&quot;:{&quot;proxyHost&quot;:&quot;proxy1.health.qld.gov.au&quot;,&quot;proxyPort&quot;:80,&quot;proxyType&quot;:&quot;HTTP&quot;,&quot;authData&quot;:{&quot;proxyAuthType&quot;:&quot;USER_AND_PASSWORD&quot;}}}" host="13.238.120.141" id="4699de87-794b-4a27-bc33-38f04c870fd0" keyPath="C:\Users\BatchelorD\Downloads\sc-prod-key.ppk" port="22" nameFormat="DESCRIPTIVE" username="ec2-user" useOpenSSHConfig="true" />
+    </configs>
+  </component>
+</project>
