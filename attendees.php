@@ -28,6 +28,8 @@
  * @author     Francois Marier <francois@catalyst.net.nz>
  */
 
+use mod_facetoface\custom_capability_checker;
+
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
 require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 
@@ -78,15 +80,24 @@ $contextmodule = context_module::instance($cm->id);
 require_course_login($course);
 
 // Actions the user can perform.
-$canviewattendees = has_capability('mod/facetoface:viewattendees', $context);
+$capability_checker = new custom_capability_checker();
+$canviewattendees = $capability_checker->manager_permissions; //custom LOL capability checking system
+
 $cantakeattendance = has_capability('mod/facetoface:takeattendance', $context);
 $canviewcancellations = has_capability('mod/facetoface:viewcancellations', $context);
 $canviewsession = $canviewattendees || $cantakeattendance || $canviewcancellations;
 $canapproverequests = false;
 
 //GCHLOL - PB - add capability check add attendees and add my attendees
+
+
+$can_add_attendees = $capability_checker->manager_permissions; //custom LOL capability checking system
+$can_add_my_attendees = $capability_checker->manager_permissions; //custom LOL capability checking system
+/*
 $can_add_attendees = has_capability('mod/facetoface:addattendees', $context);
 $can_add_my_attendees = has_capability('mod/facetoface:addmyattendees', $context);
+*/
+
 
 $requests = array();
 $declines = array();
@@ -328,7 +339,8 @@ if ($canviewattendees || $cantakeattendance) {
 
     // GCHLOL - can add or remove 'my' attendees
     if (!$takeattendance) {
-        if (has_capability('mod/facetoface:addattendees', $context) ||
+        if ($capability_checker->manager_permissions ||
+            has_capability('mod/facetoface:addattendees', $context) ||
             has_capability('mod/facetoface:removeattendees', $context) || 
 			has_capability('mod/facetoface:addmyattendees', $context) ||
             has_capability('mod/facetoface:removemyattendees', $context)) {

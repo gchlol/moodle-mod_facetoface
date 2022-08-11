@@ -28,6 +28,8 @@
  * @author     Francois Marier <francois@catalyst.net.nz>
  */
 
+use mod_facetoface\custom_capability_checker;
+
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
 require_once('lib.php');
 require_once('renderer.php');
@@ -151,7 +153,10 @@ function print_session_list($courseid, $facetofaceid, $location) {
     $timenow = time();
 
     $context = context_course::instance($courseid);
-    $viewattendees = has_capability('mod/facetoface:viewattendees', $context);
+
+    $capability_checker = new custom_capability_checker();
+    $viewattendees = $capability_checker->manager_permissions; //custom LOL capability checking system
+
     $editsessions = has_capability('mod/facetoface:editsessions', $context);
     $deletesessions = has_capability('mod/facetoface:deletesessions', $context); // GCHLOL - MF - Delete permission
 

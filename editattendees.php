@@ -28,6 +28,8 @@
  * @author     Francois Marier <francois@catalyst.net.nz>
  */
 
+use mod_facetoface\custom_capability_checker;
+use moodle_exception;
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
 require_once('lib.php');
 
@@ -58,7 +60,15 @@ if (!$cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course
 // Check essential permissions.
 require_course_login($course);
 $context = context_course::instance($course->id);
-require_capability('mod/facetoface:viewattendees', $context);
+//require_capability('mod/facetoface:viewattendees', $context);
+
+$capability_checker = new custom_capability_checker();
+$manager_permissions = $capability_checker->manager_permissions;
+
+if(!$manager_permissions){
+    throw new moodle_exception('', "mod_facetoface", '', "You do not have permission to do this");
+}
+
 
 // Get some language strings.
 $strsearch = get_string('search');
@@ -73,12 +83,12 @@ $errors = array();
 // GCHLOL: - PB - introduce "my" attendees
 if (has_capability('mod/facetoface:addattendees', $context)) {
     $potentialuserselector = new facetoface_candidate_selector('addselect', array('sessionid' => $session->id));
-} else if (has_capability('mod/facetoface:addmyattendees', $context)) {
+} else if ($manager_permissions) {
     $potentialuserselector = new facetoface_mycandidate_selector('addselect', array('sessionid' => $session->id));
 }
 if (has_capability('mod/facetoface:removeattendees', $context)) {
     $existinguserselector = new facetoface_existing_selector('removeselect', array('sessionid' => $session->id));
-} else if (has_capability('mod/facetoface:removemyattendees', $context)) {
+} else if ($manager_permissions) {
     $existinguserselector = new facetoface_myexisting_selector('removeselect', array('sessionid' => $session->id));
 }
 
