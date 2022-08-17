@@ -91,8 +91,8 @@ $canapproverequests = false;
 //GCHLOL - PB - add capability check add attendees and add my attendees
 
 
-$can_add_attendees = $capability_checker->manager_permissions; //custom LOL capability checking system
-$can_add_my_attendees = $capability_checker->manager_permissions; //custom LOL capability checking system
+$can_add_attendees = $capability_checker->manager_permissions || has_capability('mod/facetoface:addattendees', $context); //custom LOL capability checking system
+$can_add_my_attendees = $capability_checker->manager_permissions || has_capability('mod/facetoface:addmyattendees', $context); //custom LOL capability checking system
 /*
 $can_add_attendees = has_capability('mod/facetoface:addattendees', $context);
 $can_add_my_attendees = has_capability('mod/facetoface:addmyattendees', $context);
