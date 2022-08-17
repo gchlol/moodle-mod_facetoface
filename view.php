@@ -157,11 +157,7 @@ function print_session_list($courseid, $facetoface, $location) {
     $context = context_course::instance($courseid);
 
     $capability_checker = new custom_capability_checker();
-    $viewattendees = (
-        //custom LOL capability checking system
-        $capability_checker->manager_permissions ||
-        has_capability('mod/facetoface:viewattendees', $context)
-    );
+    $viewattendees = $capability_checker->manager_permissions || has_capability('mod/facetoface:viewattendees', $context); //custom LOL capability checking system
 
     $editsessions = has_capability('mod/facetoface:editsessions', $context);
     $deletesessions = has_capability('mod/facetoface:deletesessions', $context); // GCHLOL - MF - Delete permission
