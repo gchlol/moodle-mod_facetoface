@@ -183,6 +183,7 @@ $string['error:manageremailaddressmissing'] = 'You are currently not assigned to
 $string['error:mustspecifycoursemodulefacetoface'] = 'Must specify a course module or a Face-to-Face ID';
 $string['error:nomanageremail'] = 'You didn\'t provide an email address for your manager';
 $string['error:nomanagersemailset'] = 'No manager email is set';
+$string['error:nopermissiontoeditattendees'] = 'You don\'t have permission to edit attendees for this Face-to-Face session.';
 $string['error:nopermissiontosignup'] = 'You don\'t have permission to signup to this Face-to-Face session.';
 $string['error:noticeidincorrect'] = 'Notice ID is incorrect: {$a}';
 $string['error:problemsigningup'] = 'There was a problem signing you up.';
