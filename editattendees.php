@@ -66,7 +66,7 @@ $capability_checker = new custom_capability_checker();
 $manager_permissions = $capability_checker->manager_permissions;
 
 if(!$manager_permissions){
-    throw new moodle_exception('', "mod_facetoface", '', "You do not have permission to do this");
+    throw new moodle_exception('error:nopermissiontoeditattendees', 'mod_facetoface');
 }
 
 
