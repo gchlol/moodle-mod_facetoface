@@ -48,6 +48,8 @@ class custom_capability_checker{
     private function getViewPermissions(){
         global $USER, $DB;
 
+        $joins = $wheres = $params = [];
+
         [
             'joins' => $myusersjoins,
             'where' => $myuserswhere,
