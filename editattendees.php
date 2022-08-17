@@ -29,7 +29,7 @@
  */
 
 use mod_facetoface\custom_capability_checker;
-use moodle_exception;
+
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
 require_once('lib.php');
 
