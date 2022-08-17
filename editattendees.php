@@ -29,7 +29,7 @@
  */
 
 use mod_facetoface\custom_capability_checker;
-use moodle_exception;
+
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
 require_once('lib.php');
 
@@ -60,13 +60,15 @@ if (!$cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course
 // Check essential permissions.
 require_course_login($course);
 $context = context_course::instance($course->id);
-//require_capability('mod/facetoface:viewattendees', $context);
 
 $capability_checker = new custom_capability_checker();
 $manager_permissions = $capability_checker->manager_permissions;
 
-if(!$manager_permissions){
-    throw new moodle_exception('', "mod_facetoface", '', "You do not have permission to do this");
+if(
+    !$manager_permissions &&
+    !has_capability('mod/facetoface:viewattendees', $context)
+) {
+    throw new moodle_exception('error:nopermissiontoeditattendees', 'mod_facetoface');
 }
 
 
