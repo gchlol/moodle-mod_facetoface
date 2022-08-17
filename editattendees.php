@@ -60,12 +60,14 @@ if (!$cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course
 // Check essential permissions.
 require_course_login($course);
 $context = context_course::instance($course->id);
-//require_capability('mod/facetoface:viewattendees', $context);
 
 $capability_checker = new custom_capability_checker();
 $manager_permissions = $capability_checker->manager_permissions;
 
-if(!$manager_permissions){
+if(
+    !$manager_permissions &&
+    !has_capability('mod/facetoface:viewattendees', $context)
+) {
     throw new moodle_exception('error:nopermissiontoeditattendees', 'mod_facetoface');
 }
 
