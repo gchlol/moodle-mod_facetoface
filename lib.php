@@ -4241,8 +4241,9 @@ class facetoface_mycandidate_selector extends user_selector_base {
     public function find_users($search) {
         global $USER, $DB;
 
-        // All non-signed up system user.
-        list($wherecondition, $params) = $this->search_sql($search, 'u');
+        $joins = $wheres = [];
+
+        list($wheres[], $params) = $this->search_sql($search, 'u');
 
         [
             'joins' => $myusersjoins,
@@ -4269,21 +4270,23 @@ class facetoface_mycandidate_selector extends user_selector_base {
         $countfields = 'SELECT COUNT(u.id)';
 
         $sql = "
-				  FROM {user} u
-				  $joinsstring
-				 
-				WHERE u.suspended=0 AND $where
-				   AND u.id NOT IN
-					   (
-					   SELECT u2.id
-						 FROM {facetoface_signups} s
-						 JOIN {facetoface_signups_status} ss ON s.id = ss.signupid
-						 JOIN {user} u2 ON u2.id = s.userid
-						WHERE s.sessionid = :sessid
-						  AND ss.statuscode >= :statuswaitlisted
-						  AND ss.superceded = 0
-					   )
-			   "; //GCH-LOL do not list suspended users
+              FROM  {user} u
+                $joinsstring
+              WHERE $where and 
+                    u.suspended = 0 AND
+                    u.id NOT IN
+                    (
+                        SELECT  u2.id
+                        FROM    {facetoface_signups} s
+                                JOIN {facetoface_signups_status} ss ON
+                                    s.id = ss.signupid
+                                JOIN {user} u2 ON
+                                    u2.id = s.userid
+                        WHERE   s.sessionid = :sessid AND
+                                ss.statuscode >= :statuswaitlisted AND
+                                ss.superceded = 0
+                    )
+           "; //GCH-LOL do not list suspended users
 
 
 
@@ -4340,77 +4343,73 @@ class facetoface_myexisting_selector extends user_selector_base {
     public function find_users($search) {
         global $USER, $DB;
 
-        $posid = $DB->get_record('user_info_field', array('shortname' => 'posid'));
-        $repdel = $DB->get_record('user_info_field', array('shortname' => 'repdel'));
-        $reportsto = $DB->get_record('user_info_field', array('shortname' => 'reportsto'));
-        $termination = $DB->get_record('user_info_field', array('shortname' => 'termination'));
-        $leave = $DB->get_record('user_info_field', array('shortname' => 'leave'));
+        $joins = $wheres = [];
 
-        // By default wherecondition retrieves all users except the deleted, not confirmed and guest.
-        list($wherecondition, $whereparams) = $this->search_sql($search, 'u');
+        list($wheres[], $params) = $this->search_sql($search, 'u');
+
+        [
+            'joins' => $myusersjoins,
+            'where' => $myuserswhere,
+            'params' => $myusersparams
+        ] = api::get_myusers_sql($USER->id, true);
+        if (!empty($myusersjoins)) {
+            $joins[] = $myusersjoins;
+        }
+        if (!empty($myuserswhere)) {
+            $wheres[] = $myuserswhere;
+        }
+        if (!empty($myusersparams)) {
+            $params = array_merge($params, $myusersparams);
+        }
+
+        // Prepare final values.
+        $joinsstring = implode("\n", $joins);
+        $where = implode(' AND ', $wheres);
 
         $fields  = 'SELECT ' . $this->required_fields_sql('u');
         $fields .= ', su.id AS submissionid, s.discountcost, su.discountcode, su.notificationtype, f.id AS facetofaceid,
             f.course, ss.grade, ss.statuscode, sign.timecreated';
         $countfields = 'SELECT COUNT(1)';
-        $userid = $USER->id;
         $sql = "
-            FROM
-                {facetoface} f
-            JOIN
-                {facetoface_sessions} s
-             ON s.facetoface = f.id
-            JOIN
-                {facetoface_signups} su
-             ON s.id = su.sessionid
-            JOIN
-                {facetoface_signups_status} ss
-             ON su.id = ss.signupid
-            LEFT JOIN
-                (
-                SELECT
-                    ss.signupid,
-                    MAX(ss.timecreated) AS timecreated
-                FROM
-                    {facetoface_signups_status} ss
-                INNER JOIN
-                    {facetoface_signups} s
-                 ON s.id = ss.signupid
-                AND s.sessionid = :sessid1
-                WHERE
-                    ss.statuscode IN (:statusbooked, :statuswaitlisted)
-                GROUP BY
-                    ss.signupid
-                ) sign
-             ON su.id = sign.signupid
-            JOIN
-                {user} u
-             ON u.id = su.userid
-			 LEFT JOIN {user_info_data} ab
-					ON ab.userid = $userid AND ab.fieldid = $posid->id
-
-				  LEFT JOIN {user_info_data} ae
-					ON ae.userid = $userid AND ae.fieldid = $repdel->id
-
-				  INNER JOIN {user_info_data} aa
-					ON u.id = aa.userid AND aa.fieldid = $reportsto->id AND (aa.data=ab.data OR aa.userid = $userid OR
-					CASE WHEN ae.data > 1 THEN aa.data = ae.data END)
-
-				  LEFT JOIN {user_info_data} ac
-					ON u.id = ac.userid AND ac.fieldid = $termination->id
-				  LEFT JOIN {user_info_data} ad
-					ON u.id = ad.userid AND ad.fieldid = $leave->id
-	            WHERE
-                $wherecondition
-            AND s.id = :sessid2
-            AND ss.superceded != 1
-            AND ss.statuscode >= :statusapproved
+            FROM    {facetoface} f
+                    JOIN {facetoface_sessions} s ON
+                        s.facetoface = f.id
+                    JOIN {facetoface_signups} su ON
+                        s.id = su.sessionid
+                    JOIN {facetoface_signups_status} ss ON
+                        su.id = ss.signupid
+                    LEFT JOIN (
+                        SELECT  ss.signupid,
+                                MAX(ss.timecreated) AS timecreated
+                        FROM    {facetoface_signups_status} ss
+                                INNER JOIN {facetoface_signups} s ON
+                                    s.id = ss.signupid AND
+                                    s.sessionid = :sessid1
+                        WHERE   ss.statuscode IN (:statusbooked, :statuswaitlisted)
+                        GROUP BY ss.signupid
+                    ) sign ON
+                        su.id = sign.signupid
+                    JOIN {user} u ON
+                        u.id = su.userid
+                    $joinsstring
+            WHERE   $where AND
+                    s.id = :sessid2 AND
+                    ss.superceded != 1 AND
+                    ss.statuscode >= :statusapproved
         ";
         $order = " ORDER BY sign.timecreated ASC, ss.timecreated ASC";
-        $params = array ('sessid1' => $this->sessionid, 'statusbooked' => MDL_F2F_STATUS_BOOKED, 'statuswaitlisted' => MDL_F2F_STATUS_WAITLISTED);
-        $params = array_merge($params, $whereparams);
-        $params['sessid2'] = $this->sessionid;
-        $params['statusapproved'] = MDL_F2F_STATUS_APPROVED;
+
+        $params = array_merge(
+            $params,
+            [
+                'sessid1' => $this->sessionid,
+                'sessid2' => $this->sessionid,
+                'statusapproved' => MDL_F2F_STATUS_APPROVED,
+                'statuswaitlisted' => MDL_F2F_STATUS_WAITLISTED,
+                'statusbooked' => MDL_F2F_STATUS_BOOKED,
+            ]
+        );
+
         if (!$this->is_validating()) {
             $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
             if ($potentialmemberscount > 100) {
