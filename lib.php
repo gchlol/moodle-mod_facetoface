@@ -4270,23 +4270,23 @@ class facetoface_mycandidate_selector extends user_selector_base {
         $countfields = 'SELECT COUNT(u.id)';
 
         $sql = "
-				  FROM {user} u
-				  $joinsstring
-				 
-				WHERE
-				    $where and 
-				    u.suspended=0 AND
-				    u.id NOT IN
-					   (
-					   SELECT u2.id
-						 FROM {facetoface_signups} s
-						 JOIN {facetoface_signups_status} ss ON s.id = ss.signupid
-						 JOIN {user} u2 ON u2.id = s.userid
-						WHERE s.sessionid = :sessid
-						  AND ss.statuscode >= :statuswaitlisted
-						  AND ss.superceded = 0
-					   )
-			   "; //GCH-LOL do not list suspended users
+              FROM  {user} u
+                $joinsstring
+              WHERE $where and 
+                    u.suspended = 0 AND
+                    u.id NOT IN
+                    (
+                        SELECT  u2.id
+                        FROM    {facetoface_signups} s
+                                JOIN {facetoface_signups_status} ss ON
+                                    s.id = ss.signupid
+                                JOIN {user} u2 ON
+                                    u2.id = s.userid
+                        WHERE   s.sessionid = :sessid AND
+                                ss.statuscode >= :statuswaitlisted AND
+                                ss.superceded = 0
+                    )
+           "; //GCH-LOL do not list suspended users
 
 
 
@@ -4370,45 +4370,32 @@ class facetoface_myexisting_selector extends user_selector_base {
         $fields .= ', su.id AS submissionid, s.discountcost, su.discountcode, su.notificationtype, f.id AS facetofaceid,
             f.course, ss.grade, ss.statuscode, sign.timecreated';
         $countfields = 'SELECT COUNT(1)';
-        $userid = $USER->id;
         $sql = "
-            FROM
-                {facetoface} f
-            JOIN
-                {facetoface_sessions} s
-             ON s.facetoface = f.id
-            JOIN
-                {facetoface_signups} su
-             ON s.id = su.sessionid
-            JOIN
-                {facetoface_signups_status} ss
-             ON su.id = ss.signupid
-            LEFT JOIN
-                (
-                SELECT
-                    ss.signupid,
-                    MAX(ss.timecreated) AS timecreated
-                FROM
-                    {facetoface_signups_status} ss
-                INNER JOIN
-                    {facetoface_signups} s
-                 ON s.id = ss.signupid
-                AND s.sessionid = :sessid1
-                WHERE
-                    ss.statuscode IN (:statusbooked, :statuswaitlisted)
-                GROUP BY
-                    ss.signupid
-                ) sign
-             ON su.id = sign.signupid
-            JOIN
-                {user} u
-             ON u.id = su.userid
-             $joinsstring
-	            WHERE
-                $where
-            AND s.id = :sessid2
-            AND ss.superceded != 1
-            AND ss.statuscode >= :statusapproved
+            FROM    {facetoface} f
+                    JOIN {facetoface_sessions} s ON
+                        s.facetoface = f.id
+                    JOIN {facetoface_signups} su ON
+                        s.id = su.sessionid
+                    JOIN {facetoface_signups_status} ss ON
+                        su.id = ss.signupid
+                    LEFT JOIN (
+                        SELECT  ss.signupid,
+                                MAX(ss.timecreated) AS timecreated
+                        FROM    {facetoface_signups_status} ss
+                                INNER JOIN {facetoface_signups} s ON
+                                    s.id = ss.signupid AND
+                                    s.sessionid = :sessid1
+                        WHERE   ss.statuscode IN (:statusbooked, :statuswaitlisted)
+                        GROUP BY ss.signupid
+                    ) sign ON
+                        su.id = sign.signupid
+                    JOIN {user} u ON
+                        u.id = su.userid
+                    $joinsstring
+            WHERE   $where AND
+                    s.id = :sessid2 AND
+                    ss.superceded != 1 AND
+                    ss.statuscode >= :statusapproved
         ";
         $order = " ORDER BY sign.timecreated ASC, ss.timecreated ASC";
 
