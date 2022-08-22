@@ -4241,8 +4241,9 @@ class facetoface_mycandidate_selector extends user_selector_base {
     public function find_users($search) {
         global $USER, $DB;
 
-        // All non-signed up system user.
-        list($wherecondition, $params) = $this->search_sql($search, 'u');
+        $joins = $wheres = [];
+
+        list($wheres[], $params) = $this->search_sql($search, 'u');
 
         [
             'joins' => $myusersjoins,
@@ -4272,8 +4273,10 @@ class facetoface_mycandidate_selector extends user_selector_base {
 				  FROM {user} u
 				  $joinsstring
 				 
-				WHERE u.suspended=0 AND $where
-				   AND u.id NOT IN
+				WHERE
+				    $where and 
+				    u.suspended=0 AND
+				    u.id NOT IN
 					   (
 					   SELECT u2.id
 						 FROM {facetoface_signups} s
