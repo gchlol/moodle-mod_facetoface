@@ -16,6 +16,7 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 namespace mod_facetoface;
 
+use dml_exception;
 use mod_facetoface\data\user_sql;
 
 /**
@@ -25,10 +26,7 @@ use mod_facetoface\data\user_sql;
  * @copyright   2021 Queensland Health <daryl.batchelor@health.qld.gov.au>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-
-
-class custom_capability_checker{
+class custom_capability_checker {
 
     /**
      * @var bool
@@ -44,22 +42,22 @@ class custom_capability_checker{
      * Checks if user has view permissions
      *
      * @return bool
+     * @throws dml_exception
      */
-    private function getViewPermissions(){
+    private function getViewPermissions(): bool {
         global $USER, $DB;
 
         $users_join = user_sql::get_my_users_sql($USER->id);
 
-        $countfields = 'SELECT COUNT(u.id)';
-
         $sql = "
-				  FROM {user} u
-				  $users_join->joins
-				 
-				WHERE u.suspended=0 AND $users_join->wheres
-				";
+            SELECT  COUNT(u.id)
+            FROM    {user} u
+                    $users_join->joins
+            WHERE   u.suspended=0 AND
+                    $users_join->wheres
+        ";
 
-        $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $users_join->params);
+        $potentialmemberscount = $DB->count_records_sql($sql, $users_join->params);
 
         return $potentialmemberscount > 0;
     }
