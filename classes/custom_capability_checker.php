@@ -16,7 +16,8 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 namespace mod_facetoface;
 
-use tool_organisation\api;
+use dml_exception;
+use mod_facetoface\data\user_sql;
 
 /**
  * checks user capabilities.
@@ -25,10 +26,7 @@ use tool_organisation\api;
  * @copyright   2021 Queensland Health <daryl.batchelor@health.qld.gov.au>
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-
-
-class custom_capability_checker{
+class custom_capability_checker {
 
     /**
      * @var bool
@@ -44,46 +42,23 @@ class custom_capability_checker{
      * Checks if user has view permissions
      *
      * @return bool
+     * @throws dml_exception
      */
-    private function getViewPermissions(){
+    private function getViewPermissions(): bool {
         global $USER, $DB;
 
-        $joins = $wheres = $params = [];
-
-        [
-            'joins' => $myusersjoins,
-            'where' => $myuserswhere,
-            'params' => $myusersparams
-        ] = api::get_myusers_sql($USER->id, true);
-        if (!empty($myusersjoins)) {
-            $joins[] = $myusersjoins;
-        }
-        if (!empty($myuserswhere)) {
-            $wheres[] = $myuserswhere;
-        }
-        if (!empty($myusersparams)) {
-            $params = $myusersparams;
-        }
-
-        // Prepare final values.
-        $joinsstring = implode("\n", $joins);
-        $where = implode(' AND ', $wheres);
-
-
-        $countfields = 'SELECT COUNT(u.id)';
+        $users_join = user_sql::get_my_users_sql($USER->id);
 
         $sql = "
-				  FROM {user} u
-				  $joinsstring
-				 
-				WHERE u.suspended=0 AND $where
-				";
+            SELECT  COUNT(u.id)
+            FROM    {user} u
+                    $users_join->joins
+            WHERE   u.suspended = 0 AND
+                    $users_join->wheres
+        ";
 
-        $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
+        $potentialmemberscount = $DB->count_records_sql($sql, $users_join->params);
 
         return $potentialmemberscount > 0;
-
-
-
     }
 }
