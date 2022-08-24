@@ -28,7 +28,7 @@
  * @author     Francois Marier <francois@catalyst.net.nz>
  */
 
-use tool_organisation\api;
+use mod_facetoface\data\user_sql;
 use mod_facetoface\custom_capability_checker;
 
 defined('MOODLE_INTERNAL') || die();
@@ -4591,22 +4591,12 @@ class facetoface_mycandidate_selector extends user_selector_base {
 
         $joins = $wheres = [];
 
-        list($wheres[], $params) = $this->search_sql($search, 'u');
+        [ $wheres[], $params ] = $this->search_sql($search, 'u');
 
-        [
-            'joins' => $myusersjoins,
-            'where' => $myuserswhere,
-            'params' => $myusersparams
-        ] = api::get_myusers_sql($USER->id, true);
-        if (!empty($myusersjoins)) {
-            $joins[] = $myusersjoins;
-        }
-        if (!empty($myuserswhere)) {
-            $wheres[] = $myuserswhere;
-        }
-        if (!empty($myusersparams)) {
-            $params = array_merge($params, $myusersparams);
-        }
+        $users_join = user_sql::get_my_users_sql($USER->id);
+        $joins[] = $users_join->joins;
+        $wheres[] = $users_join->wheres;
+        $params = array_merge($params, $users_join->params);
 
         // Prepare final values.
         $joinsstring = implode("\n", $joins);
@@ -4615,7 +4605,7 @@ class facetoface_mycandidate_selector extends user_selector_base {
 
 
         $fields      = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
-        $countfields = 'SELECT COUNT(u.id)';
+        $countfields = 'SELECT COUNT(distinct u.id)';
 
         $sql = "
               FROM  {user} u
@@ -4693,22 +4683,12 @@ class facetoface_myexisting_selector extends user_selector_base {
 
         $joins = $wheres = [];
 
-        list($wheres[], $params) = $this->search_sql($search, 'u');
+        [ $wheres[], $params ] = $this->search_sql($search, 'u');
 
-        [
-            'joins' => $myusersjoins,
-            'where' => $myuserswhere,
-            'params' => $myusersparams
-        ] = api::get_myusers_sql($USER->id, true);
-        if (!empty($myusersjoins)) {
-            $joins[] = $myusersjoins;
-        }
-        if (!empty($myuserswhere)) {
-            $wheres[] = $myuserswhere;
-        }
-        if (!empty($myusersparams)) {
-            $params = array_merge($params, $myusersparams);
-        }
+        $users_join = user_sql::get_my_users_sql($USER->id);
+        $joins[] = $users_join->joins;
+        $wheres[] = $users_join->wheres;
+        $params = array_merge($params, $users_join->params);
 
         // Prepare final values.
         $joinsstring = implode("\n", $joins);
@@ -4717,7 +4697,7 @@ class facetoface_myexisting_selector extends user_selector_base {
         $fields  = 'SELECT ' . $this->required_fields_sql('u');
         $fields .= ', su.id AS submissionid, s.discountcost, su.discountcode, su.notificationtype, f.id AS facetofaceid,
             f.course, ss.grade, ss.statuscode, sign.timecreated';
-        $countfields = 'SELECT COUNT(1)';
+        $countfields = 'SELECT COUNT(distinct u.id)';
         $sql = "
             FROM    {facetoface} f
                     JOIN {facetoface_sessions} s ON

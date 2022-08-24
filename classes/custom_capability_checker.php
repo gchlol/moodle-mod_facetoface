@@ -16,7 +16,7 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 namespace mod_facetoface;
 
-use tool_organisation\api;
+use mod_facetoface\data\user_sql;
 
 /**
  * checks user capabilities.
@@ -48,42 +48,19 @@ class custom_capability_checker{
     private function getViewPermissions(){
         global $USER, $DB;
 
-        $joins = $wheres = $params = [];
-
-        [
-            'joins' => $myusersjoins,
-            'where' => $myuserswhere,
-            'params' => $myusersparams
-        ] = api::get_myusers_sql($USER->id, true);
-        if (!empty($myusersjoins)) {
-            $joins[] = $myusersjoins;
-        }
-        if (!empty($myuserswhere)) {
-            $wheres[] = $myuserswhere;
-        }
-        if (!empty($myusersparams)) {
-            $params = $myusersparams;
-        }
-
-        // Prepare final values.
-        $joinsstring = implode("\n", $joins);
-        $where = implode(' AND ', $wheres);
-
+        $users_join = user_sql::get_my_users_sql($USER->id);
 
         $countfields = 'SELECT COUNT(u.id)';
 
         $sql = "
 				  FROM {user} u
-				  $joinsstring
+				  $users_join->joins
 				 
-				WHERE u.suspended=0 AND $where
+				WHERE u.suspended=0 AND $users_join->wheres
 				";
 
-        $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $params);
+        $potentialmemberscount = $DB->count_records_sql($countfields . $sql, $users_join->params);
 
         return $potentialmemberscount > 0;
-
-
-
     }
 }
