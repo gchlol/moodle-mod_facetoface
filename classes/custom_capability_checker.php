@@ -53,7 +53,7 @@ class custom_capability_checker {
             SELECT  COUNT(u.id)
             FROM    {user} u
                     $users_join->joins
-            WHERE   u.suspended=0 AND
+            WHERE   u.suspended = 0 AND
                     $users_join->wheres
         ";
 
