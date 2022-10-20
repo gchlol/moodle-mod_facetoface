@@ -84,7 +84,10 @@ class user_sql {
         ";
 
         $where = "
-            aa.data = ab.data or
+            (
+                ab.data > 1 and
+                aa.data = ab.data
+            ) or
             (
                 ae.data > 1 and
                 aa.data = ae.data
