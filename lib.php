@@ -306,9 +306,6 @@ function facetoface_fix_settings($facetoface) {
     if (empty($facetoface->approvalreqd)) {
         $facetoface->approvalreqd = 0;
     }
-    if (empty($facetoface->attendancesheetshowlogo)) {
-        $facetoface->attendancesheetshowlogo = 0;
-    }
 }
 
 /**
