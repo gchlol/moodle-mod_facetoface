@@ -835,6 +835,21 @@ function xmldb_facetoface_upgrade($oldversion=0) {
         upgrade_mod_savepoint(true, 2023031300, 'facetoface');
     }
 
+    if ($oldversion < 2023051600) {
+
+        // Define field attendancesheetshowlogo to be added to facetoface.
+        $table = new xmldb_table('facetoface');
+        $field = new xmldb_field('attendancesheetshowlogo', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'allowcancellationsdefault');
+
+        // Conditionally launch add field attendancesheetshowlogo.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Facetoface savepoint reached.
+        upgrade_mod_savepoint(true, 2023051600, 'facetoface');
+    }
+
     if ($oldversion < 2023100200) {
 
         // Define field completionattendance to be added to facetoface.

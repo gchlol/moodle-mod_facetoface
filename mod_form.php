@@ -268,6 +268,13 @@ class mod_facetoface_mod_form extends moodleform_mod {
         $mform->addHelpButton('cancellationinstrmngr', 'cancellationinstrmngr', 'facetoface');
         $mform->disabledIf('cancellationinstrmngr', 'emailmanagercancellation');
         $mform->setDefault('cancellationinstrmngr', get_string('setting:defaultcancellationinstrmngrdefault', 'facetoface'));
+
+        // Attendance Sheet
+        $mform->addElement('header', 'attendancesheetheader', get_string('attendancesheet:heading', 'facetoface'));
+
+        $mform->addElement('checkbox', 'attendancesheetshowlogo', get_string('modform:showlogo', 'mod_facetoface'));
+        $mform->addHelpButton('attendancesheetshowlogo', 'modform:showlogo', 'mod_facetoface');
+
         $data = (object) ['confirmationmessage' => $confirmationmessagedata];
         $this->set_data($data);
         $features = new stdClass;
