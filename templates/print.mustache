@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>
+        {{#title}}{{title}}{{/title}}
+        {{^title}}Print{{/title}}
+    </title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            margin: auto;
+
+        {{^landscape}}
+            width: 210mm;
+            height: 297mm;
+        {{/landscape}}
+        }
+        * {
+            -webkit-print-color-adjust: exact !important;   /* Chrome, Safari */
+            color-adjust: exact !important;                 /*Firefox*/
+        }
+        #ciap-gauge-chart table {
+            margin: 0 auto !important;
+        }
+        .table caption {
+            caption-side: top;
+            padding-top: .572rem;
+            padding-bottom: .572rem;
+            font-weight: bold;
+        }
+        .table th {
+            padding: 0.25rem;
+        }
+        .table td {
+            padding: 0.25rem;
+            vertical-align: middle;
+        }
+        .text-primary {color: #069 !important;}
+        @page {
+            {{#landscape}}size: landscape;{{/landscape}}
+            {{^landscape}}size: A4;{{/landscape}}
+            margin: auto;
+        }
+        @media print {
+            html, body {
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+
+            {{^landscape}}
+                width: 21cm;
+                height: 297mm;
+            {{/landscape}}
+            }
+
+            .pagebreak {
+                clear: both;
+                page-break-before: always;
+                break-after: all;
+            } /* page-break-after works, as well */
+
+            .chart-div {
+                break-inside: avoid;
+            }
+
+        {{#apply_table_colours}}
+            .table .table-primary,
+            .table .table-primary > th,
+            .table .table-primary > td {
+                background-color: #b8daff !important;
+            }
+
+            .table .table-primary th,
+            .table .table-primary td,
+            .table .table-primary thead th,
+            .table .table-primary tbody + tbody {
+                border-color: #7abaff !important;
+            }
+
+            .table .table-secondary,
+            .table .table-secondary > th,
+            .table .table-secondary > td {
+                background-color: #d6d8db !important;
+            }
+
+            .table .table-secondary th,
+            .table .table-secondary td,
+            .table .table-secondary thead th,
+            .table .table-secondary tbody + tbody {
+                border-color: #b3b7bb !important;
+            }
+
+            .table .table-success,
+            .table .table-success > th,
+            .table .table-success > td {
+                background-color: #c3e6cb !important;
+            }
+
+            .table .table-success th,
+            .table .table-success td,
+            .table .table-success thead th,
+            .table .table-success tbody + tbody {
+                border-color: #8fd19e !important;
+            }
+
+            .table .table-info,
+            .table .table-info > th,
+            .table .table-info > td {
+                background-color: #bee5eb !important;
+            }
+
+            .table .table-info th,
+            .table .table-info td,
+            .table .table-info thead th,
+            .table .table-info tbody + tbody {
+                border-color: #86cfda !important;
+            }
+
+            .table .table-warning,
+            .table .table-warning > th,
+            .table .table-warning > td {
+                background-color: #ffeeba !important;
+            }
+
+            .table .table-warning th,
+            .table .table-warning td,
+            .table .table-warning thead th,
+            .table .table-warning tbody + tbody {
+                border-color: #ffdf7e !important;
+            }
+
+            .table .table-danger,
+            .table .table-danger > th,
+            .table .table-danger > td {
+                background-color: #f5c6cb !important;
+            }
+
+            .table .table-danger th,
+            .table .table-danger td,
+            .table .table-danger thead th,
+            .table .table-danger tbody + tbody {
+                border-color: #ed969e !important;
+            }
+
+            .table .table-light,
+            .table .table-light > th,
+            .table .table-light > td {
+                background-color: #fdfdfe !important;
+            }
+
+            .table .table-light th,
+            .table .table-light td,
+            .table .table-light thead th,
+            .table .table-light tbody + tbody {
+                border-color: #fbfcfc !important;
+            }
+        {{/apply_table_colours}}
+        }
+    </style>
+</head>
+<body>
+
+{{#use_container}}
+    <div class="container">
+{{/use_container}}
+    {{#heading}}
+        <h1 style="text-align: center">{{heading}}</h1>
+    {{/heading}}
+
+    {{{page}}}
+{{#use_container}}
+    </div>
+{{/use_container}}
+
+<script type="text/javascript">
+    {{^manual_trigger}}
+        window.print();
+    {{/manual_trigger}}
+
+    window.onafterprint = function(){
+        window.close();
+    }
+</script>
+</body>
+</html>
