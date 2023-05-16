@@ -28,6 +28,8 @@
  * @author     Francois Marier <francois@catalyst.net.nz>
  */
 
+use mod_facetoface\enum\attendance_column;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
@@ -197,6 +199,12 @@ class mod_facetoface_mod_form extends moodleform_mod {
         $mform->setDefault('attendancesheetshowlogo', 1);
         $mform->addHelpButton('attendancesheetshowlogo', 'modform:showlogo', 'mod_facetoface');
 
+        $column_checkboxes = [];
+        foreach (self::attendance_sheet_column_options() as $key => $label) {
+            $column_checkboxes[] = $mform->createElement('checkbox', $key, $label);
+        }
+        $mform->addGroup($column_checkboxes, 'attendancesheetcolumns', 'Columns', html_writer::empty_tag('br'));
+
         $features = new stdClass;
         $features->groups = false;
         $features->groupings = false;
@@ -229,6 +237,14 @@ class mod_facetoface_mod_form extends moodleform_mod {
         } else {
             $defaultvalues['emailmanagercancellation'] = 1;
         }
+
+        if (empty($defaultvalues['attendancesheetcolumns'])) {
+            $defaultvalues['attendancesheetcolumns'] = [];
+
+        } else {
+            $keys = explode(',', $defaultvalues['attendancesheetcolumns']);
+            $defaultvalues['attendancesheetcolumns'] = array_fill_keys($keys, 1);
+        }
     }
 
     /**
@@ -258,5 +274,20 @@ class mod_facetoface_mod_form extends moodleform_mod {
      */
     public function completion_rule_enabled($data) {
         return !empty($data['completionpass']);
+    }
+
+    /**
+     * Get the list of attendance sheet column options.
+     *
+     * @return string[] List of options.
+     * @throws coding_exception
+     */
+    private static function attendance_sheet_column_options(): array {
+        $options = [];
+        foreach (attendance_column::options() as $key) {
+            $options[$key] = get_string("attendancecolumn:$key", 'mod_facetoface');
+        }
+
+        return $options;
     }
 }
