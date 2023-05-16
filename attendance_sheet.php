@@ -79,16 +79,15 @@ $data->custom_fields = [];
 $custom_fields = facetoface_get_session_customfields();
 $custom_field_data = facetoface_get_customfielddata($session->id);
 foreach ($custom_fields as $field) {
-    if (empty($custom_field_data[$field->shortname])) {
-        continue;
-    }
+    $field_data = $custom_field_data[$field->shortname]->data ?? null;
 
-    $field_data = $custom_field_data[$field->shortname]->data;
-    $formatted_data = format_string($field_data);
-
-    if ($field->type === CUSTOMFIELD_TYPE_MULTISELECT) {
-        $values = explode(CUSTOMFIELD_DELIMITER, $formatted_data);
-        $formatted_data = implode(', ', $values);
+    $formatted_data = '';
+    if ($field_data !== null) {
+        $formatted_data = format_string($field_data);
+        if ($field->type === CUSTOMFIELD_TYPE_MULTISELECT) {
+            $values = explode(CUSTOMFIELD_DELIMITER, $formatted_data);
+            $formatted_data = implode(', ', $values);
+        }
     }
 
     $data->custom_fields[] = (object)[
