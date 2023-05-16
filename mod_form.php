@@ -193,7 +193,7 @@ class mod_facetoface_mod_form extends moodleform_mod {
         // Attendance Sheet
         $mform->addElement('header', 'attendancesheetheader', get_string('attendancesheet:heading', 'facetoface'));
 
-        $mform->addElement('advcheckbox', 'attendancesheetshowlogo', get_string('modform:showlogo', 'mod_facetoface'));
+        $mform->addElement('selectyesno', 'attendancesheetshowlogo', get_string('modform:showlogo', 'mod_facetoface'));
         $mform->setDefault('attendancesheetshowlogo', 1);
         $mform->addHelpButton('attendancesheetshowlogo', 'modform:showlogo', 'mod_facetoface');
 
