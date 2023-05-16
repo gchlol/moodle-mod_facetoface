@@ -43,7 +43,7 @@ class backup_facetoface_activity_structure_step extends backup_activity_structur
             'cancellationsubject', 'cancellationinstrmngr', 'cancellationmessage', 'remindersubject', 'reminderinstrmngr',
             'remindermessage', 'reminderperiod', 'requestsubject', 'requestinstrmngr', 'requestmessage',
             'approvalreqd', 'allowcancellationsdefault', 'signuptype', 'multiplesignupmethod', 'completionattendance',
-            'attendancesheetshowlogo',
+            'attendancesheetshowlogo', 'attendancesheetcolumns',
         ]);
 
         $sessions = new backup_nested_element('sessions');
