@@ -781,3 +781,5 @@ $string['attendancesheet:heading'] = 'Attendance Sheet';
 $string['attendancesheet:logfacilitator'] = 'Facilitator';
 $string['attendancesheet:logsignature'] = 'Entered into LOL - sign';
 $string['attendancesheet:signature'] = 'Signature';
+$string['modform:showlogo'] = 'Show site logo';
+$string['modform:showlogo_help'] = 'Controls whether the site logo is included in the header of the attendance sheet';

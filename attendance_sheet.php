@@ -51,9 +51,11 @@ $data->course_name = $course->fullname;
 $data->instance_name = $instance->name;
 
 $data->logo_url = null;
-$logo_url = $OUTPUT->get_logo_url(null, 100);
-if ($logo_url) {
-    $data->logo_url = $logo_url->out(false);
+if ($instance->attendancesheetshowlogo) {
+    $logo_url = $OUTPUT->get_logo_url(null, 100);
+    if ($logo_url) {
+        $data->logo_url = $logo_url->out(false);
+    }
 }
 
 // Session Date
