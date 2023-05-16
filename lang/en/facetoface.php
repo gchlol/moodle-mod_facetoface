@@ -774,3 +774,10 @@ $string['facetoface:addmyattendees'] = 'Add my attendees to a Face-to-face sessi
 $string['facetoface:deletesessions'] = 'Delete Face-to-face sessions';
 $string['facetoface:editsessions'] = 'Add, edit and copy Face-to-face sessions';
 $string['facetoface:removemyattendees'] = 'Remove my attendees from a Face-to-face session';
+
+// Pages
+$string['attendees:print'] = 'Print';
+$string['attendancesheet:heading'] = 'Attendance Sheet';
+$string['attendancesheet:logfacilitator'] = 'Facilitator';
+$string['attendancesheet:logsignature'] = 'Entered into LOL - sign';
+$string['attendancesheet:signature'] = 'Signature';

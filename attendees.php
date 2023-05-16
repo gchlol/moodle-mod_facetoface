@@ -234,7 +234,23 @@ if ($canviewattendees || $cantakeattendance) {
     if ($takeattendance) {
         $heading = get_string('takeattendance', 'facetoface');
     } else {
-        $heading = get_string('attendees', 'facetoface');
+        $icon = $OUTPUT->pix_icon('t/print', '');
+        $text = get_string('attendees:print', 'facetoface');
+
+        $heading = html_writer::link(
+            new moodle_url(
+                '/mod/facetoface/attendance_sheet.php',
+                [ 'session' => $session->id ]
+            ),
+            "$icon $text",
+            [
+                'class' => 'btn btn-outline-primary float-right m-1',
+                'role' => 'button',
+                'target' => '_blank',
+            ]
+        );
+
+        $heading .= get_string('attendees', 'facetoface');
     }
 
     echo $OUTPUT->heading($heading);
