@@ -35,7 +35,11 @@
     }
 
     .attendees-table table {
-        table-layout: fixed;
+        word-wrap: break-word;
+    }
+
+    .attendees-table table .heading-signature {
+        width: 15%;
     }
 
     .signoff-table table {
@@ -97,25 +101,29 @@
     <table class="table table-bordered table-thick table-writable">
         <thead>
             <tr>
-                <th>{{#str}} username {{/str}}</th>
-                <th>{{#str}} name {{/str}}</th>
-                <th>{{#str}} position, tool_organisation {{/str}}</th>
-                <th>{{#str}} attendancesheet:signature, mod_facetoface {{/str}}</th>
+                {{#headings}}
+                    <th class="heading-{{key}}">
+                        {{label}}
+                    </th>
+                {{/headings}}
+
+                <th class="heading-signature">
+                    {{#str}} attendancesheet:signature, mod_facetoface {{/str}}
+                </th>
             </tr>
         </thead>
         <tbody>
             {{#attendees}}
                 <tr>
-                    <td>{{username}}</td>
-                    <td>{{name}}</td>
-                    <td>{{position}}</td>
-                    <td>{{status}}</td>
+                    {{#columns}}
+                        <td>{{.}}</td>
+                    {{/columns}}
                 </tr>
             {{/attendees}}
 
-            <tr><td></td><td></td><td></td><td></td></tr>
-            <tr><td></td><td></td><td></td><td></td></tr>
-            <tr><td></td><td></td><td></td><td></td></tr>
+            <tr>{{#headings}}<td></td>{{/headings}}<td></td></tr>
+            <tr>{{#headings}}<td></td>{{/headings}}<td></td></tr>
+            <tr>{{#headings}}<td></td>{{/headings}}<td></td></tr>
         </tbody>
     </table>
 </div>

@@ -29,6 +29,7 @@
  */
 
 use mod_facetoface\enum\attendance_column;
+use mod_facetoface\util\enum_util;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -200,7 +201,8 @@ class mod_facetoface_mod_form extends moodleform_mod {
         $mform->addHelpButton('attendancesheetshowlogo', 'modform:showlogo', 'mod_facetoface');
 
         $column_checkboxes = [];
-        foreach (self::attendance_sheet_column_options() as $key => $label) {
+        $column_options = enum_util::menu_options(attendance_column::class);
+        foreach ($column_options as $key => $label) {
             $column_checkboxes[] = $mform->createElement('checkbox', $key, $label);
         }
         $mform->addGroup($column_checkboxes, 'attendancesheetcolumns', 'Columns', html_writer::empty_tag('br'));
@@ -238,7 +240,10 @@ class mod_facetoface_mod_form extends moodleform_mod {
             $defaultvalues['emailmanagercancellation'] = 1;
         }
 
-        if (empty($defaultvalues['attendancesheetcolumns'])) {
+        if (
+            !isset($defaultvalues['attendancesheetcolumns']) ||
+            $defaultvalues['attendancesheetcolumns'] === ''
+        ) {
             $defaultvalues['attendancesheetcolumns'] = [];
 
         } else {
@@ -274,20 +279,5 @@ class mod_facetoface_mod_form extends moodleform_mod {
      */
     public function completion_rule_enabled($data) {
         return !empty($data['completionpass']);
-    }
-
-    /**
-     * Get the list of attendance sheet column options.
-     *
-     * @return string[] List of options.
-     * @throws coding_exception
-     */
-    private static function attendance_sheet_column_options(): array {
-        $options = [];
-        foreach (attendance_column::options() as $key) {
-            $options[$key] = get_string("attendancecolumn:$key", 'mod_facetoface');
-        }
-
-        return $options;
     }
 }
