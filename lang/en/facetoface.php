@@ -774,3 +774,21 @@ $string['facetoface:addmyattendees'] = 'Add my attendees to a Face-to-face sessi
 $string['facetoface:deletesessions'] = 'Delete Face-to-face sessions';
 $string['facetoface:editsessions'] = 'Add, edit and copy Face-to-face sessions';
 $string['facetoface:removemyattendees'] = 'Remove my attendees from a Face-to-face session';
+
+// Pages
+$string['attendees:print'] = 'Print';
+$string['attendancesheet:heading'] = 'Attendance Sheet';
+$string['attendancesheet:logfacilitator'] = 'Facilitator';
+$string['attendancesheet:logsignature'] = 'Entered into LOL - sign';
+$string['attendancesheet:signature'] = 'Signature';
+$string['modform:showlogo'] = 'Show site logo';
+$string['modform:showlogo_help'] = 'Controls whether the site logo is included in the header of the attendance sheet';
+
+// Enum
+$string['attendancecolumn:0'] = 'Name';
+$string['attendancecolumn:1'] = 'Payroll';
+$string['attendancecolumn:2'] = 'Email';
+$string['attendancecolumn:3'] = 'Org Unit';
+$string['attendancecolumn:4'] = 'Position';
+$string['attendancecolumn:5'] = 'Stream';
+$string['attendancecolumn:6'] = 'Paypoint';

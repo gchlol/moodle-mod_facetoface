@@ -28,6 +28,9 @@
  * @author     Francois Marier <francois@catalyst.net.nz>
  */
 
+use mod_facetoface\enum\attendance_column;
+use mod_facetoface\util\enum_util;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
@@ -190,6 +193,20 @@ class mod_facetoface_mod_form extends moodleform_mod {
         $mform->disabledIf('cancellationinstrmngr', 'emailmanagercancellation');
         $mform->setDefault('cancellationinstrmngr', get_string('setting:defaultcancellationinstrmngrdefault', 'facetoface'));
 
+        // Attendance Sheet
+        $mform->addElement('header', 'attendancesheetheader', get_string('attendancesheet:heading', 'facetoface'));
+
+        $mform->addElement('selectyesno', 'attendancesheetshowlogo', get_string('modform:showlogo', 'mod_facetoface'));
+        $mform->setDefault('attendancesheetshowlogo', 1);
+        $mform->addHelpButton('attendancesheetshowlogo', 'modform:showlogo', 'mod_facetoface');
+
+        $column_checkboxes = [];
+        $column_options = enum_util::menu_options(attendance_column::class);
+        foreach ($column_options as $key => $label) {
+            $column_checkboxes[] = $mform->createElement('checkbox', $key, $label);
+        }
+        $mform->addGroup($column_checkboxes, 'attendancesheetcolumns', 'Columns', html_writer::empty_tag('br'));
+
         $features = new stdClass;
         $features->groups = false;
         $features->groupings = false;
@@ -221,6 +238,17 @@ class mod_facetoface_mod_form extends moodleform_mod {
             $defaultvalues['cancellationinstrmngr'] = null;
         } else {
             $defaultvalues['emailmanagercancellation'] = 1;
+        }
+
+        if (
+            !isset($defaultvalues['attendancesheetcolumns']) ||
+            $defaultvalues['attendancesheetcolumns'] === ''
+        ) {
+            $defaultvalues['attendancesheetcolumns'] = [];
+
+        } else {
+            $keys = explode(',', $defaultvalues['attendancesheetcolumns']);
+            $defaultvalues['attendancesheetcolumns'] = array_fill_keys($keys, 1);
         }
     }
 

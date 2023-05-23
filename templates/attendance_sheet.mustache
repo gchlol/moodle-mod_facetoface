@@ -1,0 +1,152 @@
+<style>
+    .sheet-section {
+        margin-bottom: 2rem;
+    }
+
+    table.table {
+        margin-bottom: 0;
+    }
+
+    .table.table-thick th,
+    .table.table-thick td {
+        border: 2px solid black !important;
+    }
+
+    .table.table-writable thead tr {
+        height: 35px;
+    }
+
+    .table.table-writable tbody tr {
+        height: 50px;
+    }
+
+    .table.table-writable th,
+    .table.table-writable td {
+        vertical-align: top;
+    }
+
+    .details-table table {
+        align-self: flex-start;
+    }
+
+    .details-table table td,
+    .details-table table th {
+        border-top: 1px solid #9f9f9f;
+    }
+
+    .attendees-table table {
+        word-wrap: break-word;
+    }
+
+    .attendees-table table .heading-signature {
+        width: 15%;
+    }
+
+    .signoff-table {
+        break-inside: avoid-page;
+    }
+
+    .signoff-table table {
+        table-layout: fixed;
+        width: 60%;
+    }
+</style>
+
+<div class="sheet-section d-flex">
+    <h1 class="flex-grow-1 align-self-center">
+        {{#str}} attendancesheet:heading, mod_facetoface {{/str}}
+    </h1>
+
+    {{#logo_url}}
+        <img src="{{logo_url}}" alt="Site Logo" />
+    {{/logo_url}}
+</div>
+
+<div class="details-table sheet-section d-flex">
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>{{course_name}}</th>
+            </tr>
+            <tr>
+                <th>{{instance_name}}</th>
+            </tr>
+
+            {{#session_date}}
+                <tr>
+                    <th>{{{session_date}}}</th>
+                </tr>
+            {{/session_date}}
+        </tbody>
+    </table>
+
+    <table class="table">
+        <tbody>
+            {{#custom_fields}}
+                <tr>
+                    <th>{{name}}</th>
+                    <td>{{value}}</td>
+                </tr>
+            {{/custom_fields}}
+
+            {{#trainers}}
+                <tr>
+                    <th>{{role}}</th>
+                    <td>{{names}}</td>
+                </tr>
+            {{/trainers}}
+        </tbody>
+    </table>
+</div>
+
+<div class="attendees-table sheet-section">
+    <h2>{{#str}} attendees, mod_facetoface {{/str}}</h2>
+
+    <table class="table table-bordered table-thick table-writable">
+        <thead>
+            <tr>
+                {{#headings}}
+                    <th class="heading-{{key}}">
+                        {{label}}
+                    </th>
+                {{/headings}}
+
+                <th class="heading-signature">
+                    {{#str}} attendancesheet:signature, mod_facetoface {{/str}}
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#attendees}}
+                <tr>
+                    {{#columns}}
+                        <td>{{.}}</td>
+                    {{/columns}}
+                </tr>
+            {{/attendees}}
+
+            <tr>{{#headings}}<td></td>{{/headings}}<td></td></tr>
+            <tr>{{#headings}}<td></td>{{/headings}}<td></td></tr>
+            <tr>{{#headings}}<td></td>{{/headings}}<td></td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="signoff-table sheet-section d-flex justify-content-end">
+    <table class="table table-bordered table-thick table-writable">
+        <tbody>
+            <tr>
+                <th>{{#str}} attendancesheet:logsignature, mod_facetoface {{/str}}</th>
+                <td></td>
+            </tr>
+            <tr>
+                <th>{{#str}} attendancesheet:logfacilitator, mod_facetoface {{/str}}</th>
+                <td></td>
+            </tr>
+            <tr>
+                <th>{{#str}} date {{/str}}</th>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
