@@ -2783,11 +2783,18 @@ function facetoface_format_session_times($start, $end, $tz) {
     $formattedsession->enddate = userdate($end, $date_format, $targettz);
     $formattedsession->enddatetime = userdate($end, get_string('strftimedatetime', 'langconfig'), $targettz);
     $formattedsession->endtime = userdate($end, $time_format, $targettz);
-    if (empty($displaytimezones)) {
-        $formattedsession->timezone = '';
-    } else {
+
+    $formattedsession->timezone = '';
+    if (!empty($displaytimezones)) {
         $formattedsession->timezone = core_date::get_localised_timezone($targettz);
     }
+
+    $sessiondatelangkey = !empty($formattedsession->timezone) ? 'sessionstartdateandtime' : 'sessionstartdateandtimewithouttimezone';
+    if ($formattedsession->startdate != $formattedsession->enddate) {
+        $sessiondatelangkey = !empty($formattedsession->timezone) ? 'sessionstartfinishdateandtime' : 'sessionstartfinishdateandtimewithouttimezone';
+    }
+    $formattedsession->datetime = get_string($sessiondatelangkey, 'facetoface', $formattedsession);
+
     return $formattedsession;
 }
 
