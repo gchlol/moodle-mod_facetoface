@@ -775,6 +775,10 @@ $string['facetoface:deletesessions'] = 'Delete Face-to-face sessions';
 $string['facetoface:editsessions'] = 'Add, edit and copy Face-to-face sessions';
 $string['facetoface:removemyattendees'] = 'Remove my attendees from a Face-to-face session';
 
+// Core
+$string['session:strftimedate'] = '';
+$string['session:strftimetime'] = '';
+
 // Pages
 $string['attendees:print'] = 'Print';
 $string['attendancesheet:heading'] = 'Attendance Sheet';
