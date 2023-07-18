@@ -2523,7 +2523,6 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
  * @return object Formatted date, start time, end time and timezone info
  */
 function facetoface_format_session_times($start, $end, $tz) {
-
     $displaytimezones = get_config(null, 'facetoface_displaysessiontimezones');
 
     $formattedsession = new stdClass();
@@ -2533,15 +2532,32 @@ function facetoface_format_session_times($start, $end, $tz) {
         $targettz = core_date::get_user_timezone($tz);
     }
 
-    $formattedsession->startdate = userdate($start, get_string('strftimedate', 'langconfig'), $targettz);
-    $formattedsession->starttime = userdate($start, get_string('strftimetime', 'langconfig'), $targettz);
-    $formattedsession->enddate = userdate($end, get_string('strftimedate', 'langconfig'), $targettz);
-    $formattedsession->endtime = userdate($end, get_string('strftimetime', 'langconfig'), $targettz);
-    if (empty($displaytimezones)) {
-        $formattedsession->timezone = '';
-    } else {
+    $date_format = get_string('session:strftimedate', 'facetoface');
+    if (empty($date_format)) {
+        $date_format = get_string('strftimedate', 'langconfig');
+    }
+
+    $time_format = get_string('session:strftimetime', 'facetoface');
+    if (empty($time_format)) {
+        $time_format = get_string('strftimetime', 'langconfig');
+    }
+
+    $formattedsession->startdate = userdate($start, $date_format, $targettz);
+    $formattedsession->starttime = userdate($start, $time_format, $targettz);
+    $formattedsession->enddate = userdate($end, $date_format, $targettz);
+    $formattedsession->endtime = userdate($end, $time_format, $targettz);
+
+    $formattedsession->timezone = '';
+    if (!empty($displaytimezones)) {
         $formattedsession->timezone = core_date::get_localised_timezone($targettz);
     }
+
+    $sessiondatelangkey = !empty($formattedsession->timezone) ? 'sessionstartdateandtime' : 'sessionstartdateandtimewithouttimezone';
+    if ($formattedsession->startdate != $formattedsession->enddate) {
+        $sessiondatelangkey = !empty($formattedsession->timezone) ? 'sessionstartfinishdateandtime' : 'sessionstartfinishdateandtimewithouttimezone';
+    }
+    $formattedsession->datetime = get_string($sessiondatelangkey, 'facetoface', $formattedsession);
+
     return $formattedsession;
 }
 
@@ -2609,13 +2625,7 @@ function facetoface_cm_info_view(cm_info $coursemodule) {
                             $sessiondates .= html_writer::empty_tag('br');
                         }
                         $sessionobj = facetoface_format_session_times($date->timestart, $date->timefinish, null);
-                        if ($sessionobj->startdate == $sessionobj->enddate) {
-                            $sessiondatelangkey = !empty($sessionobj->timezone) ? 'sessionstartdateandtime' : 'sessionstartdateandtimewithouttimezone';
-                            $sessiondates .= get_string($sessiondatelangkey, 'facetoface', $sessionobj);
-                        } else {
-                            $sessiondatelangkey = !empty($sessionobj->timezone) ? 'sessionstartfinishdateandtime' : 'sessionstartfinishdateandtimewithouttimezone';
-                            $sessiondates .= get_string($sessiondatelangkey, 'facetoface', $sessionobj);
-                        }
+                        $sessiondates .= $sessionobj->datetime;
                     }
                 } else {
                     $sessiondates = get_string('wait-listed', 'facetoface');
@@ -2682,13 +2692,8 @@ function facetoface_cm_info_view(cm_info $coursemodule) {
                         $sessiondate = get_string('unknowndate', 'facetoface');
                     } else {
                         $sessionobj = facetoface_format_session_times($session->sessiondates[0]->timestart, $session->sessiondates[0]->timefinish, null);
-                        if ($sessionobj->startdate == $sessionobj->enddate) {
-                            $sessiondatelangkey = !empty($sessionobj->timezone) ? 'sessionstartdateandtime' : 'sessionstartdateandtimewithouttimezone';
-                            $sessiondate = get_string($sessiondatelangkey, 'facetoface', $sessionobj);
-                        } else {
-                            $sessiondatelangkey = !empty($sessionobj->timezone) ? 'sessionstartfinishdateandtime' : 'sessionstartfinishdateandtimewithouttimezone';
-                            $sessiondate .= get_string($sessiondatelangkey, 'facetoface', $sessionobj);
-                        }
+                        $sessiondate .= $sessionobj->datetime;
+
                         if (count($session->sessiondates) > 1) {
                             $multidate = html_writer::empty_tag('br') . get_string('multidate', 'facetoface');
                         }
@@ -3473,9 +3478,9 @@ function facetoface_print_session($session, $showcapacity, $calendaroutput=false
             if (!empty($html)) {
                 $html .= html_writer::empty_tag('br');
             }
-            $timestart = userdate($date->timestart, get_string('strftimedatetime'));
-            $timefinish = userdate($date->timefinish, get_string('strftimedatetime'));
-            $html .= "$timestart &ndash; $timefinish";
+
+            $sessionobj = facetoface_format_session_times($date->timestart, $date->timefinish, null);
+            $html .= $sessionobj->datetime;
         }
         $table->data[] = array($strdatetime, $html);
     } else {

@@ -34,7 +34,7 @@ class mod_facetoface_renderer extends plugin_renderer_base {
 
     /**
      * Builds session list table given an array of sessions
-     * 
+     *
      * GCHLOL - MF - Added $deletesessions to parameters
      */
     public function print_session_list_table($customfields, $sessions, $viewattendees, $editsessions, $deletesessions = false) {
@@ -94,15 +94,17 @@ class mod_facetoface_renderer extends plugin_renderer_base {
             $allsessiontimes = '';
             if ($session->datetimeknown) {
                 foreach ($session->sessiondates as $date) {
+                    $sessionobj = facetoface_format_session_times($date->timestart, $date->timefinish, null);
+
                     if (!empty($allsessiondates)) {
                         $allsessiondates .= html_writer::empty_tag('br');
                     }
-                    $allsessiondates .= userdate($date->timestart, get_string('strftimedate'));
+                    $allsessiondates .= $sessionobj->startdate;
+
                     if (!empty($allsessiontimes)) {
                         $allsessiontimes .= html_writer::empty_tag('br');
                     }
-                    $allsessiontimes .= userdate($date->timestart, get_string('strftimetime')).
-                        ' - '.userdate($date->timefinish, get_string('strftimetime'));
+                    $allsessiontimes .= "$sessionobj->starttime - $sessionobj->endtime";
                 }
             } else {
                 $allsessiondates = get_string('wait-listed', 'facetoface');

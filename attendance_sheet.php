@@ -72,13 +72,7 @@ if ($session->datetimeknown) {
     $session_dates = [];
     foreach ($session->sessiondates as $date) {
         $date_data = facetoface_format_session_times($date->timestart, $date->timefinish, null);
-
-        $session_lang_key = !empty($sessionobj->timezone) ? 'sessionstartdateandtime' : 'sessionstartdateandtimewithouttimezone';
-        if ($date_data->startdate !== $date_data->enddate) {
-            $session_lang_key = !empty($sessionobj->timezone) ? 'sessionstartfinishdateandtime' : 'sessionstartfinishdateandtimewithouttimezone';
-        }
-
-        $session_dates[] = get_string($session_lang_key, 'facetoface', $date_data);
+        $session_dates[] = $date_data->datetime;
     }
 
     $data->session_date = implode(html_writer::empty_tag('br'), $session_dates);
