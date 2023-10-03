@@ -36,3 +36,7 @@ $plugin->requires  = 2022031500;  // Requires 4.0.
 $plugin->component = 'mod_facetoface';
 $plugin->maturity  = MATURITY_STABLE;
 $plugin->supported = [400, 402];
+
+$plugin->dependencies = [
+    'tool_organisation' => 2023092800,
+];

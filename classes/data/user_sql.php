@@ -5,6 +5,7 @@ namespace mod_facetoface\data;
 use core\dml\sql_join;
 use dml_exception;
 use tool_organisation\api;
+use tool_organisation\enum\role_permission;
 
 class user_sql {
 
@@ -47,7 +48,14 @@ class user_sql {
             'joins' => $join,
             'where' => $where,
             'params' => $params,
-        ] = api::get_myusers_sql($user_id, true);
+        ] = api::get_myusers_sql(
+            $user_id,
+            true,
+            [
+                role_permission::MANAGER,
+                role_permission::MANAGE_USERS,
+            ]
+        );
 
         // Replace the first full join with a left join to prevent restricting results.
         $join = substr_replace($join, 'left join', 0, 4);
