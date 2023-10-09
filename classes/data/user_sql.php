@@ -5,7 +5,7 @@ namespace mod_facetoface\data;
 use core\dml\sql_join;
 use dml_exception;
 use tool_organisation\api;
-use tool_organisation\enum\role_permission;
+use tool_organisation\local\type\role_permission;
 
 class user_sql {
 
