@@ -1,4 +1,0 @@
-# Default owner for everything in the repository.
-# Unless a later match takes precedence, the user/s below will be requested for pull request review.
-# For more details see https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners.
-*       @matthewfein
