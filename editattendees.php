@@ -71,8 +71,8 @@ $strfacetoface = get_string('modulename', 'facetoface');
 $errors = array();
 
 // Get the user_selector we will need.
-$potentialuserselector = new facetoface_candidate_selector('addselect', array('sessionid' => $session->id, 'courseid' => $course->id));
-$existinguserselector = new facetoface_existing_selector('removeselect', array('sessionid' => $session->id));
+$potentialuserselector = new facetoface_candidate_selector('addselect', array('sessionid' => $session->id, 'courseid' => $course->id, 'accesscontext' => $context));
+$existinguserselector = new facetoface_existing_selector('removeselect', array('sessionid' => $session->id, 'accesscontext' => $context));
 
 // Process incoming user assignments.
 if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
