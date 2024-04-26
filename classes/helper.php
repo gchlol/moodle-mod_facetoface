@@ -16,6 +16,11 @@
 
 namespace mod_facetoface;
 
+use context_user;
+use file_storage;
+use stored_file;
+use moodle_exception;
+
 /**
  * Helper functions for plugin.
  *
@@ -42,5 +47,22 @@ class helper {
 
         // Approvals must be enabled at site level and activity level.
         return get_config('facetoface', 'enableapprovals') && $instance->approvalreqd;
+    }
+
+    /**
+     * Returns file from file system. File must exist.
+     * @param int $fileitemid Item id of file stored in the current $USER's draft file area
+     * @return stored_file
+     */
+    public static function get_file(int $fileitemid): stored_file {
+        global $USER;
+        $fs = new file_storage();
+        $files = $fs->get_area_files(context_user::instance($USER->id)->id, 'user', 'draft', $fileitemid, 'itemid', false);
+
+        if (count($files) != 1) {
+            throw new moodle_exception('error:cannotloadfile', 'mod_facetoface');
+        }
+
+        return current($files);
     }
 }
