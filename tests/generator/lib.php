@@ -23,8 +23,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 class mod_facetoface_generator extends testing_module_generator {
 
     /**
@@ -76,7 +74,7 @@ class mod_facetoface_generator extends testing_module_generator {
     public function create_session($record): stdClass {
         global $DB, $CFG;
         require_once("$CFG->dirroot/mod/facetoface/lib.php");
-        $record = (object)(array)$record;
+        $record = (object) (array) $record;
 
         if (empty($record->facetoface)) {
             throw new coding_exception('Session generator requires $record->facetoface');
@@ -87,16 +85,16 @@ class mod_facetoface_generator extends testing_module_generator {
             $sessiondate = new stdClass();
             $sessiondate->timestart = $time;
             $sessiondate->timefinish = $time + (DAYSECS * 2);
-            $sessiondates = array($sessiondate);
+            $sessiondates = [$sessiondate];
         } else {
             $sessiondates = array_map(function ($date): stdClass {
                 if (is_number($date)) {
                     $sessiondate = new stdClass();
-                    $sessiondate->timestart = (int)$date;
-                    $sessiondate->timefinish = (int)$date + (DAYSECS * 2);
+                    $sessiondate->timestart = (int) $date;
+                    $sessiondate->timefinish = (int) $date + (DAYSECS * 2);
                     return $sessiondate;
                 } else {
-                    return (object)(array)$date;
+                    return (object) (array) $date;
                 }
             }, $record->sessiondates);
             unset($record->sessiondates);

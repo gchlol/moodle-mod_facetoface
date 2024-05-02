@@ -43,7 +43,7 @@ $settings->add(new admin_setting_configtext(
 ));
 
 // Load roles.
-$choices = array();
+$choices = [];
 if ($roles = role_fix_names(get_all_roles(), context_system::instance())) {
     foreach ($roles as $role) {
         $choices[$role->id] = format_string($role->localname);
@@ -54,7 +54,7 @@ $settings->add(new admin_setting_configmultiselect(
     'facetoface/session_roles',
     get_string('setting:sessionroles_caption', 'facetoface'),
     get_string('setting:sessionroles', 'facetoface'),
-    array(),
+    [],
     $choices
 ));
 
@@ -138,11 +138,15 @@ $settings->add(new admin_setting_configcheckbox(
 
 // List of user profile fields to optionally be included in attendees export.
 
-$settings->add(new admin_setting_heading('facetoface_attendeesexporttofile_header', get_string('attendeesexporttofileheading', 'facetoface'), ''));
+$settings->add(new admin_setting_heading(
+    'facetoface_attendeesexporttofile_header',
+    get_string('attendeesexporttofileheading', 'facetoface'),
+    ''
+));
 
 // Load profile fields.
 // Basic fields.
-$choices = array(
+$choices = [
     'middlename'  => new lang_string('middlename'),
     'alternatename' => new lang_string('alternatename'),
     'username'    => new lang_string('username'),
@@ -157,26 +161,27 @@ $choices = array(
     'lang'        => new lang_string('language'),
     'firstnamephonetic' => new lang_string('firstnamephonetic'),
     'lastnamephonetic'  => new lang_string('lastnamephonetic'),
-);
+];
 
 // Custom profile fields.
 $profilefields = profile_get_custom_fields();
 foreach ($profilefields as $field) {
-    $choices['profile_field_' . $field->shortname] = format_string($field->name) . ' (' . get_string('customfield', 'customfield'). ')';
+    $choices['profile_field_' . $field->shortname] = format_string($field->name)
+        . ' (' . get_string('customfield', 'customfield'). ')';
 }
 
 $settings->add(new admin_setting_configmultiselect(
     'facetoface_attendeesexportfields',
     new lang_string('setting:attendeesexportfields_caption', 'facetoface'),
     new lang_string('setting:attendeesexportfields', 'facetoface'),
-    array(),
+    [],
     $choices
 ));
 
 // List of existing custom fields.
 $html  = facetoface_list_of_customfields();
 $html .= html_writer::start_tag('p');
-$url   = new moodle_url('/mod/facetoface/customfield.php', array('id' => 0));
+$url   = new moodle_url('/mod/facetoface/customfield.php', ['id' => 0]);
 $html .= html_writer::link($url, get_string('addnewfieldlink', 'facetoface'));
 $html .= html_writer::end_tag('p');
 
@@ -185,7 +190,7 @@ $settings->add(new admin_setting_heading('facetoface/customfields_header', get_s
 // List of existing site notices.
 $html  = facetoface_list_of_sitenotices();
 $html .= html_writer::start_tag('p');
-$url  = new moodle_url('/mod/facetoface/sitenotice.php', array('id' => 0));
+$url  = new moodle_url('/mod/facetoface/sitenotice.php', ['id' => 0]);
 $html .= html_writer::link($url, get_string('addnewnoticelink', 'facetoface'));
 $html .= html_writer::end_tag('p');
 

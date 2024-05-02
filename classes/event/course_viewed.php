@@ -27,8 +27,6 @@
 
 namespace mod_facetoface\event;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * The mod_facetoface course viewed event class.
  *
@@ -75,7 +73,7 @@ class course_viewed extends \core\event\course_viewed {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/mod/facetoface/index.php', array('id' => $this->courseid));
+        return new \moodle_url('/mod/facetoface/index.php', ['id' => $this->courseid]);
     }
 
     /**

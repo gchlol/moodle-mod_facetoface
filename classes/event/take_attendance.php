@@ -27,8 +27,6 @@
 
 namespace mod_facetoface\event;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * The mod_facetoface take attendance event class.
  *
@@ -57,8 +55,9 @@ class take_attendance extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "The user with id '$this->userid' has taken the attendance for session with id '$this->objectid' in the facetoface instance " .
-            "with the course module id '$this->contextinstanceid'.";
+        return "The user with id '$this->userid' has taken the attendance "
+            . "for session with id '$this->objectid' in the facetoface instance "
+            . "with the course module id '$this->contextinstanceid'.";
     }
 
     /**
@@ -76,7 +75,7 @@ class take_attendance extends \core\event\base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/mod/facetoface/attendees.php', array('s' => $this->objectid, 'takeattendance' => 1));
+        return new \moodle_url('/mod/facetoface/attendees.php', ['s' => $this->objectid, 'takeattendance' => 1]);
     }
 
     /**

@@ -26,7 +26,7 @@ use lang_string;
  * @author     Kevin Pham <kevinpham@catalyst-au.net>
  * @copyright  Catalyst IT, 2024
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers \mod_facetoface\upload
+ * @covers \mod_facetoface\booking_manager
  */
 class upload_test extends \advanced_testcase {
 
@@ -101,7 +101,7 @@ class upload_test extends \advanced_testcase {
         $expectederr = new lang_string(
             'error:sessionoverbooked',
             'mod_facetoface',
-            (object) ['session' => $nooverbooksession->id, 'amount' => 1],
+            (object) ['session' => $nooverbooksession->id, 'amount' => 1]
         );
         $this->assertCount(1, $errors);
         $this->assertEquals($expectederr, $errors[0][1]);
@@ -197,45 +197,45 @@ class upload_test extends \advanced_testcase {
             $this->check_row_validation_error_exists(
                 $errors,
                 1,
-                new lang_string('error:userdoesnotexist', 'mod_facetoface', $records[0]->email),
+                new lang_string('error:userdoesnotexist', 'mod_facetoface', $records[0]->email)
             ),
-            'Expecting user to not exist.',
+            'Expecting user to not exist.'
         );
 
         $this->assertTrue(
             $this->check_row_validation_error_exists(
                 $errors,
                 2,
-                new lang_string('error:userisnotenrolledintocourse', 'mod_facetoface', $user->email),
+                new lang_string('error:userisnotenrolledintocourse', 'mod_facetoface', $user->email)
             ),
-            'Expected error for user not enrolled in a course.',
+            'Expected error for user not enrolled in a course.'
         );
 
         $this->assertFalse(
             $this->check_row_validation_error_exists(
                 $errors,
                 3,
-                '',
+                ''
             ),
-            'Expecting no specific errors for this user.',
+            'Expecting no specific errors for this user.'
         );
 
         $this->assertTrue(
             $this->check_row_validation_error_exists(
                 $errors,
                 4,
-                new lang_string('error:invalidnotificationtypespecified', 'mod_facetoface', $records[3]->notificationtype),
+                new lang_string('error:invalidnotificationtypespecified', 'mod_facetoface', $records[3]->notificationtype)
             ),
-            'Expecting notification type error, as an invalid type was provided.',
+            'Expecting notification type error, as an invalid type was provided.'
         );
 
         $this->assertTrue(
             $this->check_row_validation_error_exists(
                 $errors,
                 4,
-                new lang_string('error:invalidstatusspecified', 'mod_facetoface', $records[3]->status),
+                new lang_string('error:invalidstatusspecified', 'mod_facetoface', $records[3]->status)
             ),
-            'Expecting status error, since the status should be either booked or cancelled.',
+            'Expecting status error, since the status should be either booked or cancelled.'
         );
     }
 

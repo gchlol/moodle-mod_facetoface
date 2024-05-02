@@ -19,8 +19,8 @@ namespace mod_facetoface;
 /**
  * Helper class to get info about facetoface sessions.
  *
- * It's not a ORM/persistent object for a session as it should be due to the age of the plugin, and the effort to retrofit sessions data
- * into a class.
+ * It's not a ORM/persistent object for a session as it should be due to the
+ * age of the plugin, and the effort to retrofit sessions data into a class.
  *
  * @package    mod_facetoface
  * @author     Andrew Madden <andrewmadden@catalyst-au.net>

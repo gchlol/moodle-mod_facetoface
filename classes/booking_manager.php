@@ -188,7 +188,8 @@ class booking_manager {
                 // Set the session capacity if it hasn't been set yet.
                 if ($session->allowoverbook == 0 && !isset($sessioncapacitycache[$session->id])) {
                     // Total minus current capacity.
-                    $sessioncapacitycache[$session->id]['capacity'] = $session->capacity - facetoface_get_num_attendees($session->id, MDL_F2F_STATUS_APPROVED);
+                    $sessioncapacitycache[$session->id]['capacity'] =
+                        $session->capacity - facetoface_get_num_attendees($session->id, MDL_F2F_STATUS_APPROVED);
                 }
 
                 // If the status is not cancelled, then it's considered a booking and it should deduct from the session.
@@ -206,7 +207,10 @@ class booking_manager {
 
             // Check to ensure valid notification types are used if set.
             if (isset($entry->notificationtype)
-                && !in_array($this->transform_notification_type($entry->notificationtype), [MDL_F2F_BOTH, MDL_F2F_TEXT, MDL_F2F_ICAL])) {
+                && !in_array(
+                    $this->transform_notification_type($entry->notificationtype),
+                    [MDL_F2F_BOTH, MDL_F2F_TEXT, MDL_F2F_ICAL]
+                )) {
                 $errors[] = [
                     $row,
                     new lang_string('error:invalidnotificationtypespecified', 'mod_facetoface', $entry->notificationtype),
@@ -233,7 +237,7 @@ class booking_manager {
                     new lang_string(
                         'error:sessionoverbooked',
                         'mod_facetoface',
-                        (object) ['session' => $sessionid, 'amount' => -$details['capacity']],
+                        (object) ['session' => $sessionid, 'amount' => -$details['capacity']]
                     ),
                 ];
             }
@@ -275,7 +279,6 @@ class booking_manager {
 
         // Records should be valid at this point.
         foreach ($this->get_iterator() as $entry) {
-
             $user = $DB->get_record('user', ['email' => $entry->email]);
             $session = facetoface_get_session($entry->session);
 
@@ -303,12 +306,11 @@ class booking_manager {
                     $this->transform_notification_type($entry->notificationtype),
                     $statuscode,
                     $user->id,
-                    true,
+                    true
                 );
             }
         }
 
         return true;
     }
-
 }

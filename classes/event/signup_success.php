@@ -27,8 +27,6 @@
 
 namespace mod_facetoface\event;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * The mod_facetoface signup event class.
  *
@@ -76,7 +74,7 @@ class signup_success extends \core\event\base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/mod/facetoface/signup.php', array('s' => $this->objectid));
+        return new \moodle_url('/mod/facetoface/signup.php', ['s' => $this->objectid]);
     }
 
     /**

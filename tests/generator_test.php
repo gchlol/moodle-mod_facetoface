@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
-namespace mod_facetoface\completion;
+namespace mod_facetoface;
 
 /**
  * Test for attendance completion in facetoface.
@@ -25,6 +25,7 @@ namespace mod_facetoface\completion;
  * @covers \mod_facetoface_generator
  */
 class generator_test extends \advanced_testcase {
+
     public function setUp(): void {
         $this->resetAfterTest();
     }
@@ -76,9 +77,9 @@ class generator_test extends \advanced_testcase {
             'signuptype' => '0',
             'multiplesignupmethod' => '0',
             'completionattendance' => '0',
-            'cmid' => (int)$cm->id,
+            'cmid' => (int) $cm->id,
         ];
-        $this->assertSame($expected, (array)$facetoface);
+        $this->assertSame($expected, (array) $facetoface);
     }
 
     public function test_create_session() {
@@ -123,8 +124,8 @@ class generator_test extends \advanced_testcase {
             'discountcost' => '11',
             'allowcancellations' => '0',
             'sessiondates' => [
-                ['timestart' => $now - 3 * DAYSECS, 'timefinish' => $now - 2 * DAYSECS]
-            ]
+                ['timestart' => $now - 3 * DAYSECS, 'timefinish' => $now - 2 * DAYSECS],
+            ],
         ]);
         $this->assertInstanceOf(\stdClass::class, $session2);
         $this->assertSame($facetoface->id, $session2->facetoface);
