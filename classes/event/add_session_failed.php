@@ -27,8 +27,6 @@
 
 namespace mod_facetoface\event;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * The mod_facetoface add session failed event class.
  *
@@ -76,7 +74,7 @@ class add_session_failed extends \core\event\base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/mod/facetoface/sessions.php', array('f' => $this->objectid));
+        return new \moodle_url('/mod/facetoface/sessions.php', ['f' => $this->objectid]);
     }
 
     /**

@@ -50,9 +50,9 @@ class mod_facetoface_cancelsignup_form extends moodleform {
         $mform->addElement('text', 'cancelreason', get_string('cancelreason', 'facetoface'), 'size="60" maxlength="255"');
         $mform->setType('cancelreason', PARAM_TEXT);
 
-        $buttonarray = array();
+        $buttonarray = [];
         $buttonarray[] =& $mform->createElement('submit', 'submitbutton', get_string('yes'));
         $buttonarray[] =& $mform->createElement('cancel', 'cancelbutton', get_string('no'));
-        $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
+        $mform->addGroup($buttonarray, 'buttonar', '', [' '], false);
     }
 }

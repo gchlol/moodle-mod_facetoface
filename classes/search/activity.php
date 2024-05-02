@@ -24,8 +24,6 @@
 
 namespace mod_facetoface\search;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Search area for mod_facetoface activities.
  *
@@ -45,7 +43,7 @@ class activity extends \core_search\base_activity {
      * @param stdClass $record Post info.
      * @return \core_search\document
      */
-    public function get_document($record, $options = array()) {
+    public function get_document($record, $options = []) {
         $doc = parent::get_document($record, $options);
         if (!$doc) {
             return false;
