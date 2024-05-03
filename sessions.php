@@ -95,7 +95,6 @@ $editoroptions = [
     'context'  => $modulecontext,
 ];
 
-
 // Handle deletions.
 if ($d && $confirm) {
     if (!confirm_sesskey()) {
@@ -360,7 +359,6 @@ if ($c) {
 }
 
 $pagetitle = format_string($facetoface->name);
-
 
 $PAGE->set_title($pagetitle);
 $PAGE->set_heading($course->fullname);

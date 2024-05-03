@@ -97,8 +97,6 @@ if ($fromform = $mform->get_data()) { // Form submitted.
         throw new moodle_exception('error:unknownbuttonclicked', 'facetoface', $returnurl);
     }
 
-
-
     $todb = new stdClass();
     $todb->name = trim($fromform->name);
     $todb->text = trim($fromform->text['text']);

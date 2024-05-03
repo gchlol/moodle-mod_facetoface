@@ -811,6 +811,7 @@ $string['waitlistedmessage_help'] = 'This message is sent out whenever users sig
 
 /* Face-to-face events and logging */
 $string['eventaddsession'] = 'Session added';
+$string['eventcsvprocessed'] = 'CSV processed';
 $string['eventaddsessionfailed'] = 'Session add (FAILED)';
 $string['eventapproverequests'] = 'Session approve requests';
 $string['eventattendeesviewed'] = 'Session attendees viewed';

@@ -17,9 +17,19 @@
 namespace mod_facetoface;
 
 use context_course;
-use moodle_exception;
+use context_user;
+use file_storage;
 use lang_string;
+use moodle_exception;
 
+/**
+ * Booking manager
+ *
+ * @package    mod_facetoface
+ * @author     Kevin Pham <kevinpham@catalyst-au.net>
+ * @copyright  Catalyst IT, 2024
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class booking_manager {
 
     /** @var stored_file the file to process as a stored_file object */
@@ -30,6 +40,9 @@ class booking_manager {
 
     /** @var int The course id. */
     private $course;
+
+    /** @var context_course The course context. */
+    private $coursecontext;
 
     /** @var int The course id. */
     private $facetoface;
@@ -58,13 +71,13 @@ class booking_manager {
         $this->f = $f;
         $this->facetoface = $facetoface;
         $this->course = $course;
+        $this->coursecontext = context_course::instance($course->id);
         $this->records = $records;
     }
 
     /**
      * Returns file from file system. File must exist.
      * @param int $fileitemid Item id of file stored in the current $USER's draft file area
-     * @return stored_file
      */
     public function load_from_file(int $fileitemid) {
         global $USER;
@@ -77,7 +90,7 @@ class booking_manager {
             throw new moodle_exception('error:cannotloadfile', 'mod_facetoface');
         }
 
-        return current($files);
+        $this->file = current($files);
     }
 
     /**
@@ -91,6 +104,10 @@ class booking_manager {
         return $this;
     }
 
+    /**
+     * Get the headers for the records.
+     * @return array
+     */
     public static function get_headers(): array {
         return [
             'email',
@@ -101,7 +118,11 @@ class booking_manager {
         ];
     }
 
-    private function get_iterator() {
+    /**
+     * Get an iterator for the records.
+     * @return Generator
+     */
+    private function get_iterator(): \Generator {
         if (!$this->usefile) {
             foreach ($this->records as $record) {
                 yield $record;
@@ -131,12 +152,20 @@ class booking_manager {
         }
     }
 
-    public function validate() {
+    /**
+     * Validate the records provided to ensure they can be processed without errors.
+     *
+     * As there are multiple dependant data points (users, sessions, capacity)
+     * that are checked. They are all in this method.
+     *
+     * @return array An array of errors.
+     */
+    public function validate(): array {
         global $DB;
         $errors = [];
         $sessioncapacitycache = [];
 
-        // Break into rows.
+        // Break into rows and validate the multiple interdependant fields together.
         foreach ($this->get_iterator() as $index => $entry) {
             $row = $index + 1;
 
@@ -200,8 +229,7 @@ class booking_manager {
             }
 
             // Check user enrolment into the course.
-            $coursecontext = context_course::instance($this->course->id);
-            if (isset($userid) && !is_enrolled($coursecontext, $userid)) {
+            if (isset($userid) && !is_enrolled($this->coursecontext, $userid)) {
                 $errors[] = [$row, new lang_string('error:userisnotenrolledintocourse', 'mod_facetoface', $entry->email)];
             }
 
