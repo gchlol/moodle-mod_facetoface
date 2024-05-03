@@ -1162,7 +1162,7 @@ function facetoface_get_attendees($sessionid) {
     global $CFG, $DB;
 
     $usernamefields = facetoface_get_all_user_name_fields(true, 'u');
-    $records = $DB->get_records_sql("
+    return $DB->get_records_sql("
         SELECT u.id, {$usernamefields},
             u.email,
             su.id AS submissionid,
@@ -1213,8 +1213,6 @@ function facetoface_get_attendees($sessionid) {
             sign.timecreated ASC,
             ss.timecreated ASC
     ", [$sessionid, MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED, $sessionid, MDL_F2F_STATUS_APPROVED]);
-
-    return $records;
 }
 
 /**
@@ -1954,7 +1952,6 @@ function facetoface_user_signup($session, $facetoface, $course, $discountcode,
 
     if (!$success) {
         throw new moodle_exception('error:couldnotupdatef2frecord', 'facetoface');
-        return false;
     }
 
     // Work out which status to use.
@@ -1985,7 +1982,6 @@ function facetoface_user_signup($session, $facetoface, $course, $discountcode,
     // Update status.
     if (!facetoface_update_signup_status($usersignup->id, $newstatus, $userid)) {
         throw new moodle_exception('error:f2ffailedupdatestatus', 'facetoface');
-        return false;
     }
 
     // Add to user calendar -- if facetoface usercalentry is set to true.
@@ -2124,7 +2120,6 @@ function facetoface_send_request_notice($facetoface, $session, $userid) {
  * @param bool $usetransaction Set to true if database transactions are to be used
  *
  * @returns integer ID of newly created signup status, or false
- *
  */
 function facetoface_update_signup_status($signupid, $statuscode, $createdby, $note='', $grade=null) {
     global $DB;
@@ -2904,7 +2899,7 @@ function facetoface_cm_info_view(cm_info $coursemodule) {
                     $moreinfolink = html_writer::link(
                         $signupurl,
                         get_string($signupstr, 'facetoface'),
-                        ['class' => 'f2fsessionlinks f2fsessioninfolink'],
+                        ['class' => 'f2fsessionlinks f2fsessioninfolink']
                     );
                     $span = html_writer::tag('span', get_string('options', 'facetoface').':', ['class' => 'f2fsessionnotice']);
                 }
@@ -2963,13 +2958,13 @@ function facetoface_cm_info_view(cm_info $coursemodule) {
                     $output .= html_writer::tag(
                         'span',
                         get_string('signupforsession', 'facetoface'),
-                        ['class' => 'f2fsessionnotice'],
+                        ['class' => 'f2fsessionnotice']
                     );
                 } else {
                     $output .= html_writer::tag(
                         'span',
                         get_string('upcomingsessions', 'facetoface'),
-                        ['class' => 'f2fsessionnotice'],
+                        ['class' => 'f2fsessionnotice']
                     );
 
                     if (!empty($futuresessions)) {
@@ -3860,9 +3855,7 @@ function facetoface_get_customfielddata($sessionid) {
               JOIN {facetoface_session_data} d ON f.id = d.fieldid
               WHERE d.sessionid = ?";
 
-    $records = $DB->get_records_sql($sql, [$sessionid]);
-
-    return $records;
+    return $DB->get_records_sql($sql, [$sessionid]);
 }
 
 /**
@@ -3937,9 +3930,6 @@ function facetoface_update_trainers($sessionid, $form) {
 
                 if (!$DB->insert_record('facetoface_session_roles', $newtrainer)) {
                     throw new moodle_exception('error:couldnotaddtrainer', 'facetoface');
-                    $transaction->force_transaction_rollback();
-
-                    return false;
                 }
             } else {
                 unset($oldtrainers[$roleid][$trainer]);
@@ -3963,8 +3953,6 @@ function facetoface_update_trainers($sessionid, $form) {
                     'userid' => $trainer->id,
                 ])) {
                     throw new moodle_exception('error:couldnotdeletetrainer', 'facetoface');
-                    $transaction->force_transaction_rollback();
-                    return false;
                 }
             }
         }

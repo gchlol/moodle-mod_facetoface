@@ -30,7 +30,7 @@ use html_writer;
 class upload_bookings_form extends \moodleform {
 
     /**
-     * Build form for importing woekflows.
+     * Build form for importing bookings.
      *
      * {@inheritDoc}
      * @see \moodleform::definition()
@@ -42,7 +42,7 @@ class upload_bookings_form extends \moodleform {
 
         $mform->addElement('header', 'settingsheader', get_string('upload'));
 
-        $url = new moodle_url('example.csv');
+        $url = new moodle_url('/mod/facetoface/example.csv');
         $link = html_writer::link($url, 'example.csv');
         $mform->addElement('static', 'examplecsv', get_string('facetoface:examplecsv', 'mod_facetoface'), $link);
 

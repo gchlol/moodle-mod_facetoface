@@ -59,7 +59,6 @@ $attendees = facetoface_get_attendees($session->id);
 // Load cancellations.
 $cancellations = facetoface_get_cancellations($session->id);
 
-
 /*
  * Capability checks to see if the current user can view this page
  *
@@ -341,7 +340,6 @@ if ($backtoallsessions) {
 }
 echo html_writer::link($url, get_string('goback', 'facetoface')) . html_writer::end_tag('p');
 
-
 /*
  * Print unapproved requests (if user able to view)
  */
@@ -357,7 +355,6 @@ if ($canapproverequests) {
         if (!$canbookuser) {
             echo html_writer::tag('p', get_string('cannotapproveatcapacity', 'facetoface'));
         }
-
 
         $action = new moodle_url('attendees.php', ['s' => $s]);
         echo html_writer::start_tag('form', ['action' => $action->out(), 'method' => 'post']);

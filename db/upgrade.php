@@ -29,7 +29,6 @@
  */
 
 /**
- *
  * Sends message to administrator listing all updated
  * duplicate custom fields
  * @param array $data

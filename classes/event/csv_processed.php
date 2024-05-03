@@ -14,29 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Copyright (C) 2007-2011 Catalyst IT (http://www.catalyst.net.nz)
- * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
- * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
- *
- * @package    mod
- * @subpackage facetoface
- * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
- * @author     Stacey Walker <stacey@catalyst-eu.net>
- */
-
 namespace mod_facetoface\event;
 
 /**
- * The mod_facetoface course viewed event class.
+ * The mod_facetoface CSV processed event.
  *
  * @package    mod_facetoface
- * @since      Moodle 2.7
- * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
- * @author     Stacey Walker <stacey@catalyst-eu.net>
+ * @author     Kevin Pham <kevinpham@catalyst-au.net>
+ * @copyright  Catalyst IT, 2024
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class course_viewed extends \core\event\course_viewed {
+class csv_processed extends \core\event\base {
 
     /**
      * Init method.
@@ -55,7 +43,8 @@ class course_viewed extends \core\event\course_viewed {
      * @return string
      */
     public function get_description() {
-        return "The user with id '$this->userid' has viewed all Face-to-Face instances within course with id '$this->courseid' ";
+        return "The user with id '$this->userid' has processed an uploaded CSV file for session bookings " .
+            "in the facetoface instance with the course module id '$this->contextinstanceid'.";
     }
 
     /**
@@ -64,7 +53,7 @@ class course_viewed extends \core\event\course_viewed {
      * @return string
      */
     public static function get_name() {
-        return get_string('eventcoursef2fviewed', 'mod_facetoface');
+        return get_string('eventcsvprocessed', 'mod_facetoface');
     }
 
     /**
@@ -73,6 +62,20 @@ class course_viewed extends \core\event\course_viewed {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/mod/facetoface/index.php', ['id' => $this->courseid]);
+        return new \moodle_url('/mod/facetoface/upload.php', ['f' => $this->objectid]);
+    }
+
+    /**
+     * Custom validation.
+     *
+     * @throws \coding_exception
+     * @return void
+     */
+    protected function validate_data() {
+        parent::validate_data();
+
+        if ($this->contextlevel != CONTEXT_MODULE) {
+            throw new \coding_exception('Context level must be CONTEXT_MODULE.');
+        }
     }
 }
