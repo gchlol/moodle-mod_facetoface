@@ -143,5 +143,37 @@ class generator_test extends \advanced_testcase {
         $this->assertSame($session2->id, $session2->sessiondates[0]->sessionid);
         $this->assertSame((string)($now - 3 * DAYSECS), $session2->sessiondates[0]->timestart);
         $this->assertSame((string)($now - 2 * DAYSECS), $session2->sessiondates[0]->timefinish);
+
+        $now = time();
+        $this->setCurrentTimeStart();
+        $session3 = $generator->create_session([
+            'facetofaceid' => $facetoface->id,
+            'capacity' => '17',
+            'allowoverbook' => '1',
+            'details' => 'xyz',
+            'duration' => '1.5', // One and half hours.
+            'normalcost' => '111',
+            'discountcost' => '11',
+            'allowcancellations' => '0',
+            'timestart' => $now + 10 * DAYSECS,
+            'timefinish' => $now + 11 * DAYSECS,
+        ]);
+        $this->assertInstanceOf(\stdClass::class, $session3);
+        $this->assertSame($facetoface->id, $session3->facetoface);
+        $this->assertSame('17', $session3->capacity);
+        $this->assertSame('1', $session3->allowoverbook);
+        $this->assertSame('xyz', $session3->details);
+        $this->assertSame('1', $session3->datetimeknown);
+        $this->assertSame('1:30', $session3->duration);
+        $this->assertSame('111', $session3->normalcost);
+        $this->assertSame('11', $session3->discountcost);
+        $this->assertSame('0', $session3->allowcancellations);
+        $this->assertTimeCurrent($session3->timecreated);
+        $this->assertSame('0', $session3->timemodified);
+        $this->assertIsArray($session3->sessiondates);
+        $this->assertCount(1, $session3->sessiondates);
+        $this->assertSame($session3->id, $session3->sessiondates[0]->sessionid);
+        $this->assertSame((string)($now + 10 * DAYSECS), $session3->sessiondates[0]->timestart);
+        $this->assertSame((string)($now + 11 * DAYSECS), $session3->sessiondates[0]->timefinish);
     }
 }
