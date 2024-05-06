@@ -78,11 +78,22 @@ class mod_facetoface_generator extends testing_module_generator {
         require_once("$CFG->dirroot/mod/facetoface/lib.php");
         $record = (object)(array)$record;
 
+        if (empty($record->facetoface) && !empty($record->facetofaceid)) {
+            $record->facetoface = $record->facetofaceid;
+        }
+
         if (empty($record->facetoface)) {
             throw new coding_exception('Session generator requires $record->facetoface');
         }
 
-        if (!isset($record->sessiondates)) {
+        if (!empty($record->timestart) && !empty($record->timefinish)) {
+            $sessiondate = new stdClass();
+            $sessiondate->timestart = $record->timestart;
+            $sessiondate->timefinish = $record->timefinish;
+            $sessiondates = [$sessiondate];
+            unset($record->timestart);
+            unset($record->timefinish);
+        } else if (!isset($record->sessiondates) || $record->sessiondates === '') {
             $time = time();
             $sessiondate = new stdClass();
             $sessiondate->timestart = $time;
