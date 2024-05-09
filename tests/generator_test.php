@@ -142,8 +142,8 @@ class generator_test extends \advanced_testcase {
         $this->assertIsArray($session2->sessiondates);
         $this->assertCount(1, $session2->sessiondates);
         $this->assertSame($session2->id, $session2->sessiondates[0]->sessionid);
-        $this->assertSame((string)($now - 3 * DAYSECS), $session2->sessiondates[0]->timestart);
-        $this->assertSame((string)($now - 2 * DAYSECS), $session2->sessiondates[0]->timefinish);
+        $this->assertSame((string) ($now - 3 * DAYSECS), $session2->sessiondates[0]->timestart);
+        $this->assertSame((string) ($now - 2 * DAYSECS), $session2->sessiondates[0]->timefinish);
 
         $now = time();
         $this->setCurrentTimeStart();
@@ -174,7 +174,7 @@ class generator_test extends \advanced_testcase {
         $this->assertIsArray($session3->sessiondates);
         $this->assertCount(1, $session3->sessiondates);
         $this->assertSame($session3->id, $session3->sessiondates[0]->sessionid);
-        $this->assertSame((string)($now + 10 * DAYSECS), $session3->sessiondates[0]->timestart);
-        $this->assertSame((string)($now + 11 * DAYSECS), $session3->sessiondates[0]->timefinish);
+        $this->assertSame((string) ($now + 10 * DAYSECS), $session3->sessiondates[0]->timestart);
+        $this->assertSame((string) ($now + 11 * DAYSECS), $session3->sessiondates[0]->timefinish);
     }
 }
