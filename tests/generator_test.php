@@ -142,7 +142,7 @@ class generator_test extends \advanced_testcase {
         $this->assertIsArray($session2->sessiondates);
         $this->assertCount(1, $session2->sessiondates);
         $this->assertSame($session2->id, $session2->sessiondates[0]->sessionid);
-        $this->assertSame((string)($now - 3 * DAYSECS), $session2->sessiondates[0]->timestart);
-        $this->assertSame((string)($now - 2 * DAYSECS), $session2->sessiondates[0]->timefinish);
+        $this->assertSame((string) ($now - 3 * DAYSECS), $session2->sessiondates[0]->timestart);
+        $this->assertSame((string) ($now - 2 * DAYSECS), $session2->sessiondates[0]->timefinish);
     }
 }
