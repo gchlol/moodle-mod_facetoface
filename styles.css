@@ -63,3 +63,7 @@ body#page-mod-facetoface-view div#page-content .formlocation {
     float: right;
     margin-bottom: 6px;
 }
+
+.path-mod-facetoface .table-responsive table.f2fbookingsuploadlist .c1 {
+    width: auto;
+}

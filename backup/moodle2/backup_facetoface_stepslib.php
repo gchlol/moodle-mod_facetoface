@@ -28,8 +28,6 @@
  * @author     Francois Marier <francois@catalyst.net.nz>
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 class backup_facetoface_activity_structure_step extends backup_activity_structure_step {
 
     protected function define_structure() {
@@ -38,45 +36,52 @@ class backup_facetoface_activity_structure_step extends backup_activity_structur
         $userinfo = $this->get_setting_value('userinfo');
 
         // Define each element separated.
-        $facetoface = new backup_nested_element('facetoface', array('id'), array(
+        $facetoface = new backup_nested_element('facetoface', ['id'], [
             'name', 'intro', 'introformat', 'thirdparty', 'thirdpartywaitlist', 'display',
             'timecreated', 'timemodified', 'shortname', 'showoncalendar', 'usercalentry',
             'confirmationsubject', 'confirmationinstrmngr', 'confirmationmessage', 'waitlistedsubject', 'waitlistedmessage',
             'cancellationsubject', 'cancellationinstrmngr', 'cancellationmessage', 'remindersubject', 'reminderinstrmngr',
             'remindermessage', 'reminderperiod', 'requestsubject', 'requestinstrmngr', 'requestmessage',
-            'approvalreqd', 'allowcancellationsdefault', 'signuptype', 'multiplesignupmethod', 'completionattendance'));
+            'approvalreqd', 'allowcancellationsdefault', 'signuptype', 'multiplesignupmethod', 'completionattendance',
+        ]);
 
         $sessions = new backup_nested_element('sessions');
 
-        $session = new backup_nested_element('session', array('id'), array(
+        $session = new backup_nested_element('session', ['id'], [
             'facetoface', 'capacity', 'allowoverbook', 'details', 'datetimeknown', 'duration', 'normalcost',
-            'discountcost', 'allowcancellations', 'timecreated', 'timemodified'));
+            'discountcost', 'allowcancellations', 'timecreated', 'timemodified',
+        ]);
 
         $signups = new backup_nested_element('signups');
 
-        $signup = new backup_nested_element('signup', array('id'), array(
-            'sessionid', 'userid', 'mailedreminder', 'discountcode', 'notificationtype'));
+        $signup = new backup_nested_element('signup', ['id'], [
+            'sessionid', 'userid', 'mailedreminder', 'discountcode', 'notificationtype',
+        ]);
 
         $signupsstatus = new backup_nested_element('signups_status');
 
-        $signupstatus = new backup_nested_element('signup_status', array('id'), array(
-            'signupid', 'statuscode', 'superceded', 'grade', 'note', 'advice', 'createdby', 'timecreated'));
+        $signupstatus = new backup_nested_element('signup_status', ['id'], [
+            'signupid', 'statuscode', 'superceded', 'grade', 'note', 'advice', 'createdby', 'timecreated',
+        ]);
 
         $sessionroles = new backup_nested_element('session_roles');
 
-        $sessionrole = new backup_nested_element('session_role', array('id'), array(
-            'sessionid', 'roleid', 'userid'));
+        $sessionrole = new backup_nested_element('session_role', ['id'], [
+            'sessionid', 'roleid', 'userid',
+        ]);
 
         $sessiondata = new backup_nested_element('session_data');
 
         // May need to replace first item 'data' with better value.
-        $sessiondataelement = new backup_nested_element('data', array('id'), array(
-            'fieldid', 'sessionid', 'data'));
+        $sessiondataelement = new backup_nested_element('data', ['id'], [
+            'fieldid', 'sessionid', 'data',
+        ]);
 
         $sessionsdates = new backup_nested_element('sessions_dates');
 
-        $sessionsdate = new backup_nested_element('sessions_date', array('id'), array(
-            'sessionid', 'timestart', 'timefinish'));
+        $sessionsdate = new backup_nested_element('sessions_date', ['id'], [
+            'sessionid', 'timestart', 'timefinish',
+        ]);
 
         // Build the tree.
         $facetoface->add_child($sessions);
@@ -98,20 +103,20 @@ class backup_facetoface_activity_structure_step extends backup_activity_structur
         $sessionsdates->add_child($sessionsdate);
 
         // Define sources.
-        $facetoface->set_source_table('facetoface', array('id' => backup::VAR_ACTIVITYID));
+        $facetoface->set_source_table('facetoface', ['id' => backup::VAR_ACTIVITYID]);
 
-        $session->set_source_table('facetoface_sessions', array('facetoface' => backup::VAR_PARENTID));
+        $session->set_source_table('facetoface_sessions', ['facetoface' => backup::VAR_PARENTID]);
 
-        $sessionsdate->set_source_table('facetoface_sessions_dates', array('sessionid' => backup::VAR_PARENTID));
+        $sessionsdate->set_source_table('facetoface_sessions_dates', ['sessionid' => backup::VAR_PARENTID]);
 
         if ($userinfo) {
-            $signup->set_source_table('facetoface_signups', array('sessionid' => backup::VAR_PARENTID));
+            $signup->set_source_table('facetoface_signups', ['sessionid' => backup::VAR_PARENTID]);
 
-            $signupstatus->set_source_table('facetoface_signups_status', array('signupid' => backup::VAR_PARENTID));
+            $signupstatus->set_source_table('facetoface_signups_status', ['signupid' => backup::VAR_PARENTID]);
 
-            $sessionrole->set_source_table('facetoface_session_roles', array('sessionid' => backup::VAR_PARENTID));
+            $sessionrole->set_source_table('facetoface_session_roles', ['sessionid' => backup::VAR_PARENTID]);
 
-            $sessiondataelement->set_source_table('facetoface_session_data', array('sessionid' => backup::VAR_PARENTID));
+            $sessiondataelement->set_source_table('facetoface_session_data', ['sessionid' => backup::VAR_PARENTID]);
         }
 
         // Define id annotations.

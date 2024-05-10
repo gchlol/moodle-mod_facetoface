@@ -32,17 +32,17 @@ require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
 require_once($CFG->libdir . '/adminlib.php');
 
 $id      = required_param('id', PARAM_INT); // ID in facetoface_session_field.
-$d       = optional_param('d', false, PARAM_BOOL); // set to true to delete the given field.
-$confirm = optional_param('confirm', false, PARAM_BOOL); // delete confirmationx.
+$d       = optional_param('d', false, PARAM_BOOL); // Set to true to delete the given field.
+$confirm = optional_param('confirm', false, PARAM_BOOL); // Delete confirmationx.
 
 $field = null;
 if ($id > 0) {
-    if (!$field = $DB->get_record('facetoface_session_field', array('id' => $id))) {
+    if (!$field = $DB->get_record('facetoface_session_field', ['id' => $id])) {
         throw new moodle_exception('error:fieldidincorrect', 'facetoface', '', $id);
     }
 }
 
-$PAGE->set_url('/mod/facetoface/customfield.php', array('id' => $id, 'd' => $d, 'confirm' => $confirm));
+$PAGE->set_url('/mod/facetoface/customfield.php', ['id' => $id, 'd' => $d, 'confirm' => $confirm]);
 
 admin_externalpage_setup('managemodules'); // This is hacky, there should be a special hidden page for it.
 
@@ -70,7 +70,7 @@ if (!empty($d)) {
     if (!$confirm) {
         echo $OUTPUT->header();
         echo $OUTPUT->heading($title);
-        $optionsyes = array('id' => $id, 'sesskey' => $USER->sesskey, 'd' => 1, 'confirm' => 1);
+        $optionsyes = ['id' => $id, 'sesskey' => $USER->sesskey, 'd' => 1, 'confirm' => 1];
         echo $OUTPUT->confirm(get_string('fielddeleteconfirm', 'facetoface', format_string($field->name)),
             new moodle_url("customfield.php", $optionsyes),
             new moodle_url($returnurl));
@@ -80,11 +80,11 @@ if (!empty($d)) {
         $transaction = $DB->start_delegated_transaction();
 
         try {
-            if (!$DB->delete_records('facetoface_session_field', array('id' => $id))) {
+            if (!$DB->delete_records('facetoface_session_field', ['id' => $id])) {
                 throw new Exception(get_string('error:couldnotdeletefield', 'facetoface'));
             }
 
-            if (!$DB->delete_records('facetoface_session_data', array('fieldid' => $id))) {
+            if (!$DB->delete_records('facetoface_session_data', ['fieldid' => $id])) {
                 throw new Exception(get_string('error:couldnotdeletefield', 'facetoface'));
             }
 
@@ -103,7 +103,6 @@ if ($mform->is_cancelled()) {
 }
 
 if ($fromform = $mform->get_data()) { // Form submitted.
-
     if (empty($fromform->submitbutton)) {
         throw new moodle_exception('error:unknownbuttonclicked', 'facetoface', $returnurl);
     }
@@ -123,7 +122,7 @@ if ($fromform = $mform->get_data()) { // Form submitted.
     }
 
     $valueslist = explode("\n", trim($fromform->possiblevalues));
-    $posvals = array();
+    $posvals = [];
     foreach ($valueslist as $val) {
         $trimmedval = trim($val);
         if (strlen($trimmedval) != 0) {
@@ -154,7 +153,6 @@ if ($fromform = $mform->get_data()) { // Form submitted.
 
     redirect($returnurl);
 } else if ($field != null) { // Edit mode.
-
     // Set values for the form.
     $toform = new stdClass();
     $toform->name = $field->name;

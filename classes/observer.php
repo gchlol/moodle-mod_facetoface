@@ -28,8 +28,6 @@
  * @author     Francois Marier <francois@catalyst.net.nz>
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Event observer for mod_forum.
  */
@@ -45,9 +43,9 @@ class mod_facetoface_observer {
 
         // NOTE: this has to be as fast as possible.
         // Get user enrolment info from event.
-        $cp = (object)$event->other['userenrolment'];
+        $cp = (object) $event->other['userenrolment'];
         if ($cp->lastenrol) {
-            $params = array('userid' => $cp->userid, 'courseid' => $cp->courseid);
+            $params = ['userid' => $cp->userid, 'courseid' => $cp->courseid];
             $f2fselect = "IN (SELECT s.id FROM {facetoface_sessions} s
                                 JOIN {facetoface} f ON f.id = s.facetoface
                                 WHERE f.course = :courseid)";
@@ -55,7 +53,8 @@ class mod_facetoface_observer {
             // Start deletions.
             $transaction = $DB->start_delegated_transaction();
             $DB->delete_records_select('facetoface_signups_status',
-                'signupid IN (SELECT id FROM {facetoface_signups} WHERE userid = :userid AND sessionid ' . $f2fselect . ')', $params);
+                'signupid IN (SELECT id FROM {facetoface_signups} WHERE userid = :userid AND sessionid ' . $f2fselect . ')',
+                $params);
             $DB->delete_records_select('facetoface_signups', 'userid = :userid AND sessionid ' . $f2fselect, $params);
             $DB->delete_records_select('facetoface_session_roles', 'userid = :userid AND sessionid ' . $f2fselect, $params);
             $transaction->allow_commit();

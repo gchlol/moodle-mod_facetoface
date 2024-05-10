@@ -27,8 +27,6 @@
 
 namespace mod_facetoface\event;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * The mod_facetoface course module viewed event class.
  *
@@ -57,7 +55,8 @@ class course_module_viewed extends \core\event\course_module_viewed {
      * @return string
      */
     public function get_description() {
-        return "The user with id '$this->userid' has viewed the Face-to-Face instance with course module id '$this->contextinstanceid' ";
+        return "The user with id '$this->userid' has viewed the Face-to-Face instance "
+            . "with course module id '$this->contextinstanceid' ";
     }
 
     /**
@@ -75,6 +74,6 @@ class course_module_viewed extends \core\event\course_module_viewed {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/mod/facetoface/view.php', array('f' => $this->objectid));
+        return new \moodle_url('/mod/facetoface/view.php', ['f' => $this->objectid]);
     }
 }

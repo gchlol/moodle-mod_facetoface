@@ -14,29 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Copyright (C) 2007-2011 Catalyst IT (http://www.catalyst.net.nz)
- * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
- * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
- *
- * @package    mod
- * @subpackage facetoface
- * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
- * @author     Stacey Walker <stacey@catalyst-eu.net>
- */
-
 namespace mod_facetoface\event;
 
 /**
- * The mod_facetoface approve requests event class.
+ * The mod_facetoface CSV processed event.
  *
  * @package    mod_facetoface
- * @since      Moodle 2.7
- * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
- * @author     Stacey Walker <stacey@catalyst-eu.net>
+ * @author     Kevin Pham <kevinpham@catalyst-au.net>
+ * @copyright  Catalyst IT, 2024
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class approve_requests extends \core\event\base {
+class csv_processed extends \core\event\base {
 
     /**
      * Init method.
@@ -46,7 +34,7 @@ class approve_requests extends \core\event\base {
     protected function init() {
         $this->data['crud'] = 'r';
         $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
-        $this->data['objecttable'] = 'facetoface_sessions';
+        $this->data['objecttable'] = 'facetoface';
     }
 
     /**
@@ -55,9 +43,8 @@ class approve_requests extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "The user with id '$this->userid' has approved attendance requests "
-            . "for session with id '$this->objectid' in the facetoface instance "
-            . "with the course module id '$this->contextinstanceid'.";
+        return "The user with id '$this->userid' has processed an uploaded CSV file for session bookings " .
+            "in the facetoface instance with the course module id '$this->contextinstanceid'.";
     }
 
     /**
@@ -66,7 +53,7 @@ class approve_requests extends \core\event\base {
      * @return string
      */
     public static function get_name() {
-        return get_string('eventapproverequests', 'mod_facetoface');
+        return get_string('eventcsvprocessed', 'mod_facetoface');
     }
 
     /**
@@ -75,7 +62,7 @@ class approve_requests extends \core\event\base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/mod/facetoface/attendees.php', ['s' => $this->objectid]);
+        return new \moodle_url('/mod/facetoface/upload.php', ['f' => $this->objectid]);
     }
 
     /**

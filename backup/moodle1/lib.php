@@ -28,8 +28,6 @@
  * @author     Francois Marier <francois@catalyst.net.nz>
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Glossary conversion handler
  */
@@ -55,24 +53,20 @@ class moodle1_mod_facetoface_handler extends moodle1_mod_handler {
      * @return array of {@link convert_path} instances
      */
     public function get_paths() {
-        return array(
+        return [
             new convert_path(
                 'facetoface', '/MOODLE_BACKUP/COURSE/MODULES/MOD/FACETOFACE',
-                array(
-                    'renamefields' => array(
-                        'description' => 'intro',
-                    ),
-                    'newfields' => array(
-                        'introformat' => FORMAT_MOODLE,
-                    ),
-                )
+                [
+                    'renamefields' => ['description' => 'intro'],
+                    'newfields' => ['introformat' => FORMAT_MOODLE],
+                ]
             ),
             new convert_path('facetoface_sessions', '/MOODLE_BACKUP/COURSE/MODULES/MOD/FACETOFACE/SESSIONS'),
             new convert_path('facetoface_session', '/MOODLE_BACKUP/COURSE/MODULES/MOD/FACETOFACE/SESSIONS/SESSION'),
             new convert_path('facetoface_sessions_dates', '/MOODLE_BACKUP/COURSE/MODULES/MOD/FACETOFACE/SESSIONS/SESSION/DATES'),
             new convert_path('facetoface_sessions_date',
                 '/MOODLE_BACKUP/COURSE/MODULES/MOD/FACETOFACE/SESSIONS/SESSION/DATES/DATE'),
-        );
+        ];
     }
 
     /**
@@ -104,9 +98,11 @@ class moodle1_mod_facetoface_handler extends moodle1_mod_handler {
 
         // Start writing facetoface.xml.
         $this->open_xml_writer("activities/facetoface_{$this->moduleid}/facetoface.xml");
-        $this->xmlwriter->begin_tag('activity', array('id' => $instanceid, 'moduleid' => $this->moduleid,
-            'modulename' => 'facetoface', 'contextid' => $contextid));
-        $this->xmlwriter->begin_tag('facetoface', array('id' => $instanceid));
+        $this->xmlwriter->begin_tag('activity', [
+            'id' => $instanceid, 'moduleid' => $this->moduleid,
+            'modulename' => 'facetoface', 'contextid' => $contextid,
+        ]);
+        $this->xmlwriter->begin_tag('facetoface', ['id' => $instanceid]);
 
         unset($data['id']);
         foreach ($data as $field => $value) {
@@ -128,7 +124,7 @@ class moodle1_mod_facetoface_handler extends moodle1_mod_handler {
      * data available
      */
     public function process_facetoface_session($data) {
-        $this->write_xml('session', $data, array('/session/id'));
+        $this->write_xml('session', $data, ['/session/id']);
 
     }
 
@@ -148,7 +144,7 @@ class moodle1_mod_facetoface_handler extends moodle1_mod_handler {
     }
 
     public function process_facetoface_sessions_date($data) {
-        $this->write_xml('sessions_date', $data, array('/date/id'));
+        $this->write_xml('sessions_date', $data, ['/date/id']);
     }
 
     public function on_facetoface_sessions_dates_end() {
@@ -170,7 +166,7 @@ class moodle1_mod_facetoface_handler extends moodle1_mod_handler {
         $this->xmlwriter->begin_tag('inforef');
         $this->xmlwriter->begin_tag('fileref');
         foreach ($this->fileman->get_fileids() as $fileid) {
-            $this->write_xml('file', array('id' => $fileid));
+            $this->write_xml('file', ['id' => $fileid]);
         }
         $this->xmlwriter->end_tag('fileref');
         $this->xmlwriter->end_tag('inforef');

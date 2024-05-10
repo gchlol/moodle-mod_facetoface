@@ -27,8 +27,6 @@
 
 namespace mod_facetoface\event;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * The mod_facetoface cancel booking failed event class.
  *
@@ -57,8 +55,9 @@ class cancel_booking_failed extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "The user with id '$this->userid' tried to cancel booking for session with id '$this->objectid' in the facetoface instance " .
-            "with the course module id '$this->contextinstanceid' and it failed.";
+        return "The user with id '$this->userid' tried to cancel booking "
+            . "for session with id '$this->objectid' in the facetoface instance "
+            . "with the course module id '$this->contextinstanceid' and it failed.";
     }
 
     /**
@@ -76,7 +75,7 @@ class cancel_booking_failed extends \core\event\base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/mod/facetoface/cancelsignup.php', array('s' => $this->objectid));
+        return new \moodle_url('/mod/facetoface/cancelsignup.php', ['s' => $this->objectid]);
     }
 
     /**

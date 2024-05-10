@@ -31,9 +31,9 @@
 defined('MOODLE_INTERNAL') || die();
 
 // List of observers.
-$observers = array(
-    array(
+$observers = [
+    [
         'eventname'   => '\core\event\user_enrolment_deleted',
         'callback'    => 'mod_facetoface_observer::user_enrolment_deleted',
-    ),
-);
+    ],
+];
