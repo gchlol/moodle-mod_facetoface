@@ -24,11 +24,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-global $CFG;
-
-require_once($CFG->dirroot  . '/course/modlib.php');
+namespace mod_facetoface;
 
 /**
  * Class for unit testing mod_facetoface.
@@ -37,14 +33,17 @@ require_once($CFG->dirroot  . '/course/modlib.php');
  * @author    Ghaly Marc-Alexandre <marc-alexandreghaly@catalyst-ca.net>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class facetoface_test extends advanced_testcase {
+class facetoface_test extends \advanced_testcase {
+
     /**
      * Test to check facetoface is added properly.
      *
      * @covers \facetoface_add_instance
      */
     public function test_add_facetofaceactivity() {
-        global $DB;
+        global $DB, $CFG;
+
+        require_once($CFG->dirroot  . '/course/modlib.php');
 
         $this->resetAfterTest();
         $this->setAdminUser();

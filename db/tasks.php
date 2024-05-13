@@ -30,14 +30,14 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$tasks = array(
-    array(
+$tasks = [
+    [
         'classname' => 'mod_facetoface\task\cron_task',
         'blocking'  => 0,
         'minute'    => '*',
         'hour'      => '1',
         'day'       => '*',
         'month'     => '*',
-        'dayofweek' => '*'
-    )
-);
+        'dayofweek' => '*',
+    ],
+];

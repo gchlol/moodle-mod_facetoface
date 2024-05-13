@@ -37,10 +37,10 @@ $confirm = optional_param('confirm', false, PARAM_BOOL); // Delete confirmation.
 
 $notice = null;
 if ($id > 0) {
-    $notice = $DB->get_record('facetoface_notice', array('id' => $id));
+    $notice = $DB->get_record('facetoface_notice', ['id' => $id]);
 }
 
-$PAGE->set_url('/mod/facetoface/sitenotice.php', array('id' => $id, 'd' => $d, 'confirm' => $confirm));
+$PAGE->set_url('/mod/facetoface/sitenotice.php', ['id' => $id, 'd' => $d, 'confirm' => $confirm]);
 
 admin_externalpage_setup('managemodules'); // This is hacky, tehre should be a special hidden page for it.
 
@@ -70,7 +70,7 @@ if (!empty($d)) {
         $info = new stdClass();
         $info->name = format_string($notice->name);
         $info->text = format_text($notice->text, FORMAT_HTML);
-        $optionsyes = array('id' => $id, 'sesskey' => $USER->sesskey, 'd' => 1, 'confirm' => 1);
+        $optionsyes = ['id' => $id, 'sesskey' => $USER->sesskey, 'd' => 1, 'confirm' => 1];
         echo $OUTPUT->confirm(get_string('noticedeleteconfirm', 'facetoface', $info),
             new moodle_url("sitenotice.php", $optionsyes),
             new moodle_url($returnurl));
@@ -78,8 +78,8 @@ if (!empty($d)) {
         exit;
     } else {
         $transaction = $DB->start_delegated_transaction();
-        $DB->delete_records('facetoface_notice', array('id' => $id));
-        $DB->delete_records('facetoface_notice_data', array('noticeid' => $id));
+        $DB->delete_records('facetoface_notice', ['id' => $id]);
+        $DB->delete_records('facetoface_notice_data', ['noticeid' => $id]);
         $transaction->allow_commit();
         redirect($returnurl);
     }
@@ -93,12 +93,9 @@ if ($mform->is_cancelled()) {
 }
 
 if ($fromform = $mform->get_data()) { // Form submitted.
-
     if (empty($fromform->submitbutton)) {
         throw new moodle_exception('error:unknownbuttonclicked', 'facetoface', $returnurl);
     }
-
-
 
     $todb = new stdClass();
     $todb->name = trim($fromform->name);
@@ -122,7 +119,6 @@ if ($fromform = $mform->get_data()) { // Form submitted.
     }
     $transaction->allow_commit();
     redirect($returnurl);
-
 } else if ($notice != null) { // Edit mode.
     // Set values for the form.
     $toform = new stdClass();

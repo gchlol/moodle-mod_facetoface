@@ -142,6 +142,16 @@ $string['email:message'] = 'Message';
 $string['email:subject'] = 'Subject';
 $string['emptylocation'] = 'Location was empty';
 $string['enrolled'] = 'enrolled';
+$string['error:invalidstatusspecified'] = "Invalid status specified. Expecting 'booked' or 'cancelled', defaults to 'booked' if empty. Value provided was '{\$a}'";
+$string['error:invalidnotificationtypespecified'] = "Invalid notification type specified. Expecting 'ical', 'email', 'both', or '', but actual was '{\$a}'";
+$string['error:sessionalreadystarted'] = 'Unable to use session {$a}, as it which has already started.';
+$string['error:userisnotenrolledintocourse'] = 'User {$a} is not enrolled into this course.';
+$string['error:bookingsuploadfileerrorsfound'] = '{$a} errors were found in the uploaded file. Bookings cannot be processed until they are resolved.';
+$string['error:bookingsuploadfileheaderfieldmismatch'] = 'Mismatched number of fields in the uploaded file on row {$a}.';
+$string['error:sessionoverbooked'] = 'Session ID {$a->session} overbooked by {$a->amount} person(s).';
+$string['error:sessiondoesnotexist'] = 'Session ID {$a} does not exist';
+$string['error:userdoesnotexist'] = 'User {$a} does not exist';
+$string['error:multipleusersmatched'] = 'Multiple users matched to identifier {$a}';
 $string['error:addalreadysignedupattendee'] = '{$a} is already signed-up for this Face-to-Face activity.';
 $string['error:addattendee'] = 'Could not add {$a} to the session.';
 $string['error:cancellationsnotallowed'] = 'You are not allowed to cancel this sign-up.';
@@ -154,6 +164,7 @@ $string['error:cannotsendconfirmationuser'] = 'There was a problem sending the c
 $string['error:cannotsendrequestuser'] = 'There was a problem sending the signup request message to your email account.';
 $string['error:cannotsendrequestmanager'] = 'There was a problem sending the signup request message to your manager\'s email account.';
 $string['error:cannotsendconfirmationusermanager'] = 'A confirmation message could not be sent to your email address and to your manager\'s email address.';
+$string['error:cannotprocessbookingsvalidationerrorsexist'] = 'There are validation errors that need to be addressed before the file can be fully processed. Please fix them and try again.';
 $string['error:canttakeattendanceforunstartedsession'] = 'Can not take attendance for a session that has yet to start.';
 $string['error:couldnotaddfield'] = 'Could not add custom session field.';
 $string['error:couldnotaddnotice'] = 'Could not add site notice.';
@@ -203,8 +214,8 @@ $string['export'] = 'Export';
 $string['exporttofile'] = 'Export to file';
 $string['exportattendance'] = 'Export attendance';
 $string['facetoface'] = 'Face-to-Face';
-$string['facetoface:addinstance'] = 'Add instance';
 $string['facetoface:addattendees'] = 'Add attendees to a Face-to-Face session';
+$string['facetoface:addinstance'] = 'Add instance';
 $string['facetoface:configurecancellation'] = 'Allow the configuration of sign-up cancellations, upon adding/editing a face-to-face activity.';
 $string['facetoface:createsitewideevent'] = 'Allow creation of site wide calendar events';
 $string['facetoface:editsessions'] = 'Add, edit, copy and delete Face-to-Face sessions';
@@ -212,6 +223,22 @@ $string['facetoface:overbook'] = 'Sign-up to full sessions.';
 $string['facetoface:removeattendees'] = 'Remove attendees from a Face-to-Face session';
 $string['facetoface:signup'] = 'Sign-up for a session';
 $string['facetoface:takeattendance'] = 'Take attendance';
+$string['facetoface:examplecsv'] = 'Example text file';
+$string['facetoface:csvprocessed'] = 'Successfully processed records.';
+$string['facetoface:uploadbookings'] = 'Upload bookings';
+$string['facetoface:validatebookings'] = 'Validate bookings';
+$string['facetoface:confirmandprocess'] = 'Confirm and process';
+$string['facetoface:uploadbookingsfile'] = 'Bookings file';
+$string['facetoface:uploadbookingsfiledesc'] = "
+Fields expected:
+- Email address (required)
+- Session number (required)
+- Discount code (optional)
+- Notification type (optional - valid options are 'email', 'ical', or 'both')
+";
+
+$string['facetoface:uploadandpreview'] = 'Bookings file';
+$string['facetoface:uploadreadytoprocess'] = 'Uploaded file has been validated and ready to be processed.';
 $string['facetoface:view'] = 'View Face-to-Face activities and sessions';
 $string['facetoface:viewattendees'] = 'View attendance list and attendees';
 $string['facetoface:viewcancellations'] = 'View cancellations';
@@ -580,6 +607,7 @@ $string['status_declined'] = 'Declined';
 $string['status_session_cancelled'] = 'Session Cancelled';
 $string['somesessionsfull'] = 'You have not been signed up for some sessions in the stream as they are at capacity.';
 $string['summary'] = 'Summary';
+$string['sessionnumber'] = '#';
 $string['takeattendance'] = 'Take attendance';
 $string['time'] = 'Time';
 $string['timedue'] = 'Registration deadline';
@@ -599,6 +627,7 @@ $string['upcomingsessionslist'] = 'List of all upcoming sessions for this Face-t
 $string['updaterequests'] = 'Update requests';
 $string['upgradeinfofacetoface'] = '{$a}: Face to Face upgrade info';
 $string['upgradeprocessinggrades'] = 'Processing Face-to-Face grades, this may take a while if there are many sessions...';
+$string['uploadbookings'] = 'Upload bookings';
 $string['usercancelledon'] = 'User cancelled on {$a}';
 $string['usercalentry'] = 'Show entry on user\'s calendar';
 $string['userdeletedcancel'] = 'User has been deleted';
@@ -782,6 +811,7 @@ $string['waitlistedmessage_help'] = 'This message is sent out whenever users sig
 
 /* Face-to-face events and logging */
 $string['eventaddsession'] = 'Session added';
+$string['eventcsvprocessed'] = 'CSV processed';
 $string['eventaddsessionfailed'] = 'Session add (FAILED)';
 $string['eventapproverequests'] = 'Session approve requests';
 $string['eventattendeesviewed'] = 'Session attendees viewed';

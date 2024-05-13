@@ -27,8 +27,6 @@
 
 namespace mod_facetoface\event;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * The mod_facetoface attendees viewed event class.
  *
@@ -57,8 +55,9 @@ class attendees_viewed extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "The user with id '$this->userid' has viewed the attendees for session with id '$this->objectid' in the facetoface instance " .
-            "with the course module id '$this->contextinstanceid'.";
+        return "The user with id '$this->userid' has viewed the attendees "
+            . "for session with id '$this->objectid' in the facetoface instance "
+            . "with the course module id '$this->contextinstanceid'.";
     }
 
     /**
@@ -76,17 +75,7 @@ class attendees_viewed extends \core\event\base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/mod/facetoface/attendees.php', array('s' => $this->objectid));
-    }
-
-    /**
-     * Return the legacy event log data.
-     *
-     * @return array|null
-     */
-    protected function get_legacy_logdata() {
-        return array($this->courseid, $this->objecttable, 'view attendees', 'attendees.php?s=' . $this->objectid,
-            $this->objectid, $this->contextinstanceid);
+        return new \moodle_url('/mod/facetoface/attendees.php', ['s' => $this->objectid]);
     }
 
     /**

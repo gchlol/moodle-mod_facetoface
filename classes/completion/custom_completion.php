@@ -84,9 +84,7 @@ class custom_completion extends \core_completion\activity_custom_completion {
                 $text = get_string('completiondetail:attendance_full', 'facetoface');
             }
         }
-        return [
-            'completionattendance' => $text,
-        ];
+        return ['completionattendance' => $text];
     }
 
     /**

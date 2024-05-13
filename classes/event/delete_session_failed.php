@@ -27,8 +27,6 @@
 
 namespace mod_facetoface\event;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * The mod_facetoface delete session failed event class.
  *
@@ -76,17 +74,7 @@ class delete_session_failed extends \core\event\base {
      * @return \moodle_url
      */
     public function get_url() {
-        return new \moodle_url('/mod/facetoface/sessions.php', array('s' => $this->objectid));
-    }
-
-    /**
-     * Return the legacy event log data.
-     *
-     * @return array|null
-     */
-    protected function get_legacy_logdata() {
-        return array($this->courseid, $this->objecttable, 'delete session (FAILED)', 'sessions.php?s=' . $this->objectid,
-            $this->objectid, $this->contextinstanceid);
+        return new \moodle_url('/mod/facetoface/sessions.php', ['s' => $this->objectid]);
     }
 
     /**
