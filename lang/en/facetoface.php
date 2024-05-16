@@ -142,7 +142,8 @@ $string['email:message'] = 'Message';
 $string['email:subject'] = 'Subject';
 $string['emptylocation'] = 'Location was empty';
 $string['enrolled'] = 'enrolled';
-$string['error:invalidstatusspecified'] = "Invalid status specified. Expecting 'booked' or 'cancelled', defaults to 'booked' if empty. Value provided was '{\$a}'";
+$string['error:cannotloadfile'] = "Unable to load the file, please check the file and try again.";
+$string['error:invalidstatusspecified'] = "Invalid status specified. Expecting 'booked', 'cancelled', 'no_show', 'partially_attended', or 'fully_attended'. Defaults to 'booked' if empty. Value provided was '{\$a}'";
 $string['error:invalidnotificationtypespecified'] = "Invalid notification type specified. Expecting 'ical', 'email', 'both', or '', but actual was '{\$a}'";
 $string['error:sessionalreadystarted'] = 'Unable to use session {$a}, as it which has already started.';
 $string['error:userisnotenrolledintocourse'] = 'User {$a} is not enrolled into this course.';
@@ -237,7 +238,7 @@ Fields expected:
 - Notification type (optional - valid options are 'email', 'ical', or 'both')
 ";
 
-$string['facetoface:uploadandpreview'] = 'Bookings file';
+$string['facetoface:uploadandpreview'] = 'Upload and validate bookings';
 $string['facetoface:uploadreadytoprocess'] = 'Uploaded file has been validated and ready to be processed.';
 $string['facetoface:view'] = 'View Face-to-Face activities and sessions';
 $string['facetoface:viewattendees'] = 'View attendance list and attendees';
