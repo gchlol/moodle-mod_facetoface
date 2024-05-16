@@ -246,7 +246,13 @@ class booking_manager {
             }
 
             // Check to ensure a valid status is set.
-            if (isset($entry->status) && !in_array($entry->status, ['', 'cancelled', 'booked'])) {
+            if (isset($entry->status) && !in_array(
+                $entry->status,
+                array_merge(facetoface_statuses(), [
+                    '',          // Defaults to booked.
+                    'cancelled', // Alternative to 'user_cancelled'.
+                ])
+            )) {
                 $errors[] = [
                     $row,
                     new lang_string('error:invalidstatusspecified', 'mod_facetoface', $entry->status),
@@ -322,10 +328,17 @@ class booking_manager {
                     throw new \Exception($cancelerr);
                 }
             } else {
-                $statuscode = MDL_F2F_STATUS_WAITLISTED;
-                if ($session->datetimeknown) {
+                // Map status to status code.
+                $statuscode = array_search($entry->status, facetoface_statuses());
+                if ($statuscode === false) {
+                    // Defaults to booked if not found.
                     $statuscode = MDL_F2F_STATUS_BOOKED;
                 }
+                if ($statuscode === MDL_F2F_STATUS_BOOKED && !$session->datetimeknown) {
+                    // If booked, ensures the status is waitlisted instead, if the datetime is unknown.
+                    $statuscode = MDL_F2F_STATUS_WAITLISTED;
+                }
+
                 facetoface_user_signup(
                     $session,
                     $this->facetoface,
