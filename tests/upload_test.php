@@ -132,7 +132,10 @@ class upload_test extends \advanced_testcase {
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
 
         $course = $this->getDataGenerator()->create_course();
+        $anothercourse = $this->getDataGenerator()->create_course();
         $facetoface = $generator->create_instance(['course' => $course->id]);
+        $anotherfacetoface = $generator->create_instance(['course' => $anothercourse->id]);
+
         // Generate users.
         $user = $this->getDataGenerator()->create_user();
         $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
@@ -141,6 +144,20 @@ class upload_test extends \advanced_testcase {
         $now = time();
         $session = $generator->create_session([
             'facetoface' => $facetoface->id,
+            'capacity' => '3',
+            'allowoverbook' => '0',
+            'details' => 'xyz',
+            'duration' => '1.5', // One and half hours.
+            'normalcost' => '111',
+            'discountcost' => '11',
+            'allowcancellations' => '0',
+            'sessiondates' => [
+                ['timestart' => $now + 3 * DAYSECS, 'timefinish' => $now + 2 * DAYSECS],
+            ],
+        ]);
+
+        $remotesession = $generator->create_session([
+            'facetoface' => $anotherfacetoface->id,
             'capacity' => '3',
             'allowoverbook' => '0',
             'details' => 'xyz',
@@ -186,6 +203,14 @@ class upload_test extends \advanced_testcase {
                 'session' => $session->id,
                 'status' => 'helloworld',
                 'notificationtype' => 'phone',
+                'discountcode' => '',
+            ],
+            // Test permissions (e.g. user not able to upload/process for a f2f activity loaded).
+            (object) [
+                'email' => $student->email,
+                'session' => $remotesession->id,
+                'status' => '',
+                'notificationtype' => '',
                 'discountcode' => '',
             ],
         ];
@@ -236,6 +261,18 @@ class upload_test extends \advanced_testcase {
                 new lang_string('error:invalidstatusspecified', 'mod_facetoface', $records[3]->status)
             ),
             'Expecting status error, since the status should be either booked or cancelled.'
+        );
+
+        $this->assertTrue(
+            $this->check_row_validation_error_exists(
+                $errors,
+                5,
+                new lang_string('error:tryingtoupdatesessionfromanothermodule', 'mod_facetoface', (object) [
+                    'session' => $remotesession->id,
+                    'f' => $facetoface->id,
+                ])
+            ),
+            'Expecting permission check conflict due to session->facetoface + facetoface id mismatcherror.'
         );
     }
 

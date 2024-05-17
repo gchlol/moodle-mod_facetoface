@@ -199,6 +199,16 @@ class booking_manager {
             if ($session) {
                 $timenow = time();
 
+                // If the session supplied does not link to the face-to-face module expected, then it's invalid.
+                if ($session->facetoface != $this->f) {
+                    $errors[] = [
+                        $row,
+                        new lang_string('error:tryingtoupdatesessionfromanothermodule', 'mod_facetoface', (object) [
+                            'session' => $entry->session,
+                            'f' => $this->f,
+                        ]),
+                    ];
+                }
                 // Don't allow user to cancel a session that has already occurred.
                 if ($entry->status === 'cancelled' && facetoface_has_session_started($session, $timenow)) {
                     $errors[] = [$row, new lang_string('error:sessionalreadystarted', 'mod_facetoface', $entry->session)];
