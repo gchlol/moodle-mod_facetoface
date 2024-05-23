@@ -223,7 +223,14 @@ function print_session_list($courseid, $facetoface, $location) {
         print_string('noupcoming', 'facetoface');
     } else {
         $upcomingarray = array_merge($upcomingarray, $upcomingtbdarray);
-        echo $f2frenderer->print_session_list_table($customfields, $upcomingarray, $viewattendees, $editsessions, !$bulksignup);
+        echo $f2frenderer->print_session_list_table(
+            $customfields,
+            $upcomingarray,
+            $viewattendees,
+            $editsessions,
+            !$bulksignup,
+            $uploadbookings
+        );
     }
 
     if ($editsessions) {
@@ -245,7 +252,14 @@ function print_session_list($courseid, $facetoface, $location) {
     // Previous sessions.
     if (!empty($previousarray)) {
         echo $OUTPUT->heading(get_string('previoussessions', 'facetoface'));
-        echo $f2frenderer->print_session_list_table($customfields, $previousarray, $viewattendees, $editsessions);
+        echo $f2frenderer->print_session_list_table(
+            $customfields,
+            $previousarray,
+            $viewattendees,
+            $editsessions,
+            true,
+            $uploadbookings
+        );
     }
 }
 
