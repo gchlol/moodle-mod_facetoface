@@ -33,7 +33,14 @@ class mod_facetoface_renderer extends plugin_renderer_base {
     /**
      * Builds session list table given an array of sessions
      */
-    public function print_session_list_table($customfields, $sessions, $viewattendees, $editsessions, $signuplinks = true) {
+    public function print_session_list_table(
+        $customfields,
+        $sessions,
+        $viewattendees,
+        $editsessions,
+        $signuplinks = true,
+        $uploadbookings = false
+    ) {
         $output = '';
 
         $tableheader = [];
@@ -42,7 +49,11 @@ class mod_facetoface_renderer extends plugin_renderer_base {
                 $tableheader[] = format_string($field->name);
             }
         }
-        $tableheader[] = get_string('sessionnumber', 'facetoface');
+
+        if ($uploadbookings) {
+            $tableheader[] = get_string('sessionnumber', 'facetoface');
+        }
+
         $tableheader[] = get_string('date', 'facetoface');
         $tableheader[] = get_string('time', 'facetoface');
         if ($viewattendees) {
@@ -90,7 +101,9 @@ class mod_facetoface_renderer extends plugin_renderer_base {
                 }
             }
 
-            $sessionrow[] = html_writer::tag('span', $session->id, ['class' => 'mr-3']);
+            if ($uploadbookings) {
+                $sessionrow[] = html_writer::tag('span', $session->id, ['class' => 'mr-3']);
+            }
 
             // Dates/times.
             $allsessiondates = '';
