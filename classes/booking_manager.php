@@ -158,12 +158,14 @@ class booking_manager {
      * As there are multiple dependant data points (users, sessions, capacity)
      * that are checked. They are all in this method.
      *
+     * @param int $timenow The current time to use for validation.
      * @return array An array of errors.
      */
-    public function validate(): array {
+    public function validate($timenow = null): array {
         global $DB;
         $errors = [];
         $sessioncapacitycache = [];
+        $timenow ??= time();
 
         // Break into rows and validate the multiple interdependant fields together.
         foreach ($this->get_iterator() as $index => $entry) {
@@ -197,8 +199,6 @@ class booking_manager {
 
             // Check for session overbooking, that is, if it would go over session capacity.
             if ($session) {
-                $timenow = time();
-
                 // If the session supplied does not link to the face-to-face module expected, then it's invalid.
                 if ($session->facetoface != $this->f) {
                     $errors[] = [
@@ -215,7 +215,7 @@ class booking_manager {
                 }
 
                 if ($session->datetimeknown
-                    && $entry->status !== 'cancelled'
+                    && in_array($entry->status, ['', 'booked'])
                     && facetoface_has_session_started($session, $timenow)) {
                     $inprogressstr = get_string('cannotsignupsessioninprogress', 'facetoface');
                     $overstr = get_string('cannotsignupsessionover', 'facetoface');
@@ -328,6 +328,7 @@ class booking_manager {
 
             // Get signup type.
             if ($entry->status === 'cancelled') {
+                // Handle cancellation.
                 if (facetoface_user_cancel($session, $user->id, true, $cancelerr)) {
                     // Notify the user of the cancellation if the session hasn't started yet.
                     $timenow = time();
@@ -339,26 +340,51 @@ class booking_manager {
                 }
             } else {
                 // Map status to status code.
-                $statuscode = array_search($entry->status, facetoface_statuses());
-                if ($statuscode === false) {
-                    // Defaults to booked if not found.
-                    $statuscode = MDL_F2F_STATUS_BOOKED;
-                }
-                if ($statuscode === MDL_F2F_STATUS_BOOKED && !$session->datetimeknown) {
-                    // If booked, ensures the status is waitlisted instead, if the datetime is unknown.
-                    $statuscode = MDL_F2F_STATUS_WAITLISTED;
+                $statuscode = array_search($entry->status, facetoface_statuses()) ?: MDL_F2F_STATUS_BOOKED;
+
+                // Handle signups.
+                if (in_array($statuscode, [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED])) {
+                    if ($statuscode === MDL_F2F_STATUS_BOOKED && !$session->datetimeknown) {
+                        // If booked, ensures the status is waitlisted instead, if the datetime is unknown.
+                        $statuscode = MDL_F2F_STATUS_WAITLISTED;
+                    }
+
+                    facetoface_user_signup(
+                        $session,
+                        $this->facetoface,
+                        $this->course,
+                        $entry->discountcode,
+                        $this->transform_notification_type($entry->notificationtype),
+                        $statuscode,
+                        $user->id,
+                        true
+                    );
+
+                    continue;
                 }
 
-                facetoface_user_signup(
-                    $session,
-                    $this->facetoface,
-                    $this->course,
-                    $entry->discountcode,
-                    $this->transform_notification_type($entry->notificationtype),
-                    $statuscode,
-                    $user->id,
-                    true
-                );
+                // Handle attendance.
+                if (in_array($statuscode, [
+                    MDL_F2F_STATUS_NO_SHOW,
+                    MDL_F2F_STATUS_PARTIALLY_ATTENDED,
+                    MDL_F2F_STATUS_FULLY_ATTENDED,
+                ])) {
+                    $attendees = facetoface_get_attendees($session->id);
+                    // Get matching attendee.
+                    foreach ($attendees as $attendee) {
+                        if ($attendee->email === $entry->email) {
+                            break;
+                        }
+                    }
+
+                    $data = (object) [
+                        's' => $session->id,
+                        'submissionid_' . $attendee->submissionid => $statuscode,
+                    ];
+                    facetoface_take_attendance($data);
+
+                    continue;
+                }
             }
         }
 

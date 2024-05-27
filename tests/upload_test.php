@@ -426,4 +426,121 @@ class upload_test extends \advanced_testcase {
         $this->assertEquals($student->id, current($users)->id);
         $this->assertNotEmpty(current($users)->timecancelled);
     }
+
+    /**
+     * Updates via uploads can be done for previous sessions, only if they are to update attendance.
+     *
+     * Book someone in, then once the session is over, update their attendance. This should work.
+     */
+    public function test_updates_for_previous_sessions() {
+        global $DB;
+        /** @var \mod_facetoface_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
+
+        $course = $this->getDataGenerator()->create_course();
+        $facetoface = $generator->create_instance(['course' => $course->id]);
+
+        // Generate users.
+        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+
+        $this->setCurrentTimeStart();
+        $now = time();
+        $session = $generator->create_session([
+            'facetoface' => $facetoface->id,
+            'capacity' => '3',
+            'allowoverbook' => '0',
+            'details' => 'xyz',
+            'duration' => '2', // One and half hours.
+            'normalcost' => '111',
+            'discountcost' => '11',
+            'allowcancellations' => '0',
+            'sessiondates' => [
+                ['timestart' => $now + 5, 'timefinish' => $now + 10],
+            ],
+        ]);
+        $bm = new booking_manager($facetoface->id);
+
+        // Book the student.
+        $records = [
+            (object) [
+                'email' => $student->email,
+                'session' => $session->id,
+                'status' => 'booked',
+            ],
+        ];
+
+        $bm->load_from_array($records);
+        $errors = $bm->validate();
+        $this->assertFalse(
+            $this->check_row_validation_error_exists(
+                $errors,
+                1,
+                ''
+            ),
+            'Expecting user to be booked without issues.'
+        );
+        $bm->process();
+
+        $DB->update_record(
+            'facetoface_sessions_dates',
+            (object) [
+                'timestart' => 0,
+                'timefinish' => 1,
+                'id' => $session->sessiondates[0]->id,
+            ],
+        );
+
+        // It should detect an error (e.g. cannot book a session in progress).
+        $errors = $bm->validate(time() + 1);
+        $this->assertTrue(
+            $this->check_row_validation_error_exists(
+                $errors,
+                1,
+                get_string('cannotsignupsessionover', 'facetoface')
+            ),
+            'Expecting user to not be bookable since the session has started.'
+        );
+
+        // Update the student's attendance after the session finishes.
+        $attendanceupdates = [
+            (object) [
+                'email' => $student->email,
+                'session' => $session->id,
+                'status' => 'no_show',
+                'grade_expected' => 0,
+            ],
+            (object) [
+                'email' => $student->email,
+                'session' => $session->id,
+                'status' => 'partially_attended',
+                'grade_expected' => 50,
+            ],
+            (object) [
+                'email' => $student->email,
+                'session' => $session->id,
+                'status' => 'fully_attended',
+                'grade_expected' => 100,
+            ],
+        ];
+
+        $timenow = time() + 4 * DAYSECS; // Two days after the session started.
+        foreach ($attendanceupdates as $update) {
+            $bm->load_from_array([$update]);
+
+            $errors = $bm->validate($timenow);
+            $this->assertFalse(
+                $this->check_row_validation_error_exists(
+                    $errors,
+                    1,
+                    ''
+                ),
+                'Expecting update to be valid (even though session has started or finished).'
+            );
+            $bm->process();
+
+            // Check to ensure the grade is as expected from the update.
+            $grade = facetoface_get_grade($student->id, $course->id, $facetoface->id);
+            $this->assertEquals($update->grade_expected, $grade->grade);
+        }
+    }
 }
