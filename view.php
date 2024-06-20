@@ -110,14 +110,8 @@ if (empty($cm->visible) and !has_capability('mod/facetoface:viewemptyactivities'
 }
 echo $OUTPUT->box_start();
 echo $OUTPUT->heading(get_string('allsessionsin', 'facetoface', $facetoface->name), 2);
+echo html_writer::empty_tag('br');
 
-if ($facetoface->intro) {
-    echo $OUTPUT->box_start('generalbox', 'description');
-    echo format_module_intro('facetoface', $facetoface, $cm->id);
-    echo $OUTPUT->box_end();
-} else {
-    echo html_writer::empty_tag('br');
-}
 $locations = get_locations($facetoface->id);
 if (count($locations) > 2) {
     echo html_writer::start_tag('form', array('action' => 'view.php', 'method' => 'get', 'class' => 'formlocation'));
