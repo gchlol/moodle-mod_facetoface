@@ -97,6 +97,13 @@ if ($validate) {
     $bm = new booking_manager($f);
     $bm->load_from_file($fileid);
 
+    // Get the options selected by the user at confirm time.
+    $confirmdata = (new confirm_bookings_form(null))->get_data();
+    
+    if (!empty($confirmdata->suppressemail)) {
+        $bm->suppress_email();
+    }
+
     // Validate entries.
     $errors = $bm->validate();
     if (empty($errors)) {
