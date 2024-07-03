@@ -53,6 +53,9 @@ class booking_manager {
     /** @var bool Whether or not the bookings are loaded from a file. */
     private $usefile = true;
 
+    /** @var bool When true, confirmation emails are not sent. */
+    private $suppressemail = false;
+
     /**
      * Constructor for the booking manager.
      * @param int $f The facetoface module ID.
@@ -357,7 +360,7 @@ class booking_manager {
                         $this->transform_notification_type($entry->notificationtype),
                         $statuscode,
                         $user->id,
-                        true
+                        !$this->suppressemail,
                     );
 
                     continue;
@@ -389,5 +392,12 @@ class booking_manager {
         }
 
         return true;
+    }
+
+    /**
+     * Stops confirmation emails from being sent
+     */
+    public function suppress_email() {
+        $this->suppressemail = true;
     }
 }
