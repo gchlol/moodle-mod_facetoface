@@ -19,6 +19,9 @@ namespace mod_facetoface\form;
 use moodle_url;
 use html_writer;
 
+defined('MOODLE_INTERNAL') || die();
+require_once($CFG->dirroot . '/repository/lib.php');
+
 /**
  * Upload bookings form class
  *
