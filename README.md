@@ -33,28 +33,6 @@ Installation
 3- (Optional) Change the default options in the activity modules
    configuration.
 
-
-Bugs/patches
--------------
-
-Feel free to send bug reports (and/or patches!) to the current maintainer:
-
-  Stacey Walker <stacey@catalyst-eu.net>
-
-
-Previous maintainer(s)
------------------------
-
-  Alastair Munro <alastair.munro@totaralms.com>
-  Aaron Barnes <aaronb@catalyst.net.nz>
-  Francois Marier <francois@catalyst.net.nz>
-
-
-Original design and development
---------------------------------
-
-  Jonathan Newman <jonathan.newman@catalyst.net.nz>
-
 Changes
 --------
 
@@ -62,7 +40,7 @@ Changes
 
 Copyright
 ---------
-Face-to-face module for Moodle
+Face-to-face module for Moodle originally designed and developed by Jonathan Newman
 Copyright (C) 2007-2011 Catalyst IT (http://www.catalyst.net.nz)
 Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
 Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
