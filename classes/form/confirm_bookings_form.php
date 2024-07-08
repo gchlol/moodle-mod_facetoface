@@ -41,8 +41,13 @@ class confirm_bookings_form extends moodleform {
         global $OUTPUT;
 
         $mform = $this->_form;
-        $fileid = $this->_customdata['fileid'] ?: 0;
-        $f = $this->_customdata['f'] ?: 0;
+        $fileid = $this->_customdata['fileid'] ?? 0;
+        $f = $this->_customdata['f'] ?? 0;
+
+        // Suppress email checkbox.
+        $mform->addElement('advcheckbox', 'suppressemail', get_string('suppressemail', 'facetoface'), '', [], [0, 1]);
+        $mform->addHelpButton('suppressemail', 'suppressemail', 'facetoface');
+        $mform->setType('supressemail', PARAM_BOOL);
 
         // The facetoface module ID.
         $mform->addElement('hidden', 'f');

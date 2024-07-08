@@ -30,7 +30,6 @@ use core\output\notification;
 use mod_facetoface\form\upload_bookings_form;
 use mod_facetoface\form\confirm_bookings_form;
 use mod_facetoface\booking_manager;
-use mod_facetoface\event\csv_processed;
 
 $f = optional_param('f', 0, PARAM_INT); // The facetoface module ID.
 $fileid = optional_param('fileid', 0, PARAM_INT); // The fileid of the file uploaded.
@@ -54,7 +53,6 @@ $modulecontext = context_module::instance($cm->id);
 require_capability('mod/facetoface:editsessions', $context);
 require_capability('mod/facetoface:uploadbookings', $context);
 
-echo $OUTPUT->header();
 
 // Render form, which should only consist of an upload element.
 if ($validate) {
@@ -97,6 +95,13 @@ if ($validate) {
     $bm = new booking_manager($f);
     $bm->load_from_file($fileid);
 
+    // Get the options selected by the user at confirm time.
+    $confirmdata = (new confirm_bookings_form(null))->get_data();
+
+    if (!empty($confirmdata->suppressemail)) {
+        $bm->suppress_email();
+    }
+
     // Validate entries.
     $errors = $bm->validate();
     if (empty($errors)) {
@@ -109,7 +114,6 @@ if ($validate) {
             'objectid' => $f,
         ];
         $event = \mod_facetoface\event\csv_processed::create($params);
-        $event->add_record_snapshot('facetoface_sessions', $session);
         $event->add_record_snapshot('facetoface', $facetoface);
         $event->trigger();
 
@@ -135,11 +139,12 @@ if ($validate) {
     $heading = get_string('facetoface:uploadbookings', 'facetoface');
 }
 
-$PAGE->set_url(new moodle_url('/mod/facetoface/upload.php', ['courseid' => $courseid, 'cmid' => $cm->id]));
-$PAGE->set_context($context);
+$PAGE->set_url(new moodle_url('/mod/facetoface/upload.php', ['courseid' => $course->id, 'cmid' => $cm->id]));
 $PAGE->set_pagelayout('standard');
 $PAGE->set_title($heading);
 $PAGE->set_heading($heading);
+
+echo $OUTPUT->header();
 
 $mform->display();
 

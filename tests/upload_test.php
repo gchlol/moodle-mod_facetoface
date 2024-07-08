@@ -543,4 +543,79 @@ class upload_test extends \advanced_testcase {
             $this->assertEquals($update->grade_expected, $grade->grade);
         }
     }
+
+    /**
+     * Provides values to test_email_suppression
+     * @return array
+     */
+    public static function email_suppression_provider(): array {
+        return [
+            'no suppression' => [
+                'shouldsuppress' => false,
+            ],
+            'suppressed emails' => [
+                'shouldsuppress' => true,
+            ],
+        ];
+    }
+
+    /**
+     * Tests that the email suppression property is considered when signing up users.
+     * @param bool $shouldsuppress
+     * @dataProvider email_suppression_provider
+     */
+    public function test_email_suppression($shouldsuppress) {
+        /** @var \mod_facetoface_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
+
+        // Create f2f in course.
+        // Note the f2f must have a confirmation message & subject set, otherwise no emails will be sent ever.
+        $course = $this->getDataGenerator()->create_course();
+        $facetoface = $generator->create_instance(['course' => $course->id, 'confirmationmessage' => 'test',
+            'confirmationsubject' => 'test']);
+        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+
+        $this->setCurrentTimeStart();
+        $now = time();
+        $session = $generator->create_session([
+            'facetoface' => $facetoface->id,
+            'capacity' => '10',
+            'allowoverbook' => '0',
+            'details' => 'xyzabc',
+            'duration' => '1.5', // One and half hours.
+            'normalcost' => '123',
+            'discountcost' => '12',
+            'allowcancellations' => '0',
+            'sessiondates' => [
+                ['timestart' => $now + 5 * DAYSECS, 'timefinish' => $now + 2 * DAYSECS],
+            ],
+        ]);
+
+        $bm = new booking_manager($facetoface->id);
+        $record = (object) [
+            'email' => $student->email,
+            'session' => $session->id,
+            'status' => 'booked',
+        ];
+
+        $records = [$record];
+        $bm->load_from_array($records);
+
+        // Set the email suppression value.
+        if ($shouldsuppress) {
+            $bm->suppress_email();
+        }
+
+        // Setup email sink and process.
+        $sink = $this->redirectEmails();
+        $bm->process();
+
+        // Check emails got sent per the config.
+        $emails = $sink->get_messages();
+        if ($shouldsuppress) {
+            $this->assertEmpty($emails);
+        } else {
+            $this->assertNotEmpty($emails);
+        }
+    }
 }
