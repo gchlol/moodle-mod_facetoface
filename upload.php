@@ -71,24 +71,6 @@ if ($validate) {
     // Validate entries.
     $errors = $bm->validate();
 
-    // List out any issues in a table.
-    if (!empty($errors)) {
-        // Print summary statement.
-        echo \core\notification::error(get_string('error:bookingsuploadfileerrorsfound', 'mod_facetoface', count($errors)));
-
-        $table = new html_table();
-        $table->attributes['class'] = 'f2fbookingsuploadlist m-auto generaltable mb-2';
-
-        $table->head[] = get_string('uucsvline', 'tool_uploaduser');
-        $table->head[] = get_string('status');
-        $table->data = $errors;
-
-        echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
-    } else {
-        // Bonus: show a preview/summary for good records (e.g. 40 records will be processed).
-        echo \core\notification::success(get_string('facetoface:uploadreadytoprocess', 'mod_facetoface'));
-    }
-
     // Set form data to allow user to continue and process the uploaded file on their next form submit.
 } else if ($process && $fileid && $f) {
     // Form submitted, and ready for processing -> process.
@@ -145,6 +127,24 @@ $PAGE->set_title($heading);
 $PAGE->set_heading($heading);
 
 echo $OUTPUT->header();
+
+// List out any issues in a table.
+if (!empty($errors)) {
+    // Print summary statement.
+    echo \core\notification::error(get_string('error:bookingsuploadfileerrorsfound', 'mod_facetoface', count($errors)));
+
+    $table = new html_table();
+    $table->attributes['class'] = 'f2fbookingsuploadlist m-auto generaltable mb-2';
+
+    $table->head[] = get_string('uucsvline', 'tool_uploaduser');
+    $table->head[] = get_string('status');
+    $table->data = $errors;
+
+    echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
+} else {
+    // Bonus: show a preview/summary for good records (e.g. 40 records will be processed).
+    echo \core\notification::success(get_string('facetoface:uploadreadytoprocess', 'mod_facetoface'));
+}
 
 $mform->display();
 
