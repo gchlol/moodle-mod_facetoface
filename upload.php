@@ -129,7 +129,7 @@ $PAGE->set_heading($heading);
 echo $OUTPUT->header();
 
 // List out any issues in a table.
-if (!empty($errors)) {
+if ($validate && !empty($errors)) {
     // Print summary statement.
     echo \core\notification::error(get_string('error:bookingsuploadfileerrorsfound', 'mod_facetoface', count($errors)));
 
@@ -141,7 +141,9 @@ if (!empty($errors)) {
     $table->data = $errors;
 
     echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
-} else {
+}
+
+if ($validate && empty($errors)) {
     // Bonus: show a preview/summary for good records (e.g. 40 records will be processed).
     echo \core\notification::success(get_string('facetoface:uploadreadytoprocess', 'mod_facetoface'));
 }
