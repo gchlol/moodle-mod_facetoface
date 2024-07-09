@@ -550,10 +550,20 @@ class upload_test extends \advanced_testcase {
      */
     public static function email_suppression_provider(): array {
         return [
-            'no suppression' => [
+            'no suppression, booked' => [
+                'status' => 'booked',
                 'shouldsuppress' => false,
             ],
-            'suppressed emails' => [
+            'suppressed emails, booked' => [
+                'status' => 'booked',
+                'shouldsuppress' => true,
+            ],
+            'no suppression, cancel' => [
+                'status' => 'cancelled',
+                'shouldsuppress' => false,
+            ],
+            'suppressed emails, cancel' => [
+                'status' => 'cancelled',
                 'shouldsuppress' => true,
             ],
         ];
@@ -561,10 +571,11 @@ class upload_test extends \advanced_testcase {
 
     /**
      * Tests that the email suppression property is considered when signing up users.
+     * @param string $status status of session to use in csv
      * @param bool $shouldsuppress
      * @dataProvider email_suppression_provider
      */
-    public function test_email_suppression($shouldsuppress) {
+    public function test_email_suppression(string $status, bool $shouldsuppress) {
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
 
@@ -572,7 +583,7 @@ class upload_test extends \advanced_testcase {
         // Note the f2f must have a confirmation message & subject set, otherwise no emails will be sent ever.
         $course = $this->getDataGenerator()->create_course();
         $facetoface = $generator->create_instance(['course' => $course->id, 'confirmationmessage' => 'test',
-            'confirmationsubject' => 'test']);
+            'confirmationsubject' => 'test', 'cancellationmessage' => 'test', 'cancellationsubject' => 'test']);
         $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
 
         $this->setCurrentTimeStart();
@@ -595,7 +606,7 @@ class upload_test extends \advanced_testcase {
         $record = (object) [
             'email' => $student->email,
             'session' => $session->id,
-            'status' => 'booked',
+            'status' => $status,
         ];
 
         $records = [$record];
