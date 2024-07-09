@@ -335,7 +335,7 @@ class booking_manager {
                 if (facetoface_user_cancel($session, $user->id, true, $cancelerr)) {
                     // Notify the user of the cancellation if the session hasn't started yet.
                     $timenow = time();
-                    if (!facetoface_has_session_started($session, $timenow)) {
+                    if (!facetoface_has_session_started($session, $timenow) && !$this->suppressemail) {
                         facetoface_send_cancellation_notice($this->facetoface, $session, $user->id);
                     }
                 } else {
