@@ -2238,6 +2238,12 @@ function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
         }
     }
 
+    // Define a simple reusable function so we don't have to copy
+    // and paste a huge function call multiple times.
+    $substitute = function($text, $session) use ($facetoface, $user) {
+        return facetoface_email_substitutions($text, format_string($facetoface->name), $facetoface->reminderperiod, $user, $session, $session->id);
+    };
+
     // Do iCal attachement stuff.
     $icalattachments = [];
     if ($notificationtype & MDL_F2F_ICAL) {
@@ -2249,28 +2255,11 @@ function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
                 $session->sessiondates = [$sessiondate]; // One day at a time.
 
                 $filename = facetoface_get_ical_attachment($notificationtype, $facetoface, $session, $user);
-                $subject = facetoface_email_substitutions(
-                    $postsubject,
-                    format_string($facetoface->name),
-                    $facetoface->reminderperiod,
-                    $user,
-                    $session,
-                    $session->id
-                );
-                $body = facetoface_email_substitutions($posttext, format_string($facetoface->name), $facetoface->reminderperiod,
-                                                       $user, $session, $session->id);
-                $htmlmessage = facetoface_email_substitutions(
-                    $posttext,
-                    $facetoface->name,
-                    $facetoface->reminderperiod,
-                    $user,
-                    $session,
-                    $session->id
-                );
-                $htmlbody = $htmlmessage;
+                $subject = $substitute($postsubject, $session);
+                $body = $substitute($posttext, $session);
                 $icalattachments[] = [
                     'filename' => $filename, 'subject' => $subject,
-                    'body' => $body, 'htmlbody' => $htmlbody,
+                    'body' => $body,
                 ];
             }
 
@@ -2278,42 +2267,20 @@ function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
             $session->sessiondates = $sessiondates;
         } else {
             $filename = facetoface_get_ical_attachment($notificationtype, $facetoface, $session, $user);
-            $subject = facetoface_email_substitutions($postsubject, format_string($facetoface->name), $facetoface->reminderperiod,
-                                                      $user, $session, $session->id);
-            $body = facetoface_email_substitutions($posttext, format_string($facetoface->name), $facetoface->reminderperiod,
-                                                   $user, $session, $session->id);
-            $htmlmessage = facetoface_email_substitutions(
-                $posttext,
-                $facetoface->name,
-                $facetoface->reminderperiod,
-                $user,
-                $session,
-                $session->id
-            );
-            $htmlbody = $htmlmessage;
+            $subject = $substitute($postsubject, $session);
+            $body = $substitute($posttext, $session);
             $icalattachments[] = [
                 'filename' => $filename, 'subject' => $subject,
-                'body' => $body, 'htmlbody' => $htmlbody,
+                'body' => $body,
             ];
         }
     }
 
     // Fill-in the email placeholders.
-    $postsubject = facetoface_email_substitutions($postsubject, format_string($facetoface->name), $facetoface->reminderperiod,
-                                                  $user, $session, $session->id);
-    $posttext = facetoface_email_substitutions($posttext, format_string($facetoface->name), $facetoface->reminderperiod,
-                                               $user, $session, $session->id);
+    $postsubject = $substitute($postsubject, $session);
+    $posttext = $substitute($posttext, $session);
+    $posttextmgrheading = $substitute($posttextmgrheading, $session);
 
-    $posttextmgrheading = facetoface_email_substitutions(
-        $posttextmgrheading,
-        format_string($facetoface->name),
-        $facetoface->reminderperiod,
-        $user,
-        $session,
-        $session->id
-    );
-
-    $posthtml = ''; // FIXME.
     if ($fromaddress = get_config('facetoface', 'fromaddress')) {
         $from = new stdClass();
         $from->maildisplay = true;
@@ -2326,7 +2293,7 @@ function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
     if ($notificationtype & MDL_F2F_ICAL) {
         foreach ($icalattachments as $attachment) {
             if (!email_to_user($user, $from, $attachment['subject'], $attachment['body'],
-                    $attachment['htmlbody'], $attachment['filename'], $attachmentfilename)) {
+                    '', $attachment['filename'], $attachmentfilename)) {
                 return 'error:cannotsendconfirmationuser';
             }
             unlink($CFG->dataroot . '/' . $attachment['filename']);
@@ -2335,7 +2302,7 @@ function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
 
     // Send plain text email.
     if ($notificationtype & MDL_F2F_TEXT
-        && !email_to_user($user, $from, $postsubject, $posttext, $posthtml)) {
+        && !email_to_user($user, $from, $postsubject, $posttext)) {
         return 'error:cannotsendconfirmationuser';
     }
 
@@ -2347,7 +2314,7 @@ function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
         $manager->email = $manageremail;
 
         // Leave out the ical attachments in the managers notification.
-        if (!email_to_user($manager, $from, $postsubject, $managertext, $posthtml)) {
+        if (!email_to_user($manager, $from, $postsubject, $managertext)) {
             return 'error:cannotsendconfirmationmanager';
         }
     }
@@ -2361,7 +2328,7 @@ function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
             $thirdparty->email = trim($recipient);
 
             // Leave out the ical attachments in the 3rd parties notification.
-            if (!email_to_user($thirdparty, $from, $postsubject, $posttext, $posthtml)) {
+            if (!email_to_user($thirdparty, $from, $postsubject, $posttext)) {
                 return 'error:cannotsendconfirmationthirdparty';
             }
         }
