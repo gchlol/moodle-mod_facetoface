@@ -168,7 +168,10 @@ class booking_manager {
         global $DB;
         $errors = [];
         $sessioncapacitycache = [];
-        $timenow ??= time();
+
+        if ($timenow == null) {
+            $timenow = time();
+        }
 
         // Break into rows and validate the multiple interdependant fields together.
         foreach ($this->get_iterator() as $index => $entry) {
