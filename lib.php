@@ -1123,7 +1123,11 @@ function facetoface_get_future_sessions(int $id): array {
     $now = time();
     return array_filter(
         facetoface_get_sessions($id),
-        fn (stdClass $s): bool => !empty(array_filter($s->sessiondates, fn (stdClass $d): bool => $d->timestart > $now))
+        function(stdClass $s) use ($now) {
+            return !empty(array_filter($s->sessiondates, function(stdClass $d) use ($now) {
+                return $d->timestart > $now;
+            }));
+        }
     );
 }
 
