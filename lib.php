@@ -1232,7 +1232,7 @@ function facetoface_get_attendee($sessionid, $userid) {
  * Return all user fields to include in exports
  */
 function facetoface_get_userfields() {
-    global $CFG;
+    global $CFG, $DB;
 
     static $userfields = null;
     if (null == $userfields) {
@@ -1251,6 +1251,14 @@ function facetoface_get_userfields() {
                 $userfields[$shortname] = get_string($shortname);
             }
             $userfields['managersemail'] = get_string('manageremail', 'facetoface');
+
+            if ($DB->record_exists('user_info_field', array('shortname' => 'stream'))) {
+                $userfields['stream'] = get_string('stream', 'facetoface');
+            }
+
+            if ($DB->record_exists('user_info_field', array('shortname' => 'division'))) {
+                $userfields['division'] = get_string('division', 'facetoface');
+            }
         }
     }
 
@@ -1326,7 +1334,6 @@ function facetoface_write_worksheet_header(&$worksheet) {
 
     $worksheet->write_string(0, $pos++, get_string('attendance', 'facetoface'));
     $worksheet->write_string(0, $pos++, get_string('datesignedup', 'facetoface'));
-
     return $pos;
 }
 
