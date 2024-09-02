@@ -1537,6 +1537,7 @@ function facetoface_write_worksheet_header(&$worksheet) {
 
     $worksheet->write_string(0, $pos++, get_string('attendance', 'facetoface'));
     $worksheet->write_string(0, $pos++, get_string('datesignedup', 'facetoface'));
+
     return $pos;
 }
 
