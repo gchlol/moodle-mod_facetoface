@@ -92,9 +92,7 @@ define('MDL_F2F_STATUS_FULLY_ATTENDED',     100);
 
 /**
  * Returns the list of possible facetoface status.
- *
- * @param int $statuscode One of the MDL_F2F_STATUS* constants
- * @return string $string Human readable code
+ * @return array $string Human readable code
  */
 function facetoface_statuses() {
     // This array must match the status codes above, and the values
