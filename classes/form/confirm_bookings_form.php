@@ -43,6 +43,7 @@ class confirm_bookings_form extends moodleform {
         $mform = $this->_form;
         $fileid = $this->_customdata['fileid'] ?? 0;
         $f = $this->_customdata['f'] ?? 0;
+        $caseinsensitive = $this->_customdata['caseinsensitive'] ?? true;
 
         // Suppress email checkbox.
         $mform->addElement('advcheckbox', 'suppressemail', get_string('suppressemail', 'facetoface'), '', [], [0, 1]);
@@ -56,6 +57,9 @@ class confirm_bookings_form extends moodleform {
         // Reference to the uploaded file.
         $mform->addElement('hidden', 'fileid', $fileid);
         $mform->setType('fileid', PARAM_INT);
+
+        $mform->addElement('hidden', 'caseinsensitive', $caseinsensitive);
+        $mform->setType('caseinsensitive', PARAM_BOOL);
 
         $backurl = new moodle_url('/mod/facetoface/upload.php', ['f' => $f]);
         $htmlbuttons = $OUTPUT->render((new single_button(
