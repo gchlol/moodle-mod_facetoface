@@ -63,6 +63,9 @@ class upload_bookings_form extends \moodleform {
         $mform->addElement('static', 'csvuploadhelp', '',
             nl2br(get_string('facetoface:uploadbookingsfiledesc', 'mod_facetoface')));
 
+        $mform->addElement('advcheckbox', 'caseinsensitive', get_string('caseinsensitive', 'mod_facetoface'));
+        $mform->setDefault('caseinsensitive', true);
+
         // The facetoface module ID.
         $mform->addElement('hidden', 'f');
         $mform->setType('f', PARAM_INT);

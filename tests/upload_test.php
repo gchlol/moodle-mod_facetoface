@@ -213,6 +213,14 @@ class upload_test extends \advanced_testcase {
                 'notificationtype' => '',
                 'discountcode' => '',
             ],
+            // Test email does not match case-wise (in the default case sensitive mode).
+            (object) [
+                'email' => strtoupper($student->email),
+                'session' => $session->id,
+                'status' => '',
+                'notificationtype' => '',
+                'discountcode' => '',
+            ],
         ];
 
         $bm->load_from_array($records);
@@ -274,6 +282,14 @@ class upload_test extends \advanced_testcase {
             ),
             'Expecting permission check conflict due to session->facetoface + facetoface id mismatcherror.'
         );
+        $this->assertTrue(
+            $this->check_row_validation_error_exists(
+                $errors,
+                6,
+                new lang_string('error:userdoesnotexist', 'mod_facetoface', strtoupper($student->email))
+            ),
+            'Expecting user to not exist because email does not match case-wise.'
+        );
     }
 
     /**
@@ -294,6 +310,119 @@ class upload_test extends \advanced_testcase {
             }
         }
         return false;
+    }
+
+    /**
+     * Tests uploading booking fails if it matches multiple users when ignoring case.
+     */
+    public function test_processing_booking_case_insensitive_match_multiple() {
+        /** @var \mod_facetoface_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
+
+        $course = $this->getDataGenerator()->create_course();
+        $facetoface = $generator->create_instance(['course' => $course->id]);
+
+        // Create two users, with emails that would be the same when made lowercase.
+        $this->getDataGenerator()->create_and_enrol($course, 'student', ['email' => 'test@test.com']);
+        $this->getDataGenerator()->create_and_enrol($course, 'student', ['email' => 'TEST@test.com']);
+
+        $this->setCurrentTimeStart();
+        $now = time();
+        $session = $generator->create_session([
+            'facetoface' => $facetoface->id,
+            'capacity' => '3',
+            'allowoverbook' => '0',
+            'details' => 'xyz',
+            'duration' => '3.0',
+            'normalcost' => '111',
+            'discountcost' => '11',
+            'allowcancellations' => '0',
+            'sessiondates' => [
+                ['timestart' => $now + 3 * DAYSECS, 'timefinish' => $now + 2 * DAYSECS],
+            ],
+        ]);
+
+        $bm = new booking_manager($facetoface->id);
+        $record = (object) [
+            'email' => 'TEST@test.com',
+            'session' => $session->id,
+            'status' => 'booked',
+            'notificationtype' => 'ical',
+            'discountcode' => 'mycode',
+        ];
+        $records = [$record];
+        $bm->set_case_insensitive(true);
+
+        $bm->load_from_array($records);
+
+        $errors = $bm->validate();
+        $this->assertNotEmpty($errors);
+
+        $this->assertTrue(
+            $this->check_row_validation_error_exists(
+                $errors,
+                1,
+                new lang_string('error:multipleusersmatched', 'mod_facetoface', 'TEST@test.com')
+            ),
+            'Expecting to error due to matching multiple users when ignoring case.',
+        );
+    }
+
+    /**
+     * Tests uploading a booking where the emails should match regardless of case.
+     */
+    public function test_processing_booking_case_insensitive() {
+        /** @var \mod_facetoface_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
+
+        $course = $this->getDataGenerator()->create_course();
+        $facetoface = $generator->create_instance(['course' => $course->id]);
+        $this->getDataGenerator()->create_and_enrol($course, 'student', ['email' => 'test@test.com']);
+
+        $this->setCurrentTimeStart();
+        $now = time();
+        $session = $generator->create_session([
+            'facetoface' => $facetoface->id,
+            'capacity' => '3',
+            'allowoverbook' => '0',
+            'details' => 'xyz',
+            'duration' => '1.5', // One and half hours.
+            'normalcost' => '111',
+            'discountcost' => '11',
+            'allowcancellations' => '0',
+            'sessiondates' => [
+                ['timestart' => $now + 3 * DAYSECS, 'timefinish' => $now + 2 * DAYSECS],
+            ],
+        ]);
+
+        $bm = new booking_manager($facetoface->id);
+        $record = (object) [
+            'email' => 'TEST@test.com',
+            'session' => $session->id,
+            'status' => 'booked',
+            'notificationtype' => 'ical',
+            'discountcode' => 'MYSPECIALCODE',
+        ];
+        $records = [$record];
+        $bm->set_case_insensitive(true);
+
+        $bm->load_from_array($records);
+
+        $errors = $bm->validate();
+        $this->assertEmpty($errors);
+        $this->assertTrue($bm->process());
+
+        // Check users are as expected.
+        $users = facetoface_get_attendees($session->id);
+        $this->assertCount(1, $users);
+        $this->assertEquals(strtolower($record->email), strtolower(current($users)->email));
+        $this->assertEquals($record->discountcode, current($users)->discountcode);
+        $this->assertEquals(MDL_F2F_ICAL, current($users)->notificationtype);
+        $this->assertEquals(MDL_F2F_STATUS_BOOKED, current($users)->statuscode);
+
+        // Re-booking the same user shouldn't cause any isssues. Run the validate again and check.
+        $errors = $bm->validate();
+        $this->assertEmpty($errors);
     }
 
     /**
