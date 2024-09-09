@@ -56,6 +56,9 @@ class booking_manager {
     /** @var bool When true, confirmation emails are not sent. */
     private $suppressemail = false;
 
+    /** @var bool Will ignore case when matching users */
+    private $caseinsensitive = false;
+
     /**
      * Constructor for the booking manager.
      * @param int $f The facetoface module ID.
@@ -165,7 +168,6 @@ class booking_manager {
      * @return array An array of errors.
      */
     public function validate($timenow = null): array {
-        global $DB;
         $errors = [];
         $sessioncapacitycache = [];
         $timenow ??= time();
@@ -180,7 +182,7 @@ class booking_manager {
             $entry->discountcode = $entry->discountcode ?? '';
 
             // Validate and get user.
-            $userids = $DB->get_records('user', ['email' => $entry->email], 'id');
+            $userids = $this->match_users($entry->email, 'id');
 
             // Multiple matched, ambiguous which is the real one.
             if (count($userids) > 1) {
@@ -294,6 +296,18 @@ class booking_manager {
     }
 
     /**
+     * Match users for a given email, taking into account case sensitivity.
+     * @param string $email
+     * @param string $fields fields to return
+     * @return array of users, with specified fields
+     */
+    private function match_users(string $email, string $fields): array {
+        global $DB;
+        $equals = $DB->sql_equal('email', ':email', !$this->caseinsensitive);
+        return $DB->get_records_select('user', $equals, ['email' => $email], 'id', $fields);
+    }
+
+    /**
      * Transform notification type to internal representation.
      *
      * @param string $type Notification type.
@@ -318,15 +332,13 @@ class booking_manager {
      * @throws moodle_exception
      */
     public function process() {
-        global $DB;
-
         if (!empty($this->validate())) {
             throw new moodle_exception('error:cannotprocessbookingsvalidationerrorsexist', 'facetoface');
         }
 
         // Records should be valid at this point.
         foreach ($this->get_iterator() as $entry) {
-            $user = $DB->get_record('user', ['email' => $entry->email]);
+            $user = current($this->match_users($entry->email, '*'));
             $session = facetoface_get_session($entry->session);
 
             // Get signup type.
@@ -399,5 +411,13 @@ class booking_manager {
      */
     public function suppress_email() {
         $this->suppressemail = true;
+    }
+
+    /**
+     * Sets case insensitive match value
+     * @param bool $value
+     */
+    public function set_case_insensitive(bool $value) {
+        $this->caseinsensitive = $value;
     }
 }

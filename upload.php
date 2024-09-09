@@ -36,6 +36,7 @@ $fileid = optional_param('fileid', 0, PARAM_INT); // The fileid of the file uplo
 $validate = optional_param('validate', 0, PARAM_INT); // Whether or not the user wants to process the upload (after verification).
 $process = optional_param('process', 0, PARAM_INT); // Whether or not the user wants to process the upload (after verification).
 $step = optional_param('step', '', PARAM_ALPHA); // The current step in the process.
+$caseinsensitive = optional_param('caseinsensitive', false, PARAM_BOOL); // If emails should match a user case insensitively.
 
 if (!$facetoface = $DB->get_record('facetoface', ['id' => $f])) {
     throw new moodle_exception('error:incorrectfacetofaceid', 'facetoface');
@@ -63,10 +64,11 @@ if ($validate) {
     $data = $mform->get_data();
     $fileid = $data->csvfile ?: 0;
 
-    $mform = new confirm_bookings_form(null, ['f' => $f, 'fileid' => $fileid]);
+    $mform = new confirm_bookings_form(null, ['f' => $f, 'fileid' => $fileid, 'caseinsensitive' => $caseinsensitive]);
 
     $bm = new booking_manager($f);
     $bm->load_from_file($fileid);
+    $bm->set_case_insensitive($caseinsensitive);
 
     // Validate entries.
     $errors = $bm->validate();
@@ -76,6 +78,7 @@ if ($validate) {
     // Form submitted, and ready for processing -> process.
     $bm = new booking_manager($f);
     $bm->load_from_file($fileid);
+    $bm->set_case_insensitive($caseinsensitive);
 
     // Get the options selected by the user at confirm time.
     $confirmdata = (new confirm_bookings_form(null))->get_data();
