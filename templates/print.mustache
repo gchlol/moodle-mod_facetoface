@@ -40,9 +40,8 @@
         }
         .text-primary {color: #069 !important;}
         @page {
-            {{#landscape}}size: landscape;{{/landscape}}
-            {{^landscape}}size: A4;{{/landscape}}
-            margin: auto;
+            size: A4{{#landscape}} landscape{{/landscape}};
+            margin: 10mm;
         }
         @media print {
             html, body {
