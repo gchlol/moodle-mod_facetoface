@@ -1177,6 +1177,56 @@ function facetoface_get_attendees($sessionid) {
 }
 
 /**
+ * Get the user's stream from the organisation table.
+ *
+ * @param int $userid The user's ID.
+ * @return string|null The stream name or null if not found.
+ */
+function get_user_stream($userid): ?string {
+    global  $DB;
+
+    $sql = "SELECT 
+                toma.paydiv1name
+            FROM 
+                {tool_organisation_mtda_assi} toma
+            JOIN 
+                {tool_organisation_assign} toa 
+            ON toma.assignid = toa.id
+            JOIN 
+               {user} u 
+            ON u.id = toa.userid
+            WHERE 
+                u.id = :userid";
+
+    return $DB->get_field_sql($sql, ['userid' => $userid]);
+}
+
+/**
+ * Get the user's division from the organisation table.
+ *
+ * @param int $userid The user's ID.
+ * @return string|null The division name or null if not found.
+ */
+function get_user_division($userid): ?string {
+    global  $DB;
+
+    $sql = "SELECT 
+                tomp.division2name
+            FROM 
+                {tool_organisation_mtda_pos} tomp
+            JOIN 
+                {tool_organisation_assign} toa 
+            ON tomp.positionid = toa.positionid
+            JOIN 
+                {user} u 
+            ON u.id = toa.userid
+            WHERE 
+                u.id = :userid";
+
+    return $DB->get_field_sql($sql, ['userid' => $userid]);
+}
+
+/**
  * Get a single attendee of a session
  *
  * @access public
@@ -1251,14 +1301,6 @@ function facetoface_get_userfields() {
                 $userfields[$shortname] = get_string($shortname);
             }
             $userfields['managersemail'] = get_string('manageremail', 'facetoface');
-
-            if ($DB->record_exists('user_info_field', array('shortname' => 'stream'))) {
-                $userfields['stream'] = get_string('stream', 'facetoface');
-            }
-
-            if ($DB->record_exists('user_info_field', array('shortname' => 'division'))) {
-                $userfields['division'] = get_string('division', 'facetoface');
-            }
         }
     }
 
@@ -1334,6 +1376,8 @@ function facetoface_write_worksheet_header(&$worksheet) {
 
     $worksheet->write_string(0, $pos++, get_string('attendance', 'facetoface'));
     $worksheet->write_string(0, $pos++, get_string('datesignedup', 'facetoface'));
+    $worksheet->write_string(0, $pos++, get_string('stream', 'facetoface'));
+    $worksheet->write_string(0, $pos++, get_string('division', 'facetoface'));
 
     return $pos;
 }
@@ -1450,6 +1494,12 @@ function facetoface_write_activity_attendance(&$worksheet, $startingrow, $faceto
                 $signup->grade = '-';
             }
 
+            $stream = get_user_stream($userid);
+            $signup->stream = !empty($stream) ? $stream : '-';
+
+            $division = get_user_division($userid);
+            $signup->division = !empty($division) ? $division : '-';
+
             $sessionsignups[$signup->sessionid][$signup->id] = $signup;
         }
     }
@@ -1534,6 +1584,10 @@ function facetoface_write_activity_attendance(&$worksheet, $startingrow, $faceto
                 if (!empty($activityname)) {
                     $worksheet->write_string($i, $j++, $activityname);
                 }
+
+                $worksheet->write_string($i, $j++, $attendee->stream);
+
+                $worksheet->write_string($i, $j++, $attendee->division);
             }
         } else {
             // No one is sign-up, so let's just print the basic info.
