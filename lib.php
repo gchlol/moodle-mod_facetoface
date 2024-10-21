@@ -1185,20 +1185,18 @@ function facetoface_get_attendees($sessionid) {
 function get_user_stream($userid): ?string {
     global  $DB;
 
-    $sql = "SELECT 
-                toma.paydiv1name
-            FROM 
-                {tool_organisation_mtda_assi} toma
-            JOIN 
-                {tool_organisation_assign} toa 
-            ON toma.assignid = toa.id
-            JOIN 
-               {user} u 
-            ON u.id = toa.userid
-            WHERE 
-                u.id = :userid";
+    $sql = "SELECT toma.paydiv1name
+              FROM {tool_organisation_assign} toa
+              JOIN {tool_organisation_mtda_assi} toma ON toma.assignid = toa.id
+             WHERE toa.userid = :userid";
 
-    return $DB->get_field_sql($sql, ['userid' => $userid]);
+    $record = $DB->get_field_sql($sql, ['userid' => $userid]);
+
+    if ($record === false) {
+        return null;
+    }
+
+    return $record;
 }
 
 /**
@@ -1210,20 +1208,18 @@ function get_user_stream($userid): ?string {
 function get_user_division($userid): ?string {
     global  $DB;
 
-    $sql = "SELECT 
-                tomp.division2name
-            FROM 
-                {tool_organisation_mtda_pos} tomp
-            JOIN 
-                {tool_organisation_assign} toa 
-            ON tomp.positionid = toa.positionid
-            JOIN 
-                {user} u 
-            ON u.id = toa.userid
-            WHERE 
-                u.id = :userid";
+    $sql = "SELECT tomp.division2name
+              FROM {tool_organisation_assign} toa
+              JOIN {tool_organisation_mtda_pos} tomp ON tomp.positionid = toa.positionid
+             WHERE toa.userid = :userid";
 
-    return $DB->get_field_sql($sql, ['userid' => $userid]);
+    $record = $DB->get_field_sql($sql, ['userid' => $userid]);
+
+    if ($record === false) {
+        return null;
+    }
+
+    return $record;
 }
 
 /**
