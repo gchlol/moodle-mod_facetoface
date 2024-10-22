@@ -1182,7 +1182,7 @@ function facetoface_get_attendees($sessionid) {
  * @param int $userid The user's ID.
  * @return string|null The stream name or null if not found.
  */
-function get_user_stream($userid): ?string {
+function get_user_stream(int $userid): ?string {
     global  $DB;
 
     $sql = "SELECT toma.paydiv1name
@@ -1205,7 +1205,7 @@ function get_user_stream($userid): ?string {
  * @param int $userid The user's ID.
  * @return string|null The division name or null if not found.
  */
-function get_user_division($userid): ?string {
+function get_user_division(int $userid): ?string {
     global  $DB;
 
     $sql = "SELECT tomp.division2name
