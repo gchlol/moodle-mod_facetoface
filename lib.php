@@ -1491,10 +1491,10 @@ function facetoface_write_activity_attendance(&$worksheet, $startingrow, $faceto
             }
 
             $stream = get_user_stream($userid);
-            $signup->stream = !empty($stream) ? $stream : '-';
+            $signup->stream = $stream ?? '-';
 
             $division = get_user_division($userid);
-            $signup->division = !empty($division) ? $division : '-';
+            $signup->division = $division ?? '-';
 
             $sessionsignups[$signup->sessionid][$signup->id] = $signup;
         }
