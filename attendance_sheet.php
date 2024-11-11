@@ -2,6 +2,7 @@
 
 use mod_facetoface\custom_capability_checker;
 use mod_facetoface\enum\attendance_column;
+use mod_facetoface\session;
 use mod_facetoface\util\enum_util;
 use tool_organisation\persistent\assignment;
 use tool_organisation\persistent\hierarchy;
@@ -71,8 +72,7 @@ $data->session_date = null;
 if ($session->datetimeknown) {
     $session_dates = [];
     foreach ($session->sessiondates as $date) {
-        $date_data = facetoface_format_session_times($date->timestart, $date->timefinish, null);
-        $session_dates[] = $date_data->datetime;
+        $session_dates[] = session::get_readable_session_datetime($date);
     }
 
     $data->session_date = implode(html_writer::empty_tag('br'), $session_dates);

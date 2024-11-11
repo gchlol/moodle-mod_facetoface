@@ -33,8 +33,8 @@ require_once('lib.php');
 
 $id = required_param('id', PARAM_INT); // Course Module ID.
 
-if (!$course = $DB->get_record('course', array('id' => $id))) {
-    print_error('error:coursemisconfigured', 'facetoface');
+if (!$course = $DB->get_record('course', ['id' => $id])) {
+    throw new moodle_exception('error:coursemisconfigured', 'facetoface');
 }
 
 require_course_login($course);
@@ -42,10 +42,10 @@ $context = context_course::instance($course->id);
 require_capability('mod/facetoface:view', $context);
 
 // Logging and events trigger.
-$params = array(
+$params = [
     'context'  => $context,
-    'objectid' => $course->id
-);
+    'objectid' => $course->id,
+];
 $event = \mod_facetoface\event\course_viewed::create($params);
 $event->add_record_snapshot('course', $course);
 $event->trigger();
@@ -60,7 +60,7 @@ $strname = get_string('name');
 
 $pagetitle = format_string($strfacetofaces);
 
-$PAGE->set_url('/mod/facetoface/index.php', array('id' => $id));
+$PAGE->set_url('/mod/facetoface/index.php', ['id' => $id]);
 
 $PAGE->set_title($pagetitle);
 $PAGE->set_heading($course->fullname);
@@ -77,34 +77,33 @@ $timenow = time();
 $table = new html_table();
 
 if ($course->format == 'weeks' && has_capability('mod/facetoface:viewattendees', $context)) {
-    $table->head  = array ($strweek, $strfacetofacename, get_string('sign-ups', 'facetoface'));
-    $table->align = array ('center', 'left', 'center');
+    $table->head  = [$strweek, $strfacetofacename, get_string('sign-ups', 'facetoface')];
+    $table->align = ['center', 'left', 'center'];
 } else if ($course->format == 'weeks') {
-    $table->head  = array ($strweek, $strfacetofacename);
-    $table->align = array ('center', 'left', 'center', 'center');
+    $table->head  = [$strweek, $strfacetofacename];
+    $table->align = ['center', 'left', 'center', 'center'];
 } else if ($course->format == 'topics' && has_capability('mod/facetoface:viewattendees', $context)) {
-    $table->head  = array ($strcourse, $strfacetofacename, get_string('sign-ups', 'facetoface'));
-    $table->align = array ('center', 'left', 'center');
+    $table->head  = [$strcourse, $strfacetofacename, get_string('sign-ups', 'facetoface')];
+    $table->align = ['center', 'left', 'center'];
 } else if ($course->format == 'topics') {
-    $table->head  = array ($strcourse, $strfacetofacename);
-    $table->align = array ('center', 'left', 'center', 'center');
+    $table->head  = [$strcourse, $strfacetofacename];
+    $table->align = ['center', 'left', 'center', 'center'];
 } else {
-    $table->head  = array ($strfacetofacename);
-    $table->align = array ('left', 'left');
+    $table->head  = [$strfacetofacename];
+    $table->align = ['left', 'left'];
 }
 
 $currentsection = '';
 
 foreach ($facetofaces as $facetoface) {
-
     $submitted = get_string('no');
 
     if (!$facetoface->visible) {
         // Show dimmed if the mod is hidden.
-        $link = html_writer::link("view.php?f=$facetoface->id", $facetoface->name, array('class' => 'dimmed'));
+        $link = html_writer::link("view.php?f=$facetoface->id", format_string($facetoface->name), ['class' => 'dimmed']);
     } else {
         // Show normal if the mod is visible.
-        $link = html_writer::link("view.php?f=$facetoface->id", $facetoface->name);
+        $link = html_writer::link("view.php?f=$facetoface->id", format_string($facetoface->name));
     }
 
     $printsection = '';
@@ -124,16 +123,16 @@ foreach ($facetofaces as $facetoface) {
             }
         }
     }
-    $url = new moodle_url('/course/view.php', array('id' => $course->id));
-    $courselink = html_writer::link($url, $course->shortname, array('title' => $course->shortname));
-    if ($course->format == 'weeks' or $course->format == 'topics') {
+    $url = new moodle_url('/course/view.php', ['id' => $course->id]);
+    $courselink = html_writer::link($url, $course->shortname, ['title' => $course->shortname]);
+    if ($course->format == 'weeks' || $course->format == 'topics') {
         if (has_capability('mod/facetoface:viewattendees', $context)) {
-            $table->data[] = array ($courselink, $link, $totalsignupcount);
+            $table->data[] = [$courselink, $link, $totalsignupcount];
         } else {
-            $table->data[] = array ($courselink, $link);
+            $table->data[] = [$courselink, $link];
         }
     } else {
-        $table->data[] = array ($link, $submitted);
+        $table->data[] = [$link, $submitted];
     }
 }
 

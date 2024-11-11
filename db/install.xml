@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/facetoface/db" VERSION="2023051700" COMMENT="XMLDB file for Moodle mod/facetoface"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+<XMLDB PATH="mod/facetoface/db" VERSION="20231002" COMMENT="XMLDB file for Moodle mod/facetoface."
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
     <TABLE NAME="facetoface" COMMENT="Each facetoface activity has an entry here">
@@ -17,6 +17,7 @@
         <FIELD NAME="confirmationsubject" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Subject line for the confirmation emails"/>
         <FIELD NAME="confirmationinstrmngr" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Contents of confirmation emails sent to instructors and managers"/>
         <FIELD NAME="confirmationmessage" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Contents of confirmation emails sent to students"/>
+        <FIELD NAME="confirmationmessageformat" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="confirmationmessageformat"/>
         <FIELD NAME="waitlistedsubject" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Subject of the email sent when the user is on a wait-list"/>
         <FIELD NAME="waitlistedmessage" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Contents of the email sent when a user is on a wait-list"/>
         <FIELD NAME="cancellationsubject" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Subject of the emails sent when users get out of an activity"/>
@@ -36,6 +37,9 @@
         <FIELD NAME="approvalreqd" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="usercalentry" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="allowcancellationsdefault" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="signuptype" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="multiplesignupmethod" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="completionattendance" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="required attendance status for activity completion"/>
         <FIELD NAME="attendancesheetshowlogo" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="attendancesheetcolumns" TYPE="char" LENGTH="256" NOTNULL="false" SEQUENCE="false"/>
       </FIELDS>

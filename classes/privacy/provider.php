@@ -24,8 +24,6 @@
 
 namespace mod_facetoface\privacy;
 
-defined('MOODLE_INTERNAL') || die();
-
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\approved_userlist;
@@ -45,18 +43,19 @@ class provider implements
     // This plugin stores personal data.
     \core_privacy\local\metadata\provider,
 
-    // This plugin deals with user lists
+    // This plugin deals with user lists.
     \core_privacy\local\request\core_userlist_provider,
 
     // This plugin is a core_user_data_provider.
     \core_privacy\local\request\plugin\provider {
+
     /**
      * Return the fields which contain personal data.
      *
      * @param collection $items a reference to the collection to use to store the metadata.
      * @return collection the updated collection of metadata items.
      */
-    public static function get_metadata(collection $collection) : collection {
+    public static function get_metadata(collection $collection): collection {
         $collection->add_database_table(
             'facetoface_signups',
             [
@@ -99,7 +98,7 @@ class provider implements
      * @param int $userid the userid.
      * @return contextlist the list of contexts containing user info for the user.
      */
-    public static function get_contexts_for_userid(int $userid) : contextlist {
+    public static function get_contexts_for_userid(int $userid): contextlist {
         // Fetch all facetoface contexts with userdata.
         $sql = "SELECT c.id
                   FROM {context} c
@@ -130,7 +129,7 @@ class provider implements
         global $DB;
 
         // Remove contexts different from COURSE_MODULE.
-        $contexts = array_reduce($contextlist->get_contexts(), function($carry, $context) {
+        $contexts = array_reduce($contextlist->get_contexts(), function ($carry, $context) {
             if ($context->contextlevel == CONTEXT_MODULE) {
                 $carry[] = $context->id;
             }
@@ -173,13 +172,13 @@ class provider implements
                 if ($session->mailedreminder > 100) { // Mailed reminder uses magic numbers or timestamp.
                     $session->mailedreminder = transform::datetime($session->mailedreminder);
                 }
-                $signups[$session->contextid][$session->id] = (object)[
+                $signups[$session->contextid][$session->id] = (object) [
                     'id' => $session->id,
                     'sessionid' => $session->sessionid,
                     'mailedreminder' => $session->mailedreminder,
                 ];
             }
-            $signupstatus[$session->contextid][$session->id][] = (object)[
+            $signupstatus[$session->contextid][$session->id][] = (object) [
                 'statuscode' => $session->id,
                 'grade' => $session->grade,
                 'note' => $session->note,
@@ -188,22 +187,22 @@ class provider implements
         }
         $sessions->close();
 
-        array_walk($signups, function($data, $contextid) {
+        array_walk($signups, function ($data, $contextid) {
             $context = \context::instance_by_id($contextid);
             writer::with_context($context)->export_related_data(
                 [],
                 'sessions',
-                (object)['signups' => $data]
+                (object) ['signups' => $data]
             );
         });
 
-        array_walk($signupstatus, function($data, $contextid) {
+        array_walk($signupstatus, function ($data, $contextid) {
             $context = \context::instance_by_id($contextid);
-            array_walk($data, function($data, $attempt) use ($context) {
+            array_walk($data, function ($data, $attempt) use ($context) {
                 writer::with_context($context)->export_related_data(
                     [],
                     'signupstatus',
-                    (object)['status' => $data]
+                    (object) ['status' => $data]
                 );
             });
         });
@@ -227,13 +226,11 @@ class provider implements
             writer::with_context($context)->export_related_data(
                 [],
                 'trainer',
-                (object)['role' => $role->shortname]
+                (object) ['role' => $role->shortname]
             );
         }
         $roles->close();
     }
-
-
 
     /**
      * Delete all data for all users in the specified context.
@@ -248,7 +245,7 @@ class provider implements
         }
 
         if ($cm = get_coursemodule_from_id('facetoface', $context->instanceid)) {
-            $params = array('fid' => $cm->instance);
+            $params = ['fid' => $cm->instance];
             $f2fselect = "IN (SELECT s.id FROM {facetoface_sessions} s
                                 JOIN {facetoface} f ON f.id = s.facetoface
                                 WHERE f.id = :fid)";
@@ -278,13 +275,12 @@ class provider implements
 
         $userid = $contextlist->get_user()->id;
         foreach ($contextlist->get_contexts() as $context) {
-
             if (!$context instanceof \context_module) {
                 return;
             }
 
             if ($cm = get_coursemodule_from_id('facetoface', $context->instanceid)) {
-                $params = array('userid' => $userid, 'fid' => $cm->instance);
+                $params = ['userid' => $userid, 'fid' => $cm->instance];
                 $f2fselect = "IN (SELECT s.id FROM {facetoface_sessions} s
                                 JOIN {facetoface} f ON f.id = s.facetoface
                                 WHERE f.id = :fid)";
@@ -324,7 +320,7 @@ class provider implements
 
         $params = [
             'contextlevel' => CONTEXT_MODULE,
-            'contextid'    => $context->id
+            'contextid'    => $context->id,
         ];
         $userlist->add_from_sql('userid', $sql, $params);
     }
@@ -345,12 +341,12 @@ class provider implements
         $userids = $userlist->get_userids();
         list ($insql, $inparams) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
 
-        // Get session id from module id
+        // Get session id from module id.
         $sessionid = $DB->get_records_select(
             'facetoface_sessions',
             "facetoface = :facetoface",
             [
-                'facetoface' => $cm->instance
+                'facetoface' => $cm->instance,
             ]
         );
 

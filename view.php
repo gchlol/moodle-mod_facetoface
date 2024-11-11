@@ -42,31 +42,31 @@ $location = optional_param('location', '', PARAM_TEXT); // Location.
 $download = optional_param('download', '', PARAM_ALPHA); // Download attendance.
 
 if ($id) {
-    if (!$cm = $DB->get_record('course_modules', array('id' => $id))) {
-        print_error('error:incorrectcoursemoduleid', 'facetoface');
+    if (!$cm = $DB->get_record('course_modules', ['id' => $id])) {
+        throw new moodle_exception('error:incorrectcoursemoduleid', 'facetoface');
     }
-    if (!$course = $DB->get_record('course', array('id' => $cm->course))) {
-        print_error('error:coursemisconfigured', 'facetoface');
+    if (!$course = $DB->get_record('course', ['id' => $cm->course])) {
+        throw new moodle_exception('error:coursemisconfigured', 'facetoface');
     }
-    if (!$facetoface = $DB->get_record('facetoface', array('id' => $cm->instance))) {
-        print_error('error:incorrectcoursemodule', 'facetoface');
+    if (!$facetoface = $DB->get_record('facetoface', ['id' => $cm->instance])) {
+        throw new moodle_exception('error:incorrectcoursemodule', 'facetoface');
     }
 } else if ($f) {
-    if (!$facetoface = $DB->get_record('facetoface', array('id' => $f))) {
-        print_error('error:incorrectfacetofaceid', 'facetoface');
+    if (!$facetoface = $DB->get_record('facetoface', ['id' => $f])) {
+        throw new moodle_exception('error:incorrectfacetofaceid', 'facetoface');
     }
-    if (!$course = $DB->get_record('course', array('id' => $facetoface->course))) {
-        print_error('error:coursemisconfigured', 'facetoface');
+    if (!$course = $DB->get_record('course', ['id' => $facetoface->course])) {
+        throw new moodle_exception('error:coursemisconfigured', 'facetoface');
     }
     if (!$cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course->id)) {
-        print_error('error:incorrectcoursemoduleid', 'facetoface');
+        throw new moodle_exception('error:incorrectcoursemoduleid', 'facetoface');
     }
 } else {
-    print_error('error:mustspecifycoursemodulefacetoface', 'facetoface');
+    throw new moodle_exception('error:mustspecifycoursemodulefacetoface', 'facetoface');
 }
 
 $context = context_module::instance($cm->id);
-$PAGE->set_url('/mod/facetoface/view.php', array('id' => $cm->id));
+$PAGE->set_url('/mod/facetoface/view.php', ['id' => $cm->id]);
 $PAGE->set_context($context);
 $PAGE->set_cm($cm);
 $PAGE->set_pagelayout('standard');
@@ -81,10 +81,10 @@ require_course_login($course, true, $cm);
 require_capability('mod/facetoface:view', $context);
 
 // Logging and events trigger.
-$params = array(
+$params = [
     'context'  => $context,
-    'objectid' => $facetoface->id
-);
+    'objectid' => $facetoface->id,
+];
 $event = \mod_facetoface\event\course_module_viewed::create($params);
 $event->add_record_snapshot('course_modules', $cm);
 $event->add_record_snapshot('course', $course);
@@ -105,41 +105,43 @@ $completion->set_module_viewed($cm);
 
 echo $OUTPUT->header();
 
-if (empty($cm->visible) and !has_capability('mod/facetoface:viewemptyactivities', $context)) {
+if (empty($cm->visible) && !has_capability('mod/facetoface:viewemptyactivities', $context)) {
     notice(get_string('activityiscurrentlyhidden'));
 }
 echo $OUTPUT->box_start();
-echo $OUTPUT->heading(get_string('allsessionsin', 'facetoface', $facetoface->name), 2);
+echo $OUTPUT->heading(get_string('allsessionsin', 'facetoface', format_string($facetoface->name)), 2);
 echo html_writer::empty_tag('br');
 
 $locations = get_locations($facetoface->id);
 if (count($locations) > 2) {
-    echo html_writer::start_tag('form', array('action' => 'view.php', 'method' => 'get', 'class' => 'formlocation'));
+    echo html_writer::start_tag('form', ['action' => 'view.php', 'method' => 'get', 'class' => 'formlocation']);
     echo html_writer::start_tag('div');
-    echo html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'f', 'value' => $facetoface->id));
-    echo html_writer::select($locations, 'location', $location, '', array('onchange' => 'this.form.submit();'));
+    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'f', 'value' => $facetoface->id]);
+    echo html_writer::select($locations, 'location', $location, '', ['onchange' => 'this.form.submit();']);
     echo html_writer::end_tag('div'). html_writer::end_tag('form');
 }
 
-print_session_list($course->id, $facetoface->id, $location);
+print_session_list($course->id, $facetoface, $location);
 
 if (has_capability('mod/facetoface:viewattendees', $context)) {
     echo $OUTPUT->heading(get_string('exportattendance', 'facetoface'));
-    echo html_writer::start_tag('form', array('action' => 'view.php', 'method' => 'get'));
+    echo html_writer::start_tag('form', ['action' => 'view.php', 'method' => 'get']);
     echo html_writer::start_tag('div');
-    echo html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'f', 'value' => $facetoface->id));
+    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'f', 'value' => $facetoface->id]);
     echo get_string('format', 'facetoface') . '&nbsp;';
-    $formats = array('excel' => get_string('excelformat', 'facetoface'),
-                     'ods' => get_string('odsformat', 'facetoface'));
+    $formats = [
+        'excel' => get_string('excelformat', 'facetoface'),
+        'ods' => get_string('odsformat', 'facetoface'),
+    ];
     echo html_writer::select($formats, 'download', 'excel', '');
-    echo html_writer::empty_tag('input', array('type' => 'submit', 'value' => get_string('exporttofile', 'facetoface')));
+    echo html_writer::empty_tag('input', ['type' => 'submit', 'value' => get_string('exporttofile', 'facetoface')]);
     echo html_writer::end_tag('div'). html_writer::end_tag('form');
 }
 
 echo $OUTPUT->box_end();
 echo $OUTPUT->footer($course);
 
-function print_session_list($courseid, $facetofaceid, $location) {
+function print_session_list($courseid, $facetoface, $location) {
     global $CFG, $USER, $DB, $OUTPUT, $PAGE;
 
     $f2frenderer = $PAGE->get_renderer('mod_facetoface');
@@ -157,32 +159,39 @@ function print_session_list($courseid, $facetofaceid, $location) {
 
     $editsessions = has_capability('mod/facetoface:editsessions', $context);
     $deletesessions = has_capability('mod/facetoface:deletesessions', $context); // GCHLOL - MF - Delete permission
+    $uploadbookings = has_capability('mod/facetoface:uploadbookings', $context);
+    $multiplesignups = $facetoface->signuptype == MOD_FACETOFACE_SIGNUP_MULTIPLE;
+    $bulksignup = $facetoface->multiplesignupmethod == MOD_FACETOFACE_SIGNUP_MULTIPLE_PER_ACTIVITY;
 
     $bookedsession = null;
-    if ($submissions = facetoface_get_user_submissions($facetofaceid, $USER->id)) {
+    if ($submissions = facetoface_get_user_submissions($facetoface->id, $USER->id)) {
+        $bookedsessionmap = array_combine(
+            array_column($submissions, 'sessionid'),
+            $submissions
+        );
+
         $submission = array_shift($submissions);
         $bookedsession = $submission;
     }
 
     $customfields = facetoface_get_session_customfields();
 
-    $upcomingarray = array();
-    $previousarray = array();
-    $upcomingtbdarray = array();
+    $upcomingarray = [];
+    $previousarray = [];
+    $upcomingtbdarray = [];
 
-    if ($sessions = facetoface_get_sessions($facetofaceid, $location) ) {
+    if ($sessions = facetoface_get_sessions($facetoface->id, $location) ) {
         foreach ($sessions as $session) {
-
             $sessionstarted = false;
             $sessionfull = false;
             $sessionwaitlisted = false;
             $isbookedsession = false;
 
             $sessiondata = $session;
-            $sessiondata->bookedsession = $bookedsession;
+            $sessiondata->bookedsession = $multiplesignups ? ($bookedsessionmap[$session->id] ?? []) : $bookedsession;
 
             // Add custom fields to sessiondata.
-            $customdata = $DB->get_records('facetoface_session_data', array('sessionid' => $session->id), '', 'fieldid, data');
+            $customdata = $DB->get_records('facetoface_session_data', ['sessionid' => $session->id], '', 'fieldid, data');
             $sessiondata->customfielddata = $customdata;
 
             // Is session waitlisted.
@@ -211,19 +220,45 @@ function print_session_list($courseid, $facetofaceid, $location) {
 
     // Upcoming sessions.
     echo $OUTPUT->heading(get_string('upcomingsessions', 'facetoface'));
+
+    if (!empty($upcomingarray) && $bulksignup) {
+        $firstsession = $sessions[array_keys($sessions)[0]];
+        $signupforstreamlink = html_writer::link(
+            'signup.php?s=' . $firstsession->id . '&backtoallsessions=' . $session->facetoface,
+            get_string('signupforstream', 'facetoface')
+        );
+
+        echo html_writer::tag('p', $signupforstreamlink);
+    }
     if (empty($upcomingarray) && empty($upcomingtbdarray)) {
         print_string('noupcoming', 'facetoface');
     } else {
         $upcomingarray = array_merge($upcomingarray, $upcomingtbdarray);
-        echo $f2frenderer->print_session_list_table($customfields, $upcomingarray, $viewattendees, $editsessions, $deletesessions); // GCHLOL - MF - Added $deletesessions
+        echo $f2frenderer->print_session_list_table(
+            $customfields,
+            $upcomingarray,
+            $viewattendees,
+            $editsessions,
+            !$bulksignup,
+            $uploadbookings,
+            $deletesessions // GCHLOL - MF - Added $deletesessions
+        );
     }
 
     if ($editsessions) {
         $addsessionlink = html_writer::link(
-            new moodle_url('sessions.php', array('f' => $facetofaceid)),
+            new moodle_url('sessions.php', ['f' => $facetoface->id]),
             get_string('addsession', 'facetoface')
         );
         echo html_writer::tag('p', $addsessionlink);
+    }
+
+    if ($uploadbookings) {
+        $adduploadlink = html_writer::link(
+            new moodle_url('upload.php', ['f' => $facetoface->id]),
+            get_string('uploadbookings', 'facetoface')
+        );
+        echo html_writer::tag('p', $adduploadlink);
     }
 
     // Previous sessions.
@@ -231,7 +266,15 @@ function print_session_list($courseid, $facetofaceid, $location) {
         // GCHLOL - PB previous list reversed.
         $previousreverse = array_reverse($previousarray);
         echo $OUTPUT->heading(get_string('previoussessions', 'facetoface'));
-        echo $f2frenderer->print_session_list_table($customfields, $previousreverse, $viewattendees, $editsessions, $deletesessions); // GCHLOL - MF - Added $deletesessions
+        echo $f2frenderer->print_session_list_table(
+            $customfields,
+            $previousreverse,
+            $viewattendees,
+            $editsessions,
+            true,
+            $uploadbookings,
+            $deletesessions  // GCHLOL - MF - Added $deletesessions
+        );
     }
 }
 
@@ -244,9 +287,9 @@ function print_session_list($courseid, $facetofaceid, $location) {
 function get_locations($facetofaceid) {
     global $CFG, $DB;
 
-    $locationfieldid = $DB->get_field('facetoface_session_field', 'id', array('shortname' => 'facility')); // GCHLOL: Change field to facility.
+    $locationfieldid = $DB->get_field('facetoface_session_field', 'id', ['shortname' => 'facility']); // GCHLOL: Change field to facility.
     if (!$locationfieldid) {
-        return array();
+        return [];
     }
 
     $sql = "SELECT DISTINCT d.data AS location
@@ -255,17 +298,17 @@ function get_locations($facetofaceid) {
               JOIN {facetoface_session_data} d ON d.sessionid = s.id
              WHERE f.id = ? AND d.fieldid = ?";
 
-    if ($records = $DB->get_records_sql($sql, array($facetofaceid, $locationfieldid))) {
+    if ($records = $DB->get_records_sql($sql, [$facetofaceid, $locationfieldid])) {
         $locationmenu[''] = get_string('alllocations', 'facetoface');
 
         $i = 1;
         foreach ($records as $record) {
-            $locationmenu[$record->location] = $record->location;
+            $locationmenu[$record->location] = format_string($record->location);
             $i++;
         }
 
         return $locationmenu;
     }
 
-    return array();
+    return [];
 }

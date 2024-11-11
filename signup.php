@@ -35,16 +35,16 @@ $s = required_param('s', PARAM_INT); // Facetoface session ID.
 $backtoallsessions = optional_param('backtoallsessions', 0, PARAM_INT);
 
 if (!$session = facetoface_get_session($s)) {
-    print_error('error:incorrectcoursemodulesession', 'facetoface');
+    throw new moodle_exception('error:incorrectcoursemodulesession', 'facetoface');
 }
-if (!$facetoface = $DB->get_record('facetoface', array('id' => $session->facetoface))) {
-    print_error('error:incorrectfacetofaceid', 'facetoface');
+if (!$facetoface = $DB->get_record('facetoface', ['id' => $session->facetoface])) {
+    throw new moodle_exception('error:incorrectfacetofaceid', 'facetoface');
 }
-if (!$course = $DB->get_record('course', array('id' => $facetoface->course))) {
-    print_error('error:coursemisconfigured', 'facetoface');
+if (!$course = $DB->get_record('course', ['id' => $facetoface->course])) {
+    throw new moodle_exception('error:coursemisconfigured', 'facetoface');
 }
 if (!$cm = get_coursemodule_from_instance("facetoface", $facetoface->id, $course->id)) {
-    print_error('error:incorrectcoursemoduleid', 'facetoface');
+    throw new moodle_exception('error:incorrectcoursemoduleid', 'facetoface');
 }
 
 require_course_login($course, true, $cm);
@@ -60,7 +60,7 @@ if ($backtoallsessions) {
 $pagetitle = format_string($facetoface->name);
 
 $PAGE->set_cm($cm);
-$PAGE->set_url('/mod/facetoface/signup.php', array('s' => $s, 'backtoallsessions' => $backtoallsessions));
+$PAGE->set_url('/mod/facetoface/signup.php', ['s' => $s, 'backtoallsessions' => $backtoallsessions]);
 
 $PAGE->set_title($pagetitle);
 $PAGE->set_heading($course->fullname);
@@ -82,7 +82,7 @@ if (isguestuser()) {
 }
 
 $manageremail = false;
-if (get_config(null, 'facetoface_addchangemanageremail')) {
+if (get_config('facetoface', 'addchangemanageremail')) {
     $manageremail = facetoface_get_manageremail($USER->id);
 }
 
@@ -93,20 +93,19 @@ if ($mform->is_cancelled()) {
     redirect($returnurl);
 }
 
+$isbulksignup = $facetoface->multiplesignupmethod == MOD_FACETOFACE_SIGNUP_MULTIPLE_PER_ACTIVITY;
 if ($fromform = $mform->get_data()) { // Form submitted.
-
     if (empty($fromform->submitbutton)) {
-        print_error('error:unknownbuttonclicked', 'facetoface', $returnurl);
+        throw new moodle_exception('error:unknownbuttonclicked', 'facetoface', $returnurl);
     }
 
     // User can not update Manager's email (depreciated functionality).
     if (!empty($fromform->manageremail)) {
-
         // Logging and events trigger.
-        $params = array(
+        $params = [
             'context'  => $contextmodule,
-            'objectid' => $session->id
-        );
+            'objectid' => $session->id,
+        ];
         $event = \mod_facetoface\event\update_manageremail_failed::create($params);
         $event->add_record_snapshot('facetoface_sessions', $session);
         $event->add_record_snapshot('facetoface', $facetoface);
@@ -117,26 +116,78 @@ if ($fromform = $mform->get_data()) { // Form submitted.
     if (!$session->datetimeknown) {
         $statuscode = MDL_F2F_STATUS_WAITLISTED;
     } else if (facetoface_get_num_attendees($session->id) < $session->capacity) {
-
         // Save available.
         $statuscode = MDL_F2F_STATUS_BOOKED;
     } else {
         $statuscode = MDL_F2F_STATUS_WAITLISTED;
     }
 
-    if (!facetoface_session_has_capacity($session, $context) && (!$session->allowoverbook)) {
-        print_error('sessionisfull', 'facetoface', $returnurl);
-    } else if (facetoface_get_user_submissions($facetoface->id, $USER->id)) {
-        print_error('alreadysignedup', 'facetoface', $returnurl);
-    } else if (facetoface_manager_needed($facetoface) && !facetoface_get_manageremail($USER->id)) {
-        print_error('error:manageremailaddressmissing', 'facetoface', $returnurl);
-    } else if ($submissionid = facetoface_user_signup($session, $facetoface, $course, $fromform->discountcode, $fromform->notificationtype, $statuscode)) {
+    if ($isbulksignup) {
+        $error = '';
+        $message = get_string('bookingcompleted', 'facetoface');
 
+        foreach (facetoface_get_future_sessions($facetoface->id) as $session) {
+            if (!facetoface_session_has_capacity($session, $context) && (!$session->allowoverbook)) {
+                $error = html_writer::empty_tag('br') . html_writer::empty_tag('br') . get_string('somesessionsfull', 'facetoface');
+                continue;
+            }
+
+            // This shouldn't happen. Bulk signup can only be enabled when multiple signups are allowed.
+            if ($facetoface->signuptype == MOD_FACETOFACE_SIGNUP_SINGLE
+                && facetoface_get_user_submissions($facetoface->id, $USER->id)) {
+                throw new moodle_exception('alreadysignedup', 'facetoface', $returnurl);
+            }
+
+            if (facetoface_manager_needed($facetoface) && !facetoface_get_manageremail($USER->id)) {
+                throw new moodle_exception('error:manageremailaddressmissing', 'facetoface', $returnurl);
+            }
+
+            if ($submissionid = facetoface_user_signup(
+                $session,
+                $facetoface,
+                $course,
+                $fromform->discountcode,
+                $fromform->notificationtype,
+                $statuscode,
+                false,
+                false
+            )) {
+                // Logging and events trigger.
+                $params = [
+                    'context'  => $contextmodule,
+                    'objectid' => $session->id,
+                ];
+                $event = \mod_facetoface\event\signup_success::create($params);
+                $event->add_record_snapshot('facetoface_sessions', $session);
+                $event->add_record_snapshot('facetoface', $facetoface);
+                $event->trigger();
+            }
+        }
+
+        $timemessage = 4;
+        redirect($returnurl, $message . $error, $timemessage);
+    }
+
+    if (!facetoface_session_has_capacity($session, $context) && (!$session->allowoverbook)) {
+        throw new moodle_exception('sessionisfull', 'facetoface', $returnurl);
+    } else if ($facetoface->signuptype == MOD_FACETOFACE_SIGNUP_SINGLE
+        && facetoface_get_user_submissions($facetoface->id, $USER->id)) {
+        throw new moodle_exception('alreadysignedup', 'facetoface', $returnurl);
+    } else if (facetoface_manager_needed($facetoface) && !facetoface_get_manageremail($USER->id)) {
+        throw new moodle_exception('error:manageremailaddressmissing', 'facetoface', $returnurl);
+    } else if ($submissionid = facetoface_user_signup(
+        $session,
+        $facetoface,
+        $course,
+        $fromform->discountcode,
+        $fromform->notificationtype,
+        $statuscode
+    )) {
         // Logging and events trigger.
-        $params = array(
+        $params = [
             'context'  => $contextmodule,
-            'objectid' => $session->id
-        );
+            'objectid' => $session->id,
+        ];
         $event = \mod_facetoface\event\signup_success::create($params);
         $event->add_record_snapshot('facetoface_sessions', $session);
         $event->add_record_snapshot('facetoface', $facetoface);
@@ -144,7 +195,8 @@ if ($fromform = $mform->get_data()) { // Form submitted.
 
         $message = get_string('bookingcompleted', 'facetoface');
         if ($session->datetimeknown && $facetoface->confirmationinstrmngr) {
-            $message .= html_writer::empty_tag('br') . html_writer::empty_tag('br') . get_string('confirmationsentmgr', 'facetoface');
+            $message .= html_writer::empty_tag('br') . html_writer::empty_tag('br')
+                     . get_string('confirmationsentmgr', 'facetoface');
         } else {
             $message .= html_writer::empty_tag('br') . html_writer::empty_tag('br') . get_string('confirmationsent', 'facetoface');
         }
@@ -152,23 +204,21 @@ if ($fromform = $mform->get_data()) { // Form submitted.
         $timemessage = 4;
         redirect($returnurl, $message, $timemessage);
     } else {
-
         // Logging and events trigger.
-        $params = array(
+        $params = [
             'context'  => $contextmodule,
-            'objectid' => $session->id
-        );
+            'objectid' => $session->id,
+        ];
         $event = \mod_facetoface\event\signup_failed::create($params);
         $event->add_record_snapshot('facetoface_sessions', $session);
         $event->add_record_snapshot('facetoface', $facetoface);
         $event->trigger();
 
-        print_error('error:problemsigningup', 'facetoface', $returnurl);
+        throw new moodle_exception('error:problemsigningup', 'facetoface', $returnurl);
     }
 
     redirect($returnurl);
 } else if ($manageremail !== false) {
-
     // Set values for the form.
     $toform = new stdClass();
     $toform->manageremail = $manageremail;
@@ -182,8 +232,8 @@ $heading = get_string('signupfor', 'facetoface', $facetoface->name);
 $viewattendees = has_capability('mod/facetoface:viewattendees', $context);
 $signedup = facetoface_check_signup($facetoface->id);
 
-if ($signedup and $signedup != $session->id) {
-    print_error('error:signedupinothersession', 'facetoface', $returnurl);
+if ($facetoface->signuptype == MOD_FACETOFACE_SIGNUP_SINGLE && $signedup && $signedup != $session->id) {
+    throw new moodle_exception('error:signedupinothersession', 'facetoface', $returnurl);
 }
 
 echo $OUTPUT->box_start();
@@ -191,7 +241,7 @@ echo $OUTPUT->heading($heading);
 
 $timenow = time();
 
-if ($session->datetimeknown && facetoface_has_session_started($session, $timenow)) {
+if (!$isbulksignup && $session->datetimeknown && facetoface_has_session_started($session, $timenow)) {
     $inprogressstr = get_string('cannotsignupsessioninprogress', 'facetoface');
     $overstr = get_string('cannotsignupsessionover', 'facetoface');
 
@@ -203,43 +253,60 @@ if ($session->datetimeknown && facetoface_has_session_started($session, $timenow
     exit;
 }
 
-if (!$signedup && !facetoface_session_has_capacity($session, $context) && (!$session->allowoverbook)) {
-    print_error('sessionisfull', 'facetoface', $returnurl);
-    echo $OUTPUT->box_end();
-    echo $OUTPUT->footer($course);
-    exit;
+if (!$isbulksignup && !$signedup && !facetoface_session_has_capacity($session, $context) && (!$session->allowoverbook)) {
+    throw new moodle_exception('sessionisfull', 'facetoface', $returnurl);
 }
 
-echo facetoface_print_session($session, $viewattendees);
+if (!$isbulksignup) {
+    echo facetoface_print_session($session, $viewattendees);
+}
 
-if ($signedup) {
+if (!$isbulksignup && $signedup) {
     if (!($session->datetimeknown && facetoface_has_session_started($session, $timenow)) && $session->allowcancellations) {
-
         // Cancellation link.
-        $cancellationurl = new moodle_url('cancelsignup.php', array('s' => $session->id, 'backtoallsessions' => $backtoallsessions));
-        echo html_writer::link($cancellationurl, get_string('cancelbooking', 'facetoface'), array('title' => get_string('cancelbooking', 'facetoface')));
+        $cancellationurl = new moodle_url('cancelsignup.php', ['s' => $session->id, 'backtoallsessions' => $backtoallsessions]);
+        echo html_writer::link(
+            $cancellationurl,
+            get_string('cancelbooking', 'facetoface'),
+            ['title' => get_string('cancelbooking', 'facetoface')]
+        );
         echo ' &ndash; ';
     }
 
     // See attendees link.
     if ($viewattendees) {
-        $attendeesurl = new moodle_url('attendees.php', array('s' => $session->id, 'backtoallsessions' => $backtoallsessions));
-        echo html_writer::link($attendeesurl, get_string('seeattendees', 'facetoface'), array('title' => get_string('seeattendees', 'facetoface')));
+        $attendeesurl = new moodle_url('attendees.php', ['s' => $session->id, 'backtoallsessions' => $backtoallsessions]);
+        echo html_writer::link(
+            $attendeesurl,
+            get_string('seeattendees', 'facetoface'),
+            ['title' => get_string('seeattendees', 'facetoface')]
+        );
     }
 
-    echo html_writer::empty_tag('br') . html_writer::link($returnurl, get_string('goback', 'facetoface'), array('title' => get_string('goback', 'facetoface')));
-} else if (facetoface_manager_needed($facetoface) && !facetoface_get_manageremail($USER->id)) {
+    echo html_writer::empty_tag('br');
+    echo html_writer::link($returnurl, get_string('goback', 'facetoface'), ['title' => get_string('goback', 'facetoface')]);
+}
 
+$managerrequired = facetoface_manager_needed($facetoface) && !facetoface_get_manageremail($USER->id);
+if (!$signedup && $managerrequired) {
     // Don't allow signup to proceed if a manager is required.
     // Check to see if the user has a managers email set.
     echo html_writer::tag('p', html_writer::tag('strong', get_string('error:manageremailaddressmissing', 'facetoface')));
-    echo html_writer::empty_tag('br') . html_writer::link($returnurl, get_string('goback', 'facetoface'), array('title' => get_string('goback', 'facetoface')));
+    echo html_writer::empty_tag('br');
+    echo html_writer::link($returnurl, get_string('goback', 'facetoface'), ['title' => get_string('goback', 'facetoface')]);
+}
 
-} else if (!has_capability('mod/facetoface:signup', $context)) {
+$hascap = has_capability('mod/facetoface:signup', $context);
+if (!$signedup && !$managerrequired && !$hascap) {
     echo html_writer::tag('p', html_writer::tag('strong', get_string('error:nopermissiontosignup', 'facetoface')));
-    echo html_writer::empty_tag('br') . html_writer::link($returnurl, get_string('goback', 'facetoface'), array('title' => get_string('goback', 'facetoface')));
-} else {
+    echo html_writer::empty_tag('br') . html_writer::link(
+        $returnurl,
+        get_string('goback', 'facetoface'),
+        ['title' => get_string('goback', 'facetoface')]
+    );
+}
 
+if ($facetoface->signuptype == MOD_FACETOFACE_SIGNUP_MULTIPLE || (!$signedup && !$managerrequired && $hascap)) {
     // Signup form.
     $mform->display();
 }

@@ -35,26 +35,27 @@ require_once('lib.php');
 
 define('MAX_USERS_PER_PAGE', 5000);
 
-$s              = required_param('s', PARAM_INT); // Facetoface session ID.
-$add            = optional_param('add', 0, PARAM_BOOL);
-$remove         = optional_param('remove', 0, PARAM_BOOL);
-$showall        = optional_param('showall', 0, PARAM_BOOL);
-$searchtext     = optional_param('searchtext', '', PARAM_TEXT); // Search string.
-$suppressemail  = optional_param('suppressemail', false, PARAM_BOOL); // Send email notifications.
-$previoussearch = optional_param('previoussearch', 0, PARAM_BOOL);
+$s                 = required_param('s', PARAM_INT); // Facetoface session ID.
+$add               = optional_param('add', 0, PARAM_BOOL);
+$remove            = optional_param('remove', 0, PARAM_BOOL);
+$showall           = optional_param('showall', 0, PARAM_BOOL);
+$searchtext        = optional_param('searchtext', '', PARAM_TEXT); // Search string.
+$suppressemail     = optional_param('suppressemail', false, PARAM_BOOL); // Send email notifications.
+$previoussearch    = optional_param('previoussearch', 0, PARAM_BOOL);
+$addtoallsessions  = optional_param('addtoallsessions', 0, PARAM_BOOL);
 $backtoallsessions = optional_param('backtoallsessions', 0, PARAM_INT); // Facetoface activity to go back to.
 
 if (!$session = facetoface_get_session($s)) {
-    print_error('error:incorrectcoursemodulesession', 'facetoface');
+    throw new moodle_exception('error:incorrectcoursemodulesession', 'facetoface');
 }
-if (!$facetoface = $DB->get_record('facetoface', array('id' => $session->facetoface))) {
-    print_error('error:incorrectfacetofaceid', 'facetoface');
+if (!$facetoface = $DB->get_record('facetoface', ['id' => $session->facetoface])) {
+    throw new moodle_exception('error:incorrectfacetofaceid', 'facetoface');
 }
-if (!$course = $DB->get_record('course', array('id' => $facetoface->course))) {
-    print_error('error:coursemisconfigured', 'facetoface');
+if (!$course = $DB->get_record('course', ['id' => $facetoface->course])) {
+    throw new moodle_exception('error:coursemisconfigured', 'facetoface');
 }
 if (!$cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course->id)) {
-    print_error('error:incorrectcoursemodule', 'facetoface');
+    throw new moodle_exception('error:incorrectcoursemodule', 'facetoface');
 }
 
 // Check essential permissions.
@@ -79,17 +80,24 @@ $strsearchresults = get_string('searchresults');
 $strfacetofaces = get_string('modulenameplural', 'facetoface');
 $strfacetoface = get_string('modulename', 'facetoface');
 
-$errors = array();
+$errors = [];
 
 // Get the user_selector we will need.
 // GCHLOL: - PB - introduce "my" attendees
 if (has_capability('mod/facetoface:addattendees', $context)) {
-    $potentialuserselector = new facetoface_candidate_selector('addselect', array('sessionid' => $session->id));
+    $potentialuserselector = new facetoface_candidate_selector('addselect', [
+    'sessionid' => $session->id,
+    'courseid' => $course->id,
+    'accesscontext' => $context,
+]);
 } else if ($manager_permissions) {
     $potentialuserselector = new facetoface_mycandidate_selector('addselect', array('sessionid' => $session->id));
 }
 if (has_capability('mod/facetoface:removeattendees', $context)) {
-    $existinguserselector = new facetoface_existing_selector('removeselect', array('sessionid' => $session->id));
+    $existinguserselector = new facetoface_existing_selector('removeselect', [
+    'sessionid' => $session->id,
+    'accesscontext' => $context,
+]);
 } else if ($manager_permissions) {
     $existinguserselector = new facetoface_myexisting_selector('removeselect', array('sessionid' => $session->id));
 }
@@ -110,7 +118,7 @@ if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
 
             // Make sure that the user is enroled in the course.
             if (!has_capability('moodle/course:view', $context, $adduser)) {
-                $user = $DB->get_record('user', array('id' => $adduser));
+                $user = $DB->get_record('user', ['id' => $adduser]);
                 // Make sure that the user is enroled in the course.
                 if (!is_enrolled($context, $user)) {
                     // GCHLOL: Enrol user with default manual enrolment role.
@@ -125,26 +133,33 @@ if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
                 }
             }
 
-            $usernamefields = get_all_user_name_fields(true);
-            if (facetoface_get_user_submissions($facetoface->id, $adduser)) {
-                $erruser = $DB->get_record('user', array('id' => $adduser), "id, {$usernamefields}");
+            $usernamefields = facetoface_get_all_user_name_fields(true);
+            if (facetoface_get_user_submissions($facetoface->id, $adduser)
+                && $facetoface->signuptype != MOD_FACETOFACE_SIGNUP_MULTIPLE) {
+                $erruser = $DB->get_record('user', ['id' => $adduser], "id, {$usernamefields}");
                 $errors[] = get_string('error:addalreadysignedupattendee', 'facetoface', fullname($erruser));
             } else {
-                if (!facetoface_session_has_capacity($session, $context)) {
-                    $errors[] = get_string('full', 'facetoface');
-                    break; // No point in trying to add other people.
-                }
-                // Check if we are waitlisting or booking.
-                if ($session->datetimeknown) {
-                    $status = MDL_F2F_STATUS_BOOKED;
-                } else {
-                    $status = MDL_F2F_STATUS_WAITLISTED;
-                }
-                // GCHLOL: Change notification type to ICAL.
-                if (!facetoface_user_signup($session, $facetoface, $course, '', MDL_F2F_ICAL,
-                $status, $adduser, !$suppressemail)) {
-                    $erruser = $DB->get_record('user', array('id' => $adduser), "id, {$usernamefields}");
-                    $errors[] = get_string('error:addattendee', 'facetoface', fullname($erruser));
+                $now = time();
+                $addtofuturesessions = $addtoallsessions && $facetoface->signuptype == MOD_FACETOFACE_SIGNUP_MULTIPLE;
+                $sessions = $addtofuturesessions ? facetoface_get_future_sessions($facetoface->id) : [$session];
+
+                foreach ($sessions as $session) {
+                    if (!facetoface_session_has_capacity($session, $context)) {
+                        $errors[] = get_string('full', 'facetoface');
+                        break; // No point in trying to add other people.
+                    }
+                    // Check if we are waitlisting or booking.
+                    if ($session->datetimeknown) {
+                        $status = MDL_F2F_STATUS_BOOKED;
+                    } else {
+                        $status = MDL_F2F_STATUS_WAITLISTED;
+                    }
+                    // GCHLOL: Change notification type to ICAL.
+                    if (!facetoface_user_signup($session, $facetoface, $course, '', MDL_F2F_ICAL,
+                            $status, $adduser, !$suppressemail)) {
+                        $erruser = $DB->get_record('user', ['id' => $adduser], "id, {$usernamefields}");
+                        $errors[] = get_string('error:addattendee', 'facetoface', fullname($erruser));
+                    }
                 }
             }
         }
@@ -166,16 +181,15 @@ if (optional_param('remove', false, PARAM_BOOL) && confirm_sesskey()) {
             }
 
             if (facetoface_user_cancel($session, $removeuser, true, $cancelerr)) {
-
                 // Notify the user of the cancellation if the session hasn't started yet.
                 $timenow = time();
-                if (!$suppressemail and !facetoface_has_session_started($session, $timenow)) {
+                if (!$suppressemail && !facetoface_has_session_started($session, $timenow)) {
                     facetoface_send_cancellation_notice($facetoface, $session, $removeuser);
                 }
             } else {
                 $errors[] = $cancelerr;
-                $usernamefields = get_all_user_name_fields(true);
-                $erruser = $DB->get_record('user', array('id' => $removeuser), "id, {$usernamefields}");
+                $usernamefields = facetoface_get_all_user_name_fields(true);
+                $erruser = $DB->get_record('user', ['id' => $removeuser], "id, {$usernamefields}");
                 $errors[] = get_string('error:removeattendee', 'facetoface', fullname($erruser));
             }
         }
@@ -191,7 +205,7 @@ if (optional_param('remove', false, PARAM_BOOL) && confirm_sesskey()) {
 $pagetitle = format_string($facetoface->name);
 
 $PAGE->set_cm($cm);
-$PAGE->set_url('/mod/facetoface/editattendees.php', array('s' => $s, 'backtoallsessions' => $backtoallsessions));
+$PAGE->set_url('/mod/facetoface/editattendees.php', ['s' => $s, 'backtoallsessions' => $backtoallsessions]);
 
 $PAGE->set_title($pagetitle);
 $PAGE->set_heading($course->fullname);
@@ -201,50 +215,70 @@ echo $OUTPUT->box_start();
 echo $OUTPUT->heading(get_string('addremoveattendees', 'facetoface'));
 
 // Create user_selector form.
-$out = html_writer::start_tag('form', array('id' => 'assignform', 'method' => 'post', 'action' => $PAGE->url));
+$out = html_writer::start_tag('form', ['id' => 'assignform', 'method' => 'post', 'action' => $PAGE->url]);
 $out .= html_writer::start_tag('div');
-$out .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => "previoussearch", 'value' => $previoussearch));
-$out .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => "backtoallsessions", 'value' => $backtoallsessions));
-$out .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => "sesskey", 'value' => sesskey()));
+$out .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => "previoussearch", 'value' => $previoussearch]);
+$out .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => "backtoallsessions", 'value' => $backtoallsessions]);
+$out .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => "sesskey", 'value' => sesskey()]);
 
 $table = new html_table();
 $table->attributes['class'] = "generaltable generalbox boxaligncenter";
-$cells = array();
+$cells = [];
+
+if ($facetoface->signuptype == MOD_FACETOFACE_SIGNUP_MULTIPLE) {
+    $content = html_writer::checkbox(
+        'addtoallsessions',
+        1,
+        0,
+        get_string('addtoallsessions', 'facetoface'),
+        ['id' => 'addtoallsessions']
+    );
+    $content .= $OUTPUT->help_icon('addtoallsessions', 'facetoface');
+    $cell = new html_table_cell($content);
+    $cell->attributes['colspan'] = '3';
+    $table->data[] = new html_table_row([$cell]);
+}
+
+$content = html_writer::checkbox('suppressemail', 1, 0, get_string('suppressemail', 'facetoface'),
+    ['id' => 'suppressemail']);
+$content .= $OUTPUT->help_icon('suppressemail', 'facetoface');
+$cell = new html_table_cell($content);
+$cell->attributes['id'] = 'backcell';
+$cell->attributes['colspan'] = '3';
+$table->data[] = new html_table_row([$cell]);
+
 $content = html_writer::start_tag('p') . html_writer::tag('label', get_string('attendees', 'facetoface'),
-        array('for' => 'removeselect')) . html_writer::end_tag('p');
+        ['for' => 'removeselect']) . html_writer::end_tag('p');
 $content .= $existinguserselector->display(true);
 $cell = new html_table_cell($content);
 $cell->attributes['id'] = 'existingcell';
 $cells[] = $cell;
 $content = html_writer::tag('div', html_writer::empty_tag('input',
-    array('type' => 'submit', 'id' => 'add', 'name' => 'add', 'title' => get_string('add'),
-        'value' => $OUTPUT->larrow().' '.get_string('add'))), array('id' => 'addcontrols'));
+    [
+        'type' => 'submit', 'id' => 'add', 'name' => 'add', 'title' => get_string('add'),
+        'value' => $OUTPUT->larrow().' '.get_string('add'),
+]), ['id' => 'addcontrols']);
 $content .= html_writer::tag('div', html_writer::empty_tag('input',
-    array('type' => 'submit', 'id' => 'remove', 'name' => 'remove', 'title' => get_string('remove'),
-        'value' => $OUTPUT->rarrow().' '.get_string('remove'))), array('id' => 'removecontrols'));
+    [
+        'type' => 'submit', 'id' => 'remove', 'name' => 'remove', 'title' => get_string('remove'),
+        'value' => $OUTPUT->rarrow().' '.get_string('remove'),
+]), ['id' => 'removecontrols']);
 $cell = new html_table_cell($content);
 $cell->attributes['id'] = 'buttonscell';
 $cells[] = $cell;
 $content = html_writer::start_tag('p') . html_writer::tag('label',
-        get_string('potentialattendees', 'facetoface'), array('for' => 'addselect')) . html_writer::end_tag('p');
+        get_string('potentialattendees', 'facetoface'), ['for' => 'addselect']) . html_writer::end_tag('p');
 $content .= $potentialuserselector->display(true);
 $cell = new html_table_cell($content);
 $cell->attributes['id'] = 'potentialcell';
 $cells[] = $cell;
 $table->data[] = new html_table_row($cells);
-$content = html_writer::checkbox('suppressemail', 1, $suppressemail, get_string('suppressemail', 'facetoface'),
-    array('id' => 'suppressemail'));
-$content .= $OUTPUT->help_icon('suppressemail', 'facetoface');
-$cell = new html_table_cell($content);
-$cell->attributes['id'] = 'backcell';
-$cell->attributes['colspan'] = '3';
-$table->data[] = new html_table_row(array($cell));
 
 $out .= html_writer::table($table);
 
 // Get all signed up non-attendees.
 $nonattendees = 0;
-$usernamefields = get_all_user_name_fields(true, 'u');
+$usernamefields = facetoface_get_all_user_name_fields(true, 'u');
 $nonattendeesrs = $DB->get_recordset_sql(
      "SELECT
             u.id,
@@ -267,13 +301,13 @@ $nonattendeesrs = $DB->get_recordset_sql(
         AND ss.superceded != 1
         AND ss.statuscode = ?
         ORDER BY
-            u.lastname, u.firstname", array($session->id, MDL_F2F_STATUS_REQUESTED)
+            u.lastname, u.firstname", [$session->id, MDL_F2F_STATUS_REQUESTED]
 );
 
 $table = new html_table();
-$table->head = array(get_string('name'), get_string('email'), get_string('status'));
+$table->head = [get_string('name'), get_string('email'), get_string('status')];
 foreach ($nonattendeesrs as $user) {
-    $data = array();
+    $data = [];
     $data[] = new html_table_cell(fullname($user));
     $data[] = new html_table_cell($user->email);
     $data[] = new html_table_cell(get_string('status_' . facetoface_get_status($user->statuscode), 'facetoface'));
@@ -305,7 +339,7 @@ if (!empty($errors)) {
 
 // Bottom of the page links.
 echo html_writer::start_tag('p');
-$url = new moodle_url('/mod/facetoface/attendees.php', array('s' => $session->id, 'backtoallsessions' => $backtoallsessions));
+$url = new moodle_url('/mod/facetoface/attendees.php', ['s' => $session->id, 'backtoallsessions' => $backtoallsessions]);
 echo html_writer::link($url, get_string('goback', 'facetoface'));
 echo html_writer::end_tag('p');
 echo $OUTPUT->box_end();

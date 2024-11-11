@@ -28,8 +28,6 @@
  * @author     Francois Marier <francois@catalyst.net.nz>
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 class mod_facetoface_renderer extends plugin_renderer_base {
 
     /**
@@ -37,15 +35,28 @@ class mod_facetoface_renderer extends plugin_renderer_base {
      *
      * GCHLOL - MF - Added $deletesessions to parameters
      */
-    public function print_session_list_table($customfields, $sessions, $viewattendees, $editsessions, $deletesessions = false) {
+    public function print_session_list_table(
+        $customfields,
+        $sessions,
+        $viewattendees,
+        $editsessions,
+        $signuplinks = true,
+        $uploadbookings = false,
+        $deletesessions = false
+    ) {
         $output = '';
 
-        $tableheader = array();
+        $tableheader = [];
         foreach ($customfields as $field) {
             if (!empty($field->showinsummary)) {
                 $tableheader[] = format_string($field->name);
             }
         }
+
+        if ($uploadbookings) {
+            $tableheader[] = get_string('sessionnumber', 'facetoface');
+        }
+
         $tableheader[] = get_string('date', 'facetoface');
         $tableheader[] = get_string('time', 'facetoface');
         if ($viewattendees) {
@@ -59,8 +70,9 @@ class mod_facetoface_renderer extends plugin_renderer_base {
         $timenow = time();
 
         $table = new html_table();
+        $table->attributes['class'] = 'f2fsessionlist';
         $table->head = $tableheader;
-        $table->data = array();
+        $table->data = [];
 
         foreach ($sessions as $session) {
             $isbookedsession = false;
@@ -68,7 +80,7 @@ class mod_facetoface_renderer extends plugin_renderer_base {
             $sessionstarted = false;
             $sessionfull = false;
 
-            $sessionrow = array();
+            $sessionrow = [];
 
             // Custom fields.
             $customdata = $session->customfielddata;
@@ -81,12 +93,19 @@ class mod_facetoface_renderer extends plugin_renderer_base {
                     $sessionrow[] = '&nbsp;';
                 } else {
                     if (CUSTOMFIELD_TYPE_MULTISELECT == $field->type) {
-                        $sessionrow[] = str_replace(CUSTOMFIELD_DELIMITER, html_writer::empty_tag('br'), format_string($customdata[$field->id]->data));
+                        $sessionrow[] = str_replace(
+                            CUSTOMFIELD_DELIMITER,
+                            html_writer::empty_tag('br'),
+                            format_string($customdata[$field->id]->data)
+                        );
                     } else {
                         $sessionrow[] = format_string($customdata[$field->id]->data);
                     }
-
                 }
+            }
+
+            if ($uploadbookings) {
+                $sessionrow[] = html_writer::tag('span', $session->id, ['class' => 'mr-3']);
             }
 
             // Dates/times.
@@ -94,22 +113,18 @@ class mod_facetoface_renderer extends plugin_renderer_base {
             $allsessiontimes = '';
             if ($session->datetimeknown) {
                 foreach ($session->sessiondates as $date) {
-                    $sessionobj = facetoface_format_session_times($date->timestart, $date->timefinish, null);
-
                     if (!empty($allsessiondates)) {
                         $allsessiondates .= html_writer::empty_tag('br');
                     }
-                    $allsessiondates .= $sessionobj->startdate;
-
+                    $allsessiondates .= \mod_facetoface\session::get_readable_session_date($date);
                     if (!empty($allsessiontimes)) {
                         $allsessiontimes .= html_writer::empty_tag('br');
                     }
-                    $allsessiontimes .= "$sessionobj->starttime - $sessionobj->endtime";
+                    $allsessiontimes .= \mod_facetoface\session::get_readable_session_time($date);
                 }
             } else {
                 $allsessiondates = get_string('wait-listed', 'facetoface');
                 $allsessiontimes = get_string('wait-listed', 'facetoface');
-                $sessionwaitlisted = true;
             }
             $sessionrow[] = $allsessiondates;
             $sessionrow[] = $allsessiontimes;
@@ -126,7 +141,9 @@ class mod_facetoface_renderer extends plugin_renderer_base {
 
             // Status.
             $status  = get_string('bookingopen', 'facetoface');
-            if ($session->datetimeknown && facetoface_has_session_started($session, $timenow) && facetoface_is_session_in_progress($session, $timenow)) {
+            if ($session->datetimeknown
+                && facetoface_has_session_started($session, $timenow)
+                && facetoface_is_session_in_progress($session, $timenow)) {
                 $status = get_string('sessioninprogress', 'facetoface');
                 $sessionstarted = true;
             } else if ($session->datetimeknown && facetoface_has_session_started($session, $timenow)) {
@@ -146,33 +163,44 @@ class mod_facetoface_renderer extends plugin_renderer_base {
             // Options.
             $options = '';
             if ($editsessions) {
-                $options .= $this->output->action_icon(new moodle_url('sessions.php', array('s' => $session->id)),
+                $options .= $this->output->action_icon(new moodle_url('sessions.php', ['s' => $session->id]),
                         new pix_icon('t/edit', get_string('edit', 'facetoface')), null,
-                        array('title' => get_string('editsession', 'facetoface'))) . ' ';
-                $options .= $this->output->action_icon(new moodle_url('sessions.php', array('s' => $session->id, 'c' => 1)),
+                        ['title' => get_string('editsession', 'facetoface')]) . ' ';
+                $options .= $this->output->action_icon(new moodle_url('sessions.php', [
+                        's' => $session->id,
+                        'c' => 1
+                    ]),
                         new pix_icon('t/copy', get_string('copy', 'facetoface')), null,
-                        array('title' => get_string('copysession', 'facetoface'))) . ' ';
+                        [ 'title' => get_string('copysession', 'facetoface') ]) . ' ';
                 if ($deletesessions) { // GCHLOL: check if has capability.
-                    $options .= $this->output->action_icon(new moodle_url('sessions.php', array('s' => $session->id, 'd' => 1)),
+                    $options .= $this->output->action_icon(new moodle_url('sessions.php', ['s' => $session->id, 'd' => 1]),
                             new pix_icon('t/delete', get_string('delete', 'facetoface')), null,
-                            array('title' => get_string('deletesession', 'facetoface'))) . ' ';
+                            ['title' => get_string('deletesession', 'facetoface')]) . ' ';
                 }
-                $options .= html_writer::empty_tag('br');
             }
             if ($viewattendees) {
                 $options .= html_writer::link('attendees.php?s='.$session->id.'&backtoallsessions='.$session->facetoface,
                         get_string('attendees', 'facetoface'),
-                        array('title' => get_string('seeattendees', 'facetoface'))) . html_writer::empty_tag('br');
+                        ['title' => get_string('seeattendees', 'facetoface')]) . ' &nbsp; ';
+                $options .= $this->output->action_icon(new moodle_url('attendees.php', ['s' => $session->id, 'download' => 'xlsx']),
+                        new pix_icon('f/spreadsheet', get_string('downloadexcel')), null,
+                        ['title' => get_string('downloadexcel')]) . ' ';
+                $options .= $this->output->action_icon(new moodle_url('attendees.php', ['s' => $session->id, 'download' => 'ods']),
+                        new pix_icon('f/calc', get_string('downloadods')), null,
+                        ['title' => get_string('downloadods')]) . ' ' . html_writer::empty_tag('br');
             }
             if ($isbookedsession) {
                 $options .= html_writer::link('signup.php?s='.$session->id.'&backtoallsessions='.$session->facetoface,
                         get_string('moreinfo', 'facetoface'),
-                        array('title' => get_string('moreinfo', 'facetoface'))) . html_writer::empty_tag('br');
+                        ['title' => get_string('moreinfo', 'facetoface')]) . html_writer::empty_tag('br');
                 if ($session->allowcancellations) {
-                    $options .= html_writer::link('cancelsignup.php?s=' . $session->id . '&backtoallsessions=' . $session->facetoface,
-                        get_string('cancelbooking', 'facetoface'), array('title' => get_string('cancelbooking', 'facetoface')));
+                    $options .= html_writer::link(
+                        'cancelsignup.php?s=' . $session->id . '&backtoallsessions=' . $session->facetoface,
+                        get_string('cancelbooking', 'facetoface'),
+                        ['title' => get_string('cancelbooking', 'facetoface')]
+                    );
                 }
-            } else if (!$sessionstarted and !$bookedsession) {
+            } else if (!$sessionstarted && !$bookedsession && $signuplinks) {
                 $options .= html_writer::link('signup.php?s='.$session->id.'&backtoallsessions='.$session->facetoface,
                     get_string('signup', 'facetoface'));
             }
@@ -185,11 +213,11 @@ class mod_facetoface_renderer extends plugin_renderer_base {
 
             // Set the CSS class for the row.
             if ($sessionstarted) {
-                $row->attributes = array('class' => 'dimmed_text');
+                $row->attributes = ['class' => 'dimmed_text'];
             } else if ($isbookedsession) {
-                $row->attributes = array('class' => 'highlight');
+                $row->attributes = ['class' => 'highlight'];
             } else if ($sessionfull) {
-                $row->attributes = array('class' => 'dimmed_text');
+                $row->attributes = ['class' => 'dimmed_text'];
             }
 
             // Add row to table.

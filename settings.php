@@ -31,9 +31,10 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/mod/facetoface/lib.php');
+require_once($CFG->dirroot . '/user/profile/lib.php');
 
 $settings->add(new admin_setting_configtext(
-    'facetoface_fromaddress',
+    'facetoface/fromaddress',
     get_string('setting:fromaddress_caption', 'facetoface'),
     get_string('setting:fromaddress', 'facetoface'),
     get_string('setting:fromaddressdefault', 'facetoface'),
@@ -42,7 +43,7 @@ $settings->add(new admin_setting_configtext(
 ));
 
 // Load roles.
-$choices = array();
+$choices = [];
 if ($roles = role_fix_names(get_all_roles(), context_system::instance())) {
     foreach ($roles as $role) {
         $choices[$role->id] = format_string($role->localname);
@@ -50,89 +51,147 @@ if ($roles = role_fix_names(get_all_roles(), context_system::instance())) {
 }
 
 $settings->add(new admin_setting_configmultiselect(
-    'facetoface_session_roles',
+    'facetoface/session_roles',
     get_string('setting:sessionroles_caption', 'facetoface'),
     get_string('setting:sessionroles', 'facetoface'),
-    array(),
+    [],
     $choices
 ));
 
-
-$settings->add(new admin_setting_heading(
-    'facetoface_manageremail_header',
-    get_string('manageremailheading', 'facetoface'),
-    ''
+$settings->add(new admin_setting_configcheckbox(
+    'facetoface/limit_candidates',
+    get_string('setting:limit_candidates_caption', 'facetoface'),
+    get_string('setting:limit_candidates', 'facetoface'),
+    0
 ));
 
 $settings->add(new admin_setting_configcheckbox(
-    'facetoface_addchangemanageremail',
+    'facetoface/enableapprovals',
+    get_string('setting:enableapprovals_caption', 'facetoface'),
+    get_string('setting:enableapprovals', 'facetoface'),
+    1
+));
+
+$settings->add(new admin_setting_heading(
+    'facetoface/manageremail_header',
+    get_string('manageremailheading', 'facetoface'),
+    get_string('manageremaildisabled', 'facetoface')
+));
+
+$settings->add(new admin_setting_configcheckbox(
+    'facetoface/addchangemanageremail',
     get_string('setting:addchangemanageremail_caption', 'facetoface'),
     get_string('setting:addchangemanageremail', 'facetoface'),
     0
 ));
+$settings->hide_if('facetoface/addchangemanageremail', 'facetoface/enableapprovals');
 
 $settings->add(new admin_setting_configtext(
-    'facetoface_manageraddressformat',
+    'facetoface/manageraddressformat',
     get_string('setting:manageraddressformat_caption', 'facetoface'),
     get_string('setting:manageraddressformat', 'facetoface'),
     get_string('setting:manageraddressformatdefault', 'facetoface'),
     PARAM_TEXT
 ));
+$settings->hide_if('facetoface/manageraddressformat', 'facetoface/enableapprovals');
 
 $settings->add(new admin_setting_configtext(
-    'facetoface_manageraddressformatreadable',
+    'facetoface/manageraddressformatreadable',
     get_string('setting:manageraddressformatreadable_caption', 'facetoface'),
     get_string('setting:manageraddressformatreadable', 'facetoface'),
     get_string('setting:manageraddressformatreadabledefault', 'facetoface'),
     PARAM_NOTAGS
 ));
+$settings->hide_if('facetoface/manageraddressformatreadable', 'facetoface/enableapprovals');
 
-$settings->add(new admin_setting_heading('facetoface_cost_header', get_string('costheading', 'facetoface'), ''));
+$settings->add(new admin_setting_heading('facetoface/cost_header', get_string('costheading', 'facetoface'), ''));
 
 $settings->add(new admin_setting_configcheckbox(
-    'facetoface_hidecost',
+    'facetoface/hidecost',
     get_string('setting:hidecost_caption', 'facetoface'),
     get_string('setting:hidecost', 'facetoface'),
     0
 ));
 
 $settings->add(new admin_setting_configcheckbox(
-    'facetoface_hidediscount',
+    'facetoface/hidediscount',
     get_string('setting:hidediscount_caption', 'facetoface'),
     get_string('setting:hidediscount', 'facetoface'),
     0
 ));
 
-$settings->add(new admin_setting_heading('facetoface_icalendar_header', get_string('icalendarheading', 'facetoface'), ''));
+$settings->add(new admin_setting_heading('facetoface/icalendar_header', get_string('icalendarheading', 'facetoface'), ''));
 
 $settings->add(new admin_setting_configcheckbox(
-    'facetoface_oneemailperday',
+    'facetoface/oneemailperday',
     get_string('setting:oneemailperday_caption', 'facetoface'),
     get_string('setting:oneemailperday', 'facetoface'),
     0
 ));
 
 $settings->add(new admin_setting_configcheckbox(
-    'facetoface_disableicalcancel',
+    'facetoface/disableicalcancel',
     get_string('setting:disableicalcancel_caption', 'facetoface'),
     get_string('setting:disableicalcancel', 'facetoface'),
     0
 ));
 
+// List of user profile fields to optionally be included in attendees export.
+
+$settings->add(new admin_setting_heading(
+    'facetoface_attendeesexporttofile_header',
+    get_string('attendeesexporttofileheading', 'facetoface'),
+    ''
+));
+
+// Load profile fields.
+// Basic fields.
+$choices = [
+    'middlename'  => new lang_string('middlename'),
+    'alternatename' => new lang_string('alternatename'),
+    'username'    => new lang_string('username'),
+    'idnumber'    => new lang_string('idnumber'),
+    'email'       => new lang_string('email'),
+    'phone1'      => new lang_string('phone1'),
+    'phone2'      => new lang_string('phone2'),
+    'department'  => new lang_string('department'),
+    'institution' => new lang_string('institution'),
+    'city'        => new lang_string('city'),
+    'country'     => new lang_string('country'),
+    'lang'        => new lang_string('language'),
+    'firstnamephonetic' => new lang_string('firstnamephonetic'),
+    'lastnamephonetic'  => new lang_string('lastnamephonetic'),
+];
+
+// Custom profile fields.
+$profilefields = profile_get_custom_fields();
+foreach ($profilefields as $field) {
+    $choices['profile_field_' . $field->shortname] = format_string($field->name)
+        . ' (' . get_string('customfield', 'customfield'). ')';
+}
+
+$settings->add(new admin_setting_configmultiselect(
+    'facetoface_attendeesexportfields',
+    new lang_string('setting:attendeesexportfields_caption', 'facetoface'),
+    new lang_string('setting:attendeesexportfields', 'facetoface'),
+    [],
+    $choices
+));
+
 // List of existing custom fields.
 $html  = facetoface_list_of_customfields();
 $html .= html_writer::start_tag('p');
-$url   = new moodle_url('/mod/facetoface/customfield.php', array('id' => 0));
+$url   = new moodle_url('/mod/facetoface/customfield.php', ['id' => 0]);
 $html .= html_writer::link($url, get_string('addnewfieldlink', 'facetoface'));
 $html .= html_writer::end_tag('p');
 
-$settings->add(new admin_setting_heading('facetoface_customfields_header', get_string('customfieldsheading', 'facetoface'), $html));
+$settings->add(new admin_setting_heading('facetoface/customfields_header', get_string('customfieldsheading', 'facetoface'), $html));
 
 // List of existing site notices.
 $html  = facetoface_list_of_sitenotices();
 $html .= html_writer::start_tag('p');
-$url  = new moodle_url('/mod/facetoface/sitenotice.php', array('id' => 0));
+$url  = new moodle_url('/mod/facetoface/sitenotice.php', ['id' => 0]);
 $html .= html_writer::link($url, get_string('addnewnoticelink', 'facetoface'));
 $html .= html_writer::end_tag('p');
 
-$settings->add(new admin_setting_heading('facetoface_sitenotices_header', get_string('sitenoticesheading', 'facetoface'), $html));
+$settings->add(new admin_setting_heading('facetoface/sitenotices_header', get_string('sitenoticesheading', 'facetoface'), $html));
