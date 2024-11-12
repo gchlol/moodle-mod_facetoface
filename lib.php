@@ -1234,47 +1234,47 @@ function facetoface_get_attendees($sessionid) {
 /**
  * Get the user's stream from the organisation table.
  *
- * @param int $userid The user's ID.
- * @return string|null The stream name or null if not found.
+ * @param int $userid User ID.
+ * @return string|null Comma separated stream names or null if not found.
  */
 function get_user_stream(int $userid): ?string {
     global  $DB;
 
-    $sql = "SELECT toma.paydiv1name
+    $sql = "SELECT DISTINCT toma.paydiv1name
               FROM {tool_organisation_assign} toa
               JOIN {tool_organisation_mtda_assi} toma ON toma.assignid = toa.id
-             WHERE toa.userid = :userid";
+             WHERE toa.userid = :userid AND
+                   toma.paydiv1name <> ''";
 
-    $record = $DB->get_field_sql($sql, ['userid' => $userid]);
-
-    if ($record === false) {
+    $records = $DB->get_fieldset_sql($sql, ['userid' => $userid]);
+    if (empty($records)) {
         return null;
     }
 
-    return $record;
+    return implode(', ', $records);
 }
 
 /**
  * Get the user's division from the organisation table.
  *
- * @param int $userid The user's ID.
- * @return string|null The division name or null if not found.
+ * @param int $userid User ID.
+ * @return string|null Comma separated division names or null if not found.
  */
 function get_user_division(int $userid): ?string {
     global  $DB;
 
-    $sql = "SELECT tomp.division2name
+    $sql = "SELECT DISTINCT tomp.division2name
               FROM {tool_organisation_assign} toa
               JOIN {tool_organisation_mtda_pos} tomp ON tomp.positionid = toa.positionid
-             WHERE toa.userid = :userid";
+             WHERE toa.userid = :userid AND
+                   tomp.division2name <> ''";
 
-    $record = $DB->get_field_sql($sql, ['userid' => $userid]);
-
-    if ($record === false) {
+    $records = $DB->get_fieldset_sql($sql, ['userid' => $userid]);
+    if (empty($records)) {
         return null;
     }
 
-    return $record;
+    return implode(', ', $records);
 }
 
 /**
