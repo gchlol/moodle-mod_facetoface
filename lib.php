@@ -4890,15 +4890,16 @@ function facetoface_mark_complete($facetoface, $cmid, $userid, $timecompleted) {
         }
     }
 
-    $sql = "SELECT *
-              FROM {course_completions}
-             WHERE userid = $userid
-                   AND course = $facetoface->course
-                   AND timecompleted IS NULL";
-    if ($completion = $DB->get_record_sql($sql)) {
-        $completion->reaggregate = $timecompleted;
+    $completion = new completion_completion([
+        'course' => $facetoface->course,
+        'userid' => $userid,
+    ]);
 
-        $DB->update_record('course_completions', $completion);
+    if ($completion->id) {
+        $completion->timecompleted = null;
+        $completion->mark_inprogress();
+
+        aggregate_completions($completion->id);
     }
 
     return $result;
