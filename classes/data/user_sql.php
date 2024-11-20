@@ -54,6 +54,7 @@ class user_sql {
             [
                 role_permission::MANAGER,
                 role_permission::MANAGE_USERS,
+                role_permission::VIEW_REPORTS,
             ]
         );
 
