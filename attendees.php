@@ -363,7 +363,8 @@ if ($canviewattendees || $cantakeattendance) {
 
     // GCHLOL - can add or remove 'my' attendees
     if (!$takeattendance
-        && (has_capability('mod/facetoface:addattendees', $context)
+        && ($capability_checker->manager_permissions
+        || has_capability('mod/facetoface:addattendees', $context)
         || has_capability('mod/facetoface:removeattendees', $context)
         || has_capability('mod/facetoface:addmyattendees', $context)
         || has_capability('mod/facetoface:removemyattendees', $context))) {
