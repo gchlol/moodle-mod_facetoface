@@ -2770,6 +2770,20 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
         $cm = get_coursemodule_from_instance('facetoface', $record->id, $course->id);
         if ($completion->is_enabled($cm)) {
             $completion->update_state($cm, COMPLETION_UNKNOWN, $record->userid, false);
+
+            $completiondata = $completion->get_data($cm);
+            if ($completiondata->completionstate == COMPLETION_COMPLETE) {
+                $sessiondate = $DB->get_field_sql(
+                    "
+                        SELECT max(timefinish)
+                          FROM {facetoface_sessions_dates}
+                         WHERE sessionid = ?
+                    ",
+                    [ $record->sessionid ]
+                );
+
+                facetoface_mark_complete($record, $cm->id, $record->userid, $sessiondate);
+            }
         }
     }
 
