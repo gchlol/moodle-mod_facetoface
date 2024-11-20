@@ -2770,6 +2770,20 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
         $cm = get_coursemodule_from_instance('facetoface', $record->id, $course->id);
         if ($completion->is_enabled($cm)) {
             $completion->update_state($cm, COMPLETION_UNKNOWN, $record->userid, false);
+
+            $completiondata = $completion->get_data($cm);
+            if ($completiondata->completionstate == COMPLETION_COMPLETE) {
+                $sessiondate = $DB->get_field_sql(
+                    "
+                        SELECT max(timefinish)
+                          FROM {facetoface_sessions_dates}
+                         WHERE sessionid = ?
+                    ",
+                    [ $record->sessionid ]
+                );
+
+                facetoface_mark_complete($record, $cm->id, $record->userid, $sessiondate);
+            }
         }
     }
 
@@ -4872,12 +4886,10 @@ function facetoface_mark_complete($facetoface, $cmid, $userid, $timecompleted) {
     if ($criteria = $DB->get_record('course_completion_criteria', $conditions)) {
         $conditions = array('userid' => $userid, 'course' => $facetoface->course, 'criteriaid' => $criteria->id);
         if ($criteriacompletion = $DB->get_record('course_completion_crit_compl', $conditions)) {
-            if ($timecompleted > $criteriacompletion->timecompleted) {
-                $criteriacompletion->timecompleted = $timecompleted;
+            $criteriacompletion->timecompleted = $timecompleted;
 
-                if (!$DB->update_record('course_completion_crit_compl', $criteriacompletion)) {
-                    $result = false;
-                }
+            if (!$DB->update_record('course_completion_crit_compl', $criteriacompletion)) {
+                $result = false;
             }
         } else {
             $criteriacompletion = new stdClass();
@@ -4892,15 +4904,16 @@ function facetoface_mark_complete($facetoface, $cmid, $userid, $timecompleted) {
         }
     }
 
-    $sql = "SELECT *
-              FROM {course_completions}
-             WHERE userid = $userid
-                   AND course = $facetoface->course
-                   AND timecompleted IS NULL";
-    if ($completion = $DB->get_record_sql($sql)) {
-        $completion->reaggregate = $timecompleted;
+    $completion = new completion_completion([
+        'course' => $facetoface->course,
+        'userid' => $userid,
+    ]);
 
-        $DB->update_record('course_completions', $completion);
+    if ($completion->id) {
+        $completion->timecompleted = null;
+        $completion->mark_inprogress();
+
+        aggregate_completions($completion->id);
     }
 
     return $result;
