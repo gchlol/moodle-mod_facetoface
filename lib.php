@@ -4872,12 +4872,10 @@ function facetoface_mark_complete($facetoface, $cmid, $userid, $timecompleted) {
     if ($criteria = $DB->get_record('course_completion_criteria', $conditions)) {
         $conditions = array('userid' => $userid, 'course' => $facetoface->course, 'criteriaid' => $criteria->id);
         if ($criteriacompletion = $DB->get_record('course_completion_crit_compl', $conditions)) {
-            if ($timecompleted > $criteriacompletion->timecompleted) {
-                $criteriacompletion->timecompleted = $timecompleted;
+            $criteriacompletion->timecompleted = $timecompleted;
 
-                if (!$DB->update_record('course_completion_crit_compl', $criteriacompletion)) {
-                    $result = false;
-                }
+            if (!$DB->update_record('course_completion_crit_compl', $criteriacompletion)) {
+                $result = false;
             }
         } else {
             $criteriacompletion = new stdClass();
