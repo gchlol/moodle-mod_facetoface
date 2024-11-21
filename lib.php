@@ -2947,6 +2947,12 @@ function facetoface_cm_info_view(cm_info $coursemodule) {
                         'class' => 'f2fsessionlinks f2fsessioninfolink',
                         'title' => $strmoreinfo,
                     ]);
+
+                    if ($session->allowcancellations) {
+                        $strcancel  = get_string('cancelbooking', 'facetoface');
+                        $cancelurl  = new moodle_url('/mod/facetoface/cancelsignup.php', [ 's' => $session->id ]);
+                        $cancellink = ' ' . html_writer::link($cancelurl, $strcancel, [ 'class' => 'f2fsessionlinks f2fcancel', 'title' => $strcancel ]);
+                    }
                 }
 
                 // Don't include the link to view attendees if user is lacking capability.
