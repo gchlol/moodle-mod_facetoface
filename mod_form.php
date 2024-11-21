@@ -375,17 +375,7 @@ class mod_facetoface_mod_form extends moodleform_mod {
         $mform->addElement('select', 'completionattendance', get_string('completiondetail:attendance', 'facetoface'), $options);
         $mform->setDefault('completionattendance', MDL_F2F_STATUS_FULLY_ATTENDED);
 
-        $group = array();
-        $group[] = $mform->createElement('advcheckbox', 'completionpass', null, get_string('completionpass', 'quiz'),
-            array('group' => 'cpass'));
-        $mform->disabledIf('completionpass', 'notchecked');
-        $mform->addGroup($group, 'completionpassgroup', get_string('completionpass', 'quiz'), ' &nbsp; ', false);
-        $mform->addHelpButton('completionpassgroup', 'completionpass', 'quiz');
-
-        return [
-            'completionattendance',
-            'completionpassgroup'
-        ];
+        return ['completionattendance'];
     }
 
     /**
@@ -395,6 +385,6 @@ class mod_facetoface_mod_form extends moodleform_mod {
      * @return bool true if custom completion enabled
      */
     public function completion_rule_enabled($data): bool {
-        return !empty($data['completionattendance']) || !empty($data['completionpass']);
+        return !empty($data['completionattendance']);
     }
 }
