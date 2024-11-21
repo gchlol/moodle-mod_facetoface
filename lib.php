@@ -2772,7 +2772,10 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
             $completion->update_state($cm, COMPLETION_UNKNOWN, $record->userid, false);
 
             $completiondata = $completion->get_data($cm);
-            if ($completiondata->completionstate == COMPLETION_COMPLETE) {
+            if (
+                $completiondata->completionstate == COMPLETION_COMPLETE ||
+                $completiondata->completionstate == COMPLETION_COMPLETE_PASS
+            ) {
                 $sessiondate = $DB->get_field_sql(
                     "
                         SELECT max(timefinish)
