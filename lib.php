@@ -2771,8 +2771,11 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
         if ($completion->is_enabled($cm)) {
             $completion->update_state($cm, COMPLETION_UNKNOWN, $record->userid, false);
 
-            $completiondata = $completion->get_data($cm);
-            if ($completiondata->completionstate == COMPLETION_COMPLETE) {
+            $completiondata = $completion->get_data($cm, false, $record->userid);
+            if (
+                $completiondata->completionstate == COMPLETION_COMPLETE ||
+                $completiondata->completionstate == COMPLETION_COMPLETE_PASS
+            ) {
                 $sessiondate = $DB->get_field_sql(
                     "
                         SELECT max(timefinish)
@@ -4909,12 +4912,10 @@ function facetoface_mark_complete($facetoface, $cmid, $userid, $timecompleted) {
         'userid' => $userid,
     ]);
 
-    if ($completion->id) {
-        $completion->timecompleted = null;
-        $completion->mark_inprogress();
+    $completion->timecompleted = null;
+    $completion->mark_inprogress();
 
-        aggregate_completions($completion->id);
-    }
+    aggregate_completions($completion->id);
 
     return $result;
 }
