@@ -4912,12 +4912,10 @@ function facetoface_mark_complete($facetoface, $cmid, $userid, $timecompleted) {
         'userid' => $userid,
     ]);
 
-    if ($completion->id) {
-        $completion->timecompleted = null;
-        $completion->mark_inprogress();
+    $completion->timecompleted = null;
+    $completion->mark_inprogress();
 
-        aggregate_completions($completion->id);
-    }
+    aggregate_completions($completion->id);
 
     return $result;
 }
