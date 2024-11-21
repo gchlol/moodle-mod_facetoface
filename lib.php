@@ -2790,30 +2790,6 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
         }
     }
 
-    // GCHLOL
-    if ($record->completionpass) {
-        $cm = get_coursemodule_from_instance('facetoface', $record->id);
-        $sql = 'SELECT timefinish
-                  FROM {facetoface_sessions_dates}
-                 WHERE sessionid = ?
-              ORDER BY timefinish DESC
-                 LIMIT 1';
-        $sessiondate = $DB->get_record_sql($sql, array($record->sessionid));
-
-        $course = get_course($record->course);
-
-        $completion = new completion_info($course);
-        if ($completion->is_enabled($cm)) {
-            $completion->update_state($cm, COMPLETION_COMPLETE);
-        }
-
-        $status = $DB->get_record('facetoface_signups_status', array('signupid' => $submissionid, 'superceded' => 0));
-
-        if ($status->statuscode == 100) {
-            facetoface_mark_complete($record, $cm->id, $record->userid, $sessiondate->timefinish);
-        }
-    }
-
     return $result;
 }
 
@@ -4924,40 +4900,4 @@ function facetoface_mark_complete($facetoface, $cmid, $userid, $timecompleted) {
     aggregate_completions($completion->id);
 
     return $result;
-}
-
-/**
- * Obtains the automatic completion state for this quiz on any conditions
- * in quiz settings, such as if all attempts are used or a certain grade is achieved.
- *
- * GCHLOL
- *
- * @param object $course Course
- * @param object $cm     Course-module
- * @param int    $userid User ID
- * @param bool   $type   Type of comparison (or/and; can be used as return value if no conditions)
- * @return bool True if completed, false if not. (If no conditions, then return
- *   value depends on comparison type)
- */
-function facetoface_get_completion_state($course, $cm, $userid, $type) {
-    global $CFG, $DB;
-
-    $facetoface = $DB->get_record('facetoface', array('id' => $cm->instance), '*', MUST_EXIST);
-    if (!$facetoface->completionpass) {
-        return $type;
-    }
-
-    // Check for passing grade.
-    if ($facetoface->completionpass) {
-        require_once($CFG->libdir . '/gradelib.php');
-        $item = grade_item::fetch(array('courseid' => $course->id, 'itemtype' => 'mod',
-            'itemmodule' => 'facetoface', 'iteminstance' => $cm->instance, 'outcomeid' => null));
-        if ($item) {
-            $grades = grade_grade::fetch_users_grades($item, array($userid), false);
-            if (!empty($grades[$userid])) {
-                return $grades[$userid]->is_passed($item);
-            }
-        }
-    }
-    return false;
 }
