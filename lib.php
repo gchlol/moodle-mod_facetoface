@@ -2771,7 +2771,7 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
         if ($completion->is_enabled($cm)) {
             $completion->update_state($cm, COMPLETION_UNKNOWN, $record->userid, false);
 
-            $completiondata = $completion->get_data($cm);
+            $completiondata = $completion->get_data($cm, false, $record->userid);
             if (
                 $completiondata->completionstate == COMPLETION_COMPLETE ||
                 $completiondata->completionstate == COMPLETION_COMPLETE_PASS
