@@ -175,6 +175,8 @@ class booking_manager {
             $timenow = time();
         }
 
+        $usersessions = [];
+
         // Break into rows and validate the multiple interdependant fields together.
         foreach ($this->get_iterator() as $index => $entry) {
             $row = $index + 1;
@@ -244,6 +246,21 @@ class booking_manager {
                     $sessioncapacitycache[$session->id]['capacity']--;
                     $sessioncapacitycache[$session->id]['rows'][] = $row;
                 }
+
+                // Don't allow users to signup to another session if the signup type is not multiple.
+                if (isset($userid) && $entry->status !== 'cancelled' && $this->facetoface->signuptype != MOD_FACETOFACE_SIGNUP_MULTIPLE) {
+                    if ($currusersessions = facetoface_get_user_submissions($this->f, $userid)) {
+                        foreach ($currusersessions as $currusersession) {
+                            if ($currusersession->sessionid != $session->id) {
+                                $errors[] = [
+                                    $row,
+                                    new lang_string('error:addalreadysignedupattendee', 'mod_facetoface', $entry->email),
+                                ];
+                                break;
+                            }
+                        }
+                    }
+                }
             }
 
             // Check user enrolment into the course.
@@ -274,6 +291,39 @@ class booking_manager {
                 $errors[] = [
                     $row,
                     new lang_string('error:invalidstatusspecified', 'mod_facetoface', $entry->status),
+                ];
+            }
+
+            // If the user exists and this isn't a cancellation, we need to store the distinct session for checking at the end.
+            if (isset($userid) && $entry->status !== 'cancelled') {
+                // Set the user sessions if it hasn't been set yet.
+                if (!isset($usersessions[$userid])) {
+                    $usersessions[$userid] = [
+                        'email' => $entry->email,
+                        'rows' => [],
+                        'sessions' => [],
+                    ];
+                }
+
+                $usersessions[$userid]['rows'][] = $row;
+
+                if ($session && !in_array($session->id, $usersessions[$userid]['sessions'])) {
+                    $usersessions[$userid]['sessions'][] = $session->id;
+                }
+            }
+        }
+
+        // If the signup type is not set to multiple, we need to create errors for users being added to multiple sessions.
+        if ($this->facetoface->signuptype != MOD_FACETOFACE_SIGNUP_MULTIPLE) {
+            // Get all users being added to more than 1 session.
+            $doublebookedusers = array_filter($usersessions, function($us) {
+                return count($us['sessions']) > 1;
+            });
+            // Create errors for the user rows.
+            foreach ($doublebookedusers as $details) {
+                $errors[] = [
+                    implode(', ', $details['rows']),
+                    new lang_string('error:multipleusersessions', 'mod_facetoface', $details['email']),
                 ];
             }
         }
