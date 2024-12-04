@@ -153,6 +153,7 @@ $string['error:bookingsuploadfileheaderfieldmismatch'] = 'Mismatched number of f
 $string['error:sessionoverbooked'] = 'Session ID {$a->session} overbooked by {$a->amount} person(s).';
 $string['error:sessiondoesnotexist'] = 'Session ID {$a} does not exist';
 $string['error:userdoesnotexist'] = 'User {$a} does not exist';
+$string['error:multipleusersessions'] = 'User {$a} has more than one session';
 $string['error:multipleusersmatched'] = 'Multiple users matched to identifier {$a}';
 $string['error:addalreadysignedupattendee'] = '{$a} is already signed-up for this Face-to-Face activity.';
 $string['error:addattendee'] = 'Could not add {$a} to the session.';

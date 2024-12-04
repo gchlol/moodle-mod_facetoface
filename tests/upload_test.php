@@ -138,7 +138,9 @@ class upload_test extends \advanced_testcase {
 
         // Generate users.
         $user = $this->getDataGenerator()->create_user();
-        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $student1 = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $student2 = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $student3 = $this->getDataGenerator()->create_and_enrol($course, 'student');
 
         $this->setCurrentTimeStart();
         $now = time();
@@ -156,6 +158,20 @@ class upload_test extends \advanced_testcase {
             ],
         ]);
 
+        $secondsession = $generator->create_session([
+            'facetoface' => $facetoface->id,
+            'capacity' => '3',
+            'allowoverbook' => '0',
+            'details' => 'xyz',
+            'duration' => '1.5', // One and half hours.
+            'normalcost' => '111',
+            'discountcost' => '11',
+            'allowcancellations' => '0',
+            'sessiondates' => [
+                ['timestart' => $now + 4 * DAYSECS, 'timefinish' => $now + 5 * DAYSECS],
+            ],
+        ]);
+
         $remotesession = $generator->create_session([
             'facetoface' => $anotherfacetoface->id,
             'capacity' => '3',
@@ -169,6 +185,9 @@ class upload_test extends \advanced_testcase {
                 ['timestart' => $now + 3 * DAYSECS, 'timefinish' => $now + 2 * DAYSECS],
             ],
         ]);
+
+        facetoface_user_signup($session, $facetoface, $course, '',
+            MDL_F2F_TEXT, MDL_F2F_STATUS_BOOKED, $student3->id);
 
         $bm = new booking_manager($facetoface->id);
 
@@ -191,7 +210,7 @@ class upload_test extends \advanced_testcase {
             ],
             // Test student who is enrolled into the course (no issues).
             (object) [
-                'email' => $student->email,
+                'email' => $student1->email,
                 'session' => $session->id,
                 'status' => '',
                 'notificationtype' => '',
@@ -199,15 +218,23 @@ class upload_test extends \advanced_testcase {
             ],
             // Test invalid options.
             (object) [
-                'email' => $student->email,
+                'email' => $student2->email,
                 'session' => $session->id,
                 'status' => 'helloworld',
                 'notificationtype' => 'phone',
                 'discountcode' => '',
             ],
+            // Test multiple rows for the same student when f2f signup type is single.
+            (object) [
+                'email' => $student2->email,
+                'session' => $secondsession->id,
+                'status' => '',
+                'notificationtype' => '',
+                'discountcode' => '',
+            ],
             // Test permissions (e.g. user not able to upload/process for a f2f activity loaded).
             (object) [
-                'email' => $student->email,
+                'email' => $student2->email,
                 'session' => $remotesession->id,
                 'status' => '',
                 'notificationtype' => '',
@@ -215,8 +242,16 @@ class upload_test extends \advanced_testcase {
             ],
             // Test email does not match case-wise (in the default case sensitive mode).
             (object) [
-                'email' => strtoupper($student->email),
+                'email' => strtoupper($student2->email),
                 'session' => $session->id,
+                'status' => '',
+                'notificationtype' => '',
+                'discountcode' => '',
+            ],
+            // Test student already in a session when f2f signup type is single.
+            (object) [
+                'email' => $student3->email,
+                'session' => $secondsession->id,
                 'status' => '',
                 'notificationtype' => '',
                 'discountcode' => '',
@@ -274,7 +309,16 @@ class upload_test extends \advanced_testcase {
         $this->assertTrue(
             $this->check_row_validation_error_exists(
                 $errors,
-                5,
+                '4, 5, 6, 7',
+                new lang_string('error:multipleusersessions', 'mod_facetoface', $student2->email)
+            ),
+            'Expecting multiple sessions error for user when f2f signup type is single.'
+        );
+
+        $this->assertTrue(
+            $this->check_row_validation_error_exists(
+                $errors,
+                6,
                 new lang_string('error:tryingtoupdatesessionfromanothermodule', 'mod_facetoface', (object) [
                     'session' => $remotesession->id,
                     'f' => $facetoface->id,
@@ -282,13 +326,23 @@ class upload_test extends \advanced_testcase {
             ),
             'Expecting permission check conflict due to session->facetoface + facetoface id mismatcherror.'
         );
+
         $this->assertTrue(
             $this->check_row_validation_error_exists(
                 $errors,
-                6,
-                new lang_string('error:userdoesnotexist', 'mod_facetoface', strtoupper($student->email))
+                7,
+                new lang_string('error:userdoesnotexist', 'mod_facetoface', strtoupper($student2->email))
             ),
             'Expecting user to not exist because email does not match case-wise.'
+        );
+
+        $this->assertTrue(
+            $this->check_row_validation_error_exists(
+                $errors,
+                8,
+                new lang_string('error:addalreadysignedupattendee', 'mod_facetoface', $student3->email)
+            ),
+            'Expecting user already signed up to another session error.'
         );
     }
 
@@ -296,11 +350,11 @@ class upload_test extends \advanced_testcase {
      * Helper function to check if a specific error exists in the array of errors.
      *
      * @param array $errors Array of errors.
-     * @param int $expectedrownumber Expected row number.
+     * @param string $expectedrownumber Expected row number string.
      * @param string $expectederrormsg Expected error message.
      * @return bool True if the error exists, false otherwise.
      */
-    private function check_row_validation_error_exists(array $errors, int $expectedrownumber, string $expectederrormsg): bool {
+    private function check_row_validation_error_exists(array $errors, string $expectedrownumber, string $expectederrormsg): bool {
         foreach ($errors as $error) {
             // Note: row number is based on a CSV file human readable format, where there is a header and row data.
             [$rownumber, $errormsg] = $error;
@@ -757,5 +811,74 @@ class upload_test extends \advanced_testcase {
         } else {
             $this->assertNotEmpty($emails);
         }
+    }
+
+    /**
+     * Test upload processing multiple sessions with signup type set to multiple.
+     */
+    public function test_processing_signup_multiple() {
+        /** @var \mod_facetoface_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
+
+        $course = $this->getDataGenerator()->create_course();
+        // Facetoface with signuptype set to multiple.
+        $facetoface = $generator->create_instance(['course' => $course->id, 'signuptype' => MOD_FACETOFACE_SIGNUP_MULTIPLE]);
+        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+
+        $now = time();
+        $record = [
+            'facetoface' => $facetoface->id,
+            'capacity' => '3',
+            'allowoverbook' => '0',
+            'details' => 'xyz',
+            'duration' => '1.5', // One and half hours.
+            'normalcost' => '111',
+            'discountcost' => '11',
+            'allowcancellations' => '0',
+            'sessiondates' => [
+                ['timestart' => $now + 3 * DAYSECS, 'timefinish' => $now + 4 * DAYSECS],
+            ],
+        ];
+        $session1 = $generator->create_session($record);
+        $session2 = $generator->create_session($record);
+        $session3 = $generator->create_session($record);
+
+        // Signup student to session3 to test already signed up validating.
+        facetoface_user_signup($session3, $facetoface, $course, '',
+            MDL_F2F_TEXT, MDL_F2F_STATUS_BOOKED, $student->id);
+
+        $bm = new booking_manager($facetoface->id);
+
+        $records = [
+            // Test user can be added to session 1.
+            (object) [
+                'email' => $student->email,
+                'session' => $session1->id,
+                'status' => '',
+                'notificationtype' => '',
+                'discountcode' => '',
+            ],
+            // Test user can be added to session 2.
+            (object) [
+                'email' => $student->email,
+                'session' => $session2->id,
+                'status' => '',
+                'notificationtype' => '',
+                'discountcode' => '',
+            ],
+        ];
+
+        $bm->load_from_array($records);
+        $errors = $bm->validate();
+
+        $this->assertEmpty($errors);
+        $this->assertTrue($bm->process());
+
+        $sessions = facetoface_get_user_submissions($facetoface->id, $student->id);
+        $this->assertCount(3, $sessions);
+        $sessionids = array_column($sessions, 'sessionid');
+        $this->assertContains($session1->id, $sessionids);
+        $this->assertContains($session2->id, $sessionids);
+        $this->assertContains($session3->id, $sessionids);
     }
 }
