@@ -171,6 +171,9 @@ if ($fromform = $mform->get_data()) { // Form submitted.
     if (empty($fromform->discountcost)) {
         $fromform->discountcost = 0;
     }
+    if (empty($fromform->sessionlink)) {
+        $fromform->sessionlink = null;
+    }
 
     $sessiondates = [];
     for ($i = 0; $i < $fromform->date_repeats; $i++) {
@@ -194,6 +197,7 @@ if ($fromform = $mform->get_data()) { // Form submitted.
     $todb->duration = $fromform->duration;
     $todb->normalcost = $fromform->normalcost;
     $todb->discountcost = $fromform->discountcost;
+    $todb->sessionlink = $fromform->sessionlink;
     if (has_capability('mod/facetoface:configurecancellation', $context)) {
         $todb->allowcancellations = $fromform->allowcancellations;
     }
@@ -323,6 +327,7 @@ if ($fromform = $mform->get_data()) { // Form submitted.
     $toform->duration = $session->duration;
     $toform->normalcost = $session->normalcost;
     $toform->discountcost = $session->discountcost;
+    $toform->sessionlink = $session->sessionlink;
     if (has_capability('mod/facetoface:configurecancellation', $context)) {
         $toform->allowcancellations = $session->allowcancellations;
     }

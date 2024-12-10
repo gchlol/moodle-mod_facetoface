@@ -889,5 +889,26 @@ function xmldb_facetoface_upgrade($oldversion=0) {
         upgrade_mod_savepoint(true, 2023100200, 'facetoface');
     }
 
+    if ($oldversion < 2024120800) {
+
+        $table = new xmldb_table('facetoface_sessions');
+        $field = new xmldb_field(
+            'sessionlink',
+            XMLDB_TYPE_CHAR,
+            '255',
+            null,
+            null,
+            null,
+            null,
+            'allowcancellations'
+        );
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2024120800, 'facetoface');
+    }
+
     return $result;
 }

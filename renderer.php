@@ -66,6 +66,7 @@ class mod_facetoface_renderer extends plugin_renderer_base {
         }
         $tableheader[] = get_string('status', 'facetoface');
         $tableheader[] = get_string('options', 'facetoface');
+        $tableheader[] = get_string('sessionlink', 'facetoface');
 
         $timenow = time();
 
@@ -208,6 +209,11 @@ class mod_facetoface_renderer extends plugin_renderer_base {
                 $options = get_string('none', 'facetoface');
             }
             $sessionrow[] = $options;
+
+            $teamslink = empty($session->sessionlink)
+                ? get_string('teamslink', 'facetoface')
+                : html_writer::link($session->sessionlink, get_string('teamslink', 'facetoface'));
+            $sessionrow[] = $teamslink;
 
             $row = new html_table_row($sessionrow);
 
