@@ -3147,9 +3147,8 @@ function facetoface_ical_escape($text, $converthtml=false) {
         $text
     );
 
-    // Text should be wordwrapped at 75 octets, and there should be one whitespace after the newline that does the wrapping.
-    $text = wordwrap($text, 75, " \n ", true);
-
+    // Text should be wrapped at 75 octets, and there should be one whitespace after the newline that does the wrapping.
+    $text = rtrim(chunk_split($text, 75, "\n "), "\n ");
     return $text;
 }
 
