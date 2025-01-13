@@ -79,7 +79,6 @@ class mod_facetoface_session_form extends moodleform {
 
         $mform->addElement('text', 'sessionlink', get_string('sessionlink', 'facetoface'), 'size="50"');
         $mform->setType('sessionlink', PARAM_URL);
-        $mform->setDefault('sessionlink', '');
 
         $formarray  = [];
         $formarray[] = $mform->createElement('selectyesno', 'datetimeknown', get_string('sessiondatetimeknown', 'facetoface'));

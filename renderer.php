@@ -210,10 +210,10 @@ class mod_facetoface_renderer extends plugin_renderer_base {
             }
             $sessionrow[] = $options;
 
-            $teamslink = empty($session->sessionlink)
-                ? get_string('teamslink', 'facetoface')
-                : html_writer::link($session->sessionlink, get_string('teamslink', 'facetoface'));
-            $sessionrow[] = $teamslink;
+            $sessionlink = empty($session->sessionlink)
+                ? ''
+                : html_writer::link($session->sessionlink, get_string('sessionlink', 'facetoface'));
+            $sessionrow[] = $sessionlink;
 
             $row = new html_table_row($sessionrow);
 
