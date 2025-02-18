@@ -193,8 +193,8 @@ class booking_manager {
             $entry->notificationtype = $entry->notificationtype ?? '';
             $entry->discountcode = $entry->discountcode ?? '';
 
-            // Validate and get user.
-            $userids = $this->match_users($entry->username, 'id');
+            // Validate and get user (try username first, then fallback to email)
+            $userids = $this->match_users($entry->username, $entry->email, 'id');
 
             // Multiple matched, ambiguous which is the real one.
             if (count($userids) > 1) {
@@ -203,7 +203,7 @@ class booking_manager {
 
             // None matched at all - missing.
             if (empty($userids)) {
-                $errors[] = [$row, new lang_string('error:userdoesnotexist', 'mod_facetoface', $entry->email)];
+                $errors[] = [$row, new lang_string('error:userdoesnotexist', 'mod_facetoface', $entry->username)];
             } else {
                 $userid = current($userids)->id;
             }
@@ -308,16 +308,24 @@ class booking_manager {
     }
 
     /**
-     * Match users for a given username(payrollid), taking into account case sensitivity.
-     * @param string $username
-     * @param string $fields fields to return
+     * Match users for a given username (payroll ID), with email as a fallback.
+     * @param string $username The payroll ID (primary lookup)
+     * @param string $email The email address (fallback)
+     * @param string $fields Fields to return from DB
      * @return array of users, with specified fields
      */
-    private function match_users(string $username, string $fields): array {
+    private function match_users(string $username, string $email, string $fields): array {
         global $DB;
-        
-        // Find users by username (payroll number).
-        return $DB->get_records('user', ['username' => $username], 'id', $fields);
+
+        // Try finding user by username (payroll ID)
+        $users = $DB->get_records('user', ['username' => $username], 'id, username, email');
+
+        // If no match found using username, try matching by email
+        if (empty($users)) {
+            $users = $DB->get_records('user', ['email' => $email], 'id, username, email');
+        }
+
+        return array_values($users); // Ensures an indexed array is returned
     }
     
 
@@ -352,7 +360,7 @@ class booking_manager {
 
         // Records should be valid at this point.
         foreach ($this->get_iterator() as $entry) {
-            $user = current($this->match_users($entry->username, '*'));
+            $user = current($this->match_users($entry->username, $entry->email, '*'));
             $session = facetoface_get_session($entry->session);
 
             // Get signup type.
