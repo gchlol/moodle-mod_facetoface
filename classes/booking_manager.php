@@ -138,7 +138,7 @@ class booking_manager {
             }
             return;
         }
-
+    
         $handle = $this->file->get_content_file_handle();
         $maxlinelength = 1000;
         $delimiter = ',';
@@ -146,26 +146,30 @@ class booking_manager {
         $headers = self::get_headers();
         $numheaders = count($headers);
         fgets($handle); // Move pointer past first line (headers).
+    
         try {
             while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
                 $rownumber++;
-                $numfields = count($data);
-                if ($numfields !== $numheaders) {
-                    throw new moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface');
-                }
+                
+                // Ensure we always have the correct number of fields
+                $data = array_pad($data, $numheaders, '');
+    
                 $record = [
-                    'username' => $data[0], // Payroll number is stored in 'username'
-                    'session' => $data[1],
-                    'status' => $data[2],
-                    'discountcode' => $data[3],
-                    'notificationtype' => $data[4],
+                    'username' => $data[0],
+                    'email' => $data[1], 
+                    'session' => $data[2],
+                    'status' => $data[3],
+                    'discountcode' => $data[4],
+                    'notificationtype' => $data[5],
                 ];
+    
                 yield (object) $record;
             }
         } finally {
             fclose($handle);
         }
     }
+    
 
     /**
      * Validate the records provided to ensure they can be processed without errors.
