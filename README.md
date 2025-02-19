@@ -18,7 +18,7 @@ Reminder messages are sent to users and their managers a few days before the
 session is scheduled to start.  Confirmation messages are sent when users
 sign-up for a session or cancel.
 
-Customizations
+Customisations
 --------------
 - Customised by Jonas Sajonas for specific use in GCHLOL.
 - Replaced email attribute with username in booking_manager.php as required by GCHLOL.
