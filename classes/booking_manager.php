@@ -195,8 +195,8 @@ class booking_manager {
             $entry->notificationtype = $entry->notificationtype ?? '';
             $entry->discountcode = $entry->discountcode ?? '';
 
-            // Validate and get user (try username first, then fallback to email)
-            $userids = $this->match_users($entry->username, $entry->email, 'id');
+            // Validate and get user
+            $userids = $this->match_users($entry->username, 'id');
 
             // Multiple matched, ambiguous which is the real one.
             if (count($userids) > 1) {
