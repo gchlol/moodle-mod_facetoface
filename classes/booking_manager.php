@@ -112,11 +112,12 @@ class booking_manager {
 
     /**
      * Get the headers for the records.
+     * username: payroll number is stored in username
      * @return array
      */
     public static function get_headers(): array {
         return [
-            'email',
+            'username',
             'session',
             'status',
             'discountcode',
@@ -135,7 +136,7 @@ class booking_manager {
             }
             return;
         }
-
+    
         $handle = $this->file->get_content_file_handle();
         $maxlinelength = 1000;
         $delimiter = ',';
@@ -143,20 +144,30 @@ class booking_manager {
         $headers = self::get_headers();
         $numheaders = count($headers);
         fgets($handle); // Move pointer past first line (headers).
+    
         try {
             while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
                 $rownumber++;
-                $numfields = count($data);
-                if ($numfields !== $numheaders) {
-                    throw new moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface');
-                }
-                $record = array_combine($headers, $data);
+                
+                // Ensure we always have the correct number of fields
+                $data = array_pad($data, $numheaders, '');
+    
+                $record = [
+                    'username' => $data[0],
+                    'session' => $data[1],
+                    'status' => $data[2],
+                    'discountcode' => $data[3],
+                    'notificationtype' => $data[4],
+                ];
+                
+    
                 yield (object) $record;
             }
         } finally {
             fclose($handle);
         }
     }
+    
 
     /**
      * Validate the records provided to ensure they can be processed without errors.
@@ -184,17 +195,17 @@ class booking_manager {
             $entry->notificationtype = $entry->notificationtype ?? '';
             $entry->discountcode = $entry->discountcode ?? '';
 
-            // Validate and get user.
-            $userids = $this->match_users($entry->email, 'id');
+            // Validate and get user (try username first, then fallback to email)
+            $userids = $this->match_users($entry->username, $entry->email, 'id');
 
             // Multiple matched, ambiguous which is the real one.
             if (count($userids) > 1) {
-                $errors[] = [$row, new lang_string('error:multipleusersmatched', 'mod_facetoface', $entry->email)];
+                $errors[] = [$row, new lang_string('error:multipleusersmatched', 'mod_facetoface', $entry->username)];
             }
 
             // None matched at all - missing.
             if (empty($userids)) {
-                $errors[] = [$row, new lang_string('error:userdoesnotexist', 'mod_facetoface', $entry->email)];
+                $errors[] = [$row, new lang_string('error:userdoesnotexist', 'mod_facetoface', $entry->username)];
             } else {
                 $userid = current($userids)->id;
             }
@@ -248,7 +259,7 @@ class booking_manager {
 
             // Check user enrolment into the course.
             if (isset($userid) && !is_enrolled($this->coursecontext, $userid)) {
-                $errors[] = [$row, new lang_string('error:userisnotenrolledintocourse', 'mod_facetoface', $entry->email)];
+                $errors[] = [$row, new lang_string('error:userisnotenrolledintocourse', 'mod_facetoface', $entry->username)];
             }
 
             // Check to ensure valid notification types are used if set.
@@ -299,17 +310,17 @@ class booking_manager {
     }
 
     /**
-     * Match users for a given email, taking into account case sensitivity.
-     * @param string $email
-     * @param string $fields fields to return
+     * Match users for a given username (payroll ID).
+     * @param string $username The payroll ID (primary lookup)
+     * @param string $fields Fields to return from DB
      * @return array of users, with specified fields
      */
-    private function match_users(string $email, string $fields): array {
+    private function match_users(string $username, string $fields): array {
         global $DB;
-        $equals = $DB->sql_equal('email', ':email', !$this->caseinsensitive);
-        return $DB->get_records_select('user', $equals, ['email' => $email], 'id', $fields);
+        $equals = $DB->sql_equal('username', ':username', !$this->caseinsensitive);
+        return $DB->get_records_select('user', $equals, ['username' => $username], 'id', $fields);
     }
-
+    
     /**
      * Transform notification type to internal representation.
      *
@@ -341,7 +352,7 @@ class booking_manager {
 
         // Records should be valid at this point.
         foreach ($this->get_iterator() as $entry) {
-            $user = current($this->match_users($entry->email, '*'));
+            $user = current($this->match_users($entry->username, '*'));
             $session = facetoface_get_session($entry->session);
 
             // Get signup type.
@@ -390,7 +401,7 @@ class booking_manager {
                     $attendees = facetoface_get_attendees($session->id);
                     // Get matching attendee.
                     foreach ($attendees as $attendee) {
-                        if ($attendee->email === $entry->email) {
+                        if ($attendee->username === $entry->username) {
                             break;
                         }
                     }
