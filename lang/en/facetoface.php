@@ -871,3 +871,5 @@ $string['facetoface:uploadbulksessions'] = 'Upload Bulk Sessions';
 $string['facetoface:uploadsessionfile'] = 'Upload Bulk Session CSV File';
 $string['facetoface:uploadsessionfiledesc'] = 'Upload a CSV file containing the bulk session data to create new sessions.';
 $string['facetoface:uploadandpreviewbulk'] = 'Upload & Preview Bulk Sessions';
+$string['bulkuploadsuccess'] = 'Bulk sessions uploaded successfully.';
+$string['error:bulkuploaderrors'] = 'Errors were found in the bulk upload file.';
