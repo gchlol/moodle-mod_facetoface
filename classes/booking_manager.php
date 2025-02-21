@@ -136,7 +136,6 @@ class booking_manager {
             }
             return;
         }
-    
         $handle = $this->file->get_content_file_handle();
         $maxlinelength = 1000;
         $delimiter = ',';
@@ -144,14 +143,11 @@ class booking_manager {
         $headers = self::get_headers();
         $numheaders = count($headers);
         fgets($handle); // Move pointer past first line (headers).
-    
         try {
             while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
-                $rownumber++;
-                
+                $rownumber++;     
                 // Ensure we always have the correct number of fields
                 $data = array_pad($data, $numheaders, '');
-    
                 $record = [
                     'username' => $data[0],
                     'session' => $data[1],
@@ -159,8 +155,6 @@ class booking_manager {
                     'discountcode' => $data[3],
                     'notificationtype' => $data[4],
                 ];
-                
-    
                 yield (object) $record;
             }
         } finally {
@@ -168,7 +162,6 @@ class booking_manager {
         }
     }
     
-
     /**
      * Validate the records provided to ensure they can be processed without errors.
      *
