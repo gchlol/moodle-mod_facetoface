@@ -21,7 +21,7 @@ sign-up for a session or cancel.
 Customisations
 --------------
 - Customised by Jonas Sajonas for specific use in GCHLOL.
-- Replaced email attribute with username in booking_manager.php as required by GCHLOL.
+- Replaced email attribute with username in booking_manager.php as per requirements of GCHLOL.
 
 Branches
 --------
