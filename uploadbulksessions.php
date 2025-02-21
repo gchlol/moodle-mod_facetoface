@@ -65,6 +65,34 @@ $heading = get_string('facetoface:uploadbulksessions', 'facetoface');
 
    // Re-display confirm form if needed.
    // You might use another form to confirm before processing.
+
+//! After getting form data: TEST
+    $data = $mform->get_data();
+    $manager = new \mod_facetoface\bulk_sessions_manager($f);
+    if ($manager->load_from_file($data->csvfile)) {
+        $errors = $manager->validate();
+        if (empty($errors)) {
+            if ($manager->process()) {
+                redirect(new moodle_url('/mod/facetoface/view.php', ['id' => $cm->id]),
+                    get_string('bulkuploadsuccess', 'facetoface'),
+                    null,
+                    \core\output\notification::NOTIFY_SUCCESS);
+            } else {
+                redirect(new moodle_url('/mod/facetoface/bulkupload.php', ['f' => $f]),
+                    implode('<br>', $manager->get_errors()),
+                    null,
+                    \core\output\notification::NOTIFY_ERROR);
+            }
+        } else {
+            // Display validation errors.
+            echo \core\notification::error(implode('<br>', $errors));
+        }
+    } else {
+        echo \core\notification::error(get_string('error:filenotloaded', 'facetoface'));
+    }
+
+//! END OF TEST
+
 } else if ($process && $fileid && $f) {
    // Form submitted for processing.
    // $manager = new bulk_sessions_manager($f);
@@ -72,7 +100,7 @@ $heading = get_string('facetoface:uploadbulksessions', 'facetoface');
    // $errors = $manager->validate();
    // if (empty($errors)) {
    //     $manager->process(); // Create sessions.
-   //     // Log event etc.
+       // Log event etc.
    //     redirect(new moodle_url('/mod/facetoface/bulkupload.php', ['f' => $f]),
    //         get_string('bulkuploadsuccess', 'facetoface'), null, notification::NOTIFY_SUCCESS);
    // }

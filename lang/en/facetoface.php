@@ -873,3 +873,11 @@ $string['facetoface:uploadsessionfiledesc'] = 'Upload a CSV file containing the 
 $string['facetoface:uploadandpreviewbulk'] = 'Upload & Preview Bulk Sessions';
 $string['bulkuploadsuccess'] = 'Bulk sessions uploaded successfully.';
 $string['error:bulkuploaderrors'] = 'Errors were found in the bulk upload file.';
+
+//! errors testing
+$string['error:missingfacetofaceid'] = 'Facetoface id is missing.';
+$string['error:missingstarttime'] = 'Start date and time is required.';
+$string['error:missingfinishtime'] = 'Finish date and time is required.';
+$string['error:invalidrow'] = 'Invalid row in CSV';
+$string['error:failedtocreatesession'] = 'Failed to create session';
+$string['error:filenotloaded'] = 'File could not be loaded.';
