@@ -865,3 +865,8 @@ $string['attendancecolumn:3'] = 'Org Unit';
 $string['attendancecolumn:4'] = 'Position';
 $string['attendancecolumn:5'] = 'Stream';
 $string['attendancecolumn:6'] = 'Paypoint';
+
+// Bulk Upload Sessions
+$string['uploadsessionfile'] = 'Upload Bulk Session CSV File';
+$string['uploadsessionfiledesc'] = 'Upload a CSV file containing the bulk session data to create new sessions.';
+$string['uploadandpreviewbulk'] = 'Upload & Preview Bulk Sessions';
