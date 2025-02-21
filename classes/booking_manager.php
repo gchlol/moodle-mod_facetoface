@@ -136,6 +136,7 @@ class booking_manager {
             }
             return;
         }
+
         $handle = $this->file->get_content_file_handle();
         $maxlinelength = 1000;
         $delimiter = ',';
