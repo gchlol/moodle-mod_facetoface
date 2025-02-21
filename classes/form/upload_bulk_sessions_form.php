@@ -44,23 +44,21 @@ class upload_bulk_sessions_form extends \moodleform {
         $mform = $this->_form;
 
         // Header.
-        $mform->addElement('header', 'settingsheader', get_string('upload')); //! CHECK
+        $mform->addElement('header', 'settingsheader', get_string('facetoface:uploadbulksessions', 'mod_facetoface'));
 
         // Example CSV link (optional).
         $url = new moodle_url('/mod/facetoface/example.csv');
         $link = html_writer::link($url, 'example.csv');
         $mform->addElement('static', 'examplecsv', get_string('facetoface:examplecsv', 'mod_facetoface'), $link);
 
-        // File manager of CSV upload
+        // File manager for CSV upload.
         $maxbytes = get_max_upload_file_size($CFG->maxbytes, 0);
-        $mform->addElement('filemanager', 'csvfile', get_string('facetoface:uploadsessionfile', 'mod_facetoface'),
-        null, 
-        [
-            'subdirs' => 0,
-            'maxfiles' => 1,
-            'accepted_types' => 'csv',
-            'maxbytes' => $maxbytes,
-            'return_types' => FILE_INTERNAL | FILE_EXTERNAL,
+        $mform->addElement('filemanager', 'csvfile', get_string('facetoface:uploadsessionfile', 'mod_facetoface'), null, [
+            'subdirs'       => 0,
+            'maxfiles'      => 1,
+            'accepted_types'=> 'csv',
+            'maxbytes'      => $maxbytes,
+            'return_types'  => FILE_INTERNAL | FILE_EXTERNAL,
         ]);
         $mform->setType('csvfile', PARAM_INT);
         $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
@@ -69,7 +67,7 @@ class upload_bulk_sessions_form extends \moodleform {
         $mform->addElement('static', 'csvuploadhelp', '',
             nl2br(get_string('facetoface:uploadsessionfiledesc', 'mod_facetoface')));
 
-        // Example: Additional checkbox if needed.
+        // Additional checkbox for case-insensitive matching (if needed).
         $mform->addElement('advcheckbox', 'caseinsensitive', get_string('caseinsensitive', 'mod_facetoface'));
         $mform->setDefault('caseinsensitive', true);
 

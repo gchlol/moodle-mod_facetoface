@@ -867,6 +867,7 @@ $string['attendancecolumn:5'] = 'Stream';
 $string['attendancecolumn:6'] = 'Paypoint';
 
 // Bulk Upload Sessions
-$string['uploadsessionfile'] = 'Upload Bulk Session CSV File';
-$string['uploadsessionfiledesc'] = 'Upload a CSV file containing the bulk session data to create new sessions.';
-$string['uploadandpreviewbulk'] = 'Upload & Preview Bulk Sessions';
+$string['facetoface:uploadbulksessions'] = 'Upload Bulk Sessions';
+$string['facetoface:uploadsessionfile'] = 'Upload Bulk Session CSV File';
+$string['facetoface:uploadsessionfiledesc'] = 'Upload a CSV file containing the bulk session data to create new sessions.';
+$string['facetoface:uploadandpreviewbulk'] = 'Upload & Preview Bulk Sessions';
