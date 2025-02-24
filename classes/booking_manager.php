@@ -162,7 +162,6 @@ class booking_manager {
             fclose($handle);
         }
     }
-    
     /**
      * Validate the records provided to ensure they can be processed without errors.
      *
@@ -314,7 +313,6 @@ class booking_manager {
         $equals = $DB->sql_equal('username', ':username', !$this->caseinsensitive);
         return $DB->get_records_select('user', $equals, ['username' => $username], 'id', $fields);
     }
-    
     /**
      * Transform notification type to internal representation.
      *
