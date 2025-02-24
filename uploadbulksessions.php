@@ -68,7 +68,7 @@ if ($validate) {
             if (empty($errors)) {
                 if ($manager->process()) {
                     redirect(new moodle_url('/mod/facetoface/view.php', ['id' => $cm->id]),
-                        get_string('bulkuploadsuccess', 'facetoface'),
+                        get_string('facetoface:bulkuploadsuccess', 'facetoface'),
                         null,
                         notification::NOTIFY_SUCCESS);
                 } else {
@@ -81,13 +81,13 @@ if ($validate) {
                 echo notification::error(implode('<br>', $errors));
             }
         } else {
-            echo notification::error(get_string('error:filenotloaded', 'facetoface'));
+            echo notification::error(get_string('facetoface:filenotloaded', 'facetoface'));
         }
     }
 } 
 else if ($process && $fileid && $f) {
     // This branch could be used for a separate processing step if needed.
-    $errmsg = get_string('error:bulkuploaderrors', 'facetoface');
+    $errmsg = get_string('facetoface:bulkuploaderrors', 'facetoface');
     redirect(new moodle_url('/mod/facetoface/bulkupload.php', ['f' => $f]), $errmsg, null, notification::NOTIFY_ERROR);
 } 
 else {
