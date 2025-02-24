@@ -35,6 +35,10 @@ class bulk_sessions_manager {
         /** @var array Validation errors */
         private $errors = [];
 
+        /** To provide clarity and acoid undefined properties */
+        private $usefile;
+        private $file;
+
 
         /**
          * Constructor
@@ -53,10 +57,10 @@ class bulk_sessions_manager {
          */
         public function load_from_file(int $fileid) {
             global $USER;
-            $this->userfile = true;
+            $this->usefile = true;
 
             $fs = get_file_storage();
-            $usercontext = \context_user::intance(instance->id);
+            $usercontext = \context_user::instance($USER->id);
             $files = $fs->get_area_files($usercontext->id, 'user','draft', $fileid, 'id', false);
         
            if (count($files) != 1) {
@@ -64,6 +68,7 @@ class bulk_sessions_manager {
         }
 
         $this->file = current($files);
+        return true; 
     }
 
     /**
@@ -81,11 +86,23 @@ class bulk_sessions_manager {
      * Get headers for the records.
      * @return array
      */
-
-     public static function get_headers(){
-        return [];
-     }
-
+     public static function get_headers() {
+        return [
+            'Facetoface id',
+            'Session date/time known',
+            'Start date and time',
+            'finish date and time',
+            'allow cancelations',
+            'Capacity',
+            'Allow overbookings',
+            'Duration',
+            'Normal Cost',
+            'Discount Cost',
+            'Details',
+            'customfield_shortname',
+            'customfield_value'
+        ];
+    }
          /**
      * Get an iterator for the records.
      * @return Generator
@@ -100,19 +117,17 @@ class bulk_sessions_manager {
         $handle = $this->file->get_content_file_handle();
         $maxlinelength = 1000;
         $delimiter = ',';
-        $rownumber = 1; // First row is headers.
+        // Read headers from file (if you want dynamic headers, otherwise use self::get_headers())
         $headers = self::get_headers();
         $numheaders = count($headers);
-        fgets($handle); // Move pointer past first line (headers).
+        fgets($handle); // Skip header row.
         try {
             while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
-                $rownumber++;
-                $numfields = count($data);
-                if ($numfields !== $numheaders) {
-                    throw new moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface');
+                if (count($data) !== $numheaders) {
+                    throw new \moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface');
                 }
-                $record = array_combine($headers, $data);
-                yield (object) $record;
+                // Yield as an associative array.
+                yield array_combine($headers, $data);
             }
         } finally {
             fclose($handle);
@@ -124,57 +139,81 @@ class bulk_sessions_manager {
      * @return array An array of error messages (empty if no errors).
      */
     public function validate() {
+        // If using file, load records from iterator.
+        if ($this->usefile) {
+            $this->records = iterator_to_array($this->get_iterator());
+        }
+
         foreach ($this->records as $record) {
-            // Validate required fields.
-            if (empty($record['Facetoface id'])) {
-                $this->errors[] = get_string('error:missingfacetofaceid', 'facetoface');
-            }
             if (empty($record['Start date and time'])) {
                 $this->errors[] = get_string('error:missingstarttime', 'facetoface');
             }
             if (empty($record['finish date and time'])) {
                 $this->errors[] = get_string('error:missingfinishtime', 'facetoface');
             }
-            // You can add additional validations for date formats, numeric capacity, etc.
         }
         return $this->errors;
     }
 
       /**
      * Process the valid records to create sessions.
-     *
      * @return bool True on success, false if any errors occurred.
      */
     public function process() {
         global $DB;
-
+    
         foreach ($this->records as $record) {
-            // Prepare session data.
             $session = new \stdClass();
-            // Use the provided Facetoface id from the CSV (if needed) or the one set for the manager.
-            $session->facetofaceid = $record['Facetoface id'] ?: $this->facetofaceid;
-            $session->starttime   = strtotime($record['Start date and time']);
-            $session->finishtime  = strtotime($record['finish date and time']);
-            $session->allowcancel = isset($record['allow cancelations']) ? ($record['allow cancelations'] === 'no' ? 0 : 1) : 1;
-            $session->capacity    = !empty($record['Capacity']) ? (int)$record['Capacity'] : 10;
-            $session->overbook    = isset($record['Allow overbookings']) ? ($record['Allow overbookings'] === 'no' ? 0 : 1) : 1;
-            $session->details     = !empty($record['Details']) ? $record['Details'] : '';
-
+            // Always use the facetoface instance ID from the manager.
+            $session->facetofaceid = $this->facetofaceid;
+    
+            // Session date/time known: default to yes.
+            $session->datetimeknown = isset($record['Session date/time known']) ? 
+                ($record['Session date/time known'] === 'no' ? 0 : 1) : 1;
+    
+            // Start and finish times (assumed to be in a valid date/time string format).
+            $session->starttime  = strtotime($record['Start date and time']);
+            $session->finishtime = strtotime($record['finish date and time']);
+    
+            // Allow sign up cancellations: default yes (1) unless CSV explicitly says "no".
+            $session->allowcancel = isset($record['allow cancelations']) ? 
+                ($record['allow cancelations'] === 'no' ? 0 : 1) : 1;
+    
+            // Capacity: default to 10 if not provided.
+            $session->capacity = !empty($record['Capacity']) ? (int)$record['Capacity'] : 10;
+    
+            // Allow overbooking: default yes (1).
+            $session->overbook = isset($record['Allow overbookings']) ? 
+                ($record['Allow overbookings'] === 'no' ? 0 : 1) : 1;
+    
+            // Duration is required.
+            $session->duration = !empty($record['Duration']) ? $record['Duration'] : '';
+    
+            // Normal Cost: optional.
+            $session->normalcost = isset($record['Normal Cost']) ? $record['Normal Cost'] : null;
+    
+            // Discount Cost: optional.
+            $session->discountcost = isset($record['Discount Cost']) ? $record['Discount Cost'] : null;
+    
+            // Details: optional.
+            $session->details = !empty($record['Details']) ? $record['Details'] : '';
+    
             // Handle custom field(s) if provided.
             if (!empty($record['customfield_shortname'])) {
-                // For example, you might store this in a serialized field or call a dedicated function.
-                $session->customfields = [$record['customfield_shortname'] => $record['customfield_value'] ?? ''];
+                $session->customfields = [
+                    $record['customfield_shortname'] => isset($record['customfield_value']) ? $record['customfield_value'] : ''
+                ];
             }
-
-            // Insert the session into the database.
-            // You might need to call a dedicated function instead.
+    
+            // Insert the session record into the database.
             if (!$DB->insert_record('facetoface_sessions', $session)) {
-                $this->errors[] = get_string('error:failedtocreatesession', 'facetoface') . ' (' . implode(', ', $record) . ')';
+                $this->errors[] = get_string('error:failedtocreatesession', 'facetoface') 
+                    . ' (' . implode(', ', $record) . ')';
             }
         }
         return empty($this->errors);
     }
-
+    
     /**
      * Get validation or processing errors.
      *
