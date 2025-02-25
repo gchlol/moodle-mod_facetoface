@@ -1,0 +1,4 @@
+Session date/time known,Start date and time,finish date and time,allow cancelations,Capacity,Allow overbookings,Duration,Normal Cost,Discount Cost,Details,customfield_shortname,customfield_value
+yes,2025-03-10 09:00,2025-03-10 12:00,yes,20,no,180,100.00,80.00,Session about training,location,Room A1
+no,,,,yes,30,yes,120,150.00,120.00,Another session,custom_field,Extra notes
+yes,2025-04-15 14:00,2025-04-15 16:30,no,50,no,150,,,Leadership Workshop,venue,Conference Hall
