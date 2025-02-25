@@ -879,3 +879,4 @@ $string['error:missingfinishtime'] = 'Finish date and time is required.';
 $string['error:failedtocreatesession'] = 'Failed to create session';
 $string['error:filenotloaded'] = 'File could not be loaded.';
 $string['error:invaliddatetimedata'] = 'Invalid Date Time data.';
+$string['error:bulkuploadfileerrorsfound'] = 'Errors were found in the uploaded file. Bookings cannot be processed until they are resolved.';

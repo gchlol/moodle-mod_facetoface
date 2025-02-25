@@ -75,7 +75,7 @@
          // **Display errors in a table**
          $table = new html_table();
          $table->attributes['class'] = 'f2fbookingsuploadlist m-auto generaltable mb-2';
-         $table->head = [get_string('csvline', 'facetoface'), get_string('status', 'facetoface')];
+         $table->head = [get_string('uucsvline', 'tool_uploaduser'), get_string('status', 'facetoface')];
  
          foreach ($errors as $line => $message) {
              $table->data[] = [$line, $message];

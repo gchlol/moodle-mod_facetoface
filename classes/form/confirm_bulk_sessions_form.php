@@ -17,6 +17,11 @@
 
 namespace mod_facetoface\form;
 
+use html_writer;
+use moodle_url;
+use moodleform;
+use single_button;
+
 defined('MOODLE_INTERNAL') || exit;
 require_once $CFG->libdir.'/formslib.php';
 
