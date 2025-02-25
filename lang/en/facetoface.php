@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -14,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
+/*
  * Copyright (C) 2007-2011 Catalyst IT (http://www.catalyst.net.nz)
  * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
@@ -876,4 +877,19 @@ $string['facetoface:bulkuploaderrors'] = 'Errors were found in the bulk upload f
 $string['error:missingstarttime'] = 'Start date and time is required.';
 $string['error:missingfinishtime'] = 'Finish date and time is required.';
 $string['facetoface:failedtocreatesession'] = 'Failed to create session';
-$string['facetoface:filenotloaded'] = 'File could not be loaded.';
+$string['error:filenotloaded'] = 'File could not be loaded.';
+$string['facetoface:csvformatinfo'] = "Expected CSV Format:\n\n"
+    ."Column Name                   | Description                                    | Required? | Example Value\n"
+    ."------------------------------|------------------------------------------------|-----------|----------------\n"
+    ."Session date/time known        | Indicates if session time is known (yes/no)   | Yes       | yes\n"
+    ."Start date and time            | Start date & time (Y-m-d H:i)                 | If yes    | 2025-03-10 09:00\n"
+    ."Finish date and time           | End date & time (Y-m-d H:i)                   | If yes    | 2025-03-10 12:00\n"
+    ."Allow cancelations             | Whether users can cancel (yes/no)             | Yes       | yes\n"
+    ."Capacity                        | Maximum attendees (integer)                   | Yes       | 20\n"
+    ."Allow overbookings              | Overbooking allowed? (yes/no)                 | Yes       | no\n"
+    ."Duration                        | Duration (integer, minutes)                   | Yes       | 180\n"
+    ."Normal Cost                     | Standard cost (optional, numeric)            | No        | 100.00\n"
+    ."Discount Cost                   | Discounted cost (optional, numeric)          | No        | 80.00\n"
+    ."Details                         | Additional session details (optional)        | No        | Advanced training session\n"
+    ."customfield_shortname           | Custom field short name (optional)           | No        | location\n"
+    .'customfield_value               | Value for the custom field (optional)        | No        | Room A1';

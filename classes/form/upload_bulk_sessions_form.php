@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,29 +17,27 @@
 
 namespace mod_facetoface\form;
 
-use moodle_url;
-use html_writer;
-
-defined('MOODLE_INTERNAL') || die();
-require_once($CFG->dirroot . '/repository/lib.php');
+defined('MOODLE_INTERNAL') || exit;
+require_once $CFG->dirroot.'/repository/lib.php';
 
 /**
- * Upload bookings form class
+ * Upload bookings form class.
  *
- * @package    mod_facetoface
  * @author     Jonas Sajonas
  * @copyright  GCHLOL, 2025
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class upload_bulk_sessions_form extends \moodleform {
-
+class upload_bulk_sessions_form extends \moodleform
+{
     /**
      * Build form for importing bookings.
      *
      * {@inheritDoc}
+     *
      * @see \moodleform::definition()
      */
-    public function definition() {
+    public function definition()
+    {
         global $CFG;
 
         $mform = $this->_form;
@@ -46,19 +45,22 @@ class upload_bulk_sessions_form extends \moodleform {
         // Header.
         $mform->addElement('header', 'settingsheader', get_string('facetoface:uploadbulksessions', 'mod_facetoface'));
 
+        // Add the expected CSV format as static text.
+        $mform->addElement('static', 'csvformatinfo', get_string('facetoface:csvformatinfo', 'mod_facetoface'));
         // Example CSV link (optional).
-        $url = new moodle_url('/mod/facetoface/example_bulk.csv');
-        $link = html_writer::link($url, 'example_bulk.csv');
+        
+        $url = new \moodle_url('/mod/facetoface/example_bulk.csv');
+        $link = \html_writer::link($url, 'example_bulk.csv');
         $mform->addElement('static', 'examplecsv', get_string('facetoface:examplecsv', 'mod_facetoface'), $link);
 
         // File manager for CSV upload.
         $maxbytes = get_max_upload_file_size($CFG->maxbytes, 0);
         $mform->addElement('filemanager', 'csvfile', get_string('facetoface:uploadsessionfile', 'mod_facetoface'), null, [
-            'subdirs'       => 0,
-            'maxfiles'      => 1,
-            'accepted_types'=> 'csv',
-            'maxbytes'      => $maxbytes,
-            'return_types'  => FILE_INTERNAL | FILE_EXTERNAL,
+            'subdirs' => 0,
+            'maxfiles' => 1,
+            'accepted_types' => 'csv',
+            'maxbytes' => $maxbytes,
+            'return_types' => FILE_INTERNAL | FILE_EXTERNAL,
         ]);
         $mform->setType('csvfile', PARAM_INT);
         $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
