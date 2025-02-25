@@ -873,6 +873,7 @@ $string['facetoface:uploadsessionfile'] = 'Upload Bulk Session CSV File';
 $string['facetoface:uploadandpreviewbulk'] = 'Upload & Preview Bulk Sessions';
 $string['facetoface:bulkuploadsuccess'] = 'Bulk sessions uploaded successfully.';
 $string['facetoface:confirmbulkpreview'] = 'Bulk Upload Preview';
+$string['facetoface:bulksessionsprocessed'] = 'Bulk sessions have been successfully processed.';
 $string['error:bulkuploaderrors'] = 'Errors were found in the bulk upload file.';
 $string['error:missingstarttime'] = 'Start date and time is required.';
 $string['error:missingfinishtime'] = 'Finish date and time is required.';

@@ -143,7 +143,7 @@
  
          // Redirect back with success message
          redirect(
-             new moodle_url('/mod/facetoface/bulkupload.php', ['f' => $f]),
+             new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]),
              get_string('facetoface:bulksessionsprocessed', 'mod_facetoface'),
              null,
              notification::NOTIFY_SUCCESS
@@ -153,7 +153,7 @@
      // If errors exist, redirect back with error message.
      $errmsg = get_string('error:bulkuploadfileerrorsfound', 'mod_facetoface', count($errors));
      redirect(
-         new moodle_url('/mod/facetoface/bulkupload.php', ['f' => $f]),
+         new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]),
          $errmsg,
          null,
          notification::NOTIFY_ERROR
@@ -165,7 +165,7 @@
  $mform->set_data(['f' => $f, 'validate' => 1]);
  $heading = get_string('facetoface:uploadbulksessions', 'facetoface');
  
- $PAGE->set_url(new moodle_url('/mod/facetoface/bulkupload.php', ['courseid' => $course->id, 'cmid' => $cm->id]));
+ $PAGE->set_url(new moodle_url('/mod/facetoface/uploadbulksessions.php', ['courseid' => $course->id, 'cmid' => $cm->id]));
  $PAGE->set_pagelayout('standard');
  $PAGE->set_title($heading);
  $PAGE->set_heading($heading);
