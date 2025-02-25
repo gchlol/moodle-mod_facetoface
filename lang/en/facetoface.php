@@ -870,7 +870,6 @@ $string['attendancecolumn:6'] = 'Paypoint';
 // Bulk Upload Sessions
 $string['facetoface:uploadbulksessions'] = 'Upload Bulk Sessions';
 $string['facetoface:uploadsessionfile'] = 'Upload Bulk Session CSV File';
-$string['facetoface:uploadsessionfiledesc'] = 'Upload a CSV file containing the bulk session data to create new sessions.';
 $string['facetoface:uploadandpreviewbulk'] = 'Upload & Preview Bulk Sessions';
 $string['facetoface:bulkuploadsuccess'] = 'Bulk sessions uploaded successfully.';
 $string['error:bulkuploaderrors'] = 'Errors were found in the bulk upload file.';
@@ -880,3 +879,17 @@ $string['error:failedtocreatesession'] = 'Failed to create session';
 $string['error:filenotloaded'] = 'File could not be loaded.';
 $string['error:invaliddatetimedata'] = 'Invalid Date Time data.';
 $string['error:bulkuploadfileerrorsfound'] = 'Errors were found in the uploaded file. Bookings cannot be processed until they are resolved.';
+$string['facetoface:uploadsessionfiledesc'] =
+'Fields expected:
+- Session date/time known (required - valid options: yes, no)
+- Start date and time (required format: YYYY-MM-DD HH:MM)
+- Finish date and time (required format: YYYY-MM-DD HH:MM)
+- Allow cancelations (required - valid options: yes, no)
+- Capacity (required - must be a whole number)
+- Allow overbookings (required - valid options: yes, no)
+- Duration (required - must be a numeric value in minutes)
+- Normal Cost (optional - numeric value)
+- Discount Cost (optional - numeric value)
+- Details (optional - session description)
+- Custom field short name (optional - used for additional data fields)
+- Custom field value (optional - value corresponding to the custom field short name)';
