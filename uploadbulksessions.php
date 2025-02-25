@@ -95,9 +95,27 @@
      } else {
          // If no errors, show confirmation form
          echo $OUTPUT->header();
+         echo $OUTPUT->heading(get_string('facetoface:confirmbulkpreview', 'facetoface'), 3);
+         
+         $records = $manager->get_records(); // Now works after adding the method
+         
+         if (!empty($records)) {
+             $table = new html_table();
+             $table->attributes['class'] = 'f2fconfirmuploadlist m-auto generaltable mb-2';
+             $table->head = bulk_sessions_manager::get_headers();
+         
+             foreach ($records as $record) {
+                 $table->data[] = array_values($record);
+             }
+         
+             echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
+         } else {
+             echo $OUTPUT->notification(get_string('facetoface:norecordsfound', 'facetoface'), 'info');
+         }
+         
          $mform->display();
          echo $OUTPUT->footer();
-         exit;
+         exit; 
      }
  }
  

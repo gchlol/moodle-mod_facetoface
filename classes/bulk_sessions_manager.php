@@ -301,4 +301,18 @@ class bulk_sessions_manager
     {
         return $this->errors;
     }
+
+    /**
+     * Get parsed CSV records.
+     *
+     * @return array List of valid records.
+     */
+    public function get_records()
+    {
+        if ($this->usefile) {
+                $this->records = iterator_to_array($this->get_iterator());
+        }
+        return $this->records;
+    }
+
 }
