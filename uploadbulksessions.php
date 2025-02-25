@@ -78,10 +78,10 @@ if ($validate) {
                         notification::NOTIFY_ERROR);
                 }
             } else {
-                echo notification::error(implode('<br>', $errors));
+                notification::add(implode('<br>', $errors), notification::NOTIFY_ERROR);
             }
         } else {
-            echo notification::error(get_string('error:filenotloaded', 'facetoface'));
+            notification::add(get_string('error:filenotloaded', 'facetoface'), notification::NOTIFY_ERROR);
         }
     }
 } elseif ($process && $fileid && $f) {
