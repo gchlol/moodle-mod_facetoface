@@ -156,10 +156,10 @@ class bulk_sessions_manager
 
         foreach ($this->records as $record) {
             if (empty($record['Start date and time'])) {
-                $this->errors[] = get_string('facetoface:missingstarttime', 'facetoface');
+                $this->errors[] = get_string('error:missingstarttime', 'facetoface');
             }
             if (empty($record['finish date and time'])) {
-                $this->errors[] = get_string('facetoface:missingfinishtime', 'facetoface');
+                $this->errors[] = get_string('error:missingfinishtime', 'facetoface');
             }
         }
 
@@ -189,7 +189,7 @@ class bulk_sessions_manager
             $session->finishtime = !empty($record['finish date and time']) ? strtotime($record['finish date and time']) : null;
 
             if ($session->datetimeknown && (empty($session->starttime) || empty($session->finishtime))) {
-                $this->errors[] = get_string('facetoface:invaliddatetimedata', 'facetoface');
+                $this->errors[] = get_string('error:invaliddatetimedata', 'facetoface');
                 continue; // Skip this record
             }
 
@@ -225,7 +225,7 @@ class bulk_sessions_manager
 
             // Insert the session record into the database.
             if (!$DB->insert_record('facetoface_sessions', $session)) {
-                $this->errors[] = get_string('facetoface:failedtocreatesession', 'facetoface')
+                $this->errors[] = get_string('error:failedtocreatesession', 'facetoface')
                     .' ('.implode(', ', $record).')';
             }
         }

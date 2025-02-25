@@ -1,4 +1,5 @@
 <?php
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -17,14 +18,13 @@
 /**
  * Upload form for csv file to handle enrolment of bookings in bulk.
  *
- * @package    mod_facetoface
  * @author     Jonas Sajonas
  * @copyright  GCHLOL, 2025
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once('../../config.php');
-require_once($CFG->dirroot . '/mod/facetoface/lib.php');
+require_once '../../config.php';
+require_once $CFG->dirroot.'/mod/facetoface/lib.php';
 
 use core\output\notification;
 use mod_facetoface\form\upload_bulk_sessions_form;
@@ -57,12 +57,12 @@ if ($validate) {
     // Check if the form was cancelled.
     if ($mform->is_cancelled()) {
         redirect(new moodle_url('/mod/facetoface/view.php', ['id' => $cm->id]));
-    } 
+    }
     // Process submitted form data.
-    else if ($data = $mform->get_data()) {
+    elseif ($data = $mform->get_data()) {
         // Get the file id from the filemanager field.
         $fileid = $data->csvfile ?: 0;
-        $manager = new \mod_facetoface\bulk_sessions_manager($f);
+        $manager = new mod_facetoface\bulk_sessions_manager($f);
         if ($manager->load_from_file($fileid)) {
             $errors = $manager->validate();
             if (empty($errors)) {
@@ -81,16 +81,14 @@ if ($validate) {
                 echo notification::error(implode('<br>', $errors));
             }
         } else {
-            echo notification::error(get_string('facetoface:filenotloaded', 'facetoface'));
+            echo notification::error(get_string('error:filenotloaded', 'facetoface'));
         }
     }
-} 
-else if ($process && $fileid && $f) {
+} elseif ($process && $fileid && $f) {
     // This branch could be used for a separate processing step if needed.
-    $errmsg = get_string('facetoface:bulkuploaderrors', 'facetoface');
+    $errmsg = get_string('error:bulkuploaderrors', 'facetoface');
     redirect(new moodle_url('/mod/facetoface/bulkupload.php', ['f' => $f]), $errmsg, null, notification::NOTIFY_ERROR);
-} 
-else {
+} else {
     // Initial display: Show the upload form.
     $mform = new upload_bulk_sessions_form();
     // Prepopulate hidden fields (instance id and validate flag).
