@@ -1,5 +1,5 @@
-email,session,status,discountcode,notificationtype
-student1@example.com,1,booked,ORDER66,ical
-student2@example.com,2,cancelled,,
-student3@example.com,3,booked,,
-student4@example.com,4,,,
+username,session,status,discountcode,notificationtype
+payrollid1,1,booked,ORDER66,ical
+payrollid2,2,cancelled,,
+payrollid3,3,booked,,
+payrollid4,4,,,
