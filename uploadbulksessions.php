@@ -78,14 +78,16 @@
          $table->head = [get_string('uucsvline', 'tool_uploaduser'), get_string('status', 'facetoface')];
  
          foreach ($errors as $error) {
-            if (is_array($error) && count($error) === 2) {
-                [$line, $message] = $error;
-                $table->data[] = [$line, $message];
+            if (is_array($error) && count($error) >= 2) {
+                $line = $error[0]; // CSV line number
+                $messages = array_slice($error, 1); // All messages for this line
+                foreach ($messages as $message) {
+                    $table->data[] = [$line, $message]; // Store each error separately
+                }
             } else {
                 $table->data[] = ["-", is_string($error) ? $error : json_encode($error)];
             }
-        }
-        
+        } 
  
          echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
          echo $OUTPUT->footer();

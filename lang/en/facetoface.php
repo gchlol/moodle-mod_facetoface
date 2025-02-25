@@ -879,6 +879,15 @@ $string['error:failedtocreatesession'] = 'Failed to create session';
 $string['error:filenotloaded'] = 'File could not be loaded.';
 $string['error:invaliddatetimedata'] = 'Invalid Date Time data.';
 $string['error:bulkuploadfileerrorsfound'] = 'Errors were found in the uploaded file. Bookings cannot be processed until they are resolved.';
+$string['error:invalidstarttime'] = 'Start date and time is invalid.';
+$string['error:invalidfinishtime'] = 'Finish date and time is invalid.';
+$string['error:starttimeafterfinish'] = 'Start time must be before the finish time.';
+$string['error:invalidcapacity'] = 'Capacity must be a positive number.';
+$string['error:invalidallowoverbook'] = 'Allow overbookings must be "yes" or "no".';
+$string['error:invalidduration'] = 'Duration must be a positive number.';
+$string['error:invalidnormalcost'] = 'Normal cost must be a valid number.';
+$string['error:invaliddiscountcost'] = 'Discount cost must be a valid number.';
+
 $string['facetoface:uploadsessionfiledesc'] =
 'Fields expected:
 - Session date/time known (required - valid options: yes, no)
