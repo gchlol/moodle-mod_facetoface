@@ -45,10 +45,7 @@ class upload_bulk_sessions_form extends \moodleform
         // Header.
         $mform->addElement('header', 'settingsheader', get_string('facetoface:uploadbulksessions', 'mod_facetoface'));
 
-        // Add the expected CSV format as static text.
-        $mform->addElement('static', 'csvformatinfo', get_string('facetoface:csvformatinfo', 'mod_facetoface'));
         // Example CSV link (optional).
-
         $url = new \moodle_url('/mod/facetoface/example_bulk.csv');
         $link = \html_writer::link($url, 'example_bulk.csv');
         $mform->addElement('static', 'example_bulkcsv', get_string('facetoface:examplecsv', 'mod_facetoface'), $link);
