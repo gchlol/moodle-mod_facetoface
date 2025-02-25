@@ -59,9 +59,9 @@ class confirm_bulk_sessions_form extends moodleform
         $mform->setType('fileid', PARAM_INT);
 
         // Back button (go back to upload screen).
-        $backurl = new moodle_url('/mod/facetoface/bulkupload.php', ['f' => $f]);
+        $backurl = new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]);
         $htmlbuttons = $OUTPUT->render(new single_button(
-            new moodle_url('/mod/facetoface/bulkupload.php', ['f' => $f, 'fileid' => $fileid, 'process' => 1]),
+            new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f, 'fileid' => $fileid, 'process' => 1]),
             get_string('facetoface:confirmandprocess', 'mod_facetoface'),
             'post',
             true

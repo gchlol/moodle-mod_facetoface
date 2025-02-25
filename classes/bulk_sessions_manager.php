@@ -223,8 +223,6 @@ class bulk_sessions_manager
         return $this->errors;
     }
     
-    
-
     /**
      * Process the valid records to create sessions.
      *

@@ -80,9 +80,9 @@
          foreach ($errors as $error) {
             if (is_array($error) && count($error) >= 2) {
                 $line = $error[0]; // CSV line number
-                $messages = array_slice($error, 1); // All messages for this line
+                $messages = array_slice($error, 1);
                 foreach ($messages as $message) {
-                    $table->data[] = [$line, $message]; // Store each error separately
+                    $table->data[] = [$line, $message];
                 }
             } else {
                 $table->data[] = ["-", is_string($error) ? $error : json_encode($error)];
