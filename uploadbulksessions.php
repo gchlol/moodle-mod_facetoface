@@ -48,7 +48,7 @@ if (!$cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course
 
 require_course_login($course, true, $cm);
 $context = context_module::instance($cm->id);
-require_capability('mod_facetoface:uploadbulksessions', $context);
+require_capability('mod/facetoface:uploadbulksessions', $context);
 
 if ($validate) {
     $heading = get_string('facetoface:uploadbulksessions', 'facetoface');
