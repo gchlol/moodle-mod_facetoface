@@ -1,0 +1,70 @@
+<?php
+
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+namespace mod_facetoface\form;
+
+defined('MOODLE_INTERNAL') || exit;
+require_once $CFG->libdir.'/formslib.php';
+
+/**
+ * Processing confirm form for bulk session uploads.
+ *
+ * @author      Jonas Sajonas
+ * @copyright   GCHLOL, 2025
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class confirm_bulk_sessions_form extends moodleform
+{
+    /**
+     * Form definition.
+     */
+    public function definition()
+    {
+        global $OUTPUT;
+
+        $mform = $this->_form;
+        $fileid = $this->_customdata['fileid'] ?? 0;
+        $f = $this->_customdata['f'] ?? 0;
+
+        // Suppress email checkbox.
+        $mform->addElement('advcheckbox', 'suppressemail', get_string('suppressemail', 'facetoface'), '', [], [0, 1]);
+        $mform->addHelpButton('suppressemail', 'suppressemail', 'facetoface');
+        $mform->setType('suppressemail', PARAM_BOOL);
+
+        // The facetoface module ID.
+        $mform->addElement('hidden', 'f');
+        $mform->setType('f', PARAM_INT);
+
+        // Reference to the uploaded file.
+        $mform->addElement('hidden', 'fileid', $fileid);
+        $mform->setType('fileid', PARAM_INT);
+
+        // Back button (go back to upload screen).
+        $backurl = new moodle_url('/mod/facetoface/bulkupload.php', ['f' => $f]);
+        $htmlbuttons = $OUTPUT->render(new single_button(
+            new moodle_url('/mod/facetoface/bulkupload.php', ['f' => $f, 'fileid' => $fileid, 'process' => 1]),
+            get_string('facetoface:confirmandprocess', 'mod_facetoface'),
+            'post',
+            true
+        ));
+        $htmlbuttons .= $OUTPUT->single_button($backurl, get_string('back'), 'get', ['class' => 'ml-3']);
+
+        // Render buttons inside a container.
+        $htmlbuttons = html_writer::tag('div', $htmlbuttons, ['class' => 'd-flex gap-2']);
+        $mform->addElement('html', $htmlbuttons);
+    }
+}
