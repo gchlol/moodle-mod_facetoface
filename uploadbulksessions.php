@@ -77,9 +77,15 @@
          $table->attributes['class'] = 'f2fbookingsuploadlist m-auto generaltable mb-2';
          $table->head = [get_string('uucsvline', 'tool_uploaduser'), get_string('status', 'facetoface')];
  
-         foreach ($errors as $line => $message) {
-             $table->data[] = [$line, $message];
-         }
+         foreach ($errors as $error) {
+            if (is_array($error) && count($error) === 2) {
+                [$line, $message] = $error;
+                $table->data[] = [$line, $message];
+            } else {
+                $table->data[] = ["-", is_string($error) ? $error : json_encode($error)];
+            }
+        }
+        
  
          echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
          echo $OUTPUT->footer();
