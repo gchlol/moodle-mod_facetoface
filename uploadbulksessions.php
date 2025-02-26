@@ -124,8 +124,11 @@
      $manager = new bulk_sessions_manager($f);
      $manager->load_from_file($fileid);
  
-     // Read confirmation form data
-     $confirmdata = (new confirm_bulk_sessions_form(null))->get_data();
+    // Read confirmation form data
+    // FIXED code in Step 2:
+    $confirmform = new confirm_bulk_sessions_form(null, ['f' => $f, 'fileid' => $fileid]);
+    $confirmdata = $confirmform->get_data();
+
  
      // Process the records after confirmation
      $errors = $manager->validate();

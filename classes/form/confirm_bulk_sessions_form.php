@@ -17,10 +17,7 @@
 
 namespace mod_facetoface\form;
 
-use html_writer;
-use moodle_url;
 use moodleform;
-use single_button;
 
 defined('MOODLE_INTERNAL') || exit;
 require_once $CFG->libdir.'/formslib.php';
@@ -54,6 +51,9 @@ class confirm_bulk_sessions_form extends moodleform {
 
         $mform->addElement('hidden', 'fileid', $fileid);
         $mform->setType('fileid', PARAM_INT);
+
+        $mform->addElement('hidden', 'process', 1);
+        $mform->setType('process', PARAM_INT);
 
         // Add a group of buttons: "Confirm and process" and "Cancel/Back".
         $buttonarray = [];
