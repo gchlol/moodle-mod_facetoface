@@ -62,6 +62,10 @@
      // **Confirmation form before processing**
      $mform = new confirm_bulk_sessions_form(null, ['f' => $f, 'fileid' => $fileid]);
  
+     error_log("DEBUG: at top, f=$f, validate=$validate, fileid=$fileid");
+     error_log("DEBUG: in validate block, f=$f, fileid=$fileid");
+
+
      $manager = new bulk_sessions_manager($f);
      $manager->load_from_file($fileid);
  
@@ -119,7 +123,7 @@
      }
  }
  
- // **STEP 2: Process the CSV after confirmation**
+ // STEP 2: Process the CSV after confirmation
  if ($process && $fileid && $f) {
      $manager = new bulk_sessions_manager($f);
      $manager->load_from_file($fileid);
@@ -176,3 +180,5 @@
  echo $OUTPUT->header();
  $mform->display();
  echo $OUTPUT->footer();
+
+ error_log("DEBUG (top of script): f=$f");
