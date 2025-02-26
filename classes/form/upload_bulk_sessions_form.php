@@ -41,6 +41,7 @@ class upload_bulk_sessions_form extends \moodleform
         global $CFG;
 
         $mform = $this->_form;
+        $f = $this->_customdata['f'] ?? 0;
 
         // Header.
         $mform->addElement('header', 'settingsheader', get_string('facetoface:uploadbulksessions', 'mod_facetoface'));
@@ -77,8 +78,6 @@ class upload_bulk_sessions_form extends \moodleform
         // Hidden field to indicate we should validate/process after upload.
         $mform->addElement('hidden', 'validate', 1);
         $mform->setType('validate', PARAM_INT);
-
-        
 
         // Submit button.
         $mform->addElement('submit', 'submit', get_string('facetoface:uploadandpreviewbulk', 'mod_facetoface'));

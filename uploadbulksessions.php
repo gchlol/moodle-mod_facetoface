@@ -32,6 +32,8 @@
  use mod_facetoface\bulk_sessions_manager;
  
  $f = optional_param('f', 0, PARAM_INT); // The facetoface module ID.
+ error_log("DEBUG: f = $f");
+ $PAGE->set_url(new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]));
  $fileid = optional_param('fileid', 0, PARAM_INT); // The fileid of the file uploaded.
  $validate = optional_param('validate', 0, PARAM_INT); // Whether or not the user wants to process the upload (after verification).
  $process = optional_param('process', 0, PARAM_INT); // Whether or not the user wants to process the upload (after verification).
@@ -167,18 +169,17 @@
      );
  }
  
- // **STEP 3: Display the initial upload form**
- $mform = new upload_bulk_sessions_form(null);
- $mform->set_data(['f' => $f, 'validate' => 1]);
- $heading = get_string('facetoface:uploadbulksessions', 'facetoface');
- 
- $PAGE->set_url(new moodle_url('/mod/facetoface/uploadbulksessions.php', ['courseid' => $course->id, 'cmid' => $cm->id]));
- $PAGE->set_pagelayout('standard');
- $PAGE->set_title($heading);
- $PAGE->set_heading($heading);
- 
- echo $OUTPUT->header();
- $mform->display();
- echo $OUTPUT->footer();
+// STEP 3: Display the initial upload form
+$mform = new upload_bulk_sessions_form(null, ['f' => $f]);
+$heading = get_string('facetoface:uploadbulksessions', 'facetoface');
 
- error_log("DEBUG (top of script): f=$f");
+$PAGE->set_url(new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]));
+$mform->set_data(['f' => $f, 'validate' => 1]);
+$PAGE->set_pagelayout('standard');
+$PAGE->set_title($heading);
+$PAGE->set_heading($heading);
+
+echo $OUTPUT->header();
+$mform->display();
+echo $OUTPUT->footer();
+
