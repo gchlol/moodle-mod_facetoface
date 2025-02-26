@@ -28,9 +28,9 @@ require_once $CFG->libdir.'/formslib.php';
 /**
  * Processing confirm form for bulk session uploads.
  *
- * @author      Jonas Sajonas
- * @copyright   GCHLOL, 2025
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author    Jonas Sajonas
+ * @copyright GCHLOL, 2025
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class confirm_bulk_sessions_form extends moodleform
 {
@@ -53,6 +53,8 @@ class confirm_bulk_sessions_form extends moodleform
         // The facetoface module ID.
         $mform->addElement('hidden', 'f');
         $mform->setType('f', PARAM_INT);
+        $mform->setDefault('f', $f);
+        
 
         // Reference to the uploaded file.
         $mform->addElement('hidden', 'fileid', $fileid);
@@ -60,12 +62,15 @@ class confirm_bulk_sessions_form extends moodleform
 
         // Back button (go back to upload screen).
         $backurl = new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]);
-        $htmlbuttons = $OUTPUT->render(new single_button(
-            new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f, 'fileid' => $fileid, 'process' => 1]),
-            get_string('facetoface:confirmandprocess', 'mod_facetoface'),
-            'post',
-            true
-        ));
+        $htmlbuttons = $OUTPUT->render(
+            new single_button(
+                new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f, 'fileid' => $fileid, 'process' => 1]),
+                get_string('facetoface:confirmandprocess', 'mod_facetoface'),
+                'post',
+                true
+            )
+        );
+
         $htmlbuttons .= $OUTPUT->single_button($backurl, get_string('back'), 'get', ['class' => 'ml-3']);
 
         // Render buttons inside a container.

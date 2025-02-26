@@ -228,67 +228,88 @@ class bulk_sessions_manager
      *
      * @return bool true on success, false if any errors occurred
      */
-    public function process()
-    {
+    public function process() {
         global $DB;
-
+    
         foreach ($this->records as $record) {
             $session = new \stdClass();
+    
             // Always use the facetoface instance ID from the manager.
             $session->facetofaceid = $this->facetofaceid;
-
+    
             // Session date/time known: default to yes.
-            $session->datetimeknown = isset($record['Session date/time known']) ?
-                ($record['Session date/time known'] === 'no' ? 0 : 1) : 1;
-
+            $session->datetimeknown = isset($record['Session date/time known'])
+                ? ($record['Session date/time known'] === 'no' ? 0 : 1)
+                : 1;
+    
             // Start and finish times (assumed to be in a valid date/time string format).
-            $session->starttime = !empty($record['Start date and time']) ? strtotime($record['Start date and time']) : null;
-            $session->finishtime = !empty($record['finish date and time']) ? strtotime($record['finish date and time']) : null;
-
+            $session->starttime = !empty($record['Start date and time'])
+                ? strtotime($record['Start date and time'])
+                : null;
+            $session->finishtime = !empty($record['finish date and time'])
+                ? strtotime($record['finish date and time'])
+                : null;
+    
             if ($session->datetimeknown && (empty($session->starttime) || empty($session->finishtime))) {
                 $this->errors[] = get_string('error:invaliddatetimedata', 'facetoface');
-                continue; // Skip this record
+                continue; // Skip this record if start/finish times are invalid.
             }
-
+    
             // Allow sign up cancellations: default yes (1) unless CSV explicitly says "no".
-            $session->allowcancel = isset($record['allow cancelations']) ?
-                ($record['allow cancelations'] === 'no' ? 0 : 1) : 1;
-
+            $session->allowcancel = isset($record['allow cancelations'])
+                ? ($record['allow cancelations'] === 'no' ? 0 : 1)
+                : 1;
+    
             // Capacity: default to 10 if not provided.
-            $session->capacity = !empty($record['Capacity']) ? (int) $record['Capacity'] : 10;
-
+            $session->capacity = !empty($record['Capacity'])
+                ? (int) $record['Capacity']
+                : 10;
+    
             // Allow overbooking: default yes (1).
-            $session->overbook = isset($record['Allow overbookings']) ?
-                ($record['Allow overbookings'] === 'no' ? 0 : 1) : 1;
-
+            $session->overbook = isset($record['Allow overbookings'])
+                ? ($record['Allow overbookings'] === 'no' ? 0 : 1)
+                : 1;
+    
             // Duration is required.
-            $session->duration = isset($record['Duration']) && is_numeric($record['Duration']) ? (int) $record['Duration'] : 0;
-
+            $session->duration = isset($record['Duration']) && is_numeric($record['Duration'])
+                ? (int) $record['Duration']
+                : 0;
+    
             // Normal Cost: optional.
-            $session->normalcost = isset($record['Normal Cost']) ? $record['Normal Cost'] : null;
-
+            $session->normalcost = isset($record['Normal Cost'])
+                ? $record['Normal Cost']
+                : null;
+    
             // Discount Cost: optional.
-            $session->discountcost = isset($record['Discount Cost']) ? $record['Discount Cost'] : null;
-
+            $session->discountcost = isset($record['Discount Cost'])
+                ? $record['Discount Cost']
+                : null;
+    
             // Details: optional.
-            $session->details = !empty($record['Details']) ? $record['Details'] : '';
-
-            // Handle custom fields only if both shortname and value exist
+            $session->details = !empty($record['Details'])
+                ? $record['Details']
+                : '';
+    
+            // Handle custom fields if both shortname and value exist.
             if (!empty($record['customfield_shortname']) && isset($record['customfield_value'])) {
                 $session->customfields = [
                     $record['customfield_shortname'] => $record['customfield_value'],
                 ];
             }
-
-            // Insert the session record into the database.
+    
+            // Add timestamps:
+            $session->timecreated = time();
+    
+            // Insert the session record into the DB.
             if (!$DB->insert_record('facetoface_sessions', $session)) {
-                $this->errors[] = get_string('error:failedtocreatesession', 'facetoface')
-                    .' ('.implode(', ', $record).')';
+                $this->errors[] = get_string('error:failedtocreatesession', 'facetoface') 
+                    . ' (' . implode(', ', $record) . ')';
             }
         }
-
+    
         return empty($this->errors);
     }
+    
 
     /**
      * Get validation or processing errors.
