@@ -32,49 +32,39 @@ require_once $CFG->libdir.'/formslib.php';
  * @copyright GCHLOL, 2025
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class confirm_bulk_sessions_form extends moodleform
-{
+class confirm_bulk_sessions_form extends moodleform {
+
     /**
      * Form definition.
      */
-    public function definition()
-    {
-        global $OUTPUT;
-
+    public function definition() {
         $mform = $this->_form;
-        $fileid = $this->_customdata['fileid'] ?? 0;
+        
+        // Grab any custom data passed in from your script.
         $f = $this->_customdata['f'] ?? 0;
+        $fileid = $this->_customdata['fileid'] ?? 0;
 
-        // Suppress email checkbox.
-        $mform->addElement('advcheckbox', 'suppressemail', get_string('suppressemail', 'facetoface'), '', [], [0, 1]);
-        $mform->addHelpButton('suppressemail', 'suppressemail', 'facetoface');
+        // Suppress email checkbox, for example.
+        $mform->addElement('advcheckbox', 'suppressemail', get_string('suppressemail', 'facetoface'));
         $mform->setType('suppressemail', PARAM_BOOL);
 
-        // The facetoface module ID.
-        $mform->addElement('hidden', 'f');
+        // Hidden fields: these will automatically be submitted with the form.
+        $mform->addElement('hidden', 'f', $f);
         $mform->setType('f', PARAM_INT);
-        $mform->setDefault('f', $f);
-        
 
-        // Reference to the uploaded file.
         $mform->addElement('hidden', 'fileid', $fileid);
         $mform->setType('fileid', PARAM_INT);
 
-        // Back button (go back to upload screen).
-        $backurl = new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]);
-        $htmlbuttons = $OUTPUT->render(
-            new single_button(
-                new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f, 'fileid' => $fileid, 'process' => 1]),
-                get_string('facetoface:confirmandprocess', 'mod_facetoface'),
-                'post',
-                true
-            )
-        );
+        // Add a group of buttons: "Confirm and process" and "Cancel/Back".
+        $buttonarray = [];
+        // 1) "Confirm and Process" submit button.
+        $buttonarray[] = $mform->createElement('submit', 'confirmbtn',
+            get_string('facetoface:confirmandprocess', 'mod_facetoface'));
 
-        $htmlbuttons .= $OUTPUT->single_button($backurl, get_string('back'), 'get', ['class' => 'ml-3']);
+        // 2) A standard Moodle "cancel" button. This triggers $mform->is_cancelled().
+        $buttonarray[] = $mform->createElement('cancel');
 
-        // Render buttons inside a container.
-        $htmlbuttons = html_writer::tag('div', $htmlbuttons, ['class' => 'd-flex gap-2']);
-        $mform->addElement('html', $htmlbuttons);
+        // Put them in a group so they appear side by side.
+        $mform->addGroup($buttonarray, 'buttonar', '', ' ', false);
     }
 }
