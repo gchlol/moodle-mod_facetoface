@@ -40,7 +40,15 @@ class bulk_session_upload_form extends \moodleform
         global $CFG;
 
         $mform = $this->_form;
+
+    // // Debug the custom data.
+    // var_dump($this->_customdata);
+    // die(); // Remove these lines after debugging.
+
         $f = $this->_customdata['f'] ?? 0;
+        $mform->addElement('hidden', 'f', $f);
+        $mform->setType('f', PARAM_INT);
+        
 
         $mform->addElement('header', 'settingsheader', get_string('facetoface:uploadbulksessions', 'mod_facetoface'));
 
@@ -70,9 +78,9 @@ class bulk_session_upload_form extends \moodleform
         $mform->addElement('advcheckbox', 'caseinsensitive', get_string('caseinsensitive', 'mod_facetoface'));
         $mform->setDefault('caseinsensitive', true);
 
-        // Hidden field for facetoface instance ID.
-        $mform->addElement('hidden', 'f', $f); 
-        $mform->setType('f', PARAM_INT);
+        // // Hidden field for facetoface instance ID.
+        // $mform->addElement('hidden', 'f', $f); 
+        // $mform->setType('f', PARAM_INT);
 
         // Hidden field to indicate we should validate/process after upload.
         $mform->addElement('hidden', 'validate', 1);

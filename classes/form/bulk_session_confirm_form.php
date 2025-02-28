@@ -35,6 +35,9 @@ class bulk_session_confirm_form extends moodleform {
      */
     public function definition() {
         $mform = $this->_form;
+
+        // var_dump($this->_customdata);
+        // die(); // Temporarily stop execution to see output.
         
         $f = $this->_customdata['f'] ?? 0;
         $fileid = $this->_customdata['fileid'] ?? 0;

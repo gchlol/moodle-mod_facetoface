@@ -238,7 +238,7 @@ class bulk_session_manager
             $session = new \stdClass();
     
             // Always use the facetoface instance ID from the manager.
-            $session->facetofaceid = $this->facetofaceid;
+            $session->facetoface = $this->facetofaceid;
     
             // Session date/time known: default to yes.
             $session->datetimeknown = isset($record['Session date/time known'])

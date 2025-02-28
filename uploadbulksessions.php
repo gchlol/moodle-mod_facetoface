@@ -161,9 +161,8 @@ if ($process && $fileid && $f) {
      );
  }
  
-$mform = new bulk_session_upload_form(null, ['f' => $f]);
 $heading = get_string('facetoface:uploadbulksessions', 'facetoface');
-
+$mform = new bulk_session_upload_form(null, ['f' => $f]);
 // $PAGE->set_url(new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]));
 $mform->set_data(['f' => $f, 'validate' => 1]);
 $PAGE->set_pagelayout('standard');
