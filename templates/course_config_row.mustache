@@ -1,0 +1,40 @@
+{{!
+    @template mod_courselist/course_config_row
+
+    This template will render a row of the course config table.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * data-course-config-item
+    * data-remove-row
+    * data-value
+    * data-label
+    * data-remove-value
+
+    Context variables required for this template:
+    * id - ID of the item being displayed.
+    * label - Label to output.
+    * movetitle - Title to display for move handle.
+
+    Example context (json):
+    {
+        "id": 100,
+        "label": "Example Item #1",
+        "movetitle": "Move Example Item #1"
+    }
+}}
+
+<tr data-course-config-item data-value="{{id}}" data-label="{{label}}">
+    <td>
+        <input name="item_ids[]" type="hidden" value="{{id}}" />
+        {{>core/drag_handle}}
+        {{label}}
+    </td>
+    <td class="action-column">
+        <a href="#" data-remove-row data-remove-value="{{id}}">
+            {{#pix}} t/delete, core, {{#str}}modform:removerow, mod_courselist{{/str}} {{/pix}}
+        </a>
+    </td>
+</tr>
