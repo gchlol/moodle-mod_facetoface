@@ -1,5 +1,5 @@
 username,session,status,discountcode,notificationtype
-payrollid1,1,booked,ORDER66,ical
-payrollid2,2,cancelled,,
-payrollid3,3,booked,,
-payrollid4,4,,,
+username1,1,booked,ORDER66,ical
+username2,2,cancelled,,
+username3,3,booked,,
+username4,4,,,
