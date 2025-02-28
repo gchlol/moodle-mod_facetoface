@@ -16,7 +16,7 @@
 
 namespace mod_facetoface\form;
 
-defined('MOODLE_INTERNAL') || exit;
+defined('MOODLE_INTERNAL') || die();
 require_once $CFG->dirroot.'/repository/lib.php';
 
 /**
