@@ -157,6 +157,7 @@ class booking_manager {
             fclose($handle);
         }
     }
+
     /**
      * Validate the records provided to ensure they can be processed without errors.
      *
@@ -174,16 +175,16 @@ class booking_manager {
             $timenow = time();
         }
 
-        // Break into rows and validate the multiple interdependant fields together.
+        // Break into rows and validate the multiple interdependant fields together
         foreach ($this->get_iterator() as $index => $entry) {
             $row = $index + 1;
 
-            // Set defaults for fields with no value.
+            // Set defaults for fields with no value
             $entry->status = $entry->status ?? '';
             $entry->notificationtype = $entry->notificationtype ?? '';
             $entry->discountcode = $entry->discountcode ?? '';
 
-            // Validate and get user
+            // Validate and get user.
             $userids = $this->match_users($entry->username, 'id');
 
             // Multiple matched, ambiguous which is the real one.
@@ -298,10 +299,9 @@ class booking_manager {
     }
 
     /**
-     * Match users for a given username (payroll ID).
-     * @param string $username The payroll ID (primary lookup)
-     * @param string $fields Fields to return from DB
-     * @return array of users, with specified fields
+     * Match users for a given username.
+     * @param string $fields to return
+     * @return array of users with specified fields
      */
     private function match_users(string $username, string $fields): array {
         global $DB;
