@@ -27,7 +27,7 @@ require_once $CFG->dirroot.'/repository/lib.php';
  * @copyright  GCHLOL, 2025
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class upload_bulk_sessions_form extends \moodleform
+class bulk_session_confirm_form extends \moodleform
 {
     /**
      * Build form for importing bookings.
@@ -44,7 +44,7 @@ class upload_bulk_sessions_form extends \moodleform
         $f = $this->_customdata['f'] ?? 0;
 
         // Header.
-        $mform->addElement('header', 'settingsheader', get_string('facetoface:uploadbulksessions', 'mod_facetoface'));
+        $mform->addElement('header', 'settingsheader', get_string('facetoface:bulk_session', 'mod_facetoface'));
 
         // Example CSV link (optional).
         $url = new \moodle_url('/mod/facetoface/example_bulk.csv');

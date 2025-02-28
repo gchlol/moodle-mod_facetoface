@@ -24,7 +24,7 @@ namespace mod_facetoface;
  * @copyright GCHLOL, 2025
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class bulk_sessions_manager
+class bulk_session_manager
 {
     /** @var int The facetoface instance ID */
     private $facetofaceid;
@@ -42,7 +42,7 @@ class bulk_sessions_manager
     /**
      * Constructor.
      *
-     * @param int $facetofaceid The facetoface instance ID
+     * @param int $facetofaceid
      */
     public function __construct(int $facetofaceid)
     {
@@ -52,7 +52,7 @@ class bulk_sessions_manager
     /**
      * Load CSV data from a file (given its fileid).
      *
-     * @param int $fileid the file ID from the filemanager
+     * @param int $fileid
      *
      * @return bool true if loaded successfully, false otherwise
      */
@@ -75,7 +75,7 @@ class bulk_sessions_manager
     }
 
     /**
-     * Load in the records to process from an array.
+     * Load in records to process from an array.
      */
     public function load_from_array(array $records)
     {
@@ -86,7 +86,7 @@ class bulk_sessions_manager
     }
 
     /**
-     * Get headers for the records.
+     * Get headers for records.
      *
      * @return array
      */
@@ -125,21 +125,18 @@ class bulk_sessions_manager
         $handle = $this->file->get_content_file_handle();
         $maxlinelength = 1000;
         $delimiter = ',';
-        // Read headers from file (if you want dynamic headers, otherwise use self::get_headers())
         $headers = self::get_headers();
         $numheaders = count($headers);
-        fgets($handle); // Skip header row.
+        fgets($handle);
 
         try {
             while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
                 if (count($data) !== $numheaders) {
                     throw new \moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface');
                 }
-                // **Remove any extra single quotes from date fields**
                 foreach ($data as &$field) {
-                    $field = trim($field, "'"); // Remove single quotes
+                    $field = trim($field, "'");
                 }
-                // Yield as an associative array.
                 yield array_combine($headers, $data);
             }
         } finally {
