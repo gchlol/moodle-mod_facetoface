@@ -112,7 +112,6 @@ class booking_manager {
 
     /**
      * Get the headers for the records.
-     * username: payroll number is stored in username
      * @return array
      */
     public static function get_headers(): array {
@@ -146,16 +145,12 @@ class booking_manager {
         fgets($handle); // Move pointer past first line (headers).
         try {
             while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
-                $rownumber++;     
-                // Ensure we always have the correct number of fields
-                $data = array_pad($data, $numheaders, '');
-                $record = [
-                    'username' => $data[0],
-                    'session' => $data[1],
-                    'status' => $data[2],
-                    'discountcode' => $data[3],
-                    'notificationtype' => $data[4],
-                ];
+                $rownumber++;
+                $numfields = count($data);
+                if ($numfields !== $numheaders) {
+                    throw new moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface');
+                }
+                $record = array_combine($headers, $data);
                 yield (object) $record;
             }
         } finally {
