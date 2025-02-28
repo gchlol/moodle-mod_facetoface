@@ -38,6 +38,13 @@ class bulk_session_manager
     private $usefile;
     private $file;
 
+    /** @var bool Will ignore case when matching users */
+    private $caseinsensitive = false;
+
+    /** @var bool When true, confirmation emails are not sent. */
+    private $suppressemail = false;
+
+
     /**
      * Constructor.
      *
@@ -328,6 +335,21 @@ class bulk_session_manager
                 $this->records = iterator_to_array($this->get_iterator());
         }
         return $this->records;
+    }
+
+    /**
+     * Stops confirmation emails from being sent
+     */
+    public function suppress_email() {
+        $this->suppressemail = true;
+    }
+
+    /**
+     * Sets case insensitive match value
+     * @param bool $value
+     */
+    public function set_case_insensitive(bool $value) {
+        $this->caseinsensitive = $value;
     }
 
 }

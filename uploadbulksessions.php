@@ -31,10 +31,10 @@
  use mod_facetoface\bulk_session_manager;
  
  $f = optional_param('f', 0, PARAM_INT);
- $PAGE->set_url(new moodle_url('/mod/facetoface/bulk_session.php', ['f' => $f]));
  $fileid = optional_param('fileid', 0, PARAM_INT);
  $validate = optional_param('validate', 0, PARAM_INT);
  $process = optional_param('process', 0, PARAM_INT);
+ $caseinsensitive = optional_param('caseinsensitive', false, PARAM_BOOL);
  
  if (!$facetoface = $DB->get_record('facetoface', ['id' => $f])) {
      throw new moodle_exception('error:incorrectfacetofaceid', 'facetoface');
@@ -50,30 +50,25 @@
  $context = context_course::instance($course->id);
  $modulecontext = context_module::instance($cm->id);
  require_capability('mod/facetoface:editsessions', $context);
+ require_capability('mod/facetoface:uploadbulksessions', $context);
  
- $mform = new \mod_facetoface\form\bulk_session_upload_form(null, ['f' => $f]);
 
- // **STEP 1: Validate the uploaded CSV file**
- if ($validate) {
-     $heading = get_string('facetoface:validatebulksessions', 'facetoface');
+if ($validate) {
+    $heading = get_string('facetoface:validatebulksessions', 'facetoface');
  
-     $mform = new bulk_session_upload_form(null);
-     $data = $mform->get_data();
-     $fileid = $data->csvfile ?: 0;
+    $mform = new bulk_session_upload_form(null);
+    $data = $mform->get_data();
+    $fileid = $data->csvfile ?: 0;
  
-     // **Confirmation form before processing**
-     $mform = new bulk_session_confirm_form(null, ['f' => $f, 'fileid' => $fileid]);
+    $mform = new bulk_session_confirm_form(null, ['f' => $f, 'fileid' => $fileid, 'caseinsensitive' => $caseinsensitive]);
  
-     error_log("DEBUG: at top, f=$f, validate=$validate, fileid=$fileid");
-     error_log("DEBUG: in validate block, f=$f, fileid=$fileid");
-
-
-     $manager = new bulk_sessions_manager($f);
-     $manager->load_from_file($fileid);
+    $manager = new bulk_session_manager($f);
+    $manager->load_from_file($fileid);
+    $manager->set_case_insensitive($caseinsensitive);
  
-     $errors = $manager->validate();
+    $errors = $manager->validate();
  
-     if (!empty($errors)) {
+    if (!empty($errors)) {
          echo $OUTPUT->header();
          echo $OUTPUT->notification(get_string('error:bulkuploadfileerrorsfound', 'mod_facetoface', count($errors)), 'error');
  
@@ -123,12 +118,17 @@
      }
  }
  
- if ($process && $fileid && $f) {
-     $manager = new bulk_session_manager($f);
-     $manager->load_from_file($fileid);
+if ($process && $fileid && $f) {
+    $manager = new bulk_session_manager($f);
+    $manager->load_from_file($fileid);
+    $manager->set_case_insensitive($caseinsensitive);
  
     $confirmform = new bulk_session_confirm_form(null, ['f' => $f, 'fileid' => $fileid]);
     $confirmdata = $confirmform->get_data();
+
+    if (!empty($confirmdata->suppressemail)) {
+        $manager->suppress_email();
+    }
 
      $errors = $manager->validate();
      if (empty($errors)) {
@@ -143,7 +143,7 @@
          $event->trigger();
  
          redirect(
-             new moodle_url('/mod/facetoface/bulk_session.php', ['f' => $f]),
+             new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]),
              get_string('facetoface:bulksessionsprocessed', 'mod_facetoface'),
              null,
              notification::NOTIFY_SUCCESS
@@ -153,18 +153,17 @@
      // If errors exist, redirect back with error message.
      $errmsg = get_string('error:bulkuploadfileerrorsfound', 'mod_facetoface', count($errors));
      redirect(
-         new moodle_url('/mod/facetoface/bulk_session.php', ['f' => $f]),
+         new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]),
          $errmsg,
          null,
          notification::NOTIFY_ERROR
      );
  }
  
-// STEP 3: Display the initial upload form
 $mform = new bulk_session_upload_form(null, ['f' => $f]);
-$heading = get_string('facetoface:bulk_sessions', 'facetoface');
+$heading = get_string('facetoface:uploadbulksessions', 'facetoface');
 
-$PAGE->set_url(new moodle_url('/mod/facetoface/bulk_session.php', ['f' => $f]));
+$PAGE->set_url(new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]));
 $mform->set_data(['f' => $f, 'validate' => 1]);
 $PAGE->set_pagelayout('standard');
 $PAGE->set_title($heading);
