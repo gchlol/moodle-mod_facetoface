@@ -121,7 +121,7 @@ if (count($locations) > 2) {
     echo html_writer::end_tag('div'). html_writer::end_tag('form');
 }
 
-print_session_list($course->id, $facetoface, $location, $context);
+print_session_list($course->id, $facetoface, $location);
 
 if (has_capability('mod/facetoface:viewattendees', $context)) {
     echo $OUTPUT->heading(get_string('exportattendance', 'facetoface'));
@@ -141,12 +141,14 @@ if (has_capability('mod/facetoface:viewattendees', $context)) {
 echo $OUTPUT->box_end();
 echo $OUTPUT->footer($course);
 
-function print_session_list($courseid, $facetoface, $location, $context) {
+function print_session_list($courseid, $facetoface, $location) {
     global $CFG, $USER, $DB, $OUTPUT, $PAGE;
 
     $f2frenderer = $PAGE->get_renderer('mod_facetoface');
 
     $timenow = time();
+
+    $context = context_course::instance($courseid);
 
     $capability_checker = new custom_capability_checker();
     $viewattendees = (
