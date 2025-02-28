@@ -43,7 +43,6 @@ class bulk_session_confirm_form extends \moodleform
         $mform = $this->_form;
         $f = $this->_customdata['f'] ?? 0;
 
-        // Header.
         $mform->addElement('header', 'settingsheader', get_string('facetoface:bulk_session', 'mod_facetoface'));
 
         // Example CSV link (optional).
@@ -60,6 +59,7 @@ class bulk_session_confirm_form extends \moodleform
             'maxbytes' => $maxbytes,
             'return_types' => FILE_INTERNAL | FILE_EXTERNAL,
         ]);
+
         $mform->setType('csvfile', PARAM_INT);
         $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
 
@@ -79,7 +79,6 @@ class bulk_session_confirm_form extends \moodleform
         $mform->addElement('hidden', 'validate', 1);
         $mform->setType('validate', PARAM_INT);
 
-        // Submit button.
         $mform->addElement('submit', 'submit', get_string('facetoface:uploadandpreviewbulk', 'mod_facetoface'));
     }
 }

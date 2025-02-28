@@ -31,11 +31,11 @@
  use mod_facetoface\form\bulk_session_confirm_form;
  use mod_facetoface\bulk_session_manager;
  
- $f = optional_param('f', 0, PARAM_INT); // The facetoface module ID.
- $PAGE->set_url(new moodle_url('/mod/facetoface/bulk_sessions.php', ['f' => $f]));
- $fileid = optional_param('fileid', 0, PARAM_INT); // The fileid of the file uploaded.
- $validate = optional_param('validate', 0, PARAM_INT); // Whether or not the user wants to process the upload (after verification).
- $process = optional_param('process', 0, PARAM_INT); // Whether or not the user wants to process the upload (after verification).
+ $f = optional_param('f', 0, PARAM_INT);
+ $PAGE->set_url(new moodle_url('/mod/facetoface/bulk_session.php', ['f' => $f]));
+ $fileid = optional_param('fileid', 0, PARAM_INT);
+ $validate = optional_param('validate', 0, PARAM_INT);
+ $process = optional_param('process', 0, PARAM_INT);
  
  if (!$facetoface = $DB->get_record('facetoface', ['id' => $f])) {
      throw new moodle_exception('error:incorrectfacetofaceid', 'facetoface');
@@ -63,7 +63,7 @@
      $fileid = $data->csvfile ?: 0;
  
      // **Confirmation form before processing**
-     $mform = new bulk_sessions_confirm_form(null, ['f' => $f, 'fileid' => $fileid]);
+     $mform = new bulk_session_confirm_form(null, ['f' => $f, 'fileid' => $fileid]);
  
      error_log("DEBUG: at top, f=$f, validate=$validate, fileid=$fileid");
      error_log("DEBUG: in validate block, f=$f, fileid=$fileid");
@@ -72,7 +72,6 @@
      $manager = new bulk_sessions_manager($f);
      $manager->load_from_file($fileid);
  
-     // Validate CSV records
      $errors = $manager->validate();
  
      if (!empty($errors)) {
@@ -100,16 +99,15 @@
          echo $OUTPUT->footer();
          exit;
      } else {
-         // If no errors, show confirmation form
          echo $OUTPUT->header();
          echo $OUTPUT->heading(get_string('facetoface:confirmbulkpreview', 'facetoface'), 3);
          
-         $records = $manager->get_records(); // Now works after adding the method
+         $records = $manager->get_records();
          
          if (!empty($records)) {
              $table = new html_table();
              $table->attributes['class'] = 'f2fconfirmuploadlist m-auto generaltable mb-2';
-             $table->head = bulk_sessions_manager::get_headers();
+             $table->head = bulk_session_manager::get_headers();
          
              foreach ($records as $record) {
                  $table->data[] = array_values($record);
@@ -126,23 +124,17 @@
      }
  }
  
- // STEP 2: Process the CSV after confirmation
  if ($process && $fileid && $f) {
      $manager = new bulk_session_manager($f);
      $manager->load_from_file($fileid);
  
-    // Read confirmation form data
-    // FIXED code in Step 2:
-    $confirmform = new bulk_sessions_confirm_form(null, ['f' => $f, 'fileid' => $fileid]);
+    $confirmform = new bulk_session_confirm_form(null, ['f' => $f, 'fileid' => $fileid]);
     $confirmdata = $confirmform->get_data();
 
- 
-     // Process the records after confirmation
      $errors = $manager->validate();
      if (empty($errors)) {
          $manager->process();
  
-         // Logging event
          $params = [
              'context'  => $modulecontext,
              'objectid' => $f,
@@ -151,7 +143,6 @@
          $event->add_record_snapshot('facetoface', $facetoface);
          $event->trigger();
  
-         // Redirect back with success message
          redirect(
              new moodle_url('/mod/facetoface/bulk_session.php', ['f' => $f]),
              get_string('facetoface:bulksessionsprocessed', 'mod_facetoface'),

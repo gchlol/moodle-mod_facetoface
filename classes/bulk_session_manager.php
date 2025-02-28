@@ -146,7 +146,7 @@ class bulk_session_manager
     }
 
     /**
-     * Validate the loaded CSV records.
+     * Validate loaded CSV records.
      *
      * @return array an array of error messages (empty if no errors)
      */

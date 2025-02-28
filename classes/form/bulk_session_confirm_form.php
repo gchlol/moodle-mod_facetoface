@@ -37,7 +37,6 @@ class bulk_session_confirm_form extends moodleform {
     public function definition() {
         $mform = $this->_form;
         
-        // Grab any custom data passed in from your script.
         $f = $this->_customdata['f'] ?? 0;
         $fileid = $this->_customdata['fileid'] ?? 0;
 
