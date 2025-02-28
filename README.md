@@ -3,7 +3,6 @@
 Custom Branch
 ------------
 This Branch is a custom branch of MOODLE_34_STABLE for use with LOL sites.
-- Latest update replaced email attribute with username
 
 Description
 ------------
@@ -18,6 +17,7 @@ can be given over multiple days.
 Reminder messages are sent to users and their managers a few days before the
 session is scheduled to start.  Confirmation messages are sent when users
 sign-up for a session or cancel.
+
 
 Branches
 --------
