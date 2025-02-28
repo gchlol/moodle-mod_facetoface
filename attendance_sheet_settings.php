@@ -1,12 +1,12 @@
 <?php
-global $PAGE;
-require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
-$PAGE->set_url('/mod/facetoface/a.php');
-$PAGE->set_context(context_system::instance());
+//global $PAGE;
+//require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
+//$PAGE->set_url('/mod/facetoface/attendance_sheet_settings.php');
+//$PAGE->set_context(context_system::instance());
 //$PAGE->set_title(get_string('facetoface', 'mod_courselist'));
 //$PAGE->set_heading(get_string('pluginname', 'mod_courselist'));
-$PAGE->set_title('Test dynamic table');
-$PAGE->set_heading('Test dynamic table');
+//$PAGE->set_title('Test dynamic table');
+//$PAGE->set_heading('Test dynamic table');
 
 // Example configuration items.
 $config_items = [
@@ -25,7 +25,8 @@ $config_items = [
 // Prepare context data for the mustache template.
 $data = [
     'uniqid'      => uniqid(),
-    'header_text' => get_string('course', 'mod_courselist'),
+    'header_text' => get_string('column', 'facetoface'),
+//    'header_text' => 'Test header text',
     'empty_table' => empty($config_items),
     'config_items'=> $config_items,
 ];

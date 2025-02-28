@@ -865,3 +865,7 @@ $string['attendancecolumn:3'] = 'Org Unit';
 $string['attendancecolumn:4'] = 'Position';
 $string['attendancecolumn:5'] = 'Stream';
 $string['attendancecolumn:6'] = 'Paypoint';
+
+// Attendance Sheet Configuration
+$string['column'] = 'Column';
+$string['value'] = 'Value';

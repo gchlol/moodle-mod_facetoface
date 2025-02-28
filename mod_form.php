@@ -279,12 +279,14 @@ class mod_facetoface_mod_form extends moodleform_mod {
         $mform->setDefault('attendancesheetshowlogo', 1);
         $mform->addHelpButton('attendancesheetshowlogo', 'modform:showlogo', 'mod_facetoface');
 
-        $column_checkboxes = [];
-        $column_options = enum_util::menu_options(attendance_column::class);
-        foreach ($column_options as $key => $label) {
-            $column_checkboxes[] = $mform->createElement('checkbox', $key, $label);
-        }
-        $mform->addGroup($column_checkboxes, 'attendancesheetcolumns', 'Columns', html_writer::empty_tag('br'));
+        // Call Attendance Sheet settings from another file
+
+//        $column_checkboxes = [];
+//        $column_options = enum_util::menu_options(attendance_column::class);
+//        foreach ($column_options as $key => $label) {
+//            $column_checkboxes[] = $mform->createElement('checkbox', $key, $label);
+//        }
+//        $mform->addGroup($column_checkboxes, 'attendancesheetcolumns', 'Columns', html_writer::empty_tag('br'));
 
         $data = (object) ['confirmationmessage' => $confirmationmessagedata];
         $this->set_data($data);
