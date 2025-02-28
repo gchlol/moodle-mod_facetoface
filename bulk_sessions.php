@@ -32,7 +32,6 @@
  use mod_facetoface\bulk_sessions_manager;
  
  $f = optional_param('f', 0, PARAM_INT); // The facetoface module ID.
- error_log("DEBUG: f = $f");
  $PAGE->set_url(new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]));
  $fileid = optional_param('fileid', 0, PARAM_INT); // The fileid of the file uploaded.
  $validate = optional_param('validate', 0, PARAM_INT); // Whether or not the user wants to process the upload (after verification).
@@ -49,10 +48,13 @@
  }
  
  require_course_login($course, true, $cm);
- $context = context_course::instance($course->id);
- $modulecontext = context_module::instance($cm->id);
+//  $context = context_course::instance($course->id);
+//  $modulecontext = context_module::instance($cm->id);
+$context = context_module::instance($cm->id);
  require_capability('mod/facetoface:editsessions', $context);
  
+ $mform = new \mod_facetoface\form\upload_bulk_sessions_form(null, ['f' => $f]);
+
  // **STEP 1: Validate the uploaded CSV file**
  if ($validate) {
      $heading = get_string('facetoface:validatebulksessions', 'facetoface');
