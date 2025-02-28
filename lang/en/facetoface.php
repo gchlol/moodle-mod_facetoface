@@ -235,7 +235,7 @@ $string['facetoface:confirmandprocess'] = 'Confirm and process';
 $string['facetoface:uploadbookingsfile'] = 'Bookings file';
 $string['facetoface:uploadbookingsfiledesc'] = "
 Fields expected:
-- Username (Payroll Number required)
+- Username (required)
 - Session number (required)
 - Discount code (optional)
 - Notification type (optional - valid options are 'email', 'ical', or 'both')
