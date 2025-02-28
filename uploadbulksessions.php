@@ -31,6 +31,7 @@
  use mod_facetoface\bulk_session_manager;
  
  $f = optional_param('f', 0, PARAM_INT);
+ $PAGE->set_url(new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]));
  $fileid = optional_param('fileid', 0, PARAM_INT);
  $validate = optional_param('validate', 0, PARAM_INT);
  $process = optional_param('process', 0, PARAM_INT);
