@@ -50,7 +50,6 @@
  require_course_login($course, true, $cm);
  $context = context_course::instance($course->id);
  $modulecontext = context_module::instance($cm->id);
-$context = context_module::instance($cm->id);
  require_capability('mod/facetoface:editsessions', $context);
  
  $mform = new \mod_facetoface\form\bulk_session_upload_form(null, ['f' => $f]);

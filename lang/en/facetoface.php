@@ -874,6 +874,7 @@ $string['facetoface:uploadandpreviewbulk'] = 'Upload & Preview Bulk Sessions';
 $string['facetoface:bulkuploadsuccess'] = 'Bulk sessions uploaded successfully.';
 $string['facetoface:confirmbulkpreview'] = 'Bulk Upload Preview';
 $string['facetoface:bulksessionsprocessed'] = 'Bulk sessions have been successfully processed.';
+$string['facetoface:validatebulksessions'] = 'Validate Bulk Sessions Upload';
 $string['error:bulkuploaderrors'] = 'Errors were found in the bulk upload file.';
 $string['error:missingstarttime'] = 'Start date and time is required.';
 $string['error:missingfinishtime'] = 'Finish date and time is required.';
@@ -892,15 +893,15 @@ $string['error:invaliddiscountcost'] = 'Discount cost must be a valid number.';
 
 $string['facetoface:uploadsessionfiledesc'] =
 'Fields expected:
-- Session date/time known (required - valid options: yes, no)
+- Session date/time (required yes / no)
 - Start date and time (required format: YYYY-MM-DD HH:MM)
 - Finish date and time (required format: YYYY-MM-DD HH:MM)
-- Allow cancelations (required - valid options: yes, no)
-- Capacity (required - must be a whole number)
-- Allow overbookings (required - valid options: yes, no)
-- Duration (required - must be a numeric value in minutes)
+- Allow cancelations (required - yes / no)
+- Capacity (required - whole number)
+- Allow overbookings (required - yes / no)
+- Duration (required - numeric value in minutes)
 - Normal Cost (optional - numeric value)
 - Discount Cost (optional - numeric value)
-- Details (optional - session description)
-- Custom field short name (optional - used for additional data fields)
-- Custom field value (optional - value corresponding to the custom field short name)';
+- Details (session description)
+- Custom field short name (optional)
+- Custom field value (optional)';
