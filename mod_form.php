@@ -279,14 +279,13 @@ class mod_facetoface_mod_form extends moodleform_mod {
         $mform->setDefault('attendancesheetshowlogo', 1);
         $mform->addHelpButton('attendancesheetshowlogo', 'modform:showlogo', 'mod_facetoface');
 
-        // Call Attendance Sheet settings from another file
+        // Call Attendance Sheet settings from another file.
+        // Include the class file.
+        require_once 'attendance_sheet_settings.class.php';
 
-//        $column_checkboxes = [];
-//        $column_options = enum_util::menu_options(attendance_column::class);
-//        foreach ($column_options as $key => $label) {
-//            $column_checkboxes[] = $mform->createElement('checkbox', $key, $label);
-//        }
-//        $mform->addGroup($column_checkboxes, 'attendancesheetcolumns', 'Columns', html_writer::empty_tag('br'));
+        // Create an instance and insert the settings into the form.
+        $attendanceSettings = new attendance_sheet_settings();
+        $attendanceSettings->add_to_form($mform);
 
         $data = (object) ['confirmationmessage' => $confirmationmessagedata];
         $this->set_data($data);
@@ -327,10 +326,10 @@ class mod_facetoface_mod_form extends moodleform_mod {
         if ($this->current->instance
             && isset($defaultvalues['confirmationmessage'])
             && !is_array($defaultvalues['confirmationmessage'])) {
-                $defaultvalues['confirmationmessage'] = [
-                    'format' => $defaultvalues['confirmationmessageformat'] ?? FORMAT_HTML,
-                    'text' => $defaultvalues['confirmationmessage'],
-                ];
+            $defaultvalues['confirmationmessage'] = [
+                'format' => $defaultvalues['confirmationmessageformat'] ?? FORMAT_HTML,
+                'text' => $defaultvalues['confirmationmessage'],
+            ];
         }
 
         if (
@@ -346,7 +345,7 @@ class mod_facetoface_mod_form extends moodleform_mod {
     }
 
     /**
-     * Modify date returned from form.
+     * Modify data returned from form.
      *
      * @param stdClass $data
      * @return void
