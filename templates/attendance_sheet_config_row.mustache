@@ -1,17 +1,16 @@
 {{!
-    @template mod_courselist/course_config_row
+    @template mod_facetoface/attendance_sheet_row
 
-    This template will render a row of the course config table.
+    This template will render a row of the attendance sheet table.
 
     Classes required for JS:
     * none
 
     Data attributes required for JS:
-    * data-course-config-item
-    * data-remove-row
+    * data-attendance-sheet-item
+    * data-attendance-remove-row
     * data-value
     * data-label
-    * data-remove-value
 
     Context variables required for this template:
     * id - ID of the item being displayed.
@@ -26,15 +25,15 @@
     }
 }}
 
-<tr data-course-config-item data-value="{{id}}" data-label="{{label}}">
+<tr data-attendance-sheet-config-item data-value="{{id}}" data-label="{{label}}">
     <td>
         <input name="item_ids[]" type="hidden" value="{{id}}" />
         {{>core/drag_handle}}
         {{label}}
     </td>
     <td class="action-column">
-        <a href="#" data-remove-row data-remove-value="{{id}}">
-            {{#pix}} t/delete, core, {{#str}}modform:removerow, mod_courselist{{/str}} {{/pix}}
+        <a href="#" data-attendance-remove-row data-remove-value="{{id}}">
+            {{#pix}} t/delete, core, {{#str}}modform:removerow, mod_facetoface{{/str}} {{/pix}}
         </a>
     </td>
 </tr>

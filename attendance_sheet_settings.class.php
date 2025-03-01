@@ -2,30 +2,30 @@
 defined('MOODLE_INTERNAL') || die();
 
 class attendance_sheet_settings {
-    protected $configitems;
+    protected $attendanceitems;
     protected $data;
 
     public function __construct() {
-        // Example configuration items.
-        $this->configitems = [
+        // Example attendance sheet items.
+        $this->attendanceitems = [
             [
                 'id'        => 100,
-                'label'     => 'Example Course #1',
-                'movetitle' => 'Move Example Course #1'
+                'label'     => 'Example Item #1',
+                'movetitle' => 'Move Example Item #1'
             ],
             [
                 'id'        => 102,
-                'label'     => 'Example Course #2',
-                'movetitle' => 'Move Example Course #2'
+                'label'     => 'Example Item #2',
+                'movetitle' => 'Move Example Item #2'
             ]
         ];
 
         // Prepare context data for the mustache template.
         $this->data = [
-            'uniqid'      => uniqid(),
-            'header_text' => get_string('column', 'facetoface'),
-            'empty_table' => empty($this->configitems),
-            'config_items'=> $this->configitems,
+            'uniqid'           => uniqid(),
+            'header_text'      => get_string('column', 'facetoface'),
+            'empty_table'      => empty($this->attendanceitems),
+            'attendance_items' => $this->attendanceitems,
         ];
     }
 
@@ -39,25 +39,25 @@ class attendance_sheet_settings {
         $output = '';
 
         // Render the table using the mustache template.
-        $output .= $OUTPUT->render_from_template('mod_courselist/course_config_table', $this->data);
+        $output .= $OUTPUT->render_from_template('mod_facetoface/attendance_sheet_config_table', $this->data);
 
         // Append inline JavaScript for deletion and drag-and-drop behavior.
         $output .= '<script>
             // Minimal inline JavaScript to add deletion and drag-and-drop behavior.
             document.addEventListener("DOMContentLoaded", function() {
-                const table = document.querySelector("[data-course-config-table]");
-                const tbody = table.querySelector("[data-config-items]");
+                const table = document.querySelector("[data-attendance-sheet-table]");
+                const tbody = table.querySelector("[data-attendance-items]");
 
                 // --- Handle Row Deletion ---
                 tbody.addEventListener("click", function(e) {
-                    if (e.target.closest("[data-remove-row]")) {
+                    if (e.target.closest("[data-attendance-remove-row]")) {
                         e.preventDefault();
-                        const row = e.target.closest("[data-course-config-item]");
+                        const row = e.target.closest("[data-attendance-sheet-item]");
                         if (row) {
                             row.remove();
                         }
                         // If no rows remain, show the "empty" row.
-                        if (!tbody.querySelector("[data-course-config-item]")) {
+                        if (!tbody.querySelector("[data-attendance-sheet-item]")) {
                             const emptyRow = tbody.querySelector(".empty");
                             if (emptyRow) {
                                 emptyRow.hidden = false;
@@ -97,13 +97,13 @@ class attendance_sheet_settings {
                 }
 
                 function handleDragEnd() {
-                    document.querySelectorAll("[data-course-config-item]").forEach(function(row) {
+                    document.querySelectorAll("[data-attendance-sheet-item]").forEach(function(row) {
                         row.classList.remove("over", "dragging");
                     });
                 }
 
                 // Set draggable attribute and add drag events on each row.
-                tbody.querySelectorAll("[data-course-config-item]").forEach(function(row) {
+                tbody.querySelectorAll("[data-attendance-sheet-item]").forEach(function(row) {
                     row.setAttribute("draggable", "true");
                     row.addEventListener("dragstart", handleDragStart, false);
                     row.addEventListener("dragenter", handleDragEnter, false);

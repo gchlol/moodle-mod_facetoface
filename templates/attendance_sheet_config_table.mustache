@@ -1,0 +1,62 @@
+{{!
+    @template mod_facetoface/attendance_sheet_table
+
+    This template will render a table used to configure attendance sheet items.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * data-attendance-sheet-table
+    * data-attendance-items
+    * data-table-header
+
+    Context variables required for this template:
+    * attendance_items - Attendance item data to display in the table.
+
+    Example context (json):
+    {
+        "header_text": "Item",
+        "empty_table": false,
+        "attendance_items": [
+            {
+                "id": 100,
+                "label": "Example Item #1",
+                "movetitle": "Move Example Item #1"
+            },
+            {
+                "id": 102,
+                "label": "Example Item #2",
+                "movetitle": "Move Example Item #2"
+            }
+        ]
+    }
+}}
+
+<div id="facetoface-attendance-sheet-config-table-{{uniqid}}">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <table class="attendance-sheet-table w-100 table-sm table-hover generaltable" data-attendance-sheet-config-table>
+                    <thead>
+                    <tr>
+                        <th colspan="2" data-table-header>{{header_text}}</th>
+                    </tr>
+                    </thead>
+
+                    <tbody data-attendance-items>
+                    <tr class="empty" {{^empty_table}}hidden{{/empty_table}}>
+                        <td colspan="2">
+                            {{#str}}modform:emptytext, mod_facetoface{{/str}}
+                        </td>
+                    </tr>
+
+                    {{#attendance_items}}
+                        {{>mod_facetoface/attendance_sheet_config_row}}
+                    {{/attendance_items}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
