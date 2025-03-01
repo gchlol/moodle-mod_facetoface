@@ -869,3 +869,6 @@ $string['attendancecolumn:6'] = 'Paypoint';
 // Attendance Sheet Configuration
 $string['column'] = 'Column';
 $string['value'] = 'Value';
+
+$string['modform:emptytext'] = 'There are no items, use the <strong>Settings > Attendance Sheet</strong> section to add some';
+$string['modform:removerow'] = 'Remove Row';
