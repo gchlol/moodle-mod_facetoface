@@ -11,19 +11,24 @@ class attendance_sheet_settings {
             [
                 'id'        => 100,
                 'label'     => 'Example Item #1',
-                'movetitle' => 'Move Example Item #1'
+                'movetitle' => 'Move Example Item #1',
+                'label2'     => 'Example Item #1b',
+                'movetitle2' => 'Move Example Item #1b'
             ],
             [
                 'id'        => 102,
                 'label'     => 'Example Item #2',
-                'movetitle' => 'Move Example Item #2'
+                'movetitle' => 'Move Example Item #2',
+                'label2'     => 'Example Item #2b',
+                'movetitle2' => 'Move Example Item #2b'
             ]
         ];
 
         // Prepare context data for the mustache template.
         $this->data = [
             'uniqid'           => uniqid(),
-            'header_text'      => get_string('column', 'facetoface'),
+            'header_text_column'      => get_string('header_text_column', 'facetoface'),
+            'header_text_value'      => get_string('header_text_value', 'facetoface'),
             'empty_table'      => empty($this->attendanceitems),
             'attendance_items' => $this->attendanceitems,
         ];

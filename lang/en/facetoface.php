@@ -867,8 +867,8 @@ $string['attendancecolumn:5'] = 'Stream';
 $string['attendancecolumn:6'] = 'Paypoint';
 
 // Attendance Sheet Configuration
-$string['column'] = 'Column';
-$string['value'] = 'Value';
+$string['header_text_column'] = 'Column';
+$string['header_text_value'] = 'Value';
 
-$string['modform:emptytext'] = 'There are no items, use the <strong>Settings > Attendance Sheet</strong> section to add some';
+$string['modform:emptytext'] = 'There are no items, use the <strong>Settings ➔ Attendance Sheet</strong> section to add some';
 $string['modform:removerow'] = 'Remove Row';

@@ -25,11 +25,15 @@
     }
 }}
 
-<tr data-attendance-sheet-config-item data-value="{{id}}" data-label="{{label}}">
+<tr data-attendance-sheet-config-item data-value="{{id}}" data-label="{{label}}" data-label2="{{label2}}">
     <td>
         <input name="item_ids[]" type="hidden" value="{{id}}" />
         {{>core/drag_handle}}
         {{label}}
+    </td>
+    <td>
+        <input name="item_ids[]" type="hidden" value="{{id}}" />
+        {{label2}}
     </td>
     <td class="action-column">
         <a href="#" data-attendance-sheet-config-remove-row data-remove-value="{{id}}">
