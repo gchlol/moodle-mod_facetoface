@@ -37,8 +37,8 @@ class attendance_sheet_settings {
         // Prepare context data for the mustache template.
         $this->data = [
             'uniqid'           => uniqid(),
-            'header_text_column'      => get_string('header_text_column', 'facetoface'),
-            'header_text_value'      => get_string('header_text_value', 'facetoface'),
+            'header_text_column'      => get_string('headertextcolumn', 'facetoface'),
+            'header_text_value'      => get_string('headertextdefaultvalue', 'facetoface'),
             'empty_table'      => empty($this->attendanceitems),
             'attendance_items' => $this->attendanceitems,
         ];
