@@ -9,18 +9,28 @@ class attendance_sheet_settings {
         // Example attendance sheet items.
         $this->attendanceitems = [
             [
-                'id'        => 100,
-                'label'     => 'Example Item #1',
-                'movetitle' => 'Move Example Item #1',
-                'label2'     => 'Example Item #1b',
-                'movetitle2' => 'Move Example Item #1b'
+                'id'     => 0,
+                'labels' => [
+                    [
+                        'value' => 'Name', // corresponds to "Name"
+                        'first' => true    // flag to include the hidden input & drag handle
+                    ],
+                    [
+                        'value' => ''      // Default value for 'Name'
+                    ]
+                ]
             ],
             [
-                'id'        => 102,
-                'label'     => 'Example Item #2',
-                'movetitle' => 'Move Example Item #2',
-                'label2'     => 'Example Item #2b',
-                'movetitle2' => 'Move Example Item #2b'
+                'id'     => 1,
+                'labels' => [
+                    [
+                        'value' => 'Pass/Fail', // corresponds to "Pass/Fail"
+                        'first' => true         // flag to include the hidden input & drag handle
+                    ],
+                    [
+                        'value' => 'Pass/Fail'  // Default value for "Pass/Fail"
+                    ]
+                ]
             ]
         ];
 
