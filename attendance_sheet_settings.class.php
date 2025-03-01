@@ -45,19 +45,19 @@ class attendance_sheet_settings {
         $output .= '<script>
             // Minimal inline JavaScript to add deletion and drag-and-drop behavior.
             document.addEventListener("DOMContentLoaded", function() {
-                const table = document.querySelector("[data-attendance-sheet-table]");
-                const tbody = table.querySelector("[data-attendance-items]");
+                const table = document.querySelector("[data-attendance-sheet-config-table]");
+                const tbody = table.querySelector("[data-attendance-sheet-config-items]");
 
                 // --- Handle Row Deletion ---
                 tbody.addEventListener("click", function(e) {
-                    if (e.target.closest("[data-attendance-remove-row]")) {
+                    if (e.target.closest("[data-attendance-sheet-config-remove-row]")) {
                         e.preventDefault();
-                        const row = e.target.closest("[data-attendance-sheet-item]");
+                        const row = e.target.closest("[data-attendance-sheet-config-item]");
                         if (row) {
                             row.remove();
                         }
                         // If no rows remain, show the "empty" row.
-                        if (!tbody.querySelector("[data-attendance-sheet-item]")) {
+                        if (!tbody.querySelector("[data-attendance-sheet-config-item]")) {
                             const emptyRow = tbody.querySelector(".empty");
                             if (emptyRow) {
                                 emptyRow.hidden = false;
@@ -97,13 +97,13 @@ class attendance_sheet_settings {
                 }
 
                 function handleDragEnd() {
-                    document.querySelectorAll("[data-attendance-sheet-item]").forEach(function(row) {
+                    document.querySelectorAll("[data-attendance-sheet-config-item]").forEach(function(row) {
                         row.classList.remove("over", "dragging");
                     });
                 }
 
                 // Set draggable attribute and add drag events on each row.
-                tbody.querySelectorAll("[data-attendance-sheet-item]").forEach(function(row) {
+                tbody.querySelectorAll("[data-attendance-sheet-config-item]").forEach(function(row) {
                     row.setAttribute("draggable", "true");
                     row.addEventListener("dragstart", handleDragStart, false);
                     row.addEventListener("dragenter", handleDragEnter, false);

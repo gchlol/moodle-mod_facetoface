@@ -37,14 +37,14 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-10">
-                <table class="attendance-sheet-table w-100 table-sm table-hover generaltable" data-attendance-sheet-config-table>
+                <table class="attendance-sheet-config-table w-100 table-sm table-hover generaltable" data-attendance-sheet-config-table>
                     <thead>
                     <tr>
                         <th colspan="2" data-table-header>{{header_text}}</th>
                     </tr>
                     </thead>
 
-                    <tbody data-attendance-items>
+                    <tbody data-attendance-sheet-config-items>
                     <tr class="empty" {{^empty_table}}hidden{{/empty_table}}>
                         <td colspan="2">
                             {{#str}}modform:emptytext, mod_facetoface{{/str}}
