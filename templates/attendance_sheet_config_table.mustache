@@ -42,7 +42,7 @@
                     <tr>
                         <th data-table-header>{{header_text_column}}</th>
                         <th data-table-header>{{header_text_value}}</th>
-                        <!-- 3rd column: dropdown -->
+                        <!-- 3rd column: the dropdown menu -->
                         <th data-table-header>
                             <select data-attendance-sheet-config-add-row>
                                 <option value="">
@@ -60,14 +60,16 @@
                     </thead>
 
                     <tbody data-attendance-sheet-config-items>
+                    <!-- "Empty" row displayed if no items exist -->
                     <tr class="empty" {{^empty_table}}hidden{{/empty_table}}>
-                        <td colspan="2">
+                        <td colspan="3">
                             {{#str}}modform:emptytext, mod_facetoface{{/str}}
                         </td>
                     </tr>
 
+                    <!-- Render existing rows from attendance_items -->
                     {{#attendance_items}}
-                        {{>mod_facetoface/attendance_sheet_config_row}}
+                        {{> mod_facetoface/attendance_sheet_config_row}}
                     {{/attendance_items}}
                     </tbody>
                 </table>
