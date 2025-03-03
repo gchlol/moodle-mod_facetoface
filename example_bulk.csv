@@ -1,12 +1,6 @@
-"Session date/time known","Start date and time","Finish date and time","Allow cancelations","Capacity","Allow overbookings","Duration","Normal Cost","Discount Cost","Details","customfield_shortname","customfield_value"
-"yes","'2025-03-10 09:00","'2025-03-10 12:00","yes","20","no","180","100.0","80.0","Session about training","location","Room A1"
-"no","","","yes","30","yes","120","150.0","120.0","Another session","custom_field","Extra notes"
-"yes","'2025-04-15 14:00","'2025-04-15 16:30","no","50","no","150","","","Leadership Workshop","venue","Conference Hall"
-"yes","'2025-06-20 08:30","'2025-06-20 10:30","yes","15","no","120","200.0","150.0","Technical Training","building","Block A"
-"no","","","no","40","yes","90","250.0","200.0","Managerial Workshop","department","HR"
-"yes","'2025-07-10 14:00","'2025-07-10 16:00","yes","25","yes","120","","","Health & Safety Course","room","Training Hall"
-"yes","'2025-08-05 10:00","'2025-08-05 12:00","no","30","no","150","180.0","","Finance Training","",""
-"no","","","yes","50","yes","60","","","Soft Skills Development","location","Conference Room"
-"yes","'2025-09-15 09:30","'2025-09-15 12:00","no","20","yes","150","300.0","250.0","Advanced Programming","lab","IT Department"
-"yes","'2025-10-25 13:00","'2025-10-25 15:30","yes","35","no","120","120.0","100.0","Public Speaking Workshop","venue","Auditorium"
-"no","","","no","45","yes","180","","","Employee Wellbeing Session","",""
+SessionDateTimeKnown,StartDate,StartTime,FinishDate,FinishTime,AllowCancelations,Capacity,AllowOverbookings,Duration,NormalCost,DiscountCost,Details,CustomfieldShortname,CustomfieldValue
+yes,10/03/2025,09:00,10/03/2025,12:00,yes,20,no,180,100,80,Session about training,location,Room A1
+yes,15/04/2025,14:00,15/04/2025,16:30,no,50,yes,150,200,180,Leadership Workshop,venue,Conference Hall
+yes,20/06/2025,10:30,20/06/2025,12:30,yes,30,no,120,150,120,Technical session,trainer,John Doe
+yes,10/07/2025,08:00,10/07/2025,10:00,yes,40,no,120,90,70,New employee onboarding,department,HR
+yes,15/08/2025,11:00,15/08/2025,13:00,no,25,yes,120,120,90,Cybersecurity Awareness,location,Room B1
