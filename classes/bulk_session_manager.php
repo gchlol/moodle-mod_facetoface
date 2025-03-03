@@ -18,6 +18,7 @@ namespace mod_facetoface;
 
 use moodle_exception;
 use Generator;
+use DateTime;
 
 /**
  * Bulk sessions manager.
@@ -98,8 +99,10 @@ class bulk_session_manager {
     public static function get_headers() {
         return [
             'Session date/time known',
-            'Start date and time',
-            'finish date and time',
+            'Start date',
+            'Start time',
+            'Finish date',
+            'Finish time',
             'allow cancelations',
             'Capacity',
             'Allow overbookings',
@@ -164,20 +167,30 @@ class bulk_session_manager {
                 $record[$key] = trim($value);
             }
 
-            // Required: Start Date and Time.
-            if (empty($record['Start date and time'])) {
+            // Required: Start Date and Start Time.
+            if (empty($record['Start date']) || empty($record['Start time'])) {
                 $this->errors[] = [$index, get_string('error:missingstarttime', 'facetoface')];
-            } else if (strtotime($record['Start date and time']) === false) {
-                $this->errors[] = [$index, get_string('error:invalidstarttime', 'facetoface')
-                . ": {$record['Start date and time']}"];
+            } else {
+                $date = DateTime::createFromFormat('d/m/Y H:i', $record['Start date'] . ' ' . $record['Start time']);
+                if ($date) {
+                    $record['Start date and time'] = $date->format('Y-m-d H:i');
+                } else {
+                    $this->errors[] = [$index, get_string('error:invalidstarttime', 'facetoface')
+                    . ": {$record['Start date']} {$record['Start time']}"];
+                }
             }
 
-            // Required: Finish Date and Time.
-            if (empty($record['finish date and time'])) {
+            // Required: Finish Date and Finish Time.
+            if (empty($record['Finish date']) || empty($record['Finish time'])) {
                 $this->errors[] = [$index, get_string('error:missingfinishtime', 'facetoface')];
-            } else if (strtotime($record['finish date and time']) === false) {
-                $this->errors[] = [$index, get_string('error:invalidfinishtime', 'facetoface')
-                . ": {$record['finish date and time']}"];
+            } else {
+                $date = DateTime::createFromFormat('d/m/Y H:i', $record['Finish date'] . ' ' . $record['Finish time']);
+                if ($date) {
+                    $record['finish date and time'] = $date->format('Y-m-d H:i');
+                } else {
+                    $this->errors[] = [$index, get_string('error:invalidfinishtime', 'facetoface')
+                    . ": {$record['Finish date']} {$record['Finish time']}"];
+                }
             }
 
             // Ensure Start time is before Finish time.
@@ -242,13 +255,15 @@ class bulk_session_manager {
                 ? ($record['Session date/time known'] === 'no' ? 0 : 1)
                 : 1;
 
-            // Start and finish times (assumed to be in a valid date/time string format).
-            $session->starttime = !empty($record['Start date and time'])
-                ? strtotime($record['Start date and time'])
-                : null;
-            $session->finishtime = !empty($record['finish date and time'])
-                ? strtotime($record['finish date and time'])
-                : null;
+            // Combine Start Date and Time.
+            $session->starttime = (!empty($record['Start date']) && !empty($record['Start time']))
+            ? strtotime(str_replace('/', '-', $record['Start date'] . ' ' . $record['Start time']))
+            : null;
+
+            // Combine Finish Date and Time.
+            $session->finishtime = (!empty($record['Finish date']) && !empty($record['Finish time']))
+            ? strtotime(str_replace('/', '-', $record['Finish date'] . ' ' . $record['Finish time']))
+            : null;
 
             if ($session->datetimeknown && (empty($session->starttime) || empty($session->finishtime))) {
                 $this->errors[] = get_string('error:invaliddatetimedata', 'facetoface');
