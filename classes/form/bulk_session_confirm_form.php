@@ -19,7 +19,7 @@ namespace mod_facetoface\form;
 use moodleform;
 
 defined('MOODLE_INTERNAL') || die();
-require_once $CFG->libdir.'/formslib.php';
+require_once($CFG->libdir.'/formslib.php');
 
 /**
  * Processing confirm form for bulk session uploads.
@@ -36,17 +36,13 @@ class bulk_session_confirm_form extends moodleform {
     public function definition() {
         $mform = $this->_form;
 
-        // var_dump($this->_customdata);
-        // die(); // Temporarily stop execution to see output.
-        
         $f = $this->_customdata['f'] ?? 0;
         $fileid = $this->_customdata['fileid'] ?? 0;
 
-        // Suppress email checkbox, for example.
         $mform->addElement('advcheckbox', 'suppressemail', get_string('suppressemail', 'facetoface'));
         $mform->setType('suppressemail', PARAM_BOOL);
 
-        // Hidden fields: these will automatically be submitted with the form.
+        // Hidden fields.
         $mform->addElement('hidden', 'f', $f);
         $mform->setType('f', PARAM_INT);
 
@@ -56,16 +52,12 @@ class bulk_session_confirm_form extends moodleform {
         $mform->addElement('hidden', 'process', 1);
         $mform->setType('process', PARAM_INT);
 
-        // Add a group of buttons: "Confirm and process" and "Cancel/Back".
+        // Add a group of buttons.
         $buttonarray = [];
-        // 1) "Confirm and Process" submit button.
         $buttonarray[] = $mform->createElement('submit', 'confirmbtn',
             get_string('facetoface:confirmandprocess', 'mod_facetoface'));
-
-        // 2) A standard Moodle "cancel" button. This triggers $mform->is_cancelled().
         $buttonarray[] = $mform->createElement('cancel');
 
-        // Put them in a group so they appear side by side.
         $mform->addGroup($buttonarray, 'buttonar', '', ' ', false);
     }
 }

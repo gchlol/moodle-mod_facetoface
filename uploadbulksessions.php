@@ -22,63 +22,63 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
- require_once('../../config.php');
- require_once($CFG->dirroot . '/mod/facetoface/lib.php');
- 
- use core\output\notification;
- use mod_facetoface\form\bulk_session_upload_form;
- use mod_facetoface\form\bulk_session_confirm_form;
- use mod_facetoface\bulk_session_manager;
- 
- $f = optional_param('f', 0, PARAM_INT);
- $PAGE->set_url(new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]));
- $fileid = optional_param('fileid', 0, PARAM_INT);
- $validate = optional_param('validate', 0, PARAM_INT);
- $process = optional_param('process', 0, PARAM_INT);
- $caseinsensitive = optional_param('caseinsensitive', false, PARAM_BOOL);
- 
- if (!$facetoface = $DB->get_record('facetoface', ['id' => $f])) {
-     throw new moodle_exception('error:incorrectfacetofaceid', 'facetoface');
- }
- if (!$course = $DB->get_record('course', ['id' => $facetoface->course])) {
+require_once('../../config.php');
+require_once($CFG->dirroot . '/mod/facetoface/lib.php');
+
+use core\output\notification;
+use mod_facetoface\form\bulk_session_upload_form;
+use mod_facetoface\form\bulk_session_confirm_form;
+use mod_facetoface\bulk_session_manager;
+
+$f = optional_param('f', 0, PARAM_INT);
+$PAGE->set_url(new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]));
+$fileid = optional_param('fileid', 0, PARAM_INT);
+$validate = optional_param('validate', 0, PARAM_INT);
+$process = optional_param('process', 0, PARAM_INT);
+$caseinsensitive = optional_param('caseinsensitive', false, PARAM_BOOL);
+
+if (!$facetoface = $DB->get_record('facetoface', ['id' => $f])) {
+        throw new moodle_exception('error:incorrectfacetofaceid', 'facetoface');
+}
+if (!$course = $DB->get_record('course', ['id' => $facetoface->course])) {
      throw new moodle_exception('error:coursemisconfigured', 'facetoface');
- }
- if (!$cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course->id)) {
+}
+if (!$cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course->id)) {
      throw new moodle_exception('error:incorrectcoursemoduleid', 'facetoface');
- }
- 
- require_course_login($course, true, $cm);
- $context = context_course::instance($course->id);
- $modulecontext = context_module::instance($cm->id);
- require_capability('mod/facetoface:editsessions', $context);
- require_capability('mod/facetoface:uploadbulksessions', $context);
- 
+}
+
+require_course_login($course, true, $cm);
+$context = context_course::instance($course->id);
+$modulecontext = context_module::instance($cm->id);
+require_capability('mod/facetoface:editsessions', $context);
+require_capability('mod/facetoface:uploadbulksessions', $context);
+
 
 if ($validate) {
     $heading = get_string('facetoface:validatebulksessions', 'facetoface');
- 
+
     $mform = new bulk_session_upload_form(null);
     $data = $mform->get_data();
     $fileid = $data->csvfile ?: 0;
- 
+
     $mform = new bulk_session_confirm_form(null, ['f' => $f, 'fileid' => $fileid, 'caseinsensitive' => $caseinsensitive]);
- 
+
     $manager = new bulk_session_manager($f);
     $manager->load_from_file($fileid);
     $manager->set_case_insensitive($caseinsensitive);
- 
+
     $errors = $manager->validate();
- 
+
     if (!empty($errors)) {
          echo $OUTPUT->header();
          echo $OUTPUT->notification(get_string('error:bulkuploadfileerrorsfound', 'mod_facetoface', count($errors)), 'error');
- 
-         // **Display errors in a table**
+
+        // Display errors in a table.
          $table = new html_table();
          $table->attributes['class'] = 'f2fbookingsuploadlist m-auto generaltable mb-2';
          $table->head = [get_string('uucsvline', 'tool_uploaduser'), get_string('status', 'facetoface')];
- 
-         foreach ($errors as $error) {
+
+        foreach ($errors as $error) {
             if (is_array($error) && count($error) >= 2) {
                 $line = $error[0]; // CSV line number
                 $messages = array_slice($error, 1);
@@ -88,42 +88,42 @@ if ($validate) {
             } else {
                 $table->data[] = ["-", is_string($error) ? $error : json_encode($error)];
             }
-        } 
- 
+        }
+
          echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
          echo $OUTPUT->footer();
          exit;
-     } else {
+    } else {
          echo $OUTPUT->header();
          echo $OUTPUT->heading(get_string('facetoface:confirmbulkpreview', 'facetoface'), 3);
-         
+
          $records = $manager->get_records();
-         
-         if (!empty($records)) {
+
+        if (!empty($records)) {
              $table = new html_table();
              $table->attributes['class'] = 'f2fconfirmuploadlist m-auto generaltable mb-2';
              $table->head = bulk_session_manager::get_headers();
-         
-             foreach ($records as $record) {
+
+            foreach ($records as $record) {
                  $table->data[] = array_values($record);
-             }
-         
+            }
+
              echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
-         } else {
+        } else {
              echo $OUTPUT->notification(get_string('facetoface:norecordsfound', 'facetoface'), 'info');
-         }
-         
+        }
+
          $mform->display();
          echo $OUTPUT->footer();
-         exit; 
-     }
- }
- 
+         exit;
+    }
+}
+
 if ($process && $fileid && $f) {
     $manager = new bulk_session_manager($f);
     $manager->load_from_file($fileid);
     $manager->set_case_insensitive($caseinsensitive);
- 
+
     $confirmform = new bulk_session_confirm_form(null, ['f' => $f, 'fileid' => $fileid]);
     $confirmdata = $confirmform->get_data();
 
@@ -132,9 +132,9 @@ if ($process && $fileid && $f) {
     }
 
      $errors = $manager->validate();
-     if (empty($errors)) {
+    if (empty($errors)) {
          $manager->process();
- 
+
          $params = [
              'context'  => $modulecontext,
              'objectid' => $f,
@@ -142,15 +142,15 @@ if ($process && $fileid && $f) {
          $event = \mod_facetoface\event\csv_processed::create($params);
          $event->add_record_snapshot('facetoface', $facetoface);
          $event->trigger();
- 
+
          redirect(
              new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]),
              get_string('facetoface:bulksessionsprocessed', 'mod_facetoface'),
              null,
              notification::NOTIFY_SUCCESS
          );
-     }
- 
+    }
+
      // If errors exist, redirect back with error message.
      $errmsg = get_string('error:bulkuploadfileerrorsfound', 'mod_facetoface', count($errors));
      redirect(
@@ -159,11 +159,10 @@ if ($process && $fileid && $f) {
          null,
          notification::NOTIFY_ERROR
      );
- }
- 
+}
+
 $heading = get_string('facetoface:uploadbulksessions', 'facetoface');
 $mform = new bulk_session_upload_form(null, ['f' => $f]);
-// $PAGE->set_url(new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]));
 $mform->set_data(['f' => $f, 'validate' => 1]);
 $PAGE->set_pagelayout('standard');
 $PAGE->set_title($heading);
@@ -172,4 +171,3 @@ $PAGE->set_heading($heading);
 echo $OUTPUT->header();
 $mform->display();
 echo $OUTPUT->footer();
-

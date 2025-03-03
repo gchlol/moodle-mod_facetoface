@@ -17,7 +17,7 @@
 namespace mod_facetoface\form;
 
 defined('MOODLE_INTERNAL') || die();
-require_once $CFG->dirroot.'/repository/lib.php';
+require_once($CFG->dirroot.'/repository/lib.php');
 
 /**
  * Upload bookings form class.
@@ -26,8 +26,7 @@ require_once $CFG->dirroot.'/repository/lib.php';
  * @copyright  GCHLOL, 2025
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class bulk_session_upload_form extends \moodleform
-{
+class bulk_session_upload_form extends \moodleform {
     /**
      * Build form for importing bookings.
      *
@@ -35,24 +34,18 @@ class bulk_session_upload_form extends \moodleform
      *
      * @see \moodleform::definition()
      */
-    public function definition()
-    {
+    public function definition() {
         global $CFG;
 
         $mform = $this->_form;
 
-    // // Debug the custom data.
-    // var_dump($this->_customdata);
-    // die(); // Remove these lines after debugging.
-
         $f = $this->_customdata['f'] ?? 0;
         $mform->addElement('hidden', 'f', $f);
         $mform->setType('f', PARAM_INT);
-        
 
         $mform->addElement('header', 'settingsheader', get_string('facetoface:uploadbulksessions', 'mod_facetoface'));
 
-        // Example CSV link (optional).
+        // Example CSV link.
         $url = new \moodle_url('/mod/facetoface/example_bulk.csv');
         $link = \html_writer::link($url, 'example_bulk.csv');
         $mform->addElement('static', 'example_bulkcsv', get_string('facetoface:examplecsv', 'mod_facetoface'), $link);
@@ -70,19 +63,15 @@ class bulk_session_upload_form extends \moodleform
         $mform->setType('csvfile', PARAM_INT);
         $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
 
-        // Description or instruction (optional).
+        // Description.
         $mform->addElement('static', 'csvuploadhelp', '',
             nl2br(get_string('facetoface:uploadsessionfiledesc', 'mod_facetoface')));
 
-        // Additional checkbox for case-insensitive matching (if needed).
+        // Additional checkbox for case-insensitive matching.
         $mform->addElement('advcheckbox', 'caseinsensitive', get_string('caseinsensitive', 'mod_facetoface'));
         $mform->setDefault('caseinsensitive', true);
 
-        // // Hidden field for facetoface instance ID.
-        // $mform->addElement('hidden', 'f', $f); 
-        // $mform->setType('f', PARAM_INT);
-
-        // Hidden field to indicate we should validate/process after upload.
+        // Hidden field to validate/process after upload.
         $mform->addElement('hidden', 'validate', 1);
         $mform->setType('validate', PARAM_INT);
 
