@@ -63,9 +63,36 @@ class bulk_session_upload_form extends \moodleform {
         $mform->setType('csvfile', PARAM_INT);
         $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
 
-        // Description.
-        $mform->addElement('static', 'csvuploadhelp', '',
-            nl2br(get_string('facetoface:uploadsessionfiledesc', 'mod_facetoface')));
+        // Get the restructured description.
+        $desc = get_string('facetoface:uploadsessionfiledesc', 'mod_facetoface');
+
+        // Split into rows by newlines.
+        $rows = explode("\n", $desc);
+
+        // Start building the table HTML.
+        $tablehtml = '<table class="uploadsessiondesc" border="1" cellspacing="0" cellpadding="5">';
+        $tablehtml .= '<thead><tr><th>Field</th><th>Description</th></tr></thead><tbody>';
+
+        // Process each row.
+        foreach ($rows as $row) {
+            $row = trim($row);
+            if (!empty($row)) {
+                // Split the row by the pipe delimiter.
+                $parts = explode('|', $row);
+                if (count($parts) == 2) {
+                    $field = trim($parts[0]);
+                    $descpart = trim($parts[1]);
+                    $tablehtml .= '<tr>';
+                    $tablehtml .= '<td>' . htmlspecialchars($field) . '</td>';
+                    $tablehtml .= '<td>' . htmlspecialchars($descpart) . '</td>';
+                    $tablehtml .= '</tr>';
+                }
+            }
+        }
+        $tablehtml .= '</tbody></table>';
+
+        // Add the static element using the HTML table.
+        $mform->addElement('static', 'csvuploadhelp', '', $tablehtml);
 
         // Additional checkbox for case-insensitive matching.
         $mform->addElement('advcheckbox', 'caseinsensitive', get_string('caseinsensitive', 'mod_facetoface'));

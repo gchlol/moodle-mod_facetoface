@@ -162,7 +162,6 @@ class bulk_session_manager {
         }
 
         foreach ($this->records as $index => $record) {
-            // Trim all fields to remove any unwanted spaces.
             foreach ($record as $key => $value) {
                 $record[$key] = trim($value);
             }
@@ -320,7 +319,7 @@ class bulk_session_manager {
 
             if (!$sessionid) {
                 $this->errors[] = get_string('error:failedtocreatesession', 'facetoface') . ' (' . implode(', ', $record) . ')';
-                continue; // Skip further processing for this session
+                continue;
             }
 
             // Insert session date into mdl_facetoface_sessions_dates.
@@ -337,7 +336,6 @@ class bulk_session_manager {
 
         return empty($this->errors);
     }
-
 
     /**
      * Get validation or processing errors.

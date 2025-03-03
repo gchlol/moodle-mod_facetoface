@@ -891,16 +891,17 @@ $string['error:invalidnormalcost'] = 'Normal cost must be a valid number.';
 $string['error:invaliddiscountcost'] = 'Discount cost must be a valid number.';
 
 $string['facetoface:uploadsessionfiledesc'] =
-'Fields expected:
-- Session date/time (required yes / no)
-- Start date and time (required format: YYYY-MM-DD HH:MM)
-- Finish date and time (required format: YYYY-MM-DD HH:MM)
-- Allow cancelations (required - yes / no)
-- Capacity (required - whole number)
-- Allow overbookings (required - yes / no)
-- Duration (required - numeric value in minutes)
-- Normal Cost (optional - numeric value)
-- Discount Cost (optional - numeric value)
-- Details (session description)
-- Custom field short name (optional)
-- Custom field value (optional)';
+"Session date/time known|Required: yes / no
+Start date|Required: Format: YYYY-MM-DD
+Start time|Required: Format: HH:MM
+Finish date|Required: Format: YYYY-MM-DD
+Finish time|Required: Format: HH:MM
+Allow cancelations|Required: yes / no
+Capacity|Required: Whole number
+Allow overbookings|Required: yes / no
+Duration|Required: Numeric value in minutes
+Normal Cost|Optional: Numeric value
+Discount Cost|Optional: Numeric value
+Details|Session description
+Custom field short name|Optional
+Custom field value|Optional";
