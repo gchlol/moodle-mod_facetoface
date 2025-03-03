@@ -1,0 +1,26 @@
+[
+  {
+    "id": 0,
+    "labels": [
+      {
+        "value": "Name",
+        "first": true
+      },
+      {
+        "value": ""
+      }
+    ]
+  },
+  {
+    "id": 1,
+    "labels": [
+      {
+        "value": "Pass/Fail",
+        "first": true
+      },
+      {
+        "value": "Pass/Fail"
+      }
+    ]
+  }
+]

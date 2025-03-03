@@ -14,43 +14,71 @@ defined('MOODLE_INTERNAL') || die();
 class attendance_sheet_settings {
     protected $attendanceitems;
     protected $data;
+    protected $defaultjsonfile;
 
     public function __construct() {
-        // Example attendance sheet items that will appear initially.
-        $this->attendanceitems = [
-            [
-                'id'     => 0,
-                'labels' => [
-                    [
-                        'value' => 'Name', // "Name" in the first column
-                        'first' => true    // indicates we include the hidden input + drag handle
-                    ],
-                    [
-                        'value' => ''      // second column is empty by default
-                    ]
-                ]
-            ],
-            [
-                'id'     => 1,
-                'labels' => [
-                    [
-                        'value' => 'Pass/Fail', // "Pass/Fail" in the first column
-                        'first' => true
-                    ],
-                    [
-                        'value' => 'Pass/Fail'  // second column has "Pass/Fail"
-                    ]
-                ]
-            ]
+        global $CFG;
+
+        // Define the folder and file path for storing the default attendance sheet settings.
+        // The folder is created under $CFG->dataroot to ensure it persists and is not publicly accessible.
+        $datafolder = $CFG->dataroot . '/mod_facetoface';
+        if (!is_dir($datafolder)) {
+            mkdir($datafolder, 0700, true); // create folder with restricted permissions.
+        }
+        $this->defaultjsonfile = $datafolder . '/attendance_sheet_default.json';
+
+        // Define the default attendance items array.
+        $defaultData = [
+//            [
+//                'id'     => 0,
+//                'labels' => [
+//                    [
+//                        'value' => 'Name',
+//                        'first' => true
+//                    ],
+//                    [
+//                        'value' => ''
+//                    ]
+//                ]
+//            ],
+//            [
+//                'id'     => 1,
+//                'labels' => [
+//                    [
+//                        'value' => 'Pass/Fail',
+//                        'first' => true
+//                    ],
+//                    [
+//                        'value' => 'Pass/Fail'
+//                    ]
+//                ]
+//            ]
         ];
+
+        // If the JSON file does not exist, create it with the default data.
+        if (!file_exists($this->defaultjsonfile)) {
+            file_put_contents($this->defaultjsonfile, json_encode($defaultData, JSON_PRETTY_PRINT));
+            // Set file permissions so that only the owner can read and write.
+            chmod($this->defaultjsonfile, 0600);
+        }
+
+        // Read and decode the JSON file to get attendance items.
+        $jsoncontent = file_get_contents($this->defaultjsonfile);
+        $decoded = json_decode($jsoncontent, true);
+        if (is_array($decoded)) {
+            $this->attendanceitems = $decoded;
+        } else {
+            // Fallback to default data if JSON decoding fails.
+            $this->attendanceitems = $defaultData;
+        }
 
         // Prepare context data for the mustache template.
         $this->data = [
-            'uniqid'                 => uniqid(),
-            'header_text_column'     => get_string('headertextcolumn', 'facetoface'),
-            'header_text_value'      => get_string('headertextdefaultvalue', 'facetoface'),
-            'empty_table'            => empty($this->attendanceitems),
-            'attendance_items'       => $this->attendanceitems,
+            'uniqid'             => uniqid(),
+            'header_text_column' => get_string('headertextcolumn', 'facetoface'),
+            'header_text_value'  => get_string('headertextdefaultvalue', 'facetoface'),
+            'empty_table'        => empty($this->attendanceitems),
+            'attendance_items'   => $this->attendanceitems,
         ];
     }
 
