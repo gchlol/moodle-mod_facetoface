@@ -316,10 +316,23 @@ class bulk_session_manager {
             $session->timecreated = time();
 
             // Insert the session record into the DB.
-            if (!$DB->insert_record('facetoface_sessions', $session)) {
-                $this->errors[] = get_string('error:failedtocreatesession', 'facetoface')
-                    . ' (' . implode(', ', $record) . ')';
+            $sessionid = $DB->insert_record('facetoface_sessions', $session);
+
+            if (!$sessionid) {
+                $this->errors[] = get_string('error:failedtocreatesession', 'facetoface') . ' (' . implode(', ', $record) . ')';
+                continue; // Skip further processing for this session
             }
+
+            // Insert session date into mdl_facetoface_sessions_dates.
+            $sessionsdate = new \stdClass();
+            $sessionsdate->sessionid = $sessionid;
+            $sessionsdate->timestart = $session->starttime;
+            $sessionsdate->timefinish = $session->finishtime;
+
+            if (!$DB->insert_record('facetoface_sessions_dates', $sessionsdate)) {
+                $this->errors[] = get_string('error:failedtoinsertdates', 'facetoface') . " for session ID {$sessionid}";
+            }
+
         }
 
         return empty($this->errors);
