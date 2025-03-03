@@ -28,7 +28,7 @@ use DateTime;
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class bulk_session_manager {
-    /** @var int The facetoface instance ID */
+    /** @var int Facetoface instance ID */
     private $facetofaceid;
 
     /** @var array Parsed CSV records */
@@ -37,7 +37,7 @@ class bulk_session_manager {
     /** @var array Validation errors */
     private $errors = [];
 
-    /** To provide clarity and acoid undefined properties */
+    /** Avoid undefined properties */
     private $usefile;
     private $file;
 
@@ -75,7 +75,6 @@ class bulk_session_manager {
         if (count($files) != 1) {
             throw new moodle_exception('error:cannotloadfile', 'mod_facetoface');
         }
-
         $this->file = current($files);
 
         return true;
@@ -116,7 +115,7 @@ class bulk_session_manager {
     }
 
     /**
-     * Get an iterator for the records.
+     * Get an iterator for records.
      *
      * @return Generator
      */
@@ -125,9 +124,9 @@ class bulk_session_manager {
             foreach ($this->records as $record) {
                 yield $record;
             }
-
             return;
         }
+
         $handle = $this->file->get_content_file_handle();
         $maxlinelength = 1000;
         $delimiter = ',';
@@ -152,7 +151,6 @@ class bulk_session_manager {
 
     /**
      * Validate loaded CSV records.
-     *
      * @return array an array of error messages (empty if no errors)
      */
     public function validate() {
@@ -231,12 +229,11 @@ class bulk_session_manager {
                 $this->errors[] = [$index, get_string('error:invalidallowoverbook', 'facetoface')];
             }
         }
-
         return $this->errors;
     }
 
     /**
-     * Process the valid records to create sessions.
+     * Process valid records to create sessions.
      *
      * @return bool true on success, false if any errors occurred
      */
@@ -246,10 +243,10 @@ class bulk_session_manager {
         foreach ($this->records as $record) {
             $session = new \stdClass();
 
-            // Always use the facetoface instance ID from the manager.
+            // Always use facetoface instance ID.
             $session->facetoface = $this->facetofaceid;
 
-            // Session date/time known: default to yes.
+            // Session date/time known: default yes.
             $session->datetimeknown = isset($record['Session date/time known'])
                 ? ($record['Session date/time known'] === 'no' ? 0 : 1)
                 : 1;
@@ -266,10 +263,10 @@ class bulk_session_manager {
 
             if ($session->datetimeknown && (empty($session->starttime) || empty($session->finishtime))) {
                 $this->errors[] = get_string('error:invaliddatetimedata', 'facetoface');
-                continue; // Skip this record if start/finish times are invalid.
+                continue; // Skip if invalid.
             }
 
-            // Allow sign up cancellations: default yes (1) unless CSV explicitly says "no".
+            // Allow sign up cancellations: default yes.
             $session->allowcancel = isset($record['allow cancelations'])
                 ? ($record['allow cancelations'] === 'no' ? 0 : 1)
                 : 1;
@@ -279,7 +276,7 @@ class bulk_session_manager {
                 ? (int) $record['Capacity']
                 : 10;
 
-            // Allow overbooking: default yes (1).
+            // Allow overbooking: default yes.
             $session->overbook = isset($record['Allow overbookings'])
                 ? ($record['Allow overbookings'] === 'no' ? 0 : 1)
                 : 1;
@@ -311,10 +308,9 @@ class bulk_session_manager {
                 ];
             }
 
-            // Add timestamps.
             $session->timecreated = time();
 
-            // Insert the session record into the DB.
+            // Insert session record.
             $sessionid = $DB->insert_record('facetoface_sessions', $session);
 
             if (!$sessionid) {
@@ -331,9 +327,7 @@ class bulk_session_manager {
             if (!$DB->insert_record('facetoface_sessions_dates', $sessionsdate)) {
                 $this->errors[] = get_string('error:failedtoinsertdates', 'facetoface') . " for session ID {$sessionid}";
             }
-
         }
-
         return empty($this->errors);
     }
 

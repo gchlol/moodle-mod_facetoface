@@ -107,7 +107,6 @@ if ($validate) {
             foreach ($records as $record) {
                  $table->data[] = array_values($record);
             }
-
              echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
         } else {
              echo $OUTPUT->notification(get_string('facetoface:norecordsfound', 'facetoface'), 'info');
