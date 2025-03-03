@@ -198,7 +198,7 @@ $settings->add(new admin_setting_heading('facetoface/sitenotices_header', get_st
 
 
 if ($hassiteconfig) { // Site admins only.
-    $ADMIN->add('modsettings', new admin_externalpage(
+    $ADMIN->add('courses', new admin_externalpage(
         'facetoface_sitebulkupload',
         get_string('f2fbulksessions', 'mod_facetoface'),
         new moodle_url('/mod/facetoface/sitebulkupload.php'),
