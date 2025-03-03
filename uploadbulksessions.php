@@ -131,6 +131,7 @@ if ($process && $fileid && $f) {
     }
 
      $errors = $manager->validate();
+
     if (empty($errors)) {
          $manager->process();
 

@@ -47,7 +47,6 @@ class bulk_session_manager {
     /** @var bool When true, confirmation emails are not sent. */
     private $suppressemail = false;
 
-
     /**
      * Constructor.
      *
