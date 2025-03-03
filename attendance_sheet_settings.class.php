@@ -25,7 +25,7 @@ class attendance_sheet_settings {
         if (!is_dir($datafolder)) {
             mkdir($datafolder, 0700, true); // create folder with restricted permissions.
         }
-        $this->defaultjsonfile = $datafolder . '/attendance_sheet_default.json';
+        $this->defaultjsonfile = $datafolder . '/attendance_sheet_config.json';
 
         // Define the default attendance items array.
         $defaultData = [
