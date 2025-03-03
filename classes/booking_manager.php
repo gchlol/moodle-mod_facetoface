@@ -175,11 +175,11 @@ class booking_manager {
             $timenow = time();
         }
 
-        // Break into rows and validate the multiple interdependant fields together
+        // Break into rows and validate the multiple interdependant fields together.
         foreach ($this->get_iterator() as $index => $entry) {
             $row = $index + 1;
 
-            // Set defaults for fields with no value
+            // Set defaults for fields with no value.
             $entry->status = $entry->status ?? '';
             $entry->notificationtype = $entry->notificationtype ?? '';
             $entry->discountcode = $entry->discountcode ?? '';
