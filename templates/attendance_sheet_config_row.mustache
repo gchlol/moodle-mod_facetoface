@@ -38,16 +38,27 @@
     {{#labels}}
     data-{{@index}}="{{value}}"
     {{/labels}}>
-    {{#labels}}
-        <td>
-            <!--If the table cell is in the first column, it needs to be draggable to move the whole row.-->
+    <td>
+        {{#labels}}
             {{#first}}
                 <input name="item_ids[]" type="hidden" value="{{../id}}" />
                 {{> core/drag_handle}}
+                {{value}}
             {{/first}}
-            {{value}}
-        </td>
-    {{/labels}}
+        {{/labels}}
+    </td>
+    <td>
+        {{^editable}}
+            {{#labels}}
+                {{^first}}
+                    {{value}}
+                {{/first}}
+            {{/labels}}
+        {{/editable}}
+        {{#editable}}
+            <input type="text" name="header_values[]" value="{{defaultvalue}}" />
+        {{/editable}}
+    </td>
     <td class="action-column">
         <a href="#" data-attendance-sheet-config-remove-row data-remove-value="{{id}}">
             {{#pix}} t/delete, core, {{#str}}modform:removerow, mod_facetoface{{/str}} {{/pix}}

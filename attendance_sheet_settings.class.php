@@ -28,32 +28,7 @@ class attendance_sheet_settings {
         $this->defaultjsonfile = $datafolder . '/attendance_sheet_config.json';
 
         // Define the default attendance items array.
-        $defaultData = [
-//            [
-//                'id'     => 0,
-//                'labels' => [
-//                    [
-//                        'value' => 'Name',
-//                        'first' => true
-//                    ],
-//                    [
-//                        'value' => ''
-//                    ]
-//                ]
-//            ],
-//            [
-//                'id'     => 1,
-//                'labels' => [
-//                    [
-//                        'value' => 'Pass/Fail',
-//                        'first' => true
-//                    ],
-//                    [
-//                        'value' => 'Pass/Fail'
-//                    ]
-//                ]
-//            ]
-        ];
+        $defaultData = [];
 
         // If the JSON file does not exist, create it with the default data.
         if (!file_exists($this->defaultjsonfile)) {
@@ -70,6 +45,20 @@ class attendance_sheet_settings {
         } else {
             // Fallback to default data if JSON decoding fails.
             $this->attendanceitems = $defaultData;
+        }
+
+        // Add editable flag for changeable columns in attendance items.
+        // Only rows with a column name of "Header Only" or "Header and Row" are changeable.
+        foreach ($this->attendanceitems as &$item) {
+            if (isset($item['labels'][0]['value'])) {
+                $column = $item['labels'][0]['value'];
+                if ($column === 'Header Only' || $column === 'Header and Row') {
+                    $item['editable'] = true;
+                    $item['defaultvalue'] = isset($item['labels'][1]['value']) ? $item['labels'][1]['value'] : '';
+                } else {
+                    $item['editable'] = false;
+                }
+            }
         }
 
         // Prepare context data for the mustache template.
@@ -101,7 +90,7 @@ class attendance_sheet_settings {
         $removerowicon = $OUTPUT->pix_icon('t/delete', get_string('modform:removerow', 'facetoface'), 'core');
         $removerowtext = '';
 
-        // Append inline JavaScript for row deletion, drag-and-drop, and adding new rows from the dropdown.
+        // Append inline JavaScript for row deletion, drag-and-drop, adding new rows, and saving config via AJAX.
         $output .= '<script>
             document.addEventListener("DOMContentLoaded", function() {
                 var table = document.querySelector("[data-attendance-sheet-config-table]");
@@ -142,7 +131,6 @@ class attendance_sheet_settings {
                 function handleDragStart(e) {
                     dragSrc = this;
                     e.dataTransfer.effectAllowed = "move";
-                    // Required for Firefox.
                     e.dataTransfer.setData("text/plain", null);
                     this.classList.add("dragging");
                 }
@@ -164,7 +152,6 @@ class attendance_sheet_settings {
                 function handleDrop(e) {
                     if (e.stopPropagation) { e.stopPropagation(); }
                     if (dragSrc !== this) {
-                        // Swap the entire innerHTML of the dragged and dropped rows.
                         var srcHTML = dragSrc.innerHTML;
                         dragSrc.innerHTML = this.innerHTML;
                         this.innerHTML = srcHTML;
@@ -173,13 +160,11 @@ class attendance_sheet_settings {
                 }
 
                 function handleDragEnd() {
-                    // Remove highlighting from all rows.
                     document.querySelectorAll("[data-attendance-sheet-config-item]").forEach(function(row) {
                         row.classList.remove("over", "dragging");
                     });
                 }
 
-                // Bind drag events to a row.
                 function bindDragEvents(row) {
                     row.setAttribute("draggable", "true");
                     row.addEventListener("dragstart", handleDragStart, false);
@@ -203,60 +188,90 @@ class attendance_sheet_settings {
                         if (!selectedValue) {
                             return;
                         }
-                        // Reset dropdown to its default option.
                         e.target.value = "";
-
-                        // Hide the empty row if visible.
                         var emptyRow = tbody.querySelector(".empty");
                         if (emptyRow) {
                             emptyRow.hidden = true;
                         }
-
-                        // Create a unique ID for the new row.
                         var rowId = Date.now();
-
-                        // Create a new <tr>.
                         var tr = document.createElement("tr");
                         tr.setAttribute("data-attendance-sheet-config-item", "");
                         tr.setAttribute("data-value", rowId);
 
-                        // --- First column (drag handle + hidden input + label) ---
                         var td1 = document.createElement("td");
                         td1.innerHTML =
                             \'<input name="item_ids[]" type="hidden" value="\' + rowId + \'" />\' +
-                            dragHandleHtml + // same as {{> core/drag_handle}}
-                            selectedValue;   // the label
-
-                        // --- Second column (depends on selection) ---
+                            dragHandleHtml +
+                            selectedValue;
                         var td2 = document.createElement("td");
                         if (["Name","Payroll","Email","Signature"].indexOf(selectedValue) !== -1) {
-                            // For these, second column is empty
                             td2.innerHTML = "";
                         } else {
-                            // For "Header Only" / "Header and Row", we add a text input
                             td2.innerHTML = \'<input type="text" name="header_values[]" />\';
                         }
-
-                        // --- Third column (delete link) ---
                         var td3 = document.createElement("td");
                         td3.classList.add("action-column");
                         td3.innerHTML =
                             \'<a href="#" data-attendance-sheet-config-remove-row data-remove-value="\' + rowId + \'">\' +
-                            removeRowIconHtml +  // same icon as {{#pix}} t/delete ...
-                            " " +
-                            removeRowText +
+                            removeRowIconHtml + " " + removeRowText +
                             \'</a>\';
-
-                        // Append <td> cells to <tr>.
                         tr.appendChild(td1);
                         tr.appendChild(td2);
                         tr.appendChild(td3);
-
-                        // Add the new row to the table body.
                         tbody.appendChild(tr);
-
-                        // Bind drag-and-drop events to the new row.
                         bindDragEvents(tr);
+                    });
+                }
+
+                // === Save Config Button Handling via AJAX ===
+                var saveButton = document.getElementById("save-config");
+                if (saveButton) {
+                    saveButton.addEventListener("click", function(e) {
+                        // Gather config data from the table.
+                        var configData = [];
+                        tbody.querySelectorAll("[data-attendance-sheet-config-item]").forEach(function(row) {
+                            var id = row.getAttribute("data-value");
+                            var cells = row.querySelectorAll("td");
+                            var columnName = cells[0].textContent.trim();
+                            var defaultValue = "";
+                            var input = cells[1].querySelector("input");
+                            if (input) {
+                                defaultValue = input.value.trim();
+                            } else {
+                                defaultValue = cells[1].textContent.trim();
+                            }
+                            var item = {
+                                id: id,
+                                labels: [
+                                    { value: columnName, first: true }
+                                ]
+                            };
+                            if (columnName === "Header Only" || columnName === "Header and Row") {
+                                item.labels.push({ value: defaultValue });
+                            } else {
+                                item.labels.push({ value: "" });
+                            }
+                            configData.push(item);
+                        });
+                        // Send the config data via AJAX to save_config.php.
+                        var xhr = new XMLHttpRequest();
+                        xhr.open("POST", "/mod/facetoface/save_config.php", true);
+                        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                        xhr.onreadystatechange = function() {
+                            if (xhr.readyState === 4) {
+                                if (xhr.status === 200) {
+                                    alert("Configuration saved successfully.");
+                                } else {
+                                    alert("Failed to save configuration.");
+                                }
+                            }
+                        };
+                        var sesskey = "";
+                        if (typeof M !== "undefined" && M.cfg && M.cfg.sesskey) {
+                            sesskey = M.cfg.sesskey;
+                        }
+                        var params = "sesskey=" + encodeURIComponent(sesskey) + "&config_data=" + encodeURIComponent(JSON.stringify(configData));
+                        xhr.send(params);
                     });
                 }
             });
