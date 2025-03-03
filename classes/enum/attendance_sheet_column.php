@@ -14,6 +14,7 @@
 namespace mod_facetoface\enum;
 
 class attendance_sheet_column extends attendance_column {
+    // Start from 10, so that attendance_column may add more columns in the future
     const SIGNATURE = 10;
     const HEADER_ONLY = 11;
     const HEADER_AND_ROWS = 12;

@@ -10,18 +10,27 @@
     * data-attendance-sheet-item
     * data-attendance-remove-row
     * data-value
-    * data-label
+    * data-attendance-sheet-config-remove-row
+    * data-remove-value
 
     Context variables required for this template:
     * id - ID of the item being displayed.
-    * label - Label to output.
-    * movetitle - Title to display for move handle.
+    * labels - Array of label objects, each containing a 'value', and possibly 'first' to indicate the drag handle.
+    * first - If the table cell is in the first column, it needs to be draggable to move the whole row.
+    * value - Text displayed in the table's current cell.
 
     Example context (json):
     {
-        "id": 100,
-        "label": "Example Item #1",
-        "movetitle": "Move Example Item #1"
+        'id'     => 0,
+        'labels' => {
+            {
+                'value' => 'Name', // "Name" in the first column
+                'first' => true    // indicates we include the hidden input + drag handle
+            },
+            {
+                'value' => ''      // second column is empty by default
+            }
+        }
     }
 }}
 
@@ -31,6 +40,7 @@
     {{/labels}}>
     {{#labels}}
         <td>
+            <!--If the table cell is in the first column, it needs to be draggable to move the whole row.-->
             {{#first}}
                 <input name="item_ids[]" type="hidden" value="{{../id}}" />
                 {{> core/drag_handle}}

@@ -1,4 +1,13 @@
 <?php
+/**
+ * Class attendance_sheet_settings
+ *
+ * The Face-to-Face plugin allows a facilitator to see students enrolled in a session
+ * and then print out the students' information for them to sign their names.
+ * This class sets up and renders the attendance sheet configuration.
+ *
+ * @package   mod_facetoface
+ */
 
 defined('MOODLE_INTERNAL') || die();
 
