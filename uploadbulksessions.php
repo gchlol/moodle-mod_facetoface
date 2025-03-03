@@ -80,7 +80,7 @@ if ($validate) {
 
         foreach ($errors as $error) {
             if (is_array($error) && count($error) >= 2) {
-                $line = $error[0]; // CSV line number
+                $line = $error[0];
                 $messages = array_slice($error, 1);
                 foreach ($messages as $message) {
                     $table->data[] = [$line, $message];

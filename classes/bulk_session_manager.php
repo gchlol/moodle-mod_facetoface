@@ -168,14 +168,16 @@ class bulk_session_manager {
             if (empty($record['Start date and time'])) {
                 $this->errors[] = [$index, get_string('error:missingstarttime', 'facetoface')];
             } else if (strtotime($record['Start date and time']) === false) {
-                $this->errors[] = [$index, get_string('error:invalidstarttime', 'facetoface') . ": {$record['Start date and time']}"];
+                $this->errors[] = [$index, get_string('error:invalidstarttime', 'facetoface')
+                . ": {$record['Start date and time']}"];
             }
 
             // Required: Finish Date and Time.
             if (empty($record['finish date and time'])) {
                 $this->errors[] = [$index, get_string('error:missingfinishtime', 'facetoface')];
             } else if (strtotime($record['finish date and time']) === false) {
-                $this->errors[] = [$index, get_string('error:invalidfinishtime', 'facetoface') . ": {$record['finish date and time']}"];
+                $this->errors[] = [$index, get_string('error:invalidfinishtime', 'facetoface')
+                . ": {$record['finish date and time']}"];
             }
 
             // Ensure Start time is before Finish time.
