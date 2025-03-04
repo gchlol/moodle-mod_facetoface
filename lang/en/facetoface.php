@@ -237,6 +237,7 @@ $string['facetoface:uploadbookingsfiledesc'] = "
 Fields expected:
 - Username (required)
 - Session number (required)
+- Status (optional - valid options are 'booked', 'cancelled')
 - Discount code (optional)
 - Notification type (optional - valid options are 'email', 'ical', or 'both')
 ";
