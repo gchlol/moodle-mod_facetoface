@@ -10,6 +10,8 @@
 require_once('../../config.php');
 require_sesskey(); // CSRF protection.
 
+global $USER;
+
 // (Optional) Check user permissions here if needed.
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['config_data'])) {
@@ -22,7 +24,7 @@ if ($configdata === null) {
 }
 
 $datafolder = $CFG->dataroot . '/mod_facetoface';
-$jsonfile = $datafolder . '/attendance_sheet_config.json';
+$jsonfile = $datafolder . '/attendance_sheet_config_' . $USER->id . '.json';
 
 // Ensure the data folder exists.
 if (!is_dir($datafolder)) {

@@ -17,7 +17,7 @@ class attendance_sheet_settings {
     protected $defaultjsonfile;
 
     public function __construct() {
-        global $CFG;
+        global $CFG, $USER;
 
         // Define the folder and file path for storing the default attendance sheet settings.
         // The folder is created under $CFG->dataroot to ensure it persists and is not publicly accessible.
@@ -25,7 +25,7 @@ class attendance_sheet_settings {
         if (!is_dir($datafolder)) {
             mkdir($datafolder, 0700, true); // create folder with restricted permissions.
         }
-        $this->defaultjsonfile = $datafolder . '/attendance_sheet_config.json';
+        $this->defaultjsonfile = $datafolder . '/attendance_sheet_config_' . $USER->id . '.json';
 
         // Define the default attendance items array.
         $defaultData = [];
