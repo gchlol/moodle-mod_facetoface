@@ -44,11 +44,11 @@ if ($hassiteconfig) {
      ));
 
      $settings = new admin_settingpage(
-        'modfacetoface_settings',           // Unique name to avoid collisions.
-        get_string('facetoface:settings', 'facetoface') // e.g. "General settings"
+        'modfacetoface_settings',
+        get_string('facetoface:settings', 'facetoface')
      );
 
-     $ADMIN->add('modfacetoface_settings', $settings);
+     $ADMIN->add('modfacetoface', $settings);
 
      // Face-to-Face config items.
      $settings->add(new admin_setting_configtext(
@@ -217,5 +217,5 @@ if ($hassiteconfig) {
         new moodle_url('/mod/facetoface/sitebulkupload.php'),
         'moodle/site:config'
      );
-     $ADMIN->add('modfacetoface_settings', $bulkupload);
+     $ADMIN->add('modfacetoface', $bulkupload);
 }
