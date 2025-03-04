@@ -34,18 +34,22 @@
     }
 }}
 
-<tr data-attendance-sheet-config-item data-value="{{id}}"
-    {{#labels}}
-    data-{{@index}}="{{value}}"
-    {{/labels}}>
+<tr data-attendance-sheet-config-item data-value="{{id}}" {{#editable}}data-changeable="{{type}}"{{/editable}}>
     <td>
-        {{#labels}}
-            {{#first}}
-                <input name="item_ids[]" type="hidden" value="{{../id}}" />
-                {{> core/drag_handle}}
-                {{value}}
-            {{/first}}
-        {{/labels}}
+        {{#editable}}
+            <input name="item_ids[]" type="hidden" value="{{id}}" />
+            {{> core/drag_handle}}
+            <input type="text" name="column_names[]" value="{{labels.0.value}}" />
+        {{/editable}}
+        {{^editable}}
+            {{#labels}}
+                {{#first}}
+                    <input name="item_ids[]" type="hidden" value="{{../id}}" />
+                    {{> core/drag_handle}}
+                    {{value}}
+                {{/first}}
+            {{/labels}}
+        {{/editable}}
     </td>
     <td>
         {{^editable}}

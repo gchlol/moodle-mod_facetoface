@@ -55,6 +55,8 @@ class attendance_sheet_settings {
                 if ($column === 'Header Only' || $column === 'Header and Row') {
                     $item['editable'] = true;
                     $item['defaultvalue'] = isset($item['labels'][1]['value']) ? $item['labels'][1]['value'] : '';
+                    // Preserve the original type to know which default value to save.
+                    $item['type'] = $column;
                 } else {
                     $item['editable'] = false;
                 }
@@ -197,6 +199,10 @@ class attendance_sheet_settings {
                         var tr = document.createElement("tr");
                         tr.setAttribute("data-attendance-sheet-config-item", "");
                         tr.setAttribute("data-value", rowId);
+                        // For changeable rows, store the original type.
+                        if (selectedValue === "Header Only" || selectedValue === "Header and Row") {
+                            tr.setAttribute("data-changeable", selectedValue);
+                        }
 
                         var td1 = document.createElement("td");
                         // If the selected value is "Header Only" or "Header and Row", create an input field for column name.
@@ -268,7 +274,9 @@ class attendance_sheet_settings {
                                     { value: columnName, first: true }
                                 ]
                             };
-                            if (columnName === "Header Only" || columnName === "Header and Row") {
+                            // Use the stored type (data-changeable) to decide if the default value should be saved.
+                            var changeableType = row.getAttribute("data-changeable");
+                            if (changeableType === "Header and Row") {
                                 item.labels.push({ value: defaultValue });
                             } else {
                                 item.labels.push({ value: "" });
