@@ -50,7 +50,7 @@ $contextsystem = context_system::instance();
 
 require_capability('moodle/site:config', $contextsystem);
 
-$returnurl = "$CFG->wwwroot/admin/settings.php?section=modsettingfacetoface";
+$returnurl = "$CFG->wwwroot/admin/settings.php?section=mod_facetoface_settings";
 
 // Header.
 

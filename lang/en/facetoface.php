@@ -868,3 +868,4 @@ $string['attendancecolumn:6'] = 'Paypoint';
 
 // Site wide bulk upload.
 $string['f2fbulksessions'] = 'Face-to-Face Bulk Upload sessions';
+$string['facetoface:settings'] = 'Face-to-Face settings';
