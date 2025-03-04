@@ -40,4 +40,3 @@ chmod($jsonfile, 0600);
 
 // Redirect back to the settings page with a success message.
 redirect(new moodle_url('/mod/facetoface/settings.php'), 'Configuration saved successfully.');
-//redirect(new moodle_url('/mod/facetoface/a.php'), 'Configuration saved successfully.');

@@ -199,16 +199,31 @@ class attendance_sheet_settings {
                         tr.setAttribute("data-value", rowId);
 
                         var td1 = document.createElement("td");
-                        td1.innerHTML =
-                            \'<input name="item_ids[]" type="hidden" value="\' + rowId + \'" />\' +
-                            dragHandleHtml +
-                            selectedValue;
+                        // If the selected value is "Header Only" or "Header and Row", create an input field for column name.
+                        if (selectedValue === "Header Only" || selectedValue === "Header and Row") {
+                            td1.innerHTML =
+                                \'<input name="item_ids[]" type="hidden" value="\' + rowId + \'" />\' +
+                                dragHandleHtml +
+                                \'<input type="text" name="column_names[]" placeholder="Enter column name" />\';
+                        } else {
+                            td1.innerHTML =
+                                \'<input name="item_ids[]" type="hidden" value="\' + rowId + \'" />\' +
+                                dragHandleHtml +
+                                selectedValue;
+                        }
+
                         var td2 = document.createElement("td");
-                        if (["Name","Payroll","Email","Signature"].indexOf(selectedValue) !== -1) {
+                        // For "Header Only", no default value input; for "Header and Row", include a default value input.
+                        if (selectedValue === "Header Only") {
+                            td2.innerHTML = "";
+                        } else if (selectedValue === "Header and Row") {
+                            td2.innerHTML = \'<input type="text" name="header_values[]" />\';
+                        } else if (["Name","Payroll","Email","Signature"].indexOf(selectedValue) !== -1) {
                             td2.innerHTML = "";
                         } else {
                             td2.innerHTML = \'<input type="text" name="header_values[]" />\';
                         }
+
                         var td3 = document.createElement("td");
                         td3.classList.add("action-column");
                         td3.innerHTML =
@@ -232,7 +247,14 @@ class attendance_sheet_settings {
                         tbody.querySelectorAll("[data-attendance-sheet-config-item]").forEach(function(row) {
                             var id = row.getAttribute("data-value");
                             var cells = row.querySelectorAll("td");
-                            var columnName = cells[0].textContent.trim();
+                            var columnName = "";
+                            // Check if there is an input for the column name (for editable rows).
+                            var inputCol = cells[0].querySelector("input[name=\'column_names[]\']");
+                            if (inputCol) {
+                                columnName = inputCol.value.trim();
+                            } else {
+                                columnName = cells[0].textContent.trim();
+                            }
                             var defaultValue = "";
                             var input = cells[1].querySelector("input");
                             if (input) {
