@@ -63,7 +63,7 @@ class attendance_sheet_settings {
                     $column = $attendance_columns_enums_to_names[$column];
                     $item['labels'][0]['value'] = $column;
                 }
-                if ($column === 'Header Only' || $column === 'Header and Row') {
+                if ($column === 'Header Only' || $column === 'Header and Rows') {
                     $item['editable'] = true;
                     $item['defaultvalue'] = isset($item['labels'][1]['value']) ? $item['labels'][1]['value'] : '';
                     // Preserve the original type to know which default value to save.
@@ -211,13 +211,13 @@ class attendance_sheet_settings {
                         tr.setAttribute("data-attendance-sheet-config-item", "");
                         tr.setAttribute("data-value", rowId);
                         // For changeable rows, store the original type.
-                        if (selectedValue === "Header Only" || selectedValue === "Header and Row") {
+                        if (selectedValue === "Header Only" || selectedValue === "Header and Rows") {
                             tr.setAttribute("data-changeable", selectedValue);
                         }
 
                         var td1 = document.createElement("td");
                         // If the selected value is "Header Only" or "Header and Row", create an input field for column name.
-                        if (selectedValue === "Header Only" || selectedValue === "Header and Row") {
+                        if (selectedValue === "Header Only" || selectedValue === "Header and Rows") {
                             td1.innerHTML =
                                 \'<input name="item_ids[]" type="hidden" value="\' + rowId + \'" />\' +
                                 dragHandleHtml +
@@ -230,11 +230,11 @@ class attendance_sheet_settings {
                         }
 
                         var td2 = document.createElement("td");
-                        // For "Header Only", no default value input; for "Header and Row", include a default value input.
+                        // For "Header Only", no default value input; for "Header and Rows", include a default value input.
                         if (selectedValue === "Header Only") {
                             td2.innerHTML = "";
-                        } else if (selectedValue === "Header and Row") {
-                            td2.innerHTML = \'<input type="text" name="header_values[]" />\';
+                        } else if (selectedValue === "Header and Rows") {
+                            td2.innerHTML = \'<input type="text" name="header_values[]" placeholder="Enter default value" />\';
                         } else if (["Name","Payroll","Email","Signature"].indexOf(selectedValue) !== -1) {
                             td2.innerHTML = "";
                         } else {
@@ -287,7 +287,7 @@ class attendance_sheet_settings {
                             };
                             // Use the stored type (data-changeable) to decide if the default value should be saved.
                             var changeableType = row.getAttribute("data-changeable");
-                            if (changeableType === "Header and Row") {
+                            if (changeableType === "Header and Rows") {
                                 item.labels.push({ value: defaultValue });
                             } else {
                                 item.labels.push({ value: "" });

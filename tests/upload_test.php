@@ -302,7 +302,7 @@ class upload_test extends \advanced_testcase {
      */
     private function check_row_validation_error_exists(array $errors, int $expectedrownumber, string $expectederrormsg): bool {
         foreach ($errors as $error) {
-            // Note: row number is based on a CSV file human readable format, where there is a header and row data.
+            // Note: row number is based on a CSV file human-readable format, where there is a header and rows data.
             [$rownumber, $errormsg] = $error;
             // Check if the error exists in the array.
             if ($rownumber == $expectedrownumber && $errormsg == $expectederrormsg) {

@@ -4,6 +4,7 @@ global $USER;
 
 use mod_facetoface\custom_capability_checker;
 use mod_facetoface\enum\attendance_column;
+use mod_facetoface\enum\enum_base;
 use mod_facetoface\session;
 use mod_facetoface\util\enum_util;
 use tool_organisation\persistent\assignment;
@@ -15,8 +16,13 @@ use tool_organisation\persistent\position;
 require(__DIR__ . '/../../config.php');
 require_once("$CFG->dirroot/mod/facetoface/lib.php");
 
+class attendance_column_json extends enum_base {
+    const COLUMN = 0;
+    const DEFAULT_VALUE = 1;
+}
+
 /**
- * Read included head columns from .json file
+ * Read included head columns from .json file.
  *
  * The .json file will have content similar to:
  * [
@@ -25,18 +31,6 @@ require_once("$CFG->dirroot/mod/facetoface/lib.php");
  *         "labels": [
  *             {
  *                 "value": 0,
- *                 "first": true
- *             },
- *             {
- *                 "value": ""
- *             }
- *         ]
- *     },
- *     {
- *         "id": "1741142238839",
- *         "labels": [
- *             {
- *                 "value": 1,
  *                 "first": true
  *             },
  *             {
@@ -70,10 +64,11 @@ require_once("$CFG->dirroot/mod/facetoface/lib.php");
  *     }
  * ]
  *
- * @param string $filePath Path to the .json file
- * @return array $configured_columns An array of values from labels[0]['value'] for all items.
+ * @param string $filePath Path to the .json file.
+ * @return array $configured_columns An array of values from labels[0]['value'] => labels[1]['value'] for all items.
+ *               e.g. [0=>"", "h"=>"", "a"=>"b"] in the example.
  */
-function read_columns_keys_from_json($filePath) {
+function read_columns_pairs_from_json($filePath) {
     // Check if the file exists.
     if (!file_exists($filePath)) {
         throw new Exception("JSON file not found: " . $filePath);
@@ -88,11 +83,12 @@ function read_columns_keys_from_json($filePath) {
         throw new Exception("Error decoding JSON: " . json_last_error_msg());
     }
 
-    // Loop through each item and extract the first label's "value".
+    // Loop through each item and extract the "Column" and "Default Value" pair.
     $configured_columns = [];
     foreach ($data as $item) {
-        if (isset($item['labels'][0]['value'])) {
-            $configured_columns[] = $item['labels'][0]['value'];
+        if (isset($item['labels'][attendance_column_json::COLUMN]['value'])) {
+            $configured_columns[$item['labels'][attendance_column_json::COLUMN]['value']] =
+                $item['labels'][attendance_column_json::DEFAULT_VALUE]['value'];
         }
     }
 
@@ -217,27 +213,27 @@ if ($trainer_roles) {
 // region Attendees Table
 
 // Headings
-// Apply reasonable defaults if not configured.
-$configured_columns = [
-    attendance_column::NAME,
-    attendance_column::USERNAME,
-    attendance_column::POSITION,
-];
-// Specifically check isset and not empty string to allow only name (0) to be configured.
-if (
-    isset($instance->attendancesheetcolumns) &&
-    $instance->attendancesheetcolumns !== ''
-) {
-    $configured_columns = explode(',', $instance->attendancesheetcolumns);
-}
+//// Apply reasonable defaults if not configured.
+//$configured_columns = [
+//    attendance_column::NAME,
+//    attendance_column::USERNAME,
+//    attendance_column::POSITION,
+//];
+//// Specifically check isset and not empty string to allow only name (0) to be configured.
+//if (
+//    isset($instance->attendancesheetcolumns) &&
+//    $instance->attendancesheetcolumns !== ''
+//) {
+//    $configured_columns = explode(',', $instance->attendancesheetcolumns);
+//}
 
 
 
 $datafolder = $CFG->dataroot . '/mod_facetoface';
-$configured_columns = read_columns_keys_from_json($datafolder . '/attendance_sheet_config_' . $USER->id . '.json');
+$configured_columns = read_columns_pairs_from_json($datafolder . '/attendance_sheet_config_' . $USER->id . '.json', attendance_column_json::COLUMN);
 $column_options = enum_util::menu_options(attendance_column::class);
 $data->headings = [];
-foreach ($configured_columns as $column_key) {
+foreach ($configured_columns as $column_key => $column_defaultvalue) {
     if (isset($column_options[$column_key])) {
         // Map enum value to the attendance_sheet table header name
         $label = $column_options[$column_key];
@@ -308,7 +304,14 @@ foreach ($attendees as $attendee) {
     $user = $DB->get_record('user', [ 'id' => $attendee->id ]);
 
     $column_data = [];
-    foreach ($configured_columns as $column_key) {
+    foreach ($configured_columns as $column_key => $column_defaultvalue) {
+        // header_only and header_and_rows type columns will use user-defined 'Default Values'
+        if (!isset($column_options[$column_key])) {
+            // Add user-defined 'Default Values'
+            $column_data[] = $column_defaultvalue;
+
+            continue;
+        }
         switch ($column_key) {
             case attendance_column::NAME:
                 $column_data[] = fullname($user);
