@@ -1,0 +1,55 @@
+/* attendance_sheet_config_styles.css */
+
+/* Block: attendance-sheet-config */
+.attendance-sheet-config__dropdown-add-item {
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    border: 1px solid #ccc;
+}
+
+.attendance-sheet-config__dropdown-add-item option {
+    background-color: #fff;
+}
+
+/* Button container styling */
+.attendance-sheet-config__button-container {
+    text-align: right;
+    margin-top: 2cm;
+    margin-right: 2cm;
+}
+
+/* Save and Cancel buttons */
+.attendance-sheet-config__button {
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
+}
+
+.attendance-sheet-config__button--save {
+    color: #FFFFFF;
+    background-color: #0051F9;
+    border-radius: 5px;
+}
+
+.attendance-sheet-config__button--cancel {
+    color: #0051F9;
+    background-color: #FFFFFF;
+    border: 1px solid #0051F9;
+    margin-left: 10px;
+    border-radius: 5px;
+}
+
+/* Row colours in Attendance Sheet Table */
+.attendance-sheet-config__table tbody tr:nth-child(odd) {
+    background-color: #F5F5F5;
+}
+
+.attendance-sheet-config__table tbody tr:nth-child(even) {
+    background-color: #F3F3F3;
+}
+
+.attendance-sheet-config__table tbody tr:hover {
+    background-color: #E7E6E6;
+}

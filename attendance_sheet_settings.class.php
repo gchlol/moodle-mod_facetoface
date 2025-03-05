@@ -21,7 +21,10 @@ class attendance_sheet_settings {
     protected $defaultjsonfile;
 
     public function __construct() {
-        global $CFG, $USER;
+        global $CFG, $USER, $PAGE;
+
+        // Include the new CSS file using Moodle's page API.
+        $PAGE->requires->css(new moodle_url('/mod/facetoface/style/attendance_sheet_config_styles.css'));
 
         // Define the folder and file path for storing the default attendance sheet settings.
         // The folder is created under $CFG->dataroot to ensure it persists and is not publicly accessible.
@@ -216,7 +219,7 @@ class attendance_sheet_settings {
                         }
 
                         var td1 = document.createElement("td");
-                        // If the selected value is "Header Only" or "Header and Row", create an input field for column name.
+                        // If the selected value is "Header Only" or "Header and Rows", create an input field for column name.
                         if (selectedValue === "Header Only" || selectedValue === "Header and Rows") {
                             td1.innerHTML =
                                 \'<input name="item_ids[]" type="hidden" value="\' + rowId + \'" />\' +
@@ -315,6 +318,17 @@ class attendance_sheet_settings {
                         xhr.send(params);
                     });
                 }
+
+                // === Cancel Button Handling ===
+                var cancelButton = document.getElementById("cancel-config");
+                if (cancelButton) {
+                    cancelButton.addEventListener("click", function(e) {
+                        e.preventDefault();
+                        if (confirm("Do you want to cancel the change? All unsaved items in the text field will be lost.")) {
+                            location.reload();
+                        }
+                    });
+                }
             });
         </script>';
 
@@ -330,3 +344,4 @@ class attendance_sheet_settings {
         $mform->addElement('html', $this->render());
     }
 }
+?>
