@@ -33,13 +33,13 @@ use mod_facetoface\site_bulk_manager;
 
 
 // Setup the admin page; must match the admin_externalpage ID from settings.php:
-admin_externalpage_setup('modfacetoface_sitebulkupload');
+// admin_externalpage_setup('modfacetoface_sitebulkupload');
 
 // Optional: ensure user has site config capability (though admin_externalpage_setup often does):
 require_capability('moodle/site:config', context_system::instance());
 
 // Prepare a return URL to go back to the new Face-to-Face settings page.
-$returnurl = new moodle_url('/admin/settings.php', ['section' => 'modfacetoface_settings']);
+$returnurl = new moodle_url('/admin/settings.php', ['section' => 'facetoface_configpage']);
 
 // Instantiate your site-level bulk-upload form:
 $mform = new \mod_facetoface\form\site_bulk_session_upload_form();

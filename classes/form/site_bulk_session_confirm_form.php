@@ -60,7 +60,7 @@ class site_bulk_session_confirm_form extends moodleform {
         $buttonarray[] = $mform->createElement(
             'submit',
             'confirmbtn',
-            get_string('facetoface:confirmandprocess', 'mod_facetoface') // Adjust string/key as needed
+            get_string('facetoface:confirmandprocess', 'mod_facetoface')
         );
         $buttonarray[] = $mform->createElement('cancel');
 

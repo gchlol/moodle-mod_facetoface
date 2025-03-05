@@ -869,3 +869,21 @@ $string['attendancecolumn:6'] = 'Paypoint';
 // Site wide bulk upload.
 $string['f2fbulksessions'] = 'Face-to-Face: Upload Sessions';
 $string['facetoface:settings'] = 'Face-to-Face settings';
+$string['sitebulkuploadheader'] = 'Upload Bulk Sessions';
+$string['examplecsv']            = 'Example CSV file';
+$string['upsf']     = 'Upload session file';
+$string['upandprev']  = 'Upload and preview';
+$string['sitebulkuploadfiledesc'] = "Session date/time known|Required: yes / no
+Start date|Required: Format: YYYY-MM-DD
+Start time|Required: Format: HH:MM
+Finish date|Required: Format: YYYY-MM-DD
+Finish time|Required: Format: HH:MM
+Allow cancelations|Required: yes / no
+Capacity|Required: Whole number
+Allow overbookings|Required: yes / no
+Duration|Required: Numeric value in minutes
+Normal Cost|Optional: Numeric value
+Discount Cost|Optional: Numeric value
+Details|Session description
+Custom field short name|Optional
+Custom field value|Optional";

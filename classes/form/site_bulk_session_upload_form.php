@@ -54,7 +54,7 @@ class site_bulk_session_upload_form extends \moodleform {
 
         // File manager for CSV upload.
         $maxbytes = get_max_upload_file_size($CFG->maxbytes, 0);
-        $mform->addElement('filemanager', 'csvfile', get_string('uploadsessionfile', 'mod_facetoface'), null, [
+        $mform->addElement('filemanager', 'csvfile', get_string('upsf', 'mod_facetoface'), null, [
             'subdirs' => 0,
             'maxfiles' => 1,
             'accepted_types' => ['.csv'],
@@ -91,6 +91,6 @@ class site_bulk_session_upload_form extends \moodleform {
         $mform->setDefault('caseinsensitive', true);
 
         // Add the submit button.
-        $this->add_action_buttons(false, get_string('uploadandpreviewbulk', 'mod_facetoface'));
+        $this->add_action_buttons(false, get_string('upandprev', 'mod_facetoface'));
     }
 }
