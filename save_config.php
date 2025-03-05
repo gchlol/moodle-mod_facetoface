@@ -41,7 +41,7 @@ foreach ($configdata as &$item) {
 }
 
 $datafolder = $CFG->dataroot . '/mod_facetoface';
-$jsonfile = $datafolder . '/attendance_sheet_config.json';
+$jsonfile = $datafolder . '/attendance_sheet_config_' . $USER->id . '.json';
 
 // Ensure the data folder exists.
 if (!is_dir($datafolder)) {
