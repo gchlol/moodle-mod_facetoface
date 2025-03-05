@@ -1,5 +1,4 @@
 <?php
-
 namespace mod_facetoface\enum;
 
 class attendance_column extends enum_base {
@@ -15,18 +14,9 @@ class attendance_column extends enum_base {
 
     /**
      * Map the column header names on attendance_sheet.php to the enum values.
-     * @var array<string, int>
+     * @var array<string, int>|null
      */
-    private static $attendancecolumnsmap = [
-        'Name'      => self::NAME,
-        'Payroll'   => self::USERNAME,
-        'Email'     => self::EMAIL,
-        'Org Unit'  => self::UNIT,
-        'Position'  => self::POSITION,
-        'Stream'    => self::STREAM,
-        'Paypoint'  => self::PAYPOINT,
-        'Signature' => self::SIGNATURE,
-    ];
+    private static $attendancecolumnsmap = null;
 
     /**
      * Inverse mapping for display purposes.
@@ -36,11 +26,35 @@ class attendance_column extends enum_base {
     private static $inverseattendancecolumnsmap = null;
 
     /**
+     * Constructor initializes the attendance columns map.
+     *
+     * @throws \coding_exception
+     */
+    public function __construct() {
+        if (is_null(self::$attendancecolumnsmap)) {
+            self::$attendancecolumnsmap = [
+                get_string('attendancecolumn:0', 'facetoface') => self::NAME,
+                get_string('attendancecolumn:1', 'facetoface') => self::USERNAME,
+                get_string('attendancecolumn:2', 'facetoface') => self::EMAIL,
+                get_string('attendancecolumn:3', 'facetoface') => self::UNIT,
+                get_string('attendancecolumn:4', 'facetoface') => self::POSITION,
+                get_string('attendancecolumn:5', 'facetoface') => self::STREAM,
+                get_string('attendancecolumn:6', 'facetoface') => self::PAYPOINT,
+                get_string('attendancecolumn:7', 'facetoface') => self::SIGNATURE,
+            ];
+        }
+    }
+
+    /**
      * Map the attendance_sheet table GUI header names to their corresponding enum values.
      *
      * @return array<string, int>
      */
     public static function map_attendance_columns_names_to_enums(): array {
+        if (is_null(self::$attendancecolumnsmap)) {
+            // Ensure the constructor runs to initialize the map.
+            new self();
+        }
         return self::$attendancecolumnsmap;
     }
 
@@ -50,7 +64,11 @@ class attendance_column extends enum_base {
      * @return array<int, string>
      */
     public static function map_attendance_columns_enums_to_names(): array {
-        if (self::$inverseattendancecolumnsmap === null) {
+        if (is_null(self::$attendancecolumnsmap)) {
+            // Ensure the constructor runs to initialize the map.
+            new self();
+        }
+        if (is_null(self::$inverseattendancecolumnsmap)) {
             self::$inverseattendancecolumnsmap = array_flip(self::$attendancecolumnsmap);
         }
         return self::$inverseattendancecolumnsmap;
