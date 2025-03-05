@@ -22,12 +22,15 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(__DIR__ . '/../../../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
+require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 
-// If you use a new form for site-level CSV upload, require_once that form:
-// require_once($CFG->dirroot.'/mod/facetoface/form/site_bulk_session_upload_form.php');
-// require_once($CFG->dirroot.'/mod/facetoface/form/site_bulk_session_confirm_form.php');
+use core\output\notification;
+use mod_facetoface\form\site_bulk_session_upload_form;
+use mod_facetoface\form\site_bulk_session_confirm_form;
+use mod_facetoface\site_bulk_manager;
+
 
 // Setup the admin page; must match the admin_externalpage ID from settings.php:
 admin_externalpage_setup('modfacetoface_sitebulkupload');
