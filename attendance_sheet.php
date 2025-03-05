@@ -1,5 +1,7 @@
 <?php
 
+global $USER;
+
 use mod_facetoface\custom_capability_checker;
 use mod_facetoface\enum\attendance_column;
 use mod_facetoface\session;
@@ -12,6 +14,90 @@ use tool_organisation\persistent\position;
 
 require(__DIR__ . '/../../config.php');
 require_once("$CFG->dirroot/mod/facetoface/lib.php");
+
+/**
+ * Read included head columns from .json file
+ *
+ * The .json file will have content similar to:
+ * [
+ *     {
+ *         "id": "1741142236659",
+ *         "labels": [
+ *             {
+ *                 "value": 0,
+ *                 "first": true
+ *             },
+ *             {
+ *                 "value": ""
+ *             }
+ *         ]
+ *     },
+ *     {
+ *         "id": "1741142238839",
+ *         "labels": [
+ *             {
+ *                 "value": 1,
+ *                 "first": true
+ *             },
+ *             {
+ *                 "value": ""
+ *             }
+ *         ]
+ *     },
+ *     {
+ *         "id": "1741142241147",
+ *         "labels": [
+ *             {
+ *                 "value": "h",
+ *                 "first": true
+ *             },
+ *             {
+ *                 "value": ""
+ *             }
+ *         ]
+ *     },
+ *     {
+ *         "id": "1741142265872",
+ *         "labels": [
+ *             {
+ *                 "value": "a",
+ *                 "first": true
+ *             },
+ *             {
+ *                 "value": "b"
+ *             }
+ *         ]
+ *     }
+ * ]
+ *
+ * @param string $filePath Path to the .json file
+ * @return array $configured_columns An array of values from labels[0]['value'] for all items.
+ */
+function read_columns_keys_from_json($filePath) {
+    // Check if the file exists.
+    if (!file_exists($filePath)) {
+        throw new Exception("JSON file not found: " . $filePath);
+    }
+
+    // Read the file contents.
+    $jsonContent = file_get_contents($filePath);
+
+    // Decode the JSON into an associative array.
+    $data = json_decode($jsonContent, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        throw new Exception("Error decoding JSON: " . json_last_error_msg());
+    }
+
+    // Loop through each item and extract the first label's "value".
+    $configured_columns = [];
+    foreach ($data as $item) {
+        if (isset($item['labels'][0]['value'])) {
+            $configured_columns[] = $item['labels'][0]['value'];
+        }
+    }
+
+    return $configured_columns;
+}
 
 $session_id = required_param('session', PARAM_INT);
 
@@ -145,6 +231,10 @@ if (
     $configured_columns = explode(',', $instance->attendancesheetcolumns);
 }
 
+
+
+$datafolder = $CFG->dataroot . '/mod_facetoface';
+$configured_columns = read_columns_keys_from_json($datafolder . '/attendance_sheet_config_' . $USER->id . '.json');
 $column_options = enum_util::menu_options(attendance_column::class);
 $data->headings = [];
 foreach ($configured_columns as $column_key) {
