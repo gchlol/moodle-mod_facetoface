@@ -9,7 +9,11 @@
  * @package   mod_facetoface
  */
 
+use mod_facetoface\enum\attendance_sheet_column;
+
 defined('MOODLE_INTERNAL') || die();
+
+// Include the enum definitions.
 
 class attendance_sheet_settings {
     protected $attendanceitems;
@@ -47,11 +51,18 @@ class attendance_sheet_settings {
             $this->attendanceitems = $defaultData;
         }
 
-        // Add editable flag for changeable columns in attendance items.
-        // Only rows with a column name of "Header Only" or "Header and Row" are changeable.
+        // Map the attendance_sheet table GUI header names to their corresponding enum values.
+        $attendance_columns_enums_to_names = attendance_sheet_column::map_attendance_columns_enums_to_names();
+
+        // Process each attendance item.
         foreach ($this->attendanceitems as &$item) {
             if (isset($item['labels'][0]['value'])) {
                 $column = $item['labels'][0]['value'];
+                // If the saved column is numeric (i.e. an enum value), convert it back to its display string.
+                if (is_numeric($column) && isset($attendance_columns_enums_to_names[$column])) {
+                    $column = $attendance_columns_enums_to_names[$column];
+                    $item['labels'][0]['value'] = $column;
+                }
                 if ($column === 'Header Only' || $column === 'Header and Row') {
                     $item['editable'] = true;
                     $item['defaultvalue'] = isset($item['labels'][1]['value']) ? $item['labels'][1]['value'] : '';
