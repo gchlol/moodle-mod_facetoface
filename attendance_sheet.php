@@ -239,11 +239,16 @@ $column_options = enum_util::menu_options(attendance_column::class);
 $data->headings = [];
 foreach ($configured_columns as $column_key) {
     if (isset($column_options[$column_key])) {
-        $data->headings[] = (object)[
-            'key' => $column_key,
-            'label' => $column_options[$column_key],
-        ];
+        // Map enum value to the attendance_sheet table header name
+        $label = $column_options[$column_key];
+    } else {
+        // Display a string as the attendance_sheet table header name directly
+        $label = $column_key;
     }
+    $data->headings[] = (object)[
+        'key' => $column_key,
+        'label' => $label,
+    ];
 }
 
 // Attendees
