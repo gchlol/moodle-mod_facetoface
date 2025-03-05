@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version metadata for the repository_pluginname plugin.
+ * Version metadata for the mod_facetoface plugin.
  *
  * @package   mod_facetoface
  * @copyright 2025, Jonas Sajonas
