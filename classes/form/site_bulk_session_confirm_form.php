@@ -37,7 +37,7 @@ class site_bulk_session_confirm_form extends moodleform {
         $mform = $this->_form;
 
         // Get any custom data passed from the calling script.
-        $f = $this->_customdata['f'] ?? 0;
+        // $f = $this->_customdata['f'] ?? 0;
         $fileid = $this->_customdata['fileid'] ?? 0;
 
         // Example checkbox (suppress email).
@@ -45,8 +45,8 @@ class site_bulk_session_confirm_form extends moodleform {
         $mform->setType('suppressemail', PARAM_BOOL);
 
         // Hidden fields for passing data forward.
-        $mform->addElement('hidden', 'f', $f);
-        $mform->setType('f', PARAM_INT);
+        // $mform->addElement('hidden', 'f', $f);
+        // $mform->setType('f', PARAM_INT);
 
         $mform->addElement('hidden', 'fileid', $fileid);
         $mform->setType('fileid', PARAM_INT);

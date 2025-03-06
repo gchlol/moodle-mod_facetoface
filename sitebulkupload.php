@@ -81,7 +81,7 @@ if ($validate) {
     $confirmform = new site_bulk_session_confirm_form(null, [
         'fileid' => $fileid,
         'caseinsensitive' => $caseinsensitive,
-        'process' => 1  // Tells the next form submission to do process=1
+        'process' => 1
     ]);
 
     // Use site_bulk_manager for site-level CSV handling.
