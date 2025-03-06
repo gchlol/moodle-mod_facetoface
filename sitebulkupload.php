@@ -31,15 +31,14 @@ use mod_facetoface\form\site_bulk_session_upload_form;
 use mod_facetoface\form\site_bulk_session_confirm_form;
 use mod_facetoface\site_bulk_manager;
 
-
 // Setup the admin page; must match the admin_externalpage ID from settings.php:
-// admin_externalpage_setup('modfacetoface_sitebulkupload');
+admin_externalpage_setup('modfacetoface_sitebulkupload');
 
 // Optional: ensure user has site config capability (though admin_externalpage_setup often does):
 require_capability('moodle/site:config', context_system::instance());
 
 // Prepare a return URL to go back to the new Face-to-Face settings page.
-$returnurl = new moodle_url('/admin/settings.php', ['section' => 'facetoface_configpage']);
+$returnurl = new moodle_url('/admin/settings.php', ['section' => 'modfacetofacesettings']);
 
 // Instantiate your site-level bulk-upload form:
 $mform = new \mod_facetoface\form\site_bulk_session_upload_form();
@@ -54,7 +53,9 @@ if ($data = $mform->get_data()) {
     // Handle the file manager / parse CSV / do “bulk session” logic at the site level...
     // Then redirect with success or error message.
 
-    redirect($returnurl, get_string('f2fbulksessionsdone', 'mod_facetoface'));
+    redirect(new moodle_url('/mod/facetoface/sitebulkupload.php'),
+    get_string('f2fbulksessionsdone', 'mod_facetoface'));
+
 }
 
 // Otherwise display the page:

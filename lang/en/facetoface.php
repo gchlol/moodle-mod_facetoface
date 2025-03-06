@@ -873,6 +873,8 @@ $string['sitebulkuploadheader'] = 'Upload Bulk Sessions';
 $string['examplecsv']            = 'Example CSV file';
 $string['upsf']     = 'Upload session file';
 $string['upandprev']  = 'Upload and preview';
+$string['f2fbulksessionsdone'] = 'Bulk upload of Face-to-Face sessions completed successfully.';
+
 $string['sitebulkuploadfiledesc'] = "Session date/time known|Required: yes / no
 Start date|Required: Format: YYYY-MM-DD
 Start time|Required: Format: HH:MM

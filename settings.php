@@ -37,19 +37,19 @@ require_once($CFG->dirroot . '/user/profile/lib.php');
 
 if ($hassiteconfig) {
 
- 
     // Create a custom Face-to-Face category under "Activity modules".
     $ADMIN->add('modsettings', new admin_category(
      'modfacetoface',
      get_string('pluginname', 'mod_facetoface')
        ));
 
+    // creats the settings page.. note this can be placed under admin tree as this is created under modfacetoface
     $settings = new admin_settingpage(
-     'modfacetoface_settings',
+     'modfacetofacesettings',
      get_string('facetoface:settings', 'facetoface')
     );
 
-   //  $ADMIN->add('modfacetoface', $settings);
+    // $ADMIN->add('modfacetoface', $settings); //
 
     // Face-to-Face config items.
     $settings->add(new admin_setting_configtext(
@@ -218,5 +218,5 @@ if ($hassiteconfig) {
     new moodle_url('/mod/facetoface/sitebulkupload.php'),
     'moodle/site:config'
     );
-   //  $ADMIN->add('modfacetoface', $bulkupload);
+    $ADMIN->add('modfacetoface', $bulkupload);
 }
