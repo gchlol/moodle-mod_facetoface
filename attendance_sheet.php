@@ -139,12 +139,13 @@ if ($trainer_roles) {
 // endregion
 
 // region Attendees Table
-
+global $attendanceconfigjson;
 // Headings
-//$attendanceconfigconstantsobj = new attendance_config_constants($CFG, $USER->id);
-//$jsonfile = $attendanceconfigconstantsobj->get_json_file();
-//$configured_columns = return_updated_configured_columns_and_defaults($jsonfile, $instance);
-$configured_columnsanddefaults = read_columns_pairs_from_json($CFG->dataroot . '/mod_facetoface/attendance_sheet_config_' . $USER->id . '.json');
+$configured_columnsanddefaults = return_updated_configured_columns_and_defaults(
+    $attendanceconfigjson,
+    $instance
+);
+//$configured_columnsanddefaults = read_columns_pairs_from_json($CFG->dataroot . '/mod_facetoface/attendance_sheet_config_' . $USER->id . '.json');
 $configured_columns = array_keys($configured_columnsanddefaults);
 $column_options = enum_util::menu_options(attendance_column::class);
 $data->headings = [];

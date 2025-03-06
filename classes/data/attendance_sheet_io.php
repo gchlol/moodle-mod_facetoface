@@ -45,27 +45,7 @@ use mod_facetoface\enum\enum_base;
 defined('MOODLE_INTERNAL') || die();
 
 
-class attendance_config_constants {
-    // Private property to hold the JSON file path
-    private $jsonfile;
-
-    /**
-     * Constructor accepts necessary objects (like $CFG and $USER)
-     * and constructs the JSON file path.
-     */
-    public function __construct($CFG, $USER) {
-        $this->jsonfile = $CFG->dataroot . '/mod_facetoface/attendance_sheet_config_' . $USER->id . '.json';
-    }
-
-    /**
-     * Public getter method to access the JSON file path.
-     *
-     * @return string The full path to the JSON file.
-     */
-    public function get_json_file() {
-        return $this->jsonfile;
-    }
-}
+$attendanceconfigjson = $CFG->dataroot . '/mod_facetoface/attendance_sheet_config_' . $USER->id . '.json';
 
 class attendance_column_json extends enum_base {
     const COLUMN = 0;
