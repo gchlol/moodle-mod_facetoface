@@ -1,19 +1,15 @@
 <?php
 /**
- * Class attendance_sheet_settings
+ * Sets up and renders the attendance sheet configuration.
  *
- * The Face-to-Face plugin allows a facilitator to see students enrolled in a session
- * and then print out the students' information for them to sign their names.
- * This class sets up and renders the attendance sheet configuration.
- *
- * @package   mod_facetoface
+ * @package    mod_facetoface
+ * @copyright  2025 Gold Coast Health
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 use mod_facetoface\enum\attendance_column;
 
 defined('MOODLE_INTERNAL') || die();
-
-// Include the enum definitions.
 
 class attendance_sheet_settings {
     protected $attendanceitems;
@@ -23,18 +19,15 @@ class attendance_sheet_settings {
     public function __construct() {
         global $CFG, $USER, $PAGE;
 
-        // Include the new CSS file using Moodle's page API.
         $PAGE->requires->css(new moodle_url('/mod/facetoface/style/attendance_sheet_config_styles.css'));
 
         // Define the folder and file path for storing the default attendance sheet settings.
-        // The folder is created under $CFG->dataroot to ensure it persists and is not publicly accessible.
         $datafolder = $CFG->dataroot . '/mod_facetoface';
         if (!is_dir($datafolder)) {
             mkdir($datafolder, 0700, true); // create folder with restricted permissions.
         }
         $this->defaultjsonfile = $datafolder . '/attendance_sheet_config_' . $USER->id . '.json';
 
-        // Define the default attendance items array.
         $defaultData = [];
 
         // If the JSON file does not exist, create it with the default data.
