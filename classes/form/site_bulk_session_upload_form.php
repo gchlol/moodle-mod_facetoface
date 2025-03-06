@@ -39,9 +39,11 @@ class site_bulk_session_upload_form extends \moodleform {
 
         $mform = $this->_form;
 
+        $validateflag = $this->_customdata['validate'] ?? 0;
+
         // (Optional) Add a hidden param if you need it.
-        $mform->addElement('hidden', 'somehiddenparam', 0);
-        $mform->setType('somehiddenparam', PARAM_INT);
+        $mform->addElement('hidden', 'validate', $validateflag);
+        $mform->setType('validate', PARAM_INT);
 
         // Header for the form.
         $mform->addElement('header', 'sitebulkuploadheader', get_string('sitebulkuploadheader', 'mod_facetoface'));

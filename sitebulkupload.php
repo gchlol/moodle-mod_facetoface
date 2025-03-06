@@ -37,32 +37,146 @@ admin_externalpage_setup('modfacetoface_sitebulkupload');
 // Optional: ensure user has site config capability (though admin_externalpage_setup often does):
 require_capability('moodle/site:config', context_system::instance());
 
-// Prepare a return URL to go back to the new Face-to-Face settings page.
-$returnurl = new moodle_url('/admin/settings.php', ['section' => 'modfacetofacesettings']);
 
-// Instantiate your site-level bulk-upload form:
-$mform = new \mod_facetoface\form\site_bulk_session_upload_form();
+$validate = optional_param('validate', 0, PARAM_INT);
+$process  = optional_param('process', 0, PARAM_INT);
+$fileid   = optional_param('fileid', 0, PARAM_INT);
+$caseinsensitive = optional_param('caseinsensitive', false, PARAM_BOOL);
 
-// If form is cancelled:
-if ($mform->is_cancelled()) {
-    redirect($returnurl);
-}
 
-// If form is submitted:
-if ($data = $mform->get_data()) {
-    // Handle the file manager / parse CSV / do “bulk session” logic at the site level...
-    // Then redirect with success or error message.
-
-    redirect(new moodle_url('/mod/facetoface/sitebulkupload.php'),
-    get_string('f2fbulksessionsdone', 'mod_facetoface'));
-
-}
-
-// Otherwise display the page:
 $PAGE->set_url('/mod/facetoface/sitebulkupload.php');
 $PAGE->set_title(get_string('f2fbulksessions', 'mod_facetoface'));
 $PAGE->set_heading(get_string('pluginname', 'mod_facetoface'));
 
-echo $OUTPUT->header();
-$mform->display();
-echo $OUTPUT->footer();
+if (!$validate && !$process) {
+    $mform = new site_bulk_session_upload_form(null, [
+        // Provide a hidden param so the form submission sets validate=1
+        'validate' => 1
+    ]);
+
+    echo $OUTPUT->header();
+    $mform->display();
+    echo $OUTPUT->footer();
+    exit;
+}
+
+// 5) Step 2: Validate & preview if user requested validation.
+if ($validate) {
+    // Reload the upload form to get the fileid.
+    $mform = new site_bulk_session_upload_form();
+    $data  = $mform->get_data();
+
+    // If form wasn’t submitted properly, just redirect to the initial page.
+    if (!$data) {
+        redirect(new moodle_url('/mod/facetoface/sitebulkupload.php'));
+    }
+
+    $fileid = $data->csvfile ?: 0;
+
+    // Create confirm form (the next step).
+    $confirmform = new site_bulk_session_confirm_form(null, [
+        'fileid' => $fileid,
+        'caseinsensitive' => $caseinsensitive,
+        'process' => 1  // Tells the next form submission to do process=1
+    ]);
+
+    // Use site_bulk_manager for site-level CSV handling.
+    $manager = new site_bulk_manager();
+    $manager->load_from_file($fileid);
+    $manager->set_case_insensitive($caseinsensitive);
+
+    // Validate CSV data.
+    $errors = $manager->validate();
+    if (!empty($errors)) {
+        echo $OUTPUT->header();
+        echo $OUTPUT->notification(
+            get_string('error:bulkuploadfileerrorsfound', 'mod_facetoface', count($errors)),
+            notification::NOTIFY_ERROR
+        );
+
+        // Display errors in a table.
+        $table = new html_table();
+        $table->attributes['class'] = 'f2fbookingsuploadlist generaltable mb-2';
+        $table->head = [
+            get_string('uucsvline', 'tool_uploaduser'),
+            get_string('status', 'facetoface')
+        ];
+
+        foreach ($errors as $error) {
+            // If $error is ["line #", "message", "message2"...]
+            if (is_array($error) && count($error) >= 2) {
+                $line     = $error[0];
+                $messages = array_slice($error, 1);
+                foreach ($messages as $msg) {
+                    $table->data[] = [$line, $msg];
+                }
+            } else {
+                $table->data[] = ['-', is_string($error) ? $error : json_encode($error)];
+            }
+        }
+
+        echo html_writer::table($table);
+        echo $OUTPUT->footer();
+        exit;
+    }
+
+    // If no errors, show a preview table plus the "confirm" form.
+    $records = $manager->get_records();
+
+    echo $OUTPUT->header();
+    echo $OUTPUT->heading(get_string('facetoface:confirmbulkpreview', 'mod_facetoface'), 3);
+
+    if (!empty($records)) {
+        $table = new html_table();
+        $table->attributes['class'] = 'f2fconfirmuploadlist generaltable mb-2';
+        $table->head = $manager->get_headers();
+
+        foreach ($records as $record) {
+            $table->data[] = array_values($record);
+        }
+        echo html_writer::table($table);
+    } else {
+        echo $OUTPUT->notification(
+            get_string('facetoface:norecordsfound', 'mod_facetoface'),
+            notification::NOTIFY_INFO
+        );
+    }
+
+    $confirmform->display();
+    echo $OUTPUT->footer();
+    exit;
+}
+
+// 6) Step 3: Process the CSV if user confirmed.
+if ($process && $fileid) {
+    $manager = new site_bulk_manager();
+    $manager->load_from_file($fileid);
+    $manager->set_case_insensitive($caseinsensitive);
+
+    // If your confirm form has a "suppressemail" checkbox, handle that:
+    $confirmform = new site_bulk_session_confirm_form();
+    $confirmdata = $confirmform->get_data();
+    if (!empty($confirmdata->suppressemail)) {
+        $manager->suppress_email();
+    }
+
+    // Validate again, just to be safe.
+    $errors = $manager->validate();
+    if (empty($errors)) {
+        $manager->process();
+        redirect(
+            new moodle_url('/mod/facetoface/sitebulkupload.php'),
+            get_string('f2fbulksessionsdone', 'mod_facetoface'),
+            null,
+            notification::NOTIFY_SUCCESS
+        );
+    } else {
+        $errmsg = get_string('error:bulkuploadfileerrorsfound', 'mod_facetoface', count($errors));
+        redirect(
+            new moodle_url('/mod/facetoface/sitebulkupload.php'),
+            $errmsg,
+            null,
+            notification::NOTIFY_ERROR
+        );
+    }
+}

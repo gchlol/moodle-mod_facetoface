@@ -15,8 +15,6 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version metadata for the mod_facetoface plugin.
- *
  * @package   mod_facetoface
  * @copyright 2025, Jonas Sajonas
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -30,6 +28,7 @@ use moodle_exception;
 use Generator;
 use DateTime;
 
+
 /**
  * Bulk sessions manager.
  *
@@ -37,7 +36,7 @@ use DateTime;
  * @copyright GCHLOL, 2025
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class bulk_session_manager {
+class site_bulk_manager {
     /** @var int Facetoface instance ID */
     private $facetofaceid;
 
@@ -62,8 +61,7 @@ class bulk_session_manager {
      *
      * @param int $facetofaceid
      */
-    public function __construct(int $facetofaceid) {
-        $this->facetofaceid = $facetofaceid;
+    public function __construct() {
     }
 
     /**
