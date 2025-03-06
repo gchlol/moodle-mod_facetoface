@@ -880,7 +880,10 @@ $string['error:f2f_not_found'] = 'Could not find Face-to-Face in the specified c
 $string['error:bookingsuploadfileheaderfieldmismatch'] = 'The uploaded CSV does not match the expected columns.';
 $string['error:missingcourseshortname'] = 'No course shortname provided.';
 $string['error:missingf2fname'] = 'No Face-to-Face activity name provided.';
-$string['sitebulkuploadfiledesc'] = "Session date/time known|Required: yes / no
+$string['sitebulkuploadfiledesc'] = "
+Course shortname|Required: exact shortname of the course (e.g. COURSE08)
+Face-to-face activity name|Required: the activity name as it appears in the course
+Session date/time known|Required: yes / no
 Start date|Required: Format: YYYY-MM-DD
 Start time|Required: Format: HH:MM
 Finish date|Required: Format: YYYY-MM-DD
@@ -893,4 +896,5 @@ Normal Cost|Optional: Numeric value
 Discount Cost|Optional: Numeric value
 Details|Session description
 Custom field short name|Optional
-Custom field value|Optional";
+Custom field value|Optional
+";
