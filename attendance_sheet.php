@@ -230,7 +230,7 @@ if ($trainer_roles) {
 
 
 $datafolder = $CFG->dataroot . '/mod_facetoface';
-$configured_columns = read_columns_pairs_from_json($datafolder . '/attendance_sheet_config_' . $USER->id . '.json', attendance_column_json::COLUMN);
+$configured_columns = read_columns_pairs_from_json($datafolder . '/attendance_sheet_config_' . $USER->id . '.json');
 $column_options = enum_util::menu_options(attendance_column::class);
 $data->headings = [];
 foreach ($configured_columns as $column_key => $column_defaultvalue) {

@@ -9,7 +9,7 @@
  * @package   mod_facetoface
  */
 
-use mod_facetoface\enum\attendance_sheet_column;
+use mod_facetoface\enum\attendance_column;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -55,7 +55,7 @@ class attendance_sheet_settings {
         }
 
         // Map the attendance_sheet table GUI header names to their corresponding enum values.
-        $attendance_columns_enums_to_names = attendance_sheet_column::map_attendance_columns_enums_to_names();
+        $attendance_columns_enums_to_names = attendance_column::map_attendance_columns_enums_to_names();
 
         // Process each attendance item.
         foreach ($this->attendanceitems as &$item) {

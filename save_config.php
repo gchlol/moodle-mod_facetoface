@@ -7,7 +7,7 @@
  * @package mod_facetoface
  */
 
-use mod_facetoface\enum\attendance_sheet_column;
+use mod_facetoface\enum\attendance_column;
 
 require_once('../../config.php');
 require_sesskey(); // CSRF protection.
@@ -27,7 +27,7 @@ if ($configdata === null) {
 }
 
 // Map the attendance_sheet table GUI header names to their corresponding enum values.
-$attendance_columns_names_to_enums = attendance_sheet_column::map_attendance_columns_names_to_enums();
+$attendance_columns_names_to_enums = attendance_column::map_attendance_columns_names_to_enums();
 
 // Loop over each configuration item and, if the first label matches a fixed column,
 // replace its value with the corresponding enum value.
