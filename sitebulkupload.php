@@ -67,7 +67,7 @@ if ($validate) {
     $data  = $mform->get_data();
 
     // If form wasn’t submitted properly, just redirect to the initial page.
-    if (!$data) {
+    if (!$data  || empty($data->csvfile)) {
         echo $OUTPUT->header();
         echo $OUTPUT->notification(get_string('error:choosecsv', 'mod_facetoface'), 'error');
         $mform->display();
