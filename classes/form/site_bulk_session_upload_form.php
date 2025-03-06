@@ -51,7 +51,7 @@ class site_bulk_session_upload_form extends \moodleform {
         // Example CSV link, if you have one for site-level usage.
         // Adjust the path to your example CSV if needed.
         $url = new \moodle_url('/mod/facetoface/sitewide_bulkexample.csv');
-        $link = \html_writer::link($url, 'example_bulk.csv');
+        $link = \html_writer::link($url, 'example.csv');
         $mform->addElement('static', 'examplecsv', '', $link);
 
         // File manager for CSV upload.
