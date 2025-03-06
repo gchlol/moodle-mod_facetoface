@@ -56,6 +56,3 @@ if ($result === false) {
 
 // Set file permissions so that only the owner can read and write.
 chmod($jsonfile, 0600);
-
-// Redirect back to the settings page with a success message.
-redirect(new moodle_url('/mod/facetoface/settings.php'), 'Configuration saved successfully.');

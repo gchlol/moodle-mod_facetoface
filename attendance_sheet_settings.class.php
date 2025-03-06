@@ -102,7 +102,7 @@ class attendance_sheet_settings {
         // Append inline JavaScript for row deletion, drag-and-drop, adding new rows, and saving config via AJAX.
         $output .= '<script>
             document.addEventListener("DOMContentLoaded", function() {
-                var table = document.querySelector("[data-attendance-sheet-config-table]");
+                let table = document.querySelector("[data-attendance-sheet-config-table]");
                 if (!table) {
                     return;
                 }
@@ -126,7 +126,7 @@ class attendance_sheet_settings {
                         }
                         // If no rows remain, show the "empty" row.
                         if (!tbody.querySelector("[data-attendance-sheet-config-item]")) {
-                            var emptyRow = tbody.querySelector(".empty");
+                            let emptyRow = tbody.querySelector(".empty");
                             if (emptyRow) {
                                 emptyRow.hidden = false;
                             }
@@ -161,7 +161,7 @@ class attendance_sheet_settings {
                 function handleDrop(e) {
                     if (e.stopPropagation) { e.stopPropagation(); }
                     if (dragSrc !== this) {
-                        var srcHTML = dragSrc.innerHTML;
+                        let srcHTML = dragSrc.innerHTML;
                         dragSrc.innerHTML = this.innerHTML;
                         this.innerHTML = srcHTML;
                     }
@@ -190,20 +190,20 @@ class attendance_sheet_settings {
                 });
 
                 // === Dropdown for Adding Rows ===
-                var addRowDropdown = table.querySelector("[data-attendance-sheet-config-add-row]");
+                let addRowDropdown = table.querySelector("[data-attendance-sheet-config-add-row]");
                 if (addRowDropdown) {
                     addRowDropdown.addEventListener("change", function(e) {
-                        var selectedValue = e.target.value;
+                        let selectedValue = e.target.value;
                         if (!selectedValue) {
                             return;
                         }
                         e.target.value = "";
-                        var emptyRow = tbody.querySelector(".empty");
+                        let emptyRow = tbody.querySelector(".empty");
                         if (emptyRow) {
                             emptyRow.hidden = true;
                         }
-                        var rowId = Date.now();
-                        var tr = document.createElement("tr");
+                        let rowId = Date.now();
+                        let tr = document.createElement("tr");
                         tr.setAttribute("data-attendance-sheet-config-item", "");
                         tr.setAttribute("data-value", rowId);
                         // For changeable rows, store the original type.
@@ -211,7 +211,7 @@ class attendance_sheet_settings {
                             tr.setAttribute("data-changeable", selectedValue);
                         }
 
-                        var td1 = document.createElement("td");
+                        let td1 = document.createElement("td");
                         // If the selected value is "Header Only" or "Header and Rows", create an input field for column name.
                         if (selectedValue === "Header Only" || selectedValue === "Header and Rows") {
                             td1.innerHTML =
@@ -225,7 +225,7 @@ class attendance_sheet_settings {
                                 selectedValue;
                         }
 
-                        var td2 = document.createElement("td");
+                        let td2 = document.createElement("td");
                         // For "Header Only", no default value input; for "Header and Rows", include a default value input.
                         if (selectedValue === "Header Only") {
                             td2.innerHTML = "";
@@ -237,7 +237,7 @@ class attendance_sheet_settings {
                             td2.innerHTML = \'<input type="text" name="header_values[]" />\';
                         }
 
-                        var td3 = document.createElement("td");
+                        let td3 = document.createElement("td");
                         td3.classList.add("action-column");
                         td3.innerHTML =
                             \'<a href="#" data-attendance-sheet-config-remove-row data-remove-value="\' + rowId + \'">\' +
@@ -252,68 +252,64 @@ class attendance_sheet_settings {
                 }
 
                 // === Save Config Button Handling via AJAX ===
-                var saveButton = document.getElementById("save-config");
+                let saveButton = document.getElementById("save-config");
                 if (saveButton) {
                     saveButton.addEventListener("click", function(e) {
                         // Gather config data from the table.
-                        var configData = [];
+                        let configData = [];
                         tbody.querySelectorAll("[data-attendance-sheet-config-item]").forEach(function(row) {
-                            var id = row.getAttribute("data-value");
-                            var cells = row.querySelectorAll("td");
-                            var columnName = "";
+                            let id = row.getAttribute("data-value");
+                            let cells = row.querySelectorAll("td");
+                            let columnName = "";
                             // Check if there is an input for the column name (for editable rows).
-                            var inputCol = cells[0].querySelector("input[name=\'column_names[]\']");
+                            let inputCol = cells[0].querySelector("input[name=\'column_names[]\']");
                             if (inputCol) {
                                 columnName = inputCol.value.trim();
                             } else {
                                 columnName = cells[0].textContent.trim();
                             }
-                            var defaultValue = "";
-                            var input = cells[1].querySelector("input");
+                            let defaultValue = "";
+                            let input = cells[1].querySelector("input");
                             if (input) {
                                 defaultValue = input.value.trim();
                             } else {
                                 defaultValue = cells[1].textContent.trim();
                             }
-                            var item = {
+                            let item = {
                                 id: id,
                                 labels: [
                                     { value: columnName, first: true }
                                 ]
                             };
-                            // Use the stored type (data-changeable) to decide if the default value should be saved.
-                            var changeableType = row.getAttribute("data-changeable");
-                            if (changeableType === "Header and Rows") {
-                                item.labels.push({ value: defaultValue });
-                            } else {
-                                item.labels.push({ value: "" });
-                            }
+                            
+                            item.labels.push({ value: defaultValue });
                             configData.push(item);
                         });
                         // Send the config data via AJAX to save_config.php.
-                        var xhr = new XMLHttpRequest();
-                        xhr.open("POST", "/mod/facetoface/save_config.php", true);
+                        let xhr = new XMLHttpRequest();
+                        // async MUST be false, or xhr.status === 0 on some pages.
+                        xhr.open("POST", "/mod/facetoface/save_config.php", false);
                         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
                         xhr.onreadystatechange = function() {
                             if (xhr.readyState === 4) {
                                 if (xhr.status === 200) {
                                     alert("Configuration saved successfully.");
                                 } else {
-                                    alert("Failed to save configuration.");
+                                    alert("Failed to save configuration. Status Code: " + xhr.status);
                                 }
                             }
                         };
-                        var sesskey = "";
+                        let sesskey = "";
                         if (typeof M !== "undefined" && M.cfg && M.cfg.sesskey) {
                             sesskey = M.cfg.sesskey;
                         }
-                        var params = "sesskey=" + encodeURIComponent(sesskey) + "&config_data=" + encodeURIComponent(JSON.stringify(configData));
+                        let params = "sesskey=" + encodeURIComponent(sesskey) + "&config_data=" + encodeURIComponent(JSON.stringify(configData));
                         xhr.send(params);
                     });
                 }
 
                 // === Cancel Button Handling ===
-                var cancelButton = document.getElementById("cancel-config");
+                let cancelButton = document.getElementById("cancel-config");
                 if (cancelButton) {
                     cancelButton.addEventListener("click", function(e) {
                         e.preventDefault();
