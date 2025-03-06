@@ -64,7 +64,7 @@ class site_bulk_session_upload_form extends \moodleform {
             'return_types' => FILE_INTERNAL | FILE_EXTERNAL,
         ]);
         $mform->setType('csvfile', PARAM_INT);
-        $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
+        // $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
 
         // (Optional) If you want to provide a table-based description or guidelines:
         $desc = get_string('sitebulkuploadfiledesc', 'mod_facetoface');
@@ -95,4 +95,24 @@ class site_bulk_session_upload_form extends \moodleform {
         // Add the submit button.
         $this->add_action_buttons(false, get_string('upandprev', 'mod_facetoface'));
     }
+
+    public function validation($data, $files) {
+        // 1) Get the default validation results (if any).
+        $errors = parent::validation($data, $files);
+
+        // 2) Check if 'csvfile' is empty.
+        //    'csvfile' must match the name in your filemanager: addElement('filemanager', 'csvfile', ...)
+        if (empty($data['csvfile'])) {
+            // Display an error message next to the 'csvfile' field
+            // (e.g., "This field is required").
+            $errors['csvfile'] = get_string('required');
+            // or use your own custom string:
+            // $errors['csvfile'] = get_string('error:nocsvfile', 'mod_facetoface');
+        }
+
+        // 3) Return any collected errors to Moodle.
+        return $errors;
+    }
+
+
 }

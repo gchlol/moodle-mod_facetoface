@@ -898,3 +898,4 @@ Details|Session description
 Custom field short name|Optional
 Custom field value|Optional
 ";
+$string['error:choosecsv'] = 'Please choose a CSV file before continuing.';

@@ -68,7 +68,11 @@ if ($validate) {
 
     // If form wasn’t submitted properly, just redirect to the initial page.
     if (!$data) {
-        redirect(new moodle_url('/mod/facetoface/sitebulkupload.php'));
+        echo $OUTPUT->header();
+        echo $OUTPUT->notification(get_string('error:choosecsv', 'mod_facetoface'), 'error');
+        $mform->display();
+        echo $OUTPUT->footer();
+        exit;
     }
 
     $fileid = $data->csvfile ?: 0;
