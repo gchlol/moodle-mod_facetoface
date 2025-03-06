@@ -176,6 +176,13 @@ class site_bulk_manager {
                 $record[$key] = trim($value);
             }
 
+            if (empty($record['Course shortname'])) {
+                $this->errors[] = [$index, get_string('error:missingcourseshortname', 'facetoface')];
+            }
+            if (empty($record['Face-to-face activity name'])) {
+                $this->errors[] = [$index, get_string('error:missingf2fname', 'facetoface')];
+            }
+
             // Required: Start Date and Start Time.
             if (empty($record['Start date']) || empty($record['Start time'])) {
                 $this->errors[] = [$index, get_string('error:missingstarttime', 'facetoface')];
@@ -261,7 +268,7 @@ class site_bulk_manager {
 
         foreach ($this->records as $record) {
             $session = new \stdClass();
-            
+
             // 1) Look up the course by shortname from the CSV row.
             $shortname = trim($record['Course shortname']);
             $course = $DB->get_record('course', ['shortname' => $shortname]);

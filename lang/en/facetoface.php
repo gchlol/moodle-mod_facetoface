@@ -878,7 +878,8 @@ $string['facetoface:confirmbulkpreview'] = 'Confirm Bulk Preview';
 $string['error:course_not_found'] = 'Could not find course with shortname: {$a}';
 $string['error:f2f_not_found'] = 'Could not find Face-to-Face in the specified course';
 $string['error:bookingsuploadfileheaderfieldmismatch'] = 'The uploaded CSV does not match the expected columns.';
-
+$string['error:missingcourseshortname'] = 'No course shortname provided.';
+$string['error:missingf2fname'] = 'No Face-to-Face activity name provided.';
 $string['sitebulkuploadfiledesc'] = "Session date/time known|Required: yes / no
 Start date|Required: Format: YYYY-MM-DD
 Start time|Required: Format: HH:MM
