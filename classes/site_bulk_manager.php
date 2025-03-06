@@ -37,8 +37,6 @@ use DateTime;
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class site_bulk_manager {
-    /** @var int Facetoface instance ID */
-    private $facetofaceid;
 
     /** @var array Parsed CSV records */
     private $records = [];
@@ -264,6 +262,31 @@ class site_bulk_manager {
         foreach ($this->records as $record) {
             $session = new \stdClass();
             $session->facetoface = $this->facetofaceid;
+
+            // 1) Look up the course by shortname from the CSV row.
+            $shortname = trim($record['Course shortname']);
+            $course = $DB->get_record('course', ['shortname' => $shortname]);
+
+            if (!$course) {
+                $this->errors[] = get_string('error:course_not_found', 'facetoface') . " ({$shortname})";
+                continue;
+            }
+
+            // 2) Look up the F2F by (course => $course->id, name => 'Face-to-Face name' from CSV).
+            $f2fname = trim($record['Face-to-face activity name']);
+            $f2frecord = $DB->get_record('facetoface', [
+            'course' => $course->id,
+            'name'   => $f2fname
+            ]);
+
+            if (!$f2frecord) {
+                $this->errors[] = get_string('error:f2f_not_found', 'facetoface')
+                    . " (Course: {$shortname} | F2F Name: {$f2fname})";
+                continue;
+            }
+
+            // 3) Now set the session->facetoface to the real ID from DB.
+            $session->facetoface = $f2frecord->id;
 
             $session->datetimeknown = isset($record['Session date/time known'])
                 ? ($record['Session date/time known'] === 'no' ? 0 : 1)
