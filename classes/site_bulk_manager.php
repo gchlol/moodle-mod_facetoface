@@ -261,8 +261,7 @@ class site_bulk_manager {
 
         foreach ($this->records as $record) {
             $session = new \stdClass();
-            $session->facetoface = $this->facetofaceid;
-
+            
             // 1) Look up the course by shortname from the CSV row.
             $shortname = trim($record['Course shortname']);
             $course = $DB->get_record('course', ['shortname' => $shortname]);
