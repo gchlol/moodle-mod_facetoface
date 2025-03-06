@@ -1,0 +1,3 @@
+Course shortname,Face-to-face activity name,Session date/time known,Start date,Start time,Finish date,Finish time,allow cancelations,Capacity,Allow overbookings,Duration,Normal Cost,Discount Cost,Details,customfield_shortname,customfield_value
+shortname_of_course,complete_name_of_activity,yes,05/05/2025,10:00,05/05/2025,12:00,yes,20,yes,120,100,80,"Demo Session #1","mycustomshortname","ValueOne"
+shortname_of_course,complete_name_of_activity,no,06/05/2025,09:00,06/05/2025,10:30,no,25,no,90,50,25,"Demo Session #2","mycustomshortname","ValueTwo"
