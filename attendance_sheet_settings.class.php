@@ -224,7 +224,7 @@ class attendance_sheet_settings {
                             td1.innerHTML =
                                 \'<input name="item_ids[]" type="hidden" value="\' + rowId + \'" />\' +
                                 dragHandleHtml +
-                                \'<input type="text" name="column_names[]" placeholder="Enter column name" />\';
+                                \'<input type="text" name="column_names[]" placeholder="Enter column name" class="attendance-sheet-config__table--first__input" />\';
                         } else {
                             td1.innerHTML =
                                 \'<input name="item_ids[]" type="hidden" value="\' + rowId + \'" />\' +
@@ -237,7 +237,7 @@ class attendance_sheet_settings {
                         if (selectedValue === "Header Only") {
                             td2.innerHTML = "";
                         } else if (selectedValue === "Header and Rows") {
-                            td2.innerHTML = \'<input type="text" name="header_values[]" placeholder="Enter default value" />\';
+                            td2.innerHTML = \'<input type="text" name="header_values[]" placeholder="Enter default value" class="attendance-sheet-config__table--not-first__input" />\';
                         } else if (["Name","Payroll","Email","Signature"].indexOf(selectedValue) !== -1) {
                             td2.innerHTML = "";
                         } else {

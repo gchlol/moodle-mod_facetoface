@@ -43,6 +43,19 @@
     border-radius: 5px;
 }
 
+/* Text field styles when the user add a new "Column Only" or "Column and Rows" item. */
+.attendance-sheet-config__table input[type="text"] {
+    border-radius: 5px;
+}
+
+.attendance-sheet-config__table--first__input {
+    width: 90%; /* Leave 10% to accommodate for the drag icon */
+}
+
+.attendance-sheet-config__table--not-first__input  {
+    width: 100%;
+}
+
 /* Row colours in Attendance Sheet Table */
 .attendance-sheet-config__table tbody tr:nth-child(odd) {
     background-color: #F5F5F5;
