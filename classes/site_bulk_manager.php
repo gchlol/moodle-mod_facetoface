@@ -106,6 +106,8 @@ class site_bulk_manager {
      */
     public static function get_headers() {
         return [
+            'Course shortname',
+            'Face-to-face activity name',
             'Session date/time known',
             'Start date',
             'Start time',
