@@ -15,12 +15,6 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Site-level bulk upload handling script for the Face-to-face module.
- *
- * Allows an admin to upload a CSV file containing session details,
- * then validates and processes these details to create/update sessions
- * across the site.
- *
  * @package   mod_facetoface
  * @copyright 2025, Gold Coast Health
  * @author    Jonas Sajonas

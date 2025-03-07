@@ -21,8 +21,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
- namespace mod_facetoface;
-
+namespace mod_facetoface;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -39,8 +38,10 @@ class site_bulk_manager {
     /** @var array Validation errors */
     private $errors = [];
 
-    /** Avoid undefined properties */
+    /** @var bool $Indicates whether records are being loaded */
     private $usefile;
+
+    /** @var file object containing CSV data. */
     private $file;
 
     /** @var bool Will ignore case when matching users */
@@ -63,10 +64,12 @@ class site_bulk_manager {
      */
     public function load_from_file(int $fileid) {
         global $USER;
-        $this->usefile = true;
 
+        $this->usefile = true;
         $fs = get_file_storage();
         $usercontext = \context_user::instance($USER->id);
+
+        // Retrieve the files from the draft area; we expect exactly one CSV file.
         $files = $fs->get_area_files($usercontext->id, 'user', 'draft', $fileid, 'id', false);
 
         if (count($files) != 1) {
@@ -89,7 +92,8 @@ class site_bulk_manager {
     }
 
     /**
-     * Get headers for records.
+     * Returns the column headers used by the CSV.
+     *
      * @return array
      */
     public static function get_headers() {
@@ -118,6 +122,7 @@ class site_bulk_manager {
      * @return Generator
      */
     private function get_iterator(): \Generator {
+        // If the manager is not using a file, simply yield from $this->records.
         if (!$this->usefile) {
             foreach ($this->records as $record) {
                 yield $record;
@@ -125,37 +130,45 @@ class site_bulk_manager {
             return;
         }
 
+        // Read from the stored file.
         $handle = $this->file->get_content_file_handle();
         $maxlinelength = 1000;
         $delimiter = ',';
+
+        // Extract the headers and skip header line.
         $headers = self::get_headers();
         $numheaders = count($headers);
 
-        // Skip header row.
+        // Skip the first line.
         fgets($handle);
 
         try {
+            // Read each line.
             while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
                 if (count($data) !== $numheaders) {
                     throw new moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface');
                 }
+                // Trim any surrounding single quotes.
                 foreach ($data as &$field) {
                     $field = trim($field, "'");
                 }
                 yield array_combine($headers, $data);
             }
         } finally {
+            // Close the file.
             fclose($handle);
         }
     }
 
     /**
      * Validate loaded CSV records.
+     *
      * @return array An array of error messages (empty if no errors)
      */
     public function validate() {
         global $DB;
 
+        // If using a file, convert it into an array once.
         if ($this->usefile) {
             $this->records = iterator_to_array($this->get_iterator());
         }
@@ -170,16 +183,21 @@ class site_bulk_manager {
                 $this->errors[] = [$index, get_string('error:missingf2fname', 'facetoface')];
             }
 
+            // Look up the course shortname.
             $shortname = $record['Course shortname'] ?? '';
             if (!empty($shortname)) {
-                $course = $DB->get_record('course', ['shortname' => $shortname]);
+                $shortnamecondition = $DB->sql_equal('shortname', ':shortname', !$this->caseinsensitive);
+                $course = $DB->get_record_select('course', $shortnamecondition, ['shortname' => $shortname]);
                 if (!$course) {
                     $this->errors[] = [$index, get_string('error:course_not_found', 'facetoface') . " ({$shortname})"];
                 }
             }
 
+            // Look up the Face-to-face record.
             $f2fname = $record['Face-to-face activity name'] ?? '';
             $f2frecord = null;
+
+            // If $course doesn't exist, $course->id won't exist either, so fallback to 0.
             $courseid = $course ? $course->id : 0;
 
             if (!empty($f2fname)) {
@@ -193,6 +211,7 @@ class site_bulk_manager {
                 }
             }
 
+            // Validate date/time fields
             if (empty($record['Start date']) || empty($record['Start time'])) {
                 $this->errors[] = [ $index, get_string('error:missingstarttime', 'facetoface')];
             } else {
@@ -221,6 +240,7 @@ class site_bulk_manager {
                 }
             }
 
+            // Validate numeric fields.
             if (!isset($record['Capacity']) || !is_numeric($record['Capacity']) || (int)$record['Capacity'] <= 0) {
                 $this->errors[] = [$index, get_string('error:invalidcapacity', 'facetoface')];
             }
@@ -233,6 +253,8 @@ class site_bulk_manager {
             if (!empty($record['Discount Cost']) && !is_numeric($record['Discount Cost'])) {
                 $this->errors[] = [$index, get_string('error:invaliddiscountcost', 'facetoface')];
             }
+
+            // Validate yes/no fields for 'allow cancelations' and 'Allow overbookings'.
             if (!in_array(strtolower($record['allow cancelations'] ?? ''), ['yes', 'no'], true)) {
                 $this->errors[] = [$index, get_string('error:invalidallowcancel', 'facetoface')];
             }
@@ -243,10 +265,9 @@ class site_bulk_manager {
         return $this->errors;
     }
 
-
-
     /**
      * Process valid records to create sessions.
+     *
      * @return bool true on success, false if any errors occurred
      */
     public function process() {
@@ -255,27 +276,45 @@ class site_bulk_manager {
         foreach ($this->records as $record) {
             $session = new \stdClass();
 
+            // Look up the course.
             $shortname = trim($record['Course shortname']);
-            $course = $DB->get_record('course', ['shortname' => $shortname]);
+            $shortnamecondition = $DB->sql_equal('shortname', ':shortname', !$this->caseinsensitive);
+
+            $course = $DB->get_record_select(
+                'course',
+                $shortnamecondition,
+                ['shortname' => $shortname]
+            );
 
             if (!$course) {
+                // Record an error and skip processing.
                 $this->errors[] = get_string('error:course_not_found', 'facetoface') . " ({$shortname})";
+                continue;
             }
-            $courseid = $course ? $course->id : 0;
+
+            // Look up the Face-to-face record.
+            $courseid = $course->id;
             $f2fname = trim($record['Face-to-face activity name']);
 
-            $f2frecord = $DB->get_record('facetoface', [
-                    'course' => $courseid,
-                    'name'   => $f2fname
-                 ]);
+            $namecondition = $DB->sql_equal('name', ':f2fname', !$this->caseinsensitive);
+            $where = $namecondition . ' AND course = :courseid';
+            $params = [
+                'f2fname' => $f2fname,
+                'courseid' => $courseid
+            ];
+
+            $f2frecord = $DB->get_record_select('facetoface', $where, $params);
 
             if (!$f2frecord) {
+                // If no matching Face-to-face record an error and skip.
                 $this->errors[] = get_string('error:f2f_not_found', 'facetoface')
                     . " (Course: {$shortname} | F2F Name: {$f2fname})";
+                continue;
             }
 
-            $session->facetoface = $f2frecord ? $f2frecord->id : 0;
 
+            // Build session data object.
+            $session->facetoface = $f2frecord->id;
             $session->datetimeknown = isset($record['Session date/time known'])
                 ? ($record['Session date/time known'] === 'no' ? 0 : 1)
                 : 1;
@@ -288,6 +327,7 @@ class site_bulk_manager {
                 ? strtotime(str_replace('/', '-', $record['Finish date'].' '.$record['Finish time']))
                 : null;
 
+            // If datetimeknown is true, ensure both start and finish times are valid.
             if ($session->datetimeknown && (empty($session->starttime) || empty($session->finishtime))) {
                 $this->errors[] = get_string('error:invaliddatetimedata', 'facetoface');
             }
@@ -304,7 +344,7 @@ class site_bulk_manager {
                 ? ($record['Allow overbookings'] === 'no' ? 0 : 1)
                 : 1;
 
-            $session->duration = isset($record['Duration']) && is_numeric($record['Duration'])
+            $session->duration = (isset($record['Duration']) && is_numeric($record['Duration']))
                 ? (int) $record['Duration']
                 : 0;
 
@@ -326,15 +366,17 @@ class site_bulk_manager {
                     $record['customfield_shortname'] => $record['customfield_value'],
                 ];
             }
+
             $session->timecreated = time();
 
-            // Insert session record.
+            // Insert the session record.
             $sessionid = $DB->insert_record('facetoface_sessions', $session);
             if (!$sessionid) {
                 $this->errors[] = get_string('error:failedtocreatesession', 'facetoface')
                     . ' (' . implode(', ', $record) . ')';
                 continue;
             }
+
             // Insert session dates.
             $sessionsdate = new \stdClass();
             $sessionsdate->sessionid = $sessionid;
@@ -350,8 +392,10 @@ class site_bulk_manager {
         return empty($this->errors);
     }
 
+
     /**
      * Get validation or processing errors.
+     *
      * @return array array of error messages
      */
     public function get_errors() {
@@ -360,6 +404,7 @@ class site_bulk_manager {
 
     /**
      * Get parsed CSV records.
+     *
      * @return array
      */
     public function get_records() {
@@ -378,6 +423,7 @@ class site_bulk_manager {
 
     /**
      * Sets case-insensitive match value.
+     *
      * @param bool $value
      */
     public function set_case_insensitive(bool $value) {
