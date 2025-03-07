@@ -52,7 +52,7 @@ class attendance_column_json extends enum_base {
  *         "id": "1741142241147",
  *         "labels": [
  *             {
- *                 "value": "h",
+ *                 "value": "Mentor Name",
  *                 "first": true
  *             },
  *             {
@@ -64,11 +64,11 @@ class attendance_column_json extends enum_base {
  *         "id": "1741142265872",
  *         "labels": [
  *             {
- *                 "value": "a",
+ *                 "value": "Pass/Fail",
  *                 "first": true
  *             },
  *             {
- *                 "value": "b"
+ *                 "value": "Pass/Fail"
  *             }
  *         ]
  *     }
