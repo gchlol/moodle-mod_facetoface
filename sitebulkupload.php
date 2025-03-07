@@ -57,7 +57,6 @@ if (!$validate && !$process) {
 }
 
 if ($validate) {
-    // Reload the upload form to get the fileid.
     $mform = new site_bulk_session_upload_form();
     $data  = $mform->get_data();
 
@@ -70,21 +69,17 @@ if ($validate) {
     }
 
     $fileid = $data->csvfile ?: 0;
-
-    // Create confirm form (the next step).
     $confirmform = new site_bulk_session_confirm_form(null, [
         'fileid' => $fileid,
         'caseinsensitive' => $caseinsensitive,
         'process' => 1
     ]);
 
-    // Use site_bulk_manager for site-level CSV handling.
     $manager = new site_bulk_manager();
     $manager->load_from_file($fileid);
     $manager->set_case_insensitive($caseinsensitive);
-
-    // Validate CSV data.
     $errors = $manager->validate();
+
     if (!empty($errors)) {
         echo $OUTPUT->header();
         echo $OUTPUT->notification(
@@ -92,7 +87,6 @@ if ($validate) {
             notification::NOTIFY_ERROR
         );
 
-        // Display errors in a table.
         $table = new html_table();
         $table->attributes['class'] = 'f2fbookingsuploadlist generaltable mb-2';
         $table->head = [
@@ -101,7 +95,6 @@ if ($validate) {
         ];
 
         foreach ($errors as $error) {
-            // If $error is ["line #", "message", "message2"...]
             if (is_array($error) && count($error) >= 2) {
                 $line     = $error[0];
                 $messages = array_slice($error, 1);
@@ -112,13 +105,18 @@ if ($validate) {
                 $table->data[] = ['-', is_string($error) ? $error : json_encode($error)];
             }
         }
-
         echo html_writer::table($table);
+
+        echo html_writer::tag('p',
+        html_writer::link(
+            new moodle_url('/mod/facetoface/sitebulkupload.php'),
+            get_string('back')
+        )
+        );
         echo $OUTPUT->footer();
         exit;
     }
 
-    // If no errors, show a preview table plus the "confirm" form.
     $records = $manager->get_records();
 
     echo $OUTPUT->header();
@@ -145,20 +143,22 @@ if ($validate) {
     exit;
 }
 
-// 6) Step 3: Process the CSV if user confirmed.
+
 if ($process && $fileid) {
     $manager = new site_bulk_manager();
     $manager->load_from_file($fileid);
     $manager->set_case_insensitive($caseinsensitive);
 
-    // If your confirm form has a "suppressemail" checkbox, handle that:
     $confirmform = new site_bulk_session_confirm_form();
+
+    if ($confirmform->is_cancelled()) {
+        redirect(new moodle_url('/mod/facetoface/sitebulkupload.php'));
+    }
     $confirmdata = $confirmform->get_data();
     if (!empty($confirmdata->suppressemail)) {
         $manager->suppress_email();
     }
 
-    // Validate again, just to be safe.
     $errors = $manager->validate();
     if (empty($errors)) {
         $manager->process();
