@@ -16,11 +16,13 @@
 
 /**
  * @package   mod_facetoface
- * @copyright 2025, Jonas Sajonas
+ * @copyright 2025, Gold Coast Health
+ * @author    Jonas Sajonas
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
  namespace mod_facetoface;
+
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -29,15 +31,7 @@ use Generator;
 use DateTime;
 
 
-/**
- * Bulk sessions manager.
- *
- * @author  Jonas Sajonas
- * @copyright GCHLOL, 2025
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
 class site_bulk_manager {
-
 
     /** @var array Parsed CSV records */
     private $records = [];
@@ -57,7 +51,6 @@ class site_bulk_manager {
 
     /**
      * Constructor.
-     *
      * @param int $facetofaceid
      */
     public function __construct() {
@@ -65,7 +58,6 @@ class site_bulk_manager {
 
     /**
      * Load CSV data from a file (given its fileid).
-     *
      * @param int $fileid
      * @return bool true if loaded successfully, false otherwise
      */
@@ -87,20 +79,17 @@ class site_bulk_manager {
 
     /**
      * Load in records to process from an array.
-     *
      * @param array $records
      * @return self
      */
     public function load_from_array(array $records) {
         $this->usefile = false;
         $this->records = $records;
-
         return $this;
     }
 
     /**
      * Get headers for records.
-     *
      * @return array
      */
     public static function get_headers() {
@@ -126,7 +115,6 @@ class site_bulk_manager {
 
     /**
      * Get an iterator for records.
-     *
      * @return Generator
      */
     private function get_iterator(): \Generator {
@@ -143,7 +131,7 @@ class site_bulk_manager {
         $headers = self::get_headers();
         $numheaders = count($headers);
 
-        // Skip the header row.
+        // Skip header row.
         fgets($handle);
 
         try {
@@ -163,121 +151,95 @@ class site_bulk_manager {
 
     /**
      * Validate loaded CSV records.
-     *
      * @return array An array of error messages (empty if no errors)
      */
     public function validate() {
         global $DB;
 
-        // If we're loading CSV from a file, parse the iterator first.
         if ($this->usefile) {
             $this->records = iterator_to_array($this->get_iterator());
         }
 
         foreach ($this->records as $index => $record) {
-            // This local array holds *all* errors for the current row
-            $errors = [];
-
-            // Trim every field in this row:
             $record = array_map('trim', $record);
 
-            // 1) Check required fields
             if (empty($record['Course shortname'])) {
-                $errors[] = get_string('error:missingcourseshortname', 'facetoface');
+                $this->errors[] = [$index, get_string('error:missingcourseshortname', 'facetoface')];
             }
             if (empty($record['Face-to-face activity name'])) {
-                $errors[] = get_string('error:missingf2fname', 'facetoface');
+                $this->errors[] = [$index, get_string('error:missingf2fname', 'facetoface')];
             }
 
-            // 2) Course lookup if we have a shortname
             $shortname = $record['Course shortname'] ?? '';
-            $course = null;
             if (!empty($shortname)) {
                 $course = $DB->get_record('course', ['shortname' => $shortname]);
                 if (!$course) {
-                    $errors[] = get_string('error:course_not_found', 'facetoface') . " ({$shortname})";
+                    $this->errors[] = [$index, get_string('error:course_not_found', 'facetoface') . " ({$shortname})"];
                 }
             }
 
-            // 3) F2F lookup if we found a valid course and have an F2F name
             $f2fname = $record['Face-to-face activity name'] ?? '';
             $f2frecord = null;
-            if (!empty($course) && !empty($f2fname)) {
-                $f2frecord = $DB->get_record('facetoface', [
-                    'course' => $course->id,
-                    'name'   => $f2fname
+            $courseid = $course ? $course->id : 0;
+
+            if (!empty($f2fname)) {
+                $f2frecord = $DB->get_record('facetoface', ['course' => $courseid, 'name'   => $f2fname
                 ]);
+
                 if (!$f2frecord) {
-                    $errors[] =
-                        get_string('error:f2f_not_found', 'facetoface')
-                        . " (Course: {$shortname} | Name: {$f2fname})";
+                    $this->errors[] = [$index, get_string('error:f2f_not_found', 'facetoface')
+                        . " (Course: {$shortname} | Name: {$f2fname})"
+                    ];
                 }
             }
 
-            // 4) Date/time checks
             if (empty($record['Start date']) || empty($record['Start time'])) {
-                $errors[] = get_string('error:missingstarttime', 'facetoface');
+                $this->errors[] = [ $index, get_string('error:missingstarttime', 'facetoface')];
             } else {
-                $datetime = DateTime::createFromFormat(
-                    'd/m/Y H:i',
-                    $record['Start date'] . ' ' . $record['Start time']
-                );
+                 $datetime = DateTime::createFromFormat(
+                     'd/m/Y H:i', $record['Start date'] . ' ' . $record['Start time']
+                 );
                 if (!$datetime) {
-                    $errors[] = get_string('error:invalidstarttime', 'facetoface')
-                        . ": {$record['Start date']} {$record['Start time']}";
+                    $this->errors[] = [ $index, get_string('error:invalidstarttime', 'facetoface')
+                    . ": {$record['Start date']} {$record['Start time']}"];
                 }
             }
 
             if (empty($record['Finish date']) || empty($record['Finish time'])) {
-                $errors[] = get_string('error:missingfinishtime', 'facetoface');
+                $this->errors[] = [ $index, get_string('error:missingfinishtime', 'facetoface')];
             } else {
                 $datetime = DateTime::createFromFormat(
                     'd/m/Y H:i',
                     $record['Finish date'] . ' ' . $record['Finish time']
                 );
                 if (!$datetime) {
-                    $errors[] = get_string('error:invalidfinishtime', 'facetoface')
-                        . ": {$record['Finish date']} {$record['Finish time']}";
+                    $this->errors[] = [
+                        $index,
+                        get_string('error:invalidfinishtime', 'facetoface') .
+                        ": {$record['Finish date']} {$record['Finish time']}"
+                    ];
                 }
             }
 
-            // Optionally, if we wanted to check Start < Finish, we'd do so after parsing them.
-
-            // 5) Numeric checks
             if (!isset($record['Capacity']) || !is_numeric($record['Capacity']) || (int)$record['Capacity'] <= 0) {
-                $errors[] = get_string('error:invalidcapacity', 'facetoface');
+                $this->errors[] = [$index, get_string('error:invalidcapacity', 'facetoface')];
             }
             if (!isset($record['Duration']) || !is_numeric($record['Duration']) || (int)$record['Duration'] <= 0) {
-                $errors[] = get_string('error:invalidduration', 'facetoface');
+                $this->errors[] = [$index, get_string('error:invalidduration', 'facetoface')];
             }
             if (!empty($record['Normal Cost']) && !is_numeric($record['Normal Cost'])) {
-                $errors[] = get_string('error:invalidnormalcost', 'facetoface');
+                $this->errors[] = [$index, get_string('error:invalidnormalcost', 'facetoface')];
             }
             if (!empty($record['Discount Cost']) && !is_numeric($record['Discount Cost'])) {
-                $errors[] = get_string('error:invaliddiscountcost', 'facetoface');
+                $this->errors[] = [$index, get_string('error:invaliddiscountcost', 'facetoface')];
             }
-
-            // 6) Yes/No checks
-            if (!in_array(strtolower($record['allow cancelations'] ?? ''), ['yes','no'], true)) {
-                $errors[] = get_string('error:invalidallowcancel', 'facetoface');
+            if (!in_array(strtolower($record['allow cancelations'] ?? ''), ['yes', 'no'], true)) {
+                $this->errors[] = [$index, get_string('error:invalidallowcancel', 'facetoface')];
             }
-            if (!in_array(strtolower($record['Allow overbookings'] ?? ''), ['yes','no'], true)) {
-                $errors[] = get_string('error:invalidallowoverbook', 'facetoface');
+            if (!in_array(strtolower($record['Allow overbookings'] ?? ''), ['yes', 'no'], true)) {
+                $this->errors[] = [$index, get_string('error:invalidallowoverbook', 'facetoface')];
             }
-
-            // If this row had any errors, merge them into the master $this->errors array
-            if (!empty($errors)) {
-                foreach ($errors as $msg) {
-                    // We store: [rowIndex, message]
-                    $this->errors[] = [$index, $msg];
-                }
-            }
-
-            // Store updated row (optional). If you want to skip in process(), you could do:
-            // if (!empty($errors)) { $record['_invalid'] = true; }
-            // $this->records[$index] = $record;
         }
-
         return $this->errors;
     }
 
@@ -285,7 +247,6 @@ class site_bulk_manager {
 
     /**
      * Process valid records to create sessions.
-     *
      * @return bool true on success, false if any errors occurred
      */
     public function process() {
@@ -294,30 +255,26 @@ class site_bulk_manager {
         foreach ($this->records as $record) {
             $session = new \stdClass();
 
-            // 1) Look up the course by shortname from the CSV row.
             $shortname = trim($record['Course shortname']);
             $course = $DB->get_record('course', ['shortname' => $shortname]);
 
             if (!$course) {
                 $this->errors[] = get_string('error:course_not_found', 'facetoface') . " ({$shortname})";
-                continue;
             }
-
-            // 2) Look up the F2F by (course => $course->id, name => 'Face-to-Face name' from CSV).
+            $courseid = $course ? $course->id : 0;
             $f2fname = trim($record['Face-to-face activity name']);
+
             $f2frecord = $DB->get_record('facetoface', [
-            'course' => $course->id,
-            'name'   => $f2fname
-            ]);
+                    'course' => $courseid,
+                    'name'   => $f2fname
+                 ]);
 
             if (!$f2frecord) {
                 $this->errors[] = get_string('error:f2f_not_found', 'facetoface')
                     . " (Course: {$shortname} | F2F Name: {$f2fname})";
-                continue;
             }
 
-            // 3) Now set the session->facetoface to the real ID from DB.
-            $session->facetoface = $f2frecord->id;
+            $session->facetoface = $f2frecord ? $f2frecord->id : 0;
 
             $session->datetimeknown = isset($record['Session date/time known'])
                 ? ($record['Session date/time known'] === 'no' ? 0 : 1)
@@ -333,7 +290,6 @@ class site_bulk_manager {
 
             if ($session->datetimeknown && (empty($session->starttime) || empty($session->finishtime))) {
                 $this->errors[] = get_string('error:invaliddatetimedata', 'facetoface');
-                continue;
             }
 
             $session->allowcancel = isset($record['allow cancelations'])
@@ -370,7 +326,6 @@ class site_bulk_manager {
                     $record['customfield_shortname'] => $record['customfield_value'],
                 ];
             }
-
             $session->timecreated = time();
 
             // Insert session record.
@@ -380,8 +335,7 @@ class site_bulk_manager {
                     . ' (' . implode(', ', $record) . ')';
                 continue;
             }
-
-            // Insert session date into mdl_facetoface_sessions_dates.
+            // Insert session dates.
             $sessionsdate = new \stdClass();
             $sessionsdate->sessionid = $sessionid;
             $sessionsdate->timestart = $session->starttime;
@@ -398,7 +352,6 @@ class site_bulk_manager {
 
     /**
      * Get validation or processing errors.
-     *
      * @return array array of error messages
      */
     public function get_errors() {
@@ -407,7 +360,6 @@ class site_bulk_manager {
 
     /**
      * Get parsed CSV records.
-     *
      * @return array
      */
     public function get_records() {
@@ -426,7 +378,6 @@ class site_bulk_manager {
 
     /**
      * Sets case-insensitive match value.
-     *
      * @param bool $value
      */
     public function set_case_insensitive(bool $value) {

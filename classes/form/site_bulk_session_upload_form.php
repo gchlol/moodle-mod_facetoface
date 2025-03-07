@@ -15,10 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version metadata for the repository_pluginname plugin.
- *
  * @package   mod_facetoface
- * @copyright 2025, Jonas Sajonas
+ * @copyright 2025, Gold Coast Health
+ * @author    Jonas Sajonas
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -36,20 +35,15 @@ class site_bulk_session_upload_form extends \moodleform {
      */
     public function definition() {
         global $CFG;
-
         $mform = $this->_form;
-
         $validateflag = $this->_customdata['validate'] ?? 0;
 
-        // (Optional) Add a hidden param if you need it.
         $mform->addElement('hidden', 'validate', $validateflag);
         $mform->setType('validate', PARAM_INT);
 
-        // Header for the form.
         $mform->addElement('header', 'sitebulkuploadheader', get_string('sitebulkuploadheader', 'mod_facetoface'));
 
-        // Example CSV link, if you have one for site-level usage.
-        // Adjust the path to your example CSV if needed.
+        // Example CSV link.
         $url = new \moodle_url('/mod/facetoface/sitewide_bulkexample.csv');
         $link = \html_writer::link($url, 'example.csv');
         $mform->addElement('static', 'examplecsv', '', $link);
@@ -64,12 +58,8 @@ class site_bulk_session_upload_form extends \moodleform {
             'return_types' => FILE_INTERNAL | FILE_EXTERNAL,
         ]);
         $mform->setType('csvfile', PARAM_INT);
-        // $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
-
-        // (Optional) If you want to provide a table-based description or guidelines:
         $desc = get_string('sitebulkuploadfiledesc', 'mod_facetoface');
         $rows = explode("\n", $desc);
-
         $tablehtml = '<table class="uploadsessiondesc" border="1" cellspacing="0" cellpadding="5">';
         $tablehtml .= '<thead><tr><th>Field</th><th>Description</th></tr></thead><tbody>';
         foreach ($rows as $row) {
@@ -85,32 +75,17 @@ class site_bulk_session_upload_form extends \moodleform {
             }
         }
         $tablehtml .= '</tbody></table>';
-
         $mform->addElement('static', 'csvuploadhelp', '', $tablehtml);
-
-        // (Optional) Additional settings, e.g. a checkbox:
         $mform->addElement('advcheckbox', 'caseinsensitive', get_string('caseinsensitive', 'mod_facetoface'));
         $mform->setDefault('caseinsensitive', true);
-
-        // Add the submit button.
         $this->add_action_buttons(false, get_string('upandprev', 'mod_facetoface'));
     }
 
     public function validation($data, $files) {
-        // 1) Get the default validation results (if any).
         $errors = parent::validation($data, $files);
-
-        // 2) Check if 'csvfile' is empty.
-        //    'csvfile' must match the name in your filemanager: addElement('filemanager', 'csvfile', ...)
         if (empty($data['csvfile'])) {
-            // Display an error message next to the 'csvfile' field
-            // (e.g., "This field is required").
             $errors['csvfile'] = get_string('required');
-            // or use your own custom string:
-            // $errors['csvfile'] = get_string('error:nocsvfile', 'mod_facetoface');
         }
-
-        // 3) Return any collected errors to Moodle.
         return $errors;
     }
 

@@ -15,12 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version metadata for the mod_facetoface plugin.
- *
  * @package   mod_facetoface
- * @copyright 2025, Jonas Sajonas
+ * @copyright 2025, Gold Coast Health
+ * @author    Jonas Sajonas
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 namespace mod_facetoface\form;
 use moodleform;
 

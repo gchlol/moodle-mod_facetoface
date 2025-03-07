@@ -15,11 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Upload form for csv file to handle enrolment of bookings in bulk.
- *
- * @author     Jonas Sajonas
- * @copyright  GCHLOL, 2025
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_facetoface
+ * @copyright 2025, Gold Coast Health
+ * @author    Jonas Sajonas
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once(__DIR__ . '/../../config.php');
@@ -31,10 +30,8 @@ use mod_facetoface\form\site_bulk_session_upload_form;
 use mod_facetoface\form\site_bulk_session_confirm_form;
 use mod_facetoface\site_bulk_manager;
 
-// Setup the admin page; must match the admin_externalpage ID from settings.php:
 admin_externalpage_setup('modfacetoface_sitebulkupload');
 
-// Optional: ensure user has site config capability (though admin_externalpage_setup often does):
 require_capability('moodle/site:config', context_system::instance());
 
 
@@ -50,7 +47,6 @@ $PAGE->set_heading(get_string('pluginname', 'mod_facetoface'));
 
 if (!$validate && !$process) {
     $mform = new site_bulk_session_upload_form(null, [
-        // Provide a hidden param so the form submission sets validate=1
         'validate' => 1
     ]);
 
@@ -60,13 +56,11 @@ if (!$validate && !$process) {
     exit;
 }
 
-// 5) Step 2: Validate & preview if user requested validation.
 if ($validate) {
     // Reload the upload form to get the fileid.
     $mform = new site_bulk_session_upload_form();
     $data  = $mform->get_data();
 
-    // If form wasn’t submitted properly, just redirect to the initial page.
     if (!$data  || empty($data->csvfile)) {
         echo $OUTPUT->header();
         echo $OUTPUT->notification(get_string('error:choosecsv', 'mod_facetoface'), 'error');
