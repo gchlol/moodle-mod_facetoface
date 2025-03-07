@@ -7,8 +7,11 @@
  * @author     Yucheng Zhu
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+global $CFG;
 
 use mod_facetoface\enum\attendance_column;
+
+require_once("$CFG->dirroot/mod/facetoface/classes/data/attendance_sheet_io.php");
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -265,7 +268,7 @@ class attendance_sheet_settings {
                             td2.innerHTML = "";
                         } else if (selectedValue === "Header and Rows") {
                             td2.innerHTML = \'<input type="text" name="header_values[]" placeholder="Enter default value" class="attendance-sheet-config__table--not-first__input" />\';
-                        } else if (["Name", "Payroll", "Email", "Signature"].indexOf(selectedValue) !== -1) {
+                        } else if (["Name", "Payroll", "Email", "Org Unit", "Position", "Stream", "Paypoint"].indexOf(selectedValue) !== -1) {
                             td2.innerHTML = "";
                         } else {
                             td2.innerHTML = \'<input type="text" name="header_values[]" />\';
