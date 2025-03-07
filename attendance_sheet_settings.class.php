@@ -22,12 +22,7 @@ class attendance_sheet_settings {
 
         $PAGE->requires->css(new moodle_url('/mod/facetoface/style/attendance_sheet_config_styles.css'));
 
-        // Define the folder and file path for storing the default attendance sheet settings.
-        $datafolder = $CFG->dataroot . '/mod_facetoface';
-        if (!is_dir($datafolder)) {
-            mkdir($datafolder, 0775, true);
-        }
-        $this->defaultjsonfile = $datafolder . '/attendance_sheet_config_' . $USER->id . '.json';
+        $this->defaultjsonfile = get_attendance_config_file($CFG, $USER);
 
         $defaultData = [];
 
@@ -53,16 +48,16 @@ class attendance_sheet_settings {
 
         // Process each attendance item.
         foreach ($this->attendanceitems as &$item) {
-            if (isset($item['labels'][0]['value'])) {
-                $column = $item['labels'][0]['value'];
+            if (isset($item['labels'][attendance_column_json::COLUMN]['value'])) {
+                $column = $item['labels'][attendance_column_json::COLUMN]['value'];
                 // If the saved column is numeric (i.e. an enum value), convert it back to its display string.
                 if (is_numeric($column) && isset($attendance_columns_enums_to_names[$column])) {
                     $column = $attendance_columns_enums_to_names[$column];
-                    $item['labels'][0]['value'] = $column;
+                    $item['labels'][attendance_column_json::COLUMN]['value'] = $column;
                 }
                 if ($column === 'Header Only' || $column === 'Header and Rows') {
                     $item['editable'] = true;
-                    $item['defaultvalue'] = isset($item['labels'][1]['value']) ? $item['labels'][1]['value'] : '';
+                    $item['defaultvalue'] = isset($item['labels'][attendance_column_json::DEFAULT_VALUE]['value']) ? $item['labels'][attendance_column_json::DEFAULT_VALUE]['value'] : '';
                     // Preserve the original type to know which default value to save.
                     $item['type'] = $column;
                 } else {
