@@ -17,7 +17,6 @@ class attendance_column extends enum_base {
     const POSITION  = 4;
     const STREAM    = 5;
     const PAYPOINT  = 6;
-    const SIGNATURE = 7;
 
     /**
      * Map the column header names in attendance_sheet.php to the enum values.
@@ -47,7 +46,6 @@ class attendance_column extends enum_base {
                 get_string('attendancecolumn:4', 'facetoface') => self::POSITION,
                 get_string('attendancecolumn:5', 'facetoface') => self::STREAM,
                 get_string('attendancecolumn:6', 'facetoface') => self::PAYPOINT,
-                get_string('attendancecolumn:7', 'facetoface') => self::SIGNATURE,
             ];
         }
     }
