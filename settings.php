@@ -35,6 +35,9 @@ require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 require_once($CFG->dirroot . '/user/profile/lib.php');
 
 
+// NOTE: I tried to minimse modifications of settings.php for maintainability.
+//       I have not removed any existing code, but added new code at the end.
+//       This is temporary until we decided on how to move forward.
 if ($hassiteconfig) {
 
     // Create a custom Face-to-Face category under "Activity modules".
@@ -43,13 +46,13 @@ if ($hassiteconfig) {
      get_string('pluginname', 'mod_facetoface')
        ));
 
-    // creats the settings page.. note this can be placed under admin tree as this is created under modfacetoface
+    // Create a new settings page under the Face-to-Face category.
     $settings = new admin_settingpage(
      'modfacetofacesettings',
      get_string('facetoface:settings', 'facetoface')
     );
 
-    // $ADMIN->add('modfacetoface', $settings); //
+    $ADMIN->add('modfacetoface', $settings);
 
     // Face-to-Face config items.
     $settings->add(new admin_setting_configtext(
@@ -212,6 +215,7 @@ if ($hassiteconfig) {
 
     $settings->add(new admin_setting_heading('facetoface/sitenotices_header', get_string('sitenoticesheading', 'facetoface'), $html));
 
+    // External page for bulk upload under Face to Face category.
     $bulkupload = new admin_externalpage(
     'modfacetoface_sitebulkupload',
     get_string('f2fbulksessions', 'mod_facetoface'),
@@ -219,4 +223,14 @@ if ($hassiteconfig) {
     'moodle/site:config'
     );
     $ADMIN->add('modfacetoface', $bulkupload);
+
+    // Alternative external page for bulk upload under Courses category.
+    $bulkuploadcourse = new admin_externalpage(
+        'modfacetoface_sitebulkupload_course',
+        get_string('f2fbulksessions', 'mod_facetoface'),
+        new moodle_url('/mod/facetoface/sitebulkupload.php'),
+        'moodle/site:config'
+    );
+    $ADMIN->add('courses', $bulkuploadcourse);
+
 }
