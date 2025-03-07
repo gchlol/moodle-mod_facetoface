@@ -147,10 +147,9 @@ if ($trainer_roles) {
 // endregion
 
 // region Attendees Table
-global $attendanceconfigjson;
 // Headings
 $configured_columnsanddefaults = return_updated_configured_columns_and_defaults(
-    $attendanceconfigjson,
+    get_attendance_config_file($CFG, $USER),
     $instance
 );
 //$configured_columnsanddefaults = read_columns_pairs_from_json($CFG->dataroot . '/mod_facetoface/attendance_sheet_config_' . $USER->id . '.json');

@@ -11,6 +11,8 @@
 use mod_facetoface\enum\attendance_column;
 
 require_once('../../config.php');
+require_once("$CFG->dirroot/mod/facetoface/classes/data/attendance_sheet_io.php");
+
 require_sesskey(); // CSRF protection.
 
 global $USER;
@@ -40,15 +42,9 @@ foreach ($configdata as &$item) {
     }
 }
 
-$datafolder = $CFG->dataroot . '/mod_facetoface';
-$jsonfile = $datafolder . '/attendance_sheet_config_' . $USER->id . '.json';
-
-if (!is_dir($datafolder)) {
-    mkdir($datafolder, 0775, true);
-}
-
 // Save the configuration to the JSON file.
-$result = file_put_contents($jsonfile, json_encode($configdata, JSON_PRETTY_PRINT));
+$jsonfile = get_attendance_config_file($CFG, $USER);
+$result = file_put_contents(get_attendance_config_file($CFG, $USER), json_encode($configdata, JSON_PRETTY_PRINT));
 if ($result === false) {
     die('Failed to save configuration.');
 }

@@ -14,7 +14,17 @@ use mod_facetoface\enum\enum_base;
 
 defined('MOODLE_INTERNAL') || die();
 
-$attendanceconfigjson = $CFG->dataroot . '/mod_facetoface/attendance_sheet_config_' . $USER->id . '.json';
+function get_attendance_config_folder($CFG) {
+    $datafolder = $CFG->dataroot . '/mod_facetoface';
+    if (!is_dir($datafolder)) {
+        mkdir($datafolder, 0775, true);
+    }
+    return $datafolder;
+}
+
+function get_attendance_config_file($CFG, $USER) {
+    return get_attendance_config_folder($CFG) . '/attendance_sheet_config_' . $USER->id . '.json';
+}
 
 class attendance_column_json extends enum_base {
     const COLUMN = 0;
