@@ -1,49 +1,18 @@
-<?php global $CFG, $USER;
-
+<?php
 /**
- * Save attendance sheet configuration from array.
+ * Read and write attendance sheet configuration.
  *
- * This script defines a function to save an attendance sheet configuration given an array of integers and a user id.
- * Each configuration item contains a unique id and a "labels" array with two entries.
- * For example, an input array of [0,1] produces the JSON:
- *
- * [
- *     {
- *         "id": "1741142236659",
- *         "labels": [
- *             {
- *                 "value": 0,
- *                 "first": true
- *             },
- *             {
- *                 "value": ""
- *             }
- *         ]
- *     },
- *     {
- *         "id": "1741142238839",
- *         "labels": [
- *             {
- *                 "value": 1,
- *                 "first": true
- *             },
- *             {
- *                 "value": ""
- *             }
- *         ]
- *     }
- * ]
- *
- * Note: For the value 2, the function casts it to a string to match the expected output.
- *
- * @package   mod_facetoface
+ * @package    mod_facetoface
+ * @copyright  2025 Gold Coast Health
+ * @author     Yucheng Zhu
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+global $CFG, $USER;
 
 use mod_facetoface\enum\attendance_column;
 use mod_facetoface\enum\enum_base;
 
 defined('MOODLE_INTERNAL') || die();
-
 
 $attendanceconfigjson = $CFG->dataroot . '/mod_facetoface/attendance_sheet_config_' . $USER->id . '.json';
 
@@ -100,12 +69,11 @@ class attendance_column_json extends enum_base {
  *               e.g. [0=>"", "h"=>"", "a"=>"b"] in the example.
  */
 function read_columns_pairs_from_json($filePath) {
-    // Check if the file exists.
+
     if (!file_exists($filePath)) {
         throw new Exception("JSON file not found: " . $filePath);
     }
 
-    // Read the file contents.
     $jsonContent = file_get_contents($filePath);
 
     // Decode the JSON into an associative array.
@@ -140,7 +108,7 @@ function save_attendance_sheet_config(array $attendance_array, string $jsonfile)
     // Define the data folder.
     $datafolder = $CFG->dataroot . '/mod_facetoface';
     if (!is_dir($datafolder)) {
-        if (!mkdir($datafolder, 0700, true)) {
+        if (!mkdir($datafolder, 0775, true)) {
             throw new Exception('Failed to create data folder.');
         }
     }
@@ -168,8 +136,8 @@ function save_attendance_sheet_config(array $attendance_array, string $jsonfile)
     if (file_put_contents($jsonfile, $jsondata) === false) {
         throw new Exception('Failed to save configuration.');
     }
-    // Set file permissions so that only the owner can read and write.
-    chmod($jsonfile, 0600);
+
+    chmod($jsonfile, 0775);
 
     return true;
 }
@@ -207,6 +175,5 @@ function return_updated_configured_columns_and_defaults(string $jsonfile, stdCla
 
     // Save the old or default column values to
     save_attendance_sheet_config($configured_columns, $jsonfile);
-
     return read_columns_pairs_from_json($jsonfile);
 }

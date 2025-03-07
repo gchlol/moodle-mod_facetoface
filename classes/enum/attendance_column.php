@@ -1,8 +1,15 @@
 <?php
+/**
+ * Convert between attendance column names and their enums.
+ *
+ * @package    mod_facetoface
+ * @copyright  2025 Gold Coast Health
+ * @author     Nicholas Lambell, Yucheng Zhu
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 namespace mod_facetoface\enum;
 
 class attendance_column extends enum_base {
-
     const NAME      = 0;
     const USERNAME  = 1; // Moodle's native `username` field is used to store the payroll number.
     const EMAIL     = 2;
@@ -13,7 +20,7 @@ class attendance_column extends enum_base {
     const SIGNATURE = 7;
 
     /**
-     * Map the column header names on attendance_sheet.php to the enum values.
+     * Map the column header names in attendance_sheet.php to the enum values.
      * @var array<string, int>|null
      */
     private static $attendancecolumnsmap = null;

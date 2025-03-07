@@ -1,10 +1,11 @@
 <?php
 /**
- * Save attendance sheet configuration.
+ * Saves the attendance sheet configuration submitted via the settings form.
  *
- * This script saves the attendance sheet configuration submitted via the settings form.
- *
- * @package mod_facetoface
+ * @package    mod_facetoface
+ * @copyright  2025 Gold Coast Health
+ * @author     Yucheng Zhu
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 use mod_facetoface\enum\attendance_column;
@@ -14,8 +15,7 @@ require_sesskey(); // CSRF protection.
 
 global $USER;
 
-// TODO: Check user has the permission to view the attendance_sheet_config file
-
+require_login();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['config_data'])) {
     die('Invalid request.');
@@ -43,9 +43,8 @@ foreach ($configdata as &$item) {
 $datafolder = $CFG->dataroot . '/mod_facetoface';
 $jsonfile = $datafolder . '/attendance_sheet_config_' . $USER->id . '.json';
 
-// Ensure the data folder exists.
 if (!is_dir($datafolder)) {
-    mkdir($datafolder, 0700, true);
+    mkdir($datafolder, 0775, true);
 }
 
 // Save the configuration to the JSON file.
@@ -54,5 +53,4 @@ if ($result === false) {
     die('Failed to save configuration.');
 }
 
-// Set file permissions so that only the owner can read and write.
-chmod($jsonfile, 0600);
+chmod($jsonfile, 0775);

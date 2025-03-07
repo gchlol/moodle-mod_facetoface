@@ -4,6 +4,7 @@
  *
  * @package    mod_facetoface
  * @copyright  2025 Gold Coast Health
+ * @author     Yucheng Zhu
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -24,7 +25,7 @@ class attendance_sheet_settings {
         // Define the folder and file path for storing the default attendance sheet settings.
         $datafolder = $CFG->dataroot . '/mod_facetoface';
         if (!is_dir($datafolder)) {
-            mkdir($datafolder, 0700, true); // create folder with restricted permissions.
+            mkdir($datafolder, 0775, true);
         }
         $this->defaultjsonfile = $datafolder . '/attendance_sheet_config_' . $USER->id . '.json';
 
@@ -33,8 +34,8 @@ class attendance_sheet_settings {
         // If the JSON file does not exist, create it with the default data.
         if (!file_exists($this->defaultjsonfile)) {
             file_put_contents($this->defaultjsonfile, json_encode($defaultData, JSON_PRETTY_PRINT));
-            // Set file permissions so that only the owner can read and write.
-            chmod($this->defaultjsonfile, 0600);
+
+            chmod($this->defaultjsonfile, 0775);
         }
 
         // Read and decode the JSON file to get attendance items.

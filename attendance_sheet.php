@@ -1,4 +1,12 @@
 <?php
+/**
+ * Display attendance sheet based on the configuration.
+ *
+ * @package    mod_facetoface
+ * @copyright  2025 Gold Coast Health
+ * @author     Nicholas Lambell, Yucheng Zhu
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 namespace classes\data;
 
