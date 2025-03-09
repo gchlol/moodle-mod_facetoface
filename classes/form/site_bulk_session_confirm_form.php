@@ -27,25 +27,30 @@ use moodleform;
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir.'/formslib.php');
 
-
+/**
+ * A Moodle form that collects confirmation details (e.g., suppressing emails)
+ * before finalizing bulk session creation from CSV data.
+ */
 class site_bulk_session_confirm_form extends moodleform {
 
     /**
-     * Defines elements on the site-level confirmation form.
+     * Defines elements and layouts on site-level confirmation form.
      */
     public function definition() {
         $mform = $this->_form;
 
+        // Retrieve file ID from customdata, which references CSV file in draft.
         $fileid = $this->_customdata['fileid'] ?? 0;
 
-        // Example checkbox (suppress email).
+        // Checkbox to allow user to suppress email notifications.
         $mform->addElement('advcheckbox', 'suppressemail', get_string('suppressemail', 'facetoface'));
         $mform->setType('suppressemail', PARAM_BOOL);
 
+        // Hidden element to store file ID and pass it to form submission.
         $mform->addElement('hidden', 'fileid', $fileid);
         $mform->setType('fileid', PARAM_INT);
 
-        // A hidden marker to indicate we're processing the form.
+        // Hidden marker to indicate we're processing this form.
         $mform->addElement('hidden', 'process', 1);
         $mform->setType('process', PARAM_INT);
 
