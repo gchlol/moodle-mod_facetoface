@@ -36,22 +36,25 @@ require_once($CFG->dirroot . '/user/profile/lib.php');
 
 
 // NOTE: I tried to minimse modifications of settings.php for maintainability.
-//       I have not removed any existing code, but added new code at the end.
-//       This is temporary until we decided on how to move forward.
+// I have not removed any existing code, but added new code at the end.
+// This is temporary until we decided on how to move forward.
 if ($hassiteconfig) {
 
-    // Create a custom Face-to-Face category under "Activity modules".
+    //? Create a custom Face-to-Face category under "Activity modules"
+    //? if removed, the categories will not display.
     $ADMIN->add('modsettings', new admin_category(
      'modfacetoface',
      get_string('pluginname', 'mod_facetoface')
        ));
 
-    // Create a new settings page under the Face-to-Face category.
+    //? Create a new settings page under the Face-to-Face category.
+    //? if removed, the settings page will not display.
     $settings = new admin_settingpage(
      'modfacetofacesettings',
      get_string('facetoface:settings', 'facetoface')
     );
 
+    //? Add the settings page to the Face-to-Face category.
     $ADMIN->add('modfacetoface', $settings);
 
     // Face-to-Face config items.
@@ -224,7 +227,7 @@ if ($hassiteconfig) {
     );
     $ADMIN->add('modfacetoface', $bulkupload);
 
-    // Alternative external page for bulk upload under Courses category.
+    //? Alternative external page for bulk upload under Courses category.
     $bulkuploadcourse = new admin_externalpage(
         'modfacetoface_sitebulkupload_course',
         get_string('f2fbulksessions', 'mod_facetoface'),
