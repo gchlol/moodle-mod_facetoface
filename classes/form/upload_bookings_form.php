@@ -81,7 +81,8 @@ class upload_bookings_form extends \moodleform {
         $buttonarray = [];
         if ($fromf2fselect) {
             $buttonlabel = get_string('backtouploadselect', 'mod_facetoface');
-            $buttonarray[] = $mform->createElement('button', 'back', $buttonlabel, ['onclick' => "location.href='uploadf2fselect.php'"]);
+            $buttonarray[] = $mform->createElement('button', 'back', $buttonlabel, [
+                'onclick' => "location.href='uploadf2fselect.php'"]);
         }
         $buttonarray[] = $mform->createElement('submit', 'submit', get_string('facetoface:uploadandpreview', 'mod_facetoface'));
 
