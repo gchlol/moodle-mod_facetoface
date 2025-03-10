@@ -41,7 +41,7 @@ $PAGE->set_heading(get_string('pluginname', 'mod_facetoface'));
 // 1. Get search & paging parameters.
 $search  = optional_param('search', '', PARAM_RAW);
 $page    = optional_param('page', 0, PARAM_INT);
-$perpage = 20; // # of rows per page
+$perpage = 10; // # of rows per page
 
 // 2. Simple search form.
 echo $OUTPUT->header();
