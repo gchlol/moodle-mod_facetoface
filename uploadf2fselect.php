@@ -15,8 +15,6 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version metadata for the repository_pluginname plugin.
- *
  * @package   mod_facetoface
  * @copyright 2025, Gold Coast Health
  * @author    Jonas Sajonas
@@ -38,12 +36,12 @@ $PAGE->set_url(new moodle_url('/mod/facetoface/uploadf2fselect.php'));
 $PAGE->set_title(get_string('pickfacetofaceinstance', 'mod_facetoface'));
 $PAGE->set_heading(get_string('pluginname', 'mod_facetoface'));
 
-// 1. Get search & paging parameters.
+// Search and paging parameters.
 $search  = optional_param('search', '', PARAM_RAW);
 $page    = optional_param('page', 0, PARAM_INT);
-$perpage = 10; // # of rows per page
+$perpage = 10;
 
-// 2. Simple search form.
+// Search form.
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('pickfacetofaceinstance', 'mod_facetoface'));
 echo html_writer::start_tag('form', ['method' => 'get', 'action' => $PAGE->url]);
@@ -51,7 +49,7 @@ echo html_writer::empty_tag('input', ['type' => 'text', 'name' => 'search', 'val
 echo html_writer::empty_tag('input', ['type' => 'submit', 'value' => get_string('search')]);
 echo html_writer::end_tag('form');
 
-// 3. Build a WHERE clause for searching facetoface by name.
+// Searching facetoface by name.
 $params = [];
 $wheresql = '';
 if (!empty($search)) {
@@ -59,20 +57,20 @@ if (!empty($search)) {
     $params['search'] = '%'.$search.'%';
 }
 
-// 4. Count total records for paging.
+// Count total records for paging.
 $countsql = "SELECT COUNT(*) FROM {facetoface} $wheresql";
 $totalcount = $DB->count_records_sql($countsql, $params);
 
-// 5. Fetch the current page of records.
+// Fetch the current page of records.
 $start = $page * $perpage;
 $sql   = "SELECT * FROM {facetoface} $wheresql ORDER BY name ASC";
 $facetofaces = $DB->get_records_sql($sql, $params, $start, $perpage);
 
-// 6. Show a paging bar to navigate pages of results.
+// Paging bar to navigate results.
 $baseurl = new moodle_url('/mod/facetoface/uploadf2fselect.php', ['search' => $search]);
 echo $OUTPUT->paging_bar($totalcount, $page, $perpage, $baseurl);
 
-// 7. Display the table (very similar to the basic approach).
+// Display table.
 if (empty($facetofaces)) {
     echo $OUTPUT->notification(get_string('nofacetofaceinstances', 'mod_facetoface'), 'info');
 } else {
@@ -91,6 +89,7 @@ if (empty($facetofaces)) {
             'f' => $f2f->id,
             'fromf2fselect' => 1
         ]);
+
         $uploadlink = html_writer::link($uploadurl, get_string('uploadbookings', 'mod_facetoface'));
 
         $table->data[] = [
@@ -103,7 +102,7 @@ if (empty($facetofaces)) {
     echo html_writer::table($table);
 }
 
-// 8. (Optional) paging bar at bottom as well.
+// Paging bar at bottom.
 echo $OUTPUT->paging_bar($totalcount, $page, $perpage, $baseurl);
 
 echo $OUTPUT->footer();

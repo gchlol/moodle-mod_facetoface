@@ -43,7 +43,7 @@ class upload_bookings_form extends \moodleform {
 
         $mform = $this->_form;
 
-        // Check if the user came from uploadf2fselect page.
+        // Check if user came from uploadf2fselect page.
         $fromf2fselect = $this->_customdata['fromf2fselect'] ?? 0;
 
         $mform->addElement('header', 'settingsheader', get_string('upload'));
@@ -77,7 +77,7 @@ class upload_bookings_form extends \moodleform {
         $mform->addElement('hidden', 'validate');
         $mform->setType('validate', PARAM_INT);
 
-        // If from uploadf2fselect, add a “Go back” or “Cancel” button.
+        // If from uploadf2fselect, add Go back button.
         $buttonarray = [];
         if ($fromf2fselect) {
             $buttonlabel = get_string('backtouploadselect', 'mod_facetoface');
