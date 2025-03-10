@@ -867,8 +867,8 @@ $string['attendancecolumn:5'] = 'Stream';
 $string['attendancecolumn:6'] = 'Paypoint';
 
 // Site wide bulk upload.
-$string['f2fbulksessions'] = 'Face-to-Face: Upload Sessions';
-$string['facetoface:settings'] = 'Face-to-Face settings';
+$string['f2fbulksessions'] = 'Upload sessions';
+$string['facetoface:settings'] = 'Settings';
 $string['sitebulkuploadheader'] = 'Upload Bulk Sessions';
 $string['examplecsv']            = 'Example CSV file';
 $string['upsf']     = 'Upload session file';

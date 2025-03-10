@@ -35,170 +35,163 @@ require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 require_once($CFG->dirroot . '/user/profile/lib.php');
 
 
-// NOTE: I tried to minimse modifications of settings.php for maintainability.
-// I have not removed any existing code, but added new code at the end.
-// This is temporary until we decided on how to move forward.
-if ($hassiteconfig) {
-
-    //? Create a custom Face-to-Face category under "Activity modules"
-    //? if removed, the categories will not display.
-    $ADMIN->add('modsettings', new admin_category(
-     'modfacetoface',
-     get_string('pluginname', 'mod_facetoface')
-       ));
-
-    //? Create a new settings page under the Face-to-Face category.
-    //? if removed, the settings page will not display.
-    $settings = new admin_settingpage(
-     'modfacetofacesettings',
-     get_string('facetoface:settings', 'facetoface')
-    );
-
-    //? Add the settings page to the Face-to-Face category.
-    $ADMIN->add('modfacetoface', $settings);
-
-    // Face-to-Face config items.
-    $settings->add(new admin_setting_configtext(
-     'facetoface/fromaddress',
-     get_string('setting:fromaddress_caption', 'facetoface'),
-     get_string('setting:fromaddress', 'facetoface'),
-     get_string('setting:fromaddressdefault', 'facetoface'),
-     PARAM_EMAIL,
-     30
+$ADMIN->add('modsettings', new admin_category(
+    'modfacetoface', get_string('pluginname', 'mod_facetoface')
     ));
 
-    // Load roles.
-    $choices = [];
+$settings = new admin_settingpage(
+    'modfacetofacesettings', get_string('facetoface:settings', 'facetoface')
+    );
+
+    $ADMIN->add('modfacetoface', $settings);
+
+if ($ADMIN->fulltree) {
+
+        // Face-to-Face config items.
+        $settings->add(new admin_setting_configtext(
+        'facetoface/fromaddress',
+        get_string('setting:fromaddress_caption', 'facetoface'),
+        get_string('setting:fromaddress', 'facetoface'),
+        get_string('setting:fromaddressdefault', 'facetoface'),
+        PARAM_EMAIL,
+        30
+        ));
+
+        // Load roles.
+        $choices = [];
     if ($roles = role_fix_names(get_all_roles(), context_system::instance())) {
         foreach ($roles as $role) {
-            $choices[$role->id] = format_string($role->localname);
+                $choices[$role->id] = format_string($role->localname);
         }
     }
 
     $settings->add(new admin_setting_configmultiselect(
-     'facetoface/session_roles',
-     get_string('setting:sessionroles_caption', 'facetoface'),
-     get_string('setting:sessionroles', 'facetoface'),
-     [],
-     $choices
-    ));
+        'facetoface/session_roles',
+        get_string('setting:sessionroles_caption', 'facetoface'),
+        get_string('setting:sessionroles', 'facetoface'),
+        [],
+        $choices
+        ));
 
     $settings->add(new admin_setting_configcheckbox(
-     'facetoface/limit_candidates',
-     get_string('setting:limit_candidates_caption', 'facetoface'),
-     get_string('setting:limit_candidates', 'facetoface'),
-     0
-    ));
+        'facetoface/limit_candidates',
+        get_string('setting:limit_candidates_caption', 'facetoface'),
+        get_string('setting:limit_candidates', 'facetoface'),
+        0
+        ));
 
     $settings->add(new admin_setting_configcheckbox(
-     'facetoface/enableapprovals',
-     get_string('setting:enableapprovals_caption', 'facetoface'),
-     get_string('setting:enableapprovals', 'facetoface'),
-     1
-    ));
+        'facetoface/enableapprovals',
+        get_string('setting:enableapprovals_caption', 'facetoface'),
+        get_string('setting:enableapprovals', 'facetoface'),
+        1
+        ));
 
     $settings->add(new admin_setting_heading(
-     'facetoface/manageremail_header',
-     get_string('manageremailheading', 'facetoface'),
-     get_string('manageremaildisabled', 'facetoface')
-    ));
+        'facetoface/manageremail_header',
+        get_string('manageremailheading', 'facetoface'),
+        get_string('manageremaildisabled', 'facetoface')
+        ));
 
     $settings->add(new admin_setting_configcheckbox(
-     'facetoface/addchangemanageremail',
-     get_string('setting:addchangemanageremail_caption', 'facetoface'),
-     get_string('setting:addchangemanageremail', 'facetoface'),
-     0
-    ));
+        'facetoface/addchangemanageremail',
+        get_string('setting:addchangemanageremail_caption', 'facetoface'),
+        get_string('setting:addchangemanageremail', 'facetoface'),
+        0
+        ));
+
     $settings->hide_if('facetoface/addchangemanageremail', 'facetoface/enableapprovals');
 
     $settings->add(new admin_setting_configtext(
-     'facetoface/manageraddressformat',
-     get_string('setting:manageraddressformat_caption', 'facetoface'),
-     get_string('setting:manageraddressformat', 'facetoface'),
-     get_string('setting:manageraddressformatdefault', 'facetoface'),
-     PARAM_TEXT
-    ));
+        'facetoface/manageraddressformat',
+        get_string('setting:manageraddressformat_caption', 'facetoface'),
+        get_string('setting:manageraddressformat', 'facetoface'),
+        get_string('setting:manageraddressformatdefault', 'facetoface'),
+        PARAM_TEXT
+        ));
+
     $settings->hide_if('facetoface/manageraddressformat', 'facetoface/enableapprovals');
 
     $settings->add(new admin_setting_configtext(
-     'facetoface/manageraddressformatreadable',
-     get_string('setting:manageraddressformatreadable_caption', 'facetoface'),
-     get_string('setting:manageraddressformatreadable', 'facetoface'),
-     get_string('setting:manageraddressformatreadabledefault', 'facetoface'),
-     PARAM_NOTAGS
-    ));
+        'facetoface/manageraddressformatreadable',
+        get_string('setting:manageraddressformatreadable_caption', 'facetoface'),
+        get_string('setting:manageraddressformatreadable', 'facetoface'),
+        get_string('setting:manageraddressformatreadabledefault', 'facetoface'),
+        PARAM_NOTAGS
+        ));
+
     $settings->hide_if('facetoface/manageraddressformatreadable', 'facetoface/enableapprovals');
 
     $settings->add(new admin_setting_heading('facetoface/cost_header', get_string('costheading', 'facetoface'), ''));
 
     $settings->add(new admin_setting_configcheckbox(
-     'facetoface/hidecost',
-     get_string('setting:hidecost_caption', 'facetoface'),
-     get_string('setting:hidecost', 'facetoface'),
-     0
-    ));
+        'facetoface/hidecost',
+        get_string('setting:hidecost_caption', 'facetoface'),
+        get_string('setting:hidecost', 'facetoface'),
+        0
+        ));
 
     $settings->add(new admin_setting_configcheckbox(
-     'facetoface/hidediscount',
-     get_string('setting:hidediscount_caption', 'facetoface'),
-     get_string('setting:hidediscount', 'facetoface'),
-     0
-    ));
+        'facetoface/hidediscount',
+        get_string('setting:hidediscount_caption', 'facetoface'),
+        get_string('setting:hidediscount', 'facetoface'),
+        0
+        ));
 
     $settings->add(new admin_setting_heading('facetoface/icalendar_header', get_string('icalendarheading', 'facetoface'), ''));
 
     $settings->add(new admin_setting_configcheckbox(
-     'facetoface/oneemailperday',
-     get_string('setting:oneemailperday_caption', 'facetoface'),
-     get_string('setting:oneemailperday', 'facetoface'),
-     0
-    ));
+        'facetoface/oneemailperday',
+        get_string('setting:oneemailperday_caption', 'facetoface'),
+        get_string('setting:oneemailperday', 'facetoface'),
+        0
+        ));
 
     $settings->add(new admin_setting_configcheckbox(
-     'facetoface/disableicalcancel',
-     get_string('setting:disableicalcancel_caption', 'facetoface'),
-     get_string('setting:disableicalcancel', 'facetoface'),
-     0
-    ));
+        'facetoface/disableicalcancel',
+        get_string('setting:disableicalcancel_caption', 'facetoface'),
+        get_string('setting:disableicalcancel', 'facetoface'),
+        0
+        ));
 
     $settings->add(new admin_setting_heading(
-     'facetoface_attendeesexporttofile_header',
-     get_string('attendeesexporttofileheading', 'facetoface'),
-     ''
-    ));
+        'facetoface_attendeesexporttofile_header',
+        get_string('attendeesexporttofileheading', 'facetoface'),
+        ''
+        ));
 
     // Basic fields.
     $choices = [
-     'middlename'  => new lang_string('middlename'),
-     'alternatename' => new lang_string('alternatename'),
-     'username'    => new lang_string('username'),
-     'idnumber'    => new lang_string('idnumber'),
-     'email'       => new lang_string('email'),
-     'phone1'      => new lang_string('phone1'),
-     'phone2'      => new lang_string('phone2'),
-     'department'  => new lang_string('department'),
-     'institution' => new lang_string('institution'),
-     'city'        => new lang_string('city'),
-     'country'     => new lang_string('country'),
-     'lang'        => new lang_string('language'),
-     'firstnamephonetic' => new lang_string('firstnamephonetic'),
-     'lastnamephonetic'  => new lang_string('lastnamephonetic'),
+    'middlename'  => new lang_string('middlename'),
+    'alternatename' => new lang_string('alternatename'),
+    'username'    => new lang_string('username'),
+    'idnumber'    => new lang_string('idnumber'),
+    'email'       => new lang_string('email'),
+    'phone1'      => new lang_string('phone1'),
+    'phone2'      => new lang_string('phone2'),
+    'department'  => new lang_string('department'),
+    'institution' => new lang_string('institution'),
+    'city'        => new lang_string('city'),
+    'country'     => new lang_string('country'),
+    'lang'        => new lang_string('language'),
+    'firstnamephonetic' => new lang_string('firstnamephonetic'),
+    'lastnamephonetic'  => new lang_string('lastnamephonetic'),
     ];
 
     // Custom profile fields.
     $profilefields = profile_get_custom_fields();
     foreach ($profilefields as $field) {
-        $choices['profile_field_' . $field->shortname] = format_string($field->name)
-         . ' (' . get_string('customfield', 'customfield'). ')';
+            $choices['profile_field_' . $field->shortname] = format_string($field->name)
+             . ' (' . get_string('customfield', 'customfield'). ')';
     }
 
     $settings->add(new admin_setting_configmultiselect(
-     'facetoface_attendeesexportfields',
-     new lang_string('setting:attendeesexportfields_caption', 'facetoface'),
-     new lang_string('setting:attendeesexportfields', 'facetoface'),
-     [],
-     $choices
-    ));
+        'facetoface_attendeesexportfields',
+        new lang_string('setting:attendeesexportfields_caption', 'facetoface'),
+        new lang_string('setting:attendeesexportfields', 'facetoface'),
+        [],
+        $choices
+        ));
 
     // List of existing custom fields.
     $html  = facetoface_list_of_customfields();
@@ -218,22 +211,15 @@ if ($hassiteconfig) {
 
     $settings->add(new admin_setting_heading('facetoface/sitenotices_header', get_string('sitenoticesheading', 'facetoface'), $html));
 
-    // External page for bulk upload under Face to Face category.
-    $bulkupload = new admin_externalpage(
-    'modfacetoface_sitebulkupload',
+}
+
+// External page for bulk upload under Face to Face category.
+$bulkupload = new admin_externalpage( 'modfacetoface_sitebulkupload',
     get_string('f2fbulksessions', 'mod_facetoface'),
     new moodle_url('/mod/facetoface/sitebulkupload.php'),
-    'moodle/site:config'
-    );
-    $ADMIN->add('modfacetoface', $bulkupload);
-
-    //? Alternative external page for bulk upload under Courses category.
-    $bulkuploadcourse = new admin_externalpage(
-        'modfacetoface_sitebulkupload_course',
-        get_string('f2fbulksessions', 'mod_facetoface'),
-        new moodle_url('/mod/facetoface/sitebulkupload.php'),
         'moodle/site:config'
-    );
-    $ADMIN->add('courses', $bulkuploadcourse);
+);
 
-}
+$ADMIN->add('modfacetoface', $bulkupload);
+
+$settings = null;
