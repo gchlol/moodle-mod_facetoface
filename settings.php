@@ -28,7 +28,6 @@
  * @author     Francois Marier <francois@catalyst.net.nz>
  */
 
-// Per Moodle coding style, the file must start with the MOODLE_INTERNAL check.
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/mod/facetoface/lib.php');
