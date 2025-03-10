@@ -116,7 +116,6 @@ if ($ADMIN->fulltree) {
         get_string('setting:manageraddressformatreadabledefault', 'facetoface'),
         PARAM_NOTAGS
     ));
-
     $settings->hide_if('facetoface/manageraddressformatreadable', 'facetoface/enableapprovals');
 
     $settings->add(new admin_setting_heading('facetoface/cost_header', get_string('costheading', 'facetoface'), ''));
