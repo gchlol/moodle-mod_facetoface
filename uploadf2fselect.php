@@ -17,22 +17,26 @@
 /**
  * Version metadata for the repository_pluginname plugin.
  *
- * @package   repository_pluginname
- * @copyright 2025, author_fullname <author_link>
+ * @package   mod_facetoface
+ * @copyright 2025, Gold Coast Health
+ * @author    Jonas Sajonas
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
 
-require_once('../../config.php');
+require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
 require_once($CFG->libdir.'/tablelib.php');
 
+use core\output\notification;
+
+require_capability('moodle/site:config', context_system::instance());
+
 admin_externalpage_setup('modfacetoface_uploadf2fselect');
 
-$PAGE->set_url(new moodle_url('/mod/facetoface/selectf2f.php'));
+$PAGE->set_url(new moodle_url('/mod/facetoface/uploadf2fselect.php'));
 $PAGE->set_title(get_string('pickfacetofaceinstance', 'mod_facetoface'));
-$PAGE->set_heading(get_string('pickfacetofaceinstance', 'mod_facetoface'));
+$PAGE->set_heading(get_string('pluginname', 'mod_facetoface'));
 
 // 1. Get search & paging parameters.
 $search  = optional_param('search', '', PARAM_RAW);
@@ -65,7 +69,7 @@ $sql   = "SELECT * FROM {facetoface} $wheresql ORDER BY name ASC";
 $facetofaces = $DB->get_records_sql($sql, $params, $start, $perpage);
 
 // 6. Show a paging bar to navigate pages of results.
-$baseurl = new moodle_url('/mod/facetoface/selectf2f.php', ['search' => $search]);
+$baseurl = new moodle_url('/mod/facetoface/uploadf2fselect.php', ['search' => $search]);
 echo $OUTPUT->paging_bar($totalcount, $page, $perpage, $baseurl);
 
 // 7. Display the table (very similar to the basic approach).
