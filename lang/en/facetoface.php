@@ -907,3 +907,4 @@ $string['unknowncourse'] = 'Unknown course';
 $string['action'] = 'Action';
 $string['uploadbookings'] = 'Upload bookings';
 $string['search'] = 'Search';
+$string['backtouploadselect'] = 'Back to upload';

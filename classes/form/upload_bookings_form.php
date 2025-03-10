@@ -43,6 +43,9 @@ class upload_bookings_form extends \moodleform {
 
         $mform = $this->_form;
 
+        // Check if the user came from uploadf2fselect page.
+        $fromf2fselect = $this->_customdata['fromf2fselect'] ?? 0;
+
         $mform->addElement('header', 'settingsheader', get_string('upload'));
 
         $url = new moodle_url('/mod/facetoface/example.csv');
@@ -51,17 +54,17 @@ class upload_bookings_form extends \moodleform {
 
         $maxbytes = get_max_upload_file_size($CFG->maxbytes, 0);
         $mform->addElement('filemanager', 'csvfile', get_string('facetoface:uploadbookingsfile', 'mod_facetoface'), null, [
-            'subdirs' => 0,
-            'maxfiles' => 1,
-            'accepted_types' => 'csv',
-            'maxbytes' => $maxbytes,
-            'return_types' => FILE_INTERNAL | FILE_EXTERNAL,
+        'subdirs' => 0,
+        'maxfiles' => 1,
+        'accepted_types' => 'csv',
+        'maxbytes' => $maxbytes,
+        'return_types' => FILE_INTERNAL | FILE_EXTERNAL,
         ]);
         $mform->setType('csvfile', PARAM_INT);
         $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
 
         $mform->addElement('static', 'csvuploadhelp', '',
-            nl2br(get_string('facetoface:uploadbookingsfiledesc', 'mod_facetoface')));
+        nl2br(get_string('facetoface:uploadbookingsfiledesc', 'mod_facetoface')));
 
         $mform->addElement('advcheckbox', 'caseinsensitive', get_string('caseinsensitive', 'mod_facetoface'));
         $mform->setDefault('caseinsensitive', true);
@@ -74,6 +77,15 @@ class upload_bookings_form extends \moodleform {
         $mform->addElement('hidden', 'validate');
         $mform->setType('validate', PARAM_INT);
 
-        $mform->addElement('submit', 'submit', get_string('facetoface:uploadandpreview', 'mod_facetoface'));
+        // If from uploadf2fselect, add a “Go back” or “Cancel” button.
+        $buttonarray = [];
+        if ($fromf2fselect) {
+            $buttonlabel = get_string('backtouploadselect', 'mod_facetoface');
+            $buttonarray[] = $mform->createElement('button', 'back', $buttonlabel, ['onclick' => "location.href='uploadf2fselect.php'"]);
+        }
+        $buttonarray[] = $mform->createElement('submit', 'submit', get_string('facetoface:uploadandpreview', 'mod_facetoface'));
+
+        $mform->addGroup($buttonarray, 'buttonar', '', [' '], false);
+
     }
 }

@@ -87,7 +87,10 @@ if (empty($facetofaces)) {
         $course = $DB->get_record('course', ['id' => $f2f->course], 'fullname', IGNORE_MISSING);
         $coursename = $course ? format_string($course->fullname) : get_string('unknowncourse', 'mod_facetoface');
 
-        $uploadurl = new moodle_url('/mod/facetoface/upload.php', ['f' => $f2f->id]);
+        $uploadurl = new moodle_url('/mod/facetoface/upload.php', [
+            'f' => $f2f->id,
+            'fromf2fselect' => 1
+        ]);
         $uploadlink = html_writer::link($uploadurl, get_string('uploadbookings', 'mod_facetoface'));
 
         $table->data[] = [
