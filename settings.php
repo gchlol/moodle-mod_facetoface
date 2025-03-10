@@ -34,13 +34,12 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 require_once($CFG->dirroot . '/user/profile/lib.php');
 
-
 $ADMIN->add('modsettings', new admin_category(
     'modfacetoface', get_string('pluginname', 'mod_facetoface')
     ));
 
 $settings = new admin_settingpage(
-    'modfacetofacesettings', get_string('facetoface:settings', 'facetoface')
+    'modsettingfacetoface', get_string('facetoface:settings', 'facetoface')
     );
 
     $ADMIN->add('modfacetoface', $settings);
@@ -108,7 +107,6 @@ if ($ADMIN->fulltree) {
         get_string('setting:manageraddressformatdefault', 'facetoface'),
         PARAM_TEXT
         ));
-
     $settings->hide_if('facetoface/manageraddressformat', 'facetoface/enableapprovals');
 
     $settings->add(new admin_setting_configtext(
