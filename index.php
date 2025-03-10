@@ -123,7 +123,6 @@ foreach ($facetofaces as $facetoface) {
             }
         }
     }
-
     $url = new moodle_url('/course/view.php', ['id' => $course->id]);
     $courselink = html_writer::link($url, $course->shortname, ['title' => $course->shortname]);
     if ($course->format == 'weeks' || $course->format == 'topics') {

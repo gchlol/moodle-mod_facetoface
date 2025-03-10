@@ -47,18 +47,18 @@ $settings = new admin_settingpage(
 
 if ($ADMIN->fulltree) {
 
-        // Face-to-Face config items.
-        $settings->add(new admin_setting_configtext(
-        'facetoface/fromaddress',
-        get_string('setting:fromaddress_caption', 'facetoface'),
-        get_string('setting:fromaddress', 'facetoface'),
-        get_string('setting:fromaddressdefault', 'facetoface'),
-        PARAM_EMAIL,
-        30
-        ));
+    // Face-to-Face config items.
+    $settings->add(new admin_setting_configtext(
+    'facetoface/fromaddress',
+    get_string('setting:fromaddress_caption', 'facetoface'),
+    get_string('setting:fromaddress', 'facetoface'),
+    get_string('setting:fromaddressdefault', 'facetoface'),
+    PARAM_EMAIL,
+    30
+    ));
 
-        // Load roles.
-        $choices = [];
+    // Load roles.
+    $choices = [];
     if ($roles = role_fix_names(get_all_roles(), context_system::instance())) {
         foreach ($roles as $role) {
                 $choices[$role->id] = format_string($role->localname);
@@ -71,35 +71,34 @@ if ($ADMIN->fulltree) {
         get_string('setting:sessionroles', 'facetoface'),
         [],
         $choices
-        ));
+    ));
 
     $settings->add(new admin_setting_configcheckbox(
         'facetoface/limit_candidates',
         get_string('setting:limit_candidates_caption', 'facetoface'),
         get_string('setting:limit_candidates', 'facetoface'),
         0
-        ));
+    ));
 
     $settings->add(new admin_setting_configcheckbox(
         'facetoface/enableapprovals',
         get_string('setting:enableapprovals_caption', 'facetoface'),
         get_string('setting:enableapprovals', 'facetoface'),
         1
-        ));
+    ));
 
     $settings->add(new admin_setting_heading(
         'facetoface/manageremail_header',
         get_string('manageremailheading', 'facetoface'),
         get_string('manageremaildisabled', 'facetoface')
-        ));
+    ));
 
     $settings->add(new admin_setting_configcheckbox(
         'facetoface/addchangemanageremail',
         get_string('setting:addchangemanageremail_caption', 'facetoface'),
         get_string('setting:addchangemanageremail', 'facetoface'),
         0
-        ));
-
+    ));
     $settings->hide_if('facetoface/addchangemanageremail', 'facetoface/enableapprovals');
 
     $settings->add(new admin_setting_configtext(
@@ -118,7 +117,7 @@ if ($ADMIN->fulltree) {
         get_string('setting:manageraddressformatreadable', 'facetoface'),
         get_string('setting:manageraddressformatreadabledefault', 'facetoface'),
         PARAM_NOTAGS
-        ));
+    ));
 
     $settings->hide_if('facetoface/manageraddressformatreadable', 'facetoface/enableapprovals');
 
@@ -129,14 +128,14 @@ if ($ADMIN->fulltree) {
         get_string('setting:hidecost_caption', 'facetoface'),
         get_string('setting:hidecost', 'facetoface'),
         0
-        ));
+    ));
 
     $settings->add(new admin_setting_configcheckbox(
         'facetoface/hidediscount',
         get_string('setting:hidediscount_caption', 'facetoface'),
         get_string('setting:hidediscount', 'facetoface'),
         0
-        ));
+    ));
 
     $settings->add(new admin_setting_heading('facetoface/icalendar_header', get_string('icalendarheading', 'facetoface'), ''));
 
@@ -145,21 +144,24 @@ if ($ADMIN->fulltree) {
         get_string('setting:oneemailperday_caption', 'facetoface'),
         get_string('setting:oneemailperday', 'facetoface'),
         0
-        ));
+    ));
 
     $settings->add(new admin_setting_configcheckbox(
         'facetoface/disableicalcancel',
         get_string('setting:disableicalcancel_caption', 'facetoface'),
         get_string('setting:disableicalcancel', 'facetoface'),
         0
-        ));
+    ));
+
+    // List of user profile fields to optionally be included in attendees export.
 
     $settings->add(new admin_setting_heading(
         'facetoface_attendeesexporttofile_header',
         get_string('attendeesexporttofileheading', 'facetoface'),
         ''
-        ));
+    ));
 
+    // Load profile fields.
     // Basic fields.
     $choices = [
     'middlename'  => new lang_string('middlename'),
@@ -191,7 +193,7 @@ if ($ADMIN->fulltree) {
         new lang_string('setting:attendeesexportfields', 'facetoface'),
         [],
         $choices
-        ));
+    ));
 
     // List of existing custom fields.
     $html  = facetoface_list_of_customfields();
