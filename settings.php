@@ -211,13 +211,23 @@ if ($ADMIN->fulltree) {
 
 }
 
-// External page for bulk upload under Face to Face category.
+// External page for bulk upload.
 $bulkupload = new admin_externalpage( 'modfacetoface_sitebulkupload',
     get_string('f2fbulksessions', 'mod_facetoface'),
     new moodle_url('/mod/facetoface/sitebulkupload.php'),
         'moodle/site:config'
 );
 
+
 $ADMIN->add('modfacetoface', $bulkupload);
+
+$uploadf2fselectpage = new admin_externalpage(
+    'modfacetoface_uploadf2fselect',
+    get_string('uploadbookings', 'mod_facetoface'),
+    new moodle_url('/mod/facetoface/uploadf2fselect.php'),
+    'moodle/site:config'
+);
+$ADMIN->add('modfacetoface', $uploadf2fselectpage);
+
 
 $settings = null;

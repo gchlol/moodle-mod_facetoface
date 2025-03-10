@@ -900,3 +900,10 @@ Custom field value|Optional
 ";
 $string['error:choosecsv'] = 'Please choose a CSV file before continuing.';
 $string['error:bulkuploadfileerrorsfound'] = 'There were {$a} errors found in your CSV file.';
+$string['pickfacetofaceinstance'] = 'Pick a Face-to-face instance';
+$string['nofacetofaceinstances'] = 'No Face-to-face instances found.';
+$string['facetofacename'] = 'Face-to-face name';
+$string['unknowncourse'] = 'Unknown course';
+$string['action'] = 'Action';
+$string['uploadbookings'] = 'Upload bookings';
+$string['search'] = 'Search';
