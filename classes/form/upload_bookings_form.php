@@ -74,5 +74,6 @@ class upload_bookings_form extends \moodleform {
         $mform->addElement('hidden', 'validate');
         $mform->setType('validate', PARAM_INT);
 
-        $mform->addElement('submit', 'submit', get_string('facetoface:uploadandpreview', 'mod_facetoface'));    }
+        $mform->addElement('submit', 'submit', get_string('facetoface:uploadandpreview', 'mod_facetoface'));
+    }
 }
