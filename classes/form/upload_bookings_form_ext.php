@@ -66,10 +66,6 @@ class upload_bookings_form_ext extends \moodleform {
         $mform->addElement('advcheckbox', 'caseinsensitive', get_string('caseinsensitive', 'mod_facetoface'));
         $mform->setDefault('caseinsensitive', true);
 
-        // The facetoface module ID.
-        $mform->addElement('hidden', 'f');
-        $mform->setType('f', PARAM_INT);
-
         // Whether or not the form should process what has been uploaded.
         $mform->addElement('hidden', 'validate');
         $mform->setType('validate', PARAM_INT);

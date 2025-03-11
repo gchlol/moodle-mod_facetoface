@@ -26,10 +26,11 @@ require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 
 use core\output\notification;
 use mod_facetoface\booking_manager_ext;
-use mod_facetoface\form\upload_bookings_ext_form;
-use mod_facetoface\form\confirm_bookings_ext_form;
+use mod_facetoface\form\upload_bookings_form_ext;
+use mod_facetoface\form\confirm_bookings_form_ext;
 
 admin_externalpage_setup('modfacetoface_upload_ext');
+
 
 // Grab parameters controlling flow.
 $validate = optional_param('validate', 0, PARAM_INT);
@@ -43,7 +44,7 @@ $PAGE->set_heading(get_string('pluginname', 'mod_facetoface'));
 
 if (!$validate && !$process) {
     // Step 1: Show the initial upload form.
-    $mform = new upload_bookings_ext_form(null, [
+    $mform = new upload_bookings_form_ext(null, [
         'validate' => 1 // So the form knows to set validate=1 on submit.
     ]);
 
@@ -55,7 +56,7 @@ if (!$validate && !$process) {
 
 if ($validate && !$process) {
     // Step 2: The user submitted the CSV file, so parse it, check for errors, show confirmation preview.
-    $mform = new upload_bookings_ext_form();
+    $mform = new upload_bookings_form_ext();
     $data  = $mform->get_data();
 
     if (!$data || empty($data->csvfile)) {
@@ -74,18 +75,18 @@ if ($validate && !$process) {
     $manager->set_case_insensitive($caseinsensitive);
     $manager->load_from_file($fileid);
 
-    // Validate
+    // Validate.
     $errors = $manager->validate();
     echo $OUTPUT->header();
 
     if (!empty($errors)) {
-        // Show errors
+        // Show errors.
         echo $OUTPUT->notification(
             get_string('error:bulkuploadfileerrorsfound', 'mod_facetoface', count($errors)),
             'error'
         );
 
-        // Display error table
+        // Display error table.
         $table = new html_table();
         $table->attributes['class'] = 'generaltable mb-3';
         $table->head = [get_string('uucsvline', 'tool_uploaduser'), get_string('status')];
@@ -97,29 +98,29 @@ if ($validate && !$process) {
         }
         echo html_writer::table($table);
 
-        // Link back if you want
+        // Link back if you want.
         echo html_writer::link(new moodle_url('/mod/facetoface/upload_ext.php'), get_string('back'));
         echo $OUTPUT->footer();
         exit;
     } else {
-        // No errors => show preview
+        // No errors => show preview.
         $records = $manager->get_records();
 
         echo $OUTPUT->heading(get_string('uploadpreview', 'mod_facetoface'), 4);
 
-        // If you want a table of all records
+        // If you want a table of all records.
         if (!empty($records)) {
             $table = new html_table();
             $table->head = booking_manager_ext::get_headers();
             foreach ($records as $r) {
-                $table->data[] = [(isset($r->email) ? $r->email : '' ), ...];
-                // or just array_values((array) $r)
+                $table->data[] = array_values((array)$r);
+
             }
             echo html_writer::table($table);
         }
 
-        // Show confirm form
-        $confirmform = new confirm_bookings_ext_form(null, [
+        // Show confirm form.
+        $confirmform = new confirm_bookings_form_ext(null, [
             'fileid' => $fileid,
             'caseinsensitive' => $caseinsensitive,
             'process' => 1
@@ -133,7 +134,7 @@ if ($validate && !$process) {
 
 if ($process && $fileid) {
     // Step 3: The user confirmed and we now finalize the bookings.
-    $confirmform = new confirm_bookings_ext_form();
+    $confirmform = new confirm_bookings_form_ext();
     if ($confirmform->is_cancelled()) {
         redirect(new moodle_url('/mod/facetoface/upload_ext.php'));
     }
@@ -148,18 +149,18 @@ if ($process && $fileid) {
         $manager->suppress_email();
     }
 
-    // Validate again (safety check)
+    // Validate again (safety check).
     $errors = $manager->validate();
     if (!empty($errors)) {
-        // Show error and redirect or display them
+        // Show error and redirect or display them.
         $errmsg = get_string('error:bulkuploadfileerrorsfound', 'mod_facetoface', count($errors));
         redirect(new moodle_url('/mod/facetoface/upload_ext.php'), $errmsg, null, notification::NOTIFY_ERROR);
     }
 
-    // Process
+    // Process.
     $manager->process();
 
-    // Show success and redirect
+    // Show success and redirect.
     redirect(
         new moodle_url('/mod/facetoface/upload_ext.php'),
         get_string('facetoface:csvprocessed', 'mod_facetoface'),
@@ -168,6 +169,6 @@ if ($process && $fileid) {
     );
 }
 
-// default fallback
+// Default fallback.
 echo $OUTPUT->header();
 echo $OUTPUT->footer();

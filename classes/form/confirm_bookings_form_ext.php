@@ -49,10 +49,6 @@ class confirm_bookings_form_ext extends moodleform {
         $mform->addHelpButton('suppressemail', 'suppressemail', 'facetoface');
         $mform->setType('supressemail', PARAM_BOOL);
 
-        // The facetoface module ID.
-        $mform->addElement('hidden', 'f');
-        $mform->setType('f', PARAM_INT);
-
         // Reference to the uploaded file.
         $mform->addElement('hidden', 'fileid', $fileid);
         $mform->setType('fileid', PARAM_INT);
