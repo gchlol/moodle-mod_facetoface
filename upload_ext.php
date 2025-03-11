@@ -172,3 +172,4 @@ if ($process && $fileid) {
 // Default fallback.
 echo $OUTPUT->header();
 echo $OUTPUT->footer();
+

@@ -126,6 +126,12 @@ class booking_manager_ext {
                     throw new moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface');
                 }
                 $record = array_combine($headers, $data);
+
+                // Trim every field in this row.
+                foreach ($record as $key => $value) {
+                    $record[$key] = trim($value);
+                }
+
                 yield (object) $record;
             }
         } finally {
@@ -265,20 +271,48 @@ class booking_manager_ext {
         global $DB;
 
         $errors = [];
-        $course = $DB->get_record('course', ['shortname' => $entry->course]);
+
+        // 1) Course shortname check using sql_equal().
+        $shortnamecondition = $DB->sql_equal(
+            'shortname',
+            ':shortname',
+            !$this->caseinsensitive
+        );
+        // Build SELECT condition e.g. "shortname = :shortname" or "LOWER(shortname) = LOWER(:shortname)".
+        $course = $DB->get_record_select(
+            'course',
+            $shortnamecondition,
+            ['shortname' => $entry->course]
+        );
+
         if (!$course) {
-            $errors[] = [$row, "Course shortname '{$entry->course}' not found"];
+            $errors[] = [
+                $row,
+                "Course shortname '{$entry->course}' not found (case-insensitive check: {$this->caseinsensitive})"
+            ];
         }
 
-        // Only look up f2f if $course is valid.
+        // 2) Face-to-face activity name check in the same course, also using sql_equal().
         $f2f = null;
         if ($course) {
-            $f2f = $DB->get_record('facetoface', [
-                'course' => $course->id,
-                'name'   => $entry->facetofacename
-            ]);
+            $facenamecondition = $DB->sql_equal(
+                'name',
+                ':facetofacename',
+                !$this->caseinsensitive
+            );
+            $where = $facenamecondition . ' AND course = :courseid';
+            $params = [
+                'facetofacename' => $entry->facetofacename,
+                'courseid' => $course->id
+            ];
+
+            $f2f = $DB->get_record_select('facetoface', $where, $params);
+
             if (!$f2f) {
-                $errors[] = [$row, "F2F '{$entry->facetofacename}' not found in course '{$entry->course}'"];
+                $errors[] = [
+                    $row,
+                    "F2F '{$entry->facetofacename}' not found in course '{$entry->course}'"
+                ];
             }
         }
 
@@ -288,6 +322,7 @@ class booking_manager_ext {
             'f2f'    => $f2f
         ];
     }
+
     private function check_session(\stdClass $entry, int $row, ?object $f2f): array {
         $errors  = [];
         $session = null;
@@ -376,6 +411,7 @@ class booking_manager_ext {
     }
 
     private function process_row(\stdClass $entry): void {
+        global $DB;
         // 1) Grab user
         $userrecord = current($this->match_users($entry->email, '*'));
         // 2) Grab session
@@ -388,6 +424,22 @@ class booking_manager_ext {
             throw new \Exception("Session not found for ID: {$entry->session}");
         }
 
+        $shortnamecondition = $DB->sql_equal(
+            'shortname',
+            ':shortname',
+            !$this->caseinsensitive // false means "use LOWER()", true means case-sensitive
+        );
+
+        $course = $DB->get_record_select(
+            'course',
+            $shortnamecondition,
+            ['shortname' => $entry->course],
+            '*',
+            MUST_EXIST
+        );
+
+        $f2f    = $DB->get_record('facetoface', ['course' => $course->id, 'name' => $entry->facetofacename], '*', MUST_EXIST);
+
         // 3) Based on status, pick the path
         if ($entry->status === 'cancelled') {
             $this->process_cancellation($session, $userrecord, $entry);
@@ -396,12 +448,12 @@ class booking_manager_ext {
             $statuscode = array_search($entry->status, facetoface_statuses()) ?: MDL_F2F_STATUS_BOOKED;
 
             if (in_array($statuscode, [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED])) {
-                $this->process_signup($session, $userrecord, $entry, $statuscode);
+                $this->process_signup($session, $f2f, $course, $userrecord, $entry, $statuscode);
             } else if (in_array($statuscode,
              [MDL_F2F_STATUS_NO_SHOW, MDL_F2F_STATUS_PARTIALLY_ATTENDED, MDL_F2F_STATUS_FULLY_ATTENDED])) {
-                $this->process_attendance($session, $userrecord, $entry, $statuscode);
+                    $this->process_attendance($session, $userrecord, $entry, $statuscode);
             }
-            // If status is something else, do nothing or handle error if needed.
+                // If status is something else, do nothing or handle error if needed.
         }
     }
 
@@ -415,7 +467,14 @@ class booking_manager_ext {
         }
     }
 
-    private function process_signup(object $session, object $user, \stdClass $entry, int $statuscode): void {
+    private function process_signup(
+        object $session,
+        object $f2f,
+        object $course,
+        object $user,
+        \stdClass $entry,
+        int $statuscode
+    ): void {
         // If the session is unknown date and status is BOOKED => switch to WAITLIST.
         if ($statuscode === MDL_F2F_STATUS_BOOKED && !$session->datetimeknown) {
             $statuscode = MDL_F2F_STATUS_WAITLISTED;
@@ -423,6 +482,8 @@ class booking_manager_ext {
 
         facetoface_user_signup(
             $session,
+            $f2f,
+            $course,
             $entry->discountcode,
             $this->transform_notification_type($entry->notificationtype),
             $statuscode,
@@ -430,6 +491,8 @@ class booking_manager_ext {
             !$this->suppressemail
         );
     }
+
+
 
     private function process_attendance(object $session, object $user, \stdClass $entry, int $statuscode): void {
         // Find the existing attendee record.
@@ -463,4 +526,3 @@ class booking_manager_ext {
         return $this->records;
     }
 }
-

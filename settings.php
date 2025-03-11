@@ -222,12 +222,12 @@ $bulkupload = new admin_externalpage( 'modfacetoface_sitebulkupload',
 
 $ADMIN->add('modfacetoface', $bulkupload);
 
-$uploadf2fselectpage = new admin_externalpage(
-    'modfacetoface_uploadf2fselect',
+$uploadextpage = new admin_externalpage(
+    'modfacetoface_upload_ext',
     get_string('uploadbookings', 'mod_facetoface'),
-    new moodle_url('/mod/facetoface/uploadf2fselect.php'),
+    new moodle_url('/mod/facetoface/upload_ext.php'),
     'moodle/site:config'
 );
-$ADMIN->add('modfacetoface', $uploadf2fselectpage);
+$ADMIN->add('modfacetoface', $uploadextpage);
 
 $settings = null;

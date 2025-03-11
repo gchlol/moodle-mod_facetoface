@@ -23,8 +23,6 @@
 
 namespace mod_facetoface;
 
-defined('MOODLE_INTERNAL') || die();
-
 use moodle_exception;
 use Generator;
 use DateTime;

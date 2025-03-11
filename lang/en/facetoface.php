@@ -907,3 +907,14 @@ $string['unknowncourse'] = 'Unknown course';
 $string['action'] = 'Action';
 $string['uploadbookings'] = 'Upload bookings';
 $string['search'] = 'Search';
+
+$string['facetoface:uploadbookingsextfiledesc'] = "
+Fields expected:
+- Course Shortname (Required)
+- Face-to-face activity name (required)
+- Email address (required)
+- Session number (required)
+- Discount code (optional)
+- Notification type (optional - valid options are 'email', 'ical', or 'both')
+";
+$string['uploadpreview'] = 'Preview';
