@@ -218,7 +218,6 @@ $bulkupload = new admin_externalpage( 'modfacetoface_sitebulkupload',
         'moodle/site:config'
 );
 
-
 $ADMIN->add('modfacetoface', $bulkupload);
 
 $uploadf2fselectpage = new admin_externalpage(
@@ -228,6 +227,5 @@ $uploadf2fselectpage = new admin_externalpage(
     'moodle/site:config'
 );
 $ADMIN->add('modfacetoface', $uploadf2fselectpage);
-
 
 $settings = null;

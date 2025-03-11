@@ -37,7 +37,6 @@ $validate = optional_param('validate', 0, PARAM_INT); // Whether or not the user
 $process = optional_param('process', 0, PARAM_INT); // Whether or not the user wants to process the upload (after verification).
 $step = optional_param('step', '', PARAM_ALPHA); // The current step in the process.
 $caseinsensitive = optional_param('caseinsensitive', false, PARAM_BOOL); // If emails should match a user case insensitively.
-$fromf2fselect = optional_param('fromf2fselect', 0, PARAM_INT);
 
 if (!$facetoface = $DB->get_record('facetoface', ['id' => $f])) {
     throw new moodle_exception('error:incorrectfacetofaceid', 'facetoface');
@@ -61,7 +60,7 @@ if ($validate) {
     // Form submitted, but not ready for processing -> validate.
     $heading = get_string('facetoface:validatebookings', 'facetoface');
 
-    $mform = new upload_bookings_form(null, ['fromf2fselect' => $fromf2fselect]);
+    $mform = new upload_bookings_form(null);
     $data = $mform->get_data();
     $fileid = $data->csvfile ?: 0;
 
@@ -118,7 +117,7 @@ if ($validate) {
         null,
         notification::NOTIFY_ERROR);
 } else {
-    $mform = new upload_bookings_form(null, ['fromf2fselect' => $fromf2fselect]);
+    $mform = new upload_bookings_form(null);
     $mform->set_data(['f' => $f, 'validate' => 1]);
 
     // Form not subumitted -> prep the form with current context (f2f module id).

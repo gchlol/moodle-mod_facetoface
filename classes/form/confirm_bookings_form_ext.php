@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   mod_facetoface
+ * @copyright 2025, Gold Coast Health
+ * @author    Jonas Sajonas
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace mod_facetoface\form;
 
 use html_writer;
@@ -24,15 +31,7 @@ use single_button;
 defined('MOODLE_INTERNAL') || die;
 require_once($CFG->libdir . '/formslib.php');
 
-/**
- * Processing confirm form
- *
- * @package     local_facetoface
- * @author     Kevin Pham <kevinpham@catalyst-au.net>
- * @copyright  Catalyst IT, 2024
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class confirm_bookings_form extends moodleform {
+class confirm_bookings_form_ext extends moodleform {
 
     /**
      * Form definition
@@ -61,15 +60,7 @@ class confirm_bookings_form extends moodleform {
         $mform->addElement('hidden', 'caseinsensitive', $caseinsensitive);
         $mform->setType('caseinsensitive', PARAM_BOOL);
 
-        $htmlbuttons = $OUTPUT->render((new single_button(
-            new moodle_url('/mod/facetoface/upload.php', ['f' => $f, 'fileid' => $fileid, 'process' => 1]),
-            get_string('facetoface:confirmandprocess', 'mod_facetoface'),
-            'post',
-            true
-        )));
-        $htmlbuttons .= $OUTPUT->single_button($backurl, get_string('back'), 'get', ['class' => 'ml-3']);
+        $mform->addElement('submit', 'submit', get_string('facetoface:uploadandpreview', 'mod_facetoface'));
 
-        $htmlbuttons = html_writer::tag('div', $htmlbuttons, ['class' => 'd-flex gap-2']);
-        $mform->addElement('html', $htmlbuttons);
     }
 }

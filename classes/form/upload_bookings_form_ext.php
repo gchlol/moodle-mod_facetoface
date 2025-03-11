@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * @package   mod_facetoface
+ * @copyright 2025, Gold Coast Health
+ * @author    Jonas Sajonas
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace mod_facetoface\form;
 
 use moodle_url;
@@ -22,15 +29,8 @@ use html_writer;
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/repository/lib.php');
 
-/**
- * Upload bookings form class
- *
- * @package    mod_facetoface
- * @author     Kevin Pham <kevinpham@catalyst-au.net>
- * @copyright  Catalyst IT, 2024
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class upload_bookings_form extends \moodleform {
+
+class upload_bookings_form_ext extends \moodleform {
 
     /**
      * Build form for importing bookings.
@@ -74,5 +74,6 @@ class upload_bookings_form extends \moodleform {
         $mform->addElement('hidden', 'validate');
         $mform->setType('validate', PARAM_INT);
 
-        $mform->addElement('submit', 'submit', get_string('facetoface:uploadandpreview', 'mod_facetoface'));    }
+        $mform->addElement('submit', 'submit', get_string('facetoface:uploadandpreview', 'mod_facetoface'));
+    }
 }
