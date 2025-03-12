@@ -918,3 +918,9 @@ Fields expected:
 - Notification type (optional - valid options are 'email', 'ical', or 'both')
 ";
 $string['uploadpreview'] = 'Preview';
+$string['error:coursenotfound'] = 'Course shortname \'{$a->course}\' not found (case-insensitive check: {$a->caseinsensitive})';
+$string['error:f2fnotfoundincourse'] = 'Face-to-face \'{$a->facetofacename}\' not found in course \'{$a->course}\'';
+$string['error:sessionwrongf2f'] = 'Session {$a->sessionid} does not belong to Face-to-face \'{$a->facetofacename}\'';
+$string['error:usernotfoundbyemail'] = 'User not found for email: {$a->email}';
+$string['error:sessionnotfoundbyid'] = 'Session not found for ID: {$a->sessionid}';
+$string['examplecsvfilename'] = 'example.csv';

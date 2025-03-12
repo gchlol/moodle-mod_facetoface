@@ -28,7 +28,13 @@ use file_storage;
 use lang_string;
 use moodle_exception;
 
-
+/**
+ * Extended booking manager for Face-to-face activities.
+ *
+ * Class responsible for loading, validating, and processing bookings
+ * from a CSV. It enforces checks like course/facetoface
+ * existence, session matching, overbooking, and so on.
+ */
 class booking_manager_ext {
 
     /** @var stored_file the file to process as a stored_file object */
@@ -47,7 +53,7 @@ class booking_manager_ext {
     private $caseinsensitive = false;
 
     /**
-     * Constructor for the booking manager.
+     * Constructor.
      * @param array $records The records to process.
      */
     public function __construct( $records = []) {
@@ -55,8 +61,10 @@ class booking_manager_ext {
     }
 
     /**
-     * Returns file from file system. File must exist.
-     * @param int $fileitemid Item id of file stored in the current $USER's draft file area
+     * Loads a single file from user's draft area.
+     *
+     * @param int $fileitemid Draft file ID.
+     * @throws moodle_exception If file not found or multiple files exist.
      */
     public function load_from_file(int $fileitemid) {
         global $USER;
@@ -74,7 +82,9 @@ class booking_manager_ext {
 
     /**
      * Load in the records to process from an array
+     *
      * @param array $records
+     * @return $this
      */
     public function load_from_array(array $records) {
         $this->usefile = false;
@@ -100,8 +110,10 @@ class booking_manager_ext {
     }
 
     /**
-     * Get an iterator for the records.
+     * Get iterator for the records.
+     *
      * @return \Generator
+     * @throws moodle_exception For invalid CSV structure.
      */
     private function get_iterator(): \Generator {
         if (!$this->usefile) {
@@ -114,20 +126,22 @@ class booking_manager_ext {
         $handle = $this->file->get_content_file_handle();
         $maxlinelength = 1000;
         $delimiter = ',';
-        $rownumber = 1; // First row is headers.
         $headers = self::get_headers();
         $numheaders = count($headers);
-        fgets($handle); // Move pointer past first line (headers).
+
+        // Skip CSV header.
+        fgets($handle);
+
         try {
             while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
-                $rownumber++;
+
                 $numfields = count($data);
                 if ($numfields !== $numheaders) {
                     throw new moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface');
                 }
                 $record = array_combine($headers, $data);
 
-                // Trim every field in this row.
+                // Trim fields.
                 foreach ($record as $key => $value) {
                     $record[$key] = trim($value);
                 }
@@ -140,13 +154,10 @@ class booking_manager_ext {
     }
 
     /**
-     * Validate the records provided to ensure they can be processed without errors.
+     * Validates all bookings for issues (course/session/user, overcapacity, etc.).
      *
-     * As there are multiple dependant data points (users, sessions, capacity)
-     * that are checked. They are all in this method.
-     *
-     * @param int $timenow The current time to use for validation.
-     * @return array An array of errors.
+     * @param int|null $timenow Optional current time.
+     * @return array List of errors; empty if none.
      */
     public function validate($timenow = null): array {
         $errors = [];
@@ -160,54 +171,60 @@ class booking_manager_ext {
             $row = $index + 1;
             $rowerrors = [];
 
-            // 1) Basic defaults.
+            // Normalize empty fields.
             $entry->status           = $entry->status ?? '';
             $entry->notificationtype = $entry->notificationtype ?? '';
             $entry->discountcode     = $entry->discountcode ?? '';
 
-            // 2) Course and F2F checks
+            // Course & Face-to-face checks.
             $coursef2f = $this->check_course_and_f2f($entry, $row);
             $rowerrors = array_merge($rowerrors, $coursef2f['errors']);
             $course    = $coursef2f['course'];
             $f2f       = $coursef2f['f2f'];
 
-            // 3) Session checks
+            // Session checks.
             $sessionset = $this->check_session($entry, $row, $f2f);
             $rowerrors  = array_merge($rowerrors, $sessionset['errors']);
             $session    = $sessionset['session'];
 
-            // 4) If no session, no point continuing with session-based checks.
-            // but we may want to do user check anyway. It's up to your needs.
-
-            // 5) Check user
+            // User checks.
             $usercheck = $this->check_user($entry, $row);
             $rowerrors = array_merge($rowerrors, $usercheck['errors']);
-            $userid    = $usercheck['userid'] ?? null;
+            $userid    = $usercheck['userid'];
 
-            // 6) If session is valid, do checks for overbooking, etc.
-            if ($session) {
-                $rowerrors = array_merge($rowerrors,
-                $this->check_overbooking($entry, $session, $row, $timenow, $sessioncapacitycache));
+            // Confirm user is enrolled in course.
+            if ($userid && $course) {
+                // Course context for enrollment checks.
+                $coursecontext = \context_course::instance($course->id);
+
+                if (!is_enrolled($coursecontext, $userid)) {
+                    $rowerrors[] = [
+                        $row,
+                        new lang_string('error:userisnotenrolledintocourse', 'mod_facetoface', $entry->email)
+                    ];
+                }
             }
 
-            // 7) Possibly do notificationtype or status validation in smaller helpers too.
-            // ...
-            // e.g. $rowerrors = array_merge($rowerrors, $this->check_status($entry->status, $row));
+            // If the session is valid, do overbooking checks.
+            if ($session) {
+                $rowerrors = array_merge(
+                    $rowerrors,
+                    $this->check_overbooking($entry, $session, $row, $timenow, $sessioncapacitycache)
+                );
+            }
 
+            // Merge any row-level errors into main errors array.
             $errors = array_merge($errors, $rowerrors);
-        } // end foreach
+        }
 
-        // Overcapacity check after the loop.
+        // Check if any sessions ended in negative capacity.
         $errors = array_merge($errors, $this->check_final_overcapacity($sessioncapacitycache));
 
         return $errors;
     }
 
     /**
-     * Match users for a given email, taking into account case sensitivity.
-     * @param string $email
-     * @param string $fields fields to return
-     * @return array of users, with specified fields
+     * Finds users by email, respecting case-sensitivity as configured.
      */
     private function match_users(string $email, string $fields): array {
         global $DB;
@@ -216,10 +233,7 @@ class booking_manager_ext {
     }
 
     /**
-     * Transform notification type to internal representation.
-     *
-     * @param string $type Notification type.
-     * @return int|null
+     * Maps notification type string to Face-to-face constants.
      */
     private function transform_notification_type($type) {
         $mapping = [
@@ -227,17 +241,17 @@ class booking_manager_ext {
             'ical' => MDL_F2F_ICAL,
             'icalendar' => MDL_F2F_ICAL,
             'both' => MDL_F2F_BOTH,
-            '' => MDL_F2F_BOTH, // Defaults to sending both if nothing is specified.
+            '' => MDL_F2F_BOTH,
         ];
 
         return $mapping[strtolower($type)] ?? null;
     }
 
     /**
-     * Process the bookings in the file.
+     * Validates and then processes bookings (signup/cancel/attendance).
      *
      * @return bool
-     * @throws moodle_exception
+     * @throws moodle_exception If validation fails.
      */
     public function process() {
         if (!empty($this->validate())) {
@@ -267,18 +281,19 @@ class booking_manager_ext {
         $this->caseinsensitive = $value;
     }
 
+    /**
+     * Check for valid course and Face-to-face activity.
+     */
     private function check_course_and_f2f(\stdClass $entry, int $row): array {
         global $DB;
-
         $errors = [];
 
-        // 1) Course shortname check using sql_equal().
         $shortnamecondition = $DB->sql_equal(
             'shortname',
             ':shortname',
             !$this->caseinsensitive
         );
-        // Build SELECT condition e.g. "shortname = :shortname" or "LOWER(shortname) = LOWER(:shortname)".
+
         $course = $DB->get_record_select(
             'course',
             $shortnamecondition,
@@ -288,11 +303,17 @@ class booking_manager_ext {
         if (!$course) {
             $errors[] = [
                 $row,
-                "Course shortname '{$entry->course}' not found (case-insensitive check: {$this->caseinsensitive})"
+                get_string(
+                    'error:coursenotfound',
+                    'mod_facetoface',
+                    (object)[
+                        'course'          => $entry->course,
+                        'caseinsensitive' => $this->caseinsensitive ? 'true' : 'false'
+                    ]
+                )
             ];
         }
 
-        // 2) Face-to-face activity name check in the same course, also using sql_equal().
         $f2f = null;
         if ($course) {
             $facenamecondition = $DB->sql_equal(
@@ -311,7 +332,14 @@ class booking_manager_ext {
             if (!$f2f) {
                 $errors[] = [
                     $row,
-                    "F2F '{$entry->facetofacename}' not found in course '{$entry->course}'"
+                    get_string(
+                        'error:f2fnotfoundincourse',
+                        'mod_facetoface',
+                        (object)[
+                            'facetofacename' => $entry->facetofacename,
+                            'course'         => $entry->course
+                        ]
+                    )
                 ];
             }
         }
@@ -323,19 +351,31 @@ class booking_manager_ext {
         ];
     }
 
+    /**
+     * Check if session exists and belongs to the correct Face-to-face.
+     */
     private function check_session(\stdClass $entry, int $row, ?object $f2f): array {
         $errors  = [];
         $session = null;
 
-        // Look up session by ID.
         $session = facetoface_get_session($entry->session);
         if (!$session) {
             $errors[] = [$row, new lang_string('error:sessiondoesnotexist', 'mod_facetoface', $entry->session)];
         }
 
-        // If both $f2f and $session exist, check they align.
         if ($f2f && $session && $session->facetoface != $f2f->id) {
-            $errors[] = [$row, "Session {$entry->session} does not belong to F2F '{$entry->facetofacename}'"];
+            $errors[] = [
+                $row,
+                get_string(
+                    'error:sessionwrongf2f',
+                    'mod_facetoface',
+                    (object)[
+                        'sessionid'      => $entry->session,
+                        'facetofacename' => $entry->facetofacename
+                    ]
+                )
+            ];
+
         }
 
         return [
@@ -343,24 +383,35 @@ class booking_manager_ext {
             'session' => $session
         ];
     }
+
+    /**
+     * Check that exactly one user matches the given email
+     * and return the user’s ID if found.
+     */
     private function check_user(\stdClass $entry, int $row): array {
         $errors = [];
         $userid = null;
 
+        // Attempt to find user(s) by email.
         $userids = $this->match_users($entry->email, 'id');
         if (count($userids) > 1) {
             $errors[] = [$row, new lang_string('error:multipleusersmatched', 'mod_facetoface', $entry->email)];
         } else if (empty($userids)) {
             $errors[] = [$row, new lang_string('error:userdoesnotexist', 'mod_facetoface', $entry->email)];
         } else {
+            // Exactly one user matched; store the user id.
             $userid = current($userids)->id;
         }
 
         return [
-            'errors' => $errors,
-            'userid' => $userid
+        'errors' => $errors,
+        'userid' => $userid
         ];
     }
+
+    /**
+     * Checks for session overcapacity or invalid cancellations.
+     */
     private function check_overbooking(
         \stdClass $entry,
         object $session,
@@ -370,14 +421,10 @@ class booking_manager_ext {
     ): array {
         $errors = [];
 
-        // Check if session is started but user tries to cancel, etc.
         if ($entry->status === 'cancelled' && facetoface_has_session_started($session, $timenow)) {
             $errors[] = [$row, new lang_string('error:sessionalreadystarted', 'mod_facetoface', $entry->session)];
         }
 
-        // If datetime known and session started, can’t sign up for booked/waitlist.
-        // ...
-        // Then do capacity checks.
         if (!isset($sessioncapacitycache[$session->id]) && !$session->allowoverbook) {
             $sessioncapacitycache[$session->id]['capacity'] =
                 $session->capacity - facetoface_get_num_attendees($session->id, MDL_F2F_STATUS_APPROVED);
@@ -386,10 +433,12 @@ class booking_manager_ext {
             $sessioncapacitycache[$session->id]['capacity']--;
             $sessioncapacitycache[$session->id]['rows'][] = $row;
         }
-
         return $errors;
     }
 
+    /**
+     * Flags any sessions that ended with negative capacity.
+     */
     private function check_final_overcapacity(array $sessioncapacitycache): array {
         $errors = [];
         $overcapacitysessions = array_filter($sessioncapacitycache, function ($s) {
@@ -410,24 +459,36 @@ class booking_manager_ext {
         return $errors;
     }
 
+    /**
+     * Process a single booking row (cancellation, signup, attendance).
+     */
     private function process_row(\stdClass $entry): void {
         global $DB;
-        // 1) Grab user
+
+        // Re-fetch user/session for safety.
         $userrecord = current($this->match_users($entry->email, '*'));
-        // 2) Grab session
         $session    = facetoface_get_session($entry->session);
 
         if (!$userrecord) {
-            throw new \Exception("User not found for email: {$entry->email}");
+            throw new \moodle_exception(
+                'error:usernotfoundbyemail',
+                'mod_facetoface',
+                '',
+                (object)['email' => $entry->email]
+            );
         }
         if (!$session) {
-            throw new \Exception("Session not found for ID: {$entry->session}");
+            throw new \moodle_exception(
+                'error:sessionnotfoundbyid',
+                'mod_facetoface',
+                '',
+                (object)['sessionid' => $entry->session]
+            );
         }
 
-        $shortnamecondition = $DB->sql_equal(
-            'shortname',
-            ':shortname',
-            !$this->caseinsensitive // false means "use LOWER()", true means case-sensitive
+        // Ensure course and F2F exist.
+        $shortnamecondition = $DB->sql_equal('shortname', ':shortname',
+            !$this->caseinsensitive
         );
 
         $course = $DB->get_record_select(
@@ -438,13 +499,12 @@ class booking_manager_ext {
             MUST_EXIST
         );
 
-        $f2f    = $DB->get_record('facetoface', ['course' => $course->id, 'name' => $entry->facetofacename], '*', MUST_EXIST);
+        $f2f = $DB->get_record(
+            'facetoface', ['course' => $course->id, 'name' => $entry->facetofacename], '*', MUST_EXIST);
 
-        // 3) Based on status, pick the path
         if ($entry->status === 'cancelled') {
             $this->process_cancellation($session, $userrecord, $entry);
         } else {
-            // Convert status to code.
             $statuscode = array_search($entry->status, facetoface_statuses()) ?: MDL_F2F_STATUS_BOOKED;
 
             if (in_array($statuscode, [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED])) {
@@ -453,20 +513,21 @@ class booking_manager_ext {
              [MDL_F2F_STATUS_NO_SHOW, MDL_F2F_STATUS_PARTIALLY_ATTENDED, MDL_F2F_STATUS_FULLY_ATTENDED])) {
                     $this->process_attendance($session, $userrecord, $entry, $statuscode);
             }
-                // If status is something else, do nothing or handle error if needed.
         }
     }
 
+    /**
+     * Cancels a user's booking. Throws exception if cancellation fails.
+     */
     private function process_cancellation(object $session, object $user, \stdClass $entry): void {
-        if (facetoface_user_cancel($session, $user->id, true, $cancelerr)) {
-            $timenow = time();
-            // Possibly email or logging if the session not started yet, etc.
-            // ...
-        } else {
+        if (!facetoface_user_cancel($session, $user->id, true, $cancelerr)) {
             throw new \Exception($cancelerr);
         }
     }
 
+    /**
+     * Signs up or waitlists a user.
+     */
     private function process_signup(
         object $session,
         object $f2f,
@@ -475,7 +536,7 @@ class booking_manager_ext {
         \stdClass $entry,
         int $statuscode
     ): void {
-        // If the session is unknown date and status is BOOKED => switch to WAITLIST.
+        // If session date is unknown, booked => waitlisted.
         if ($statuscode === MDL_F2F_STATUS_BOOKED && !$session->datetimeknown) {
             $statuscode = MDL_F2F_STATUS_WAITLISTED;
         }
@@ -492,24 +553,26 @@ class booking_manager_ext {
         );
     }
 
-
-
+    /**
+     * Marks a user's attendance for a given session.
+     */
     private function process_attendance(object $session, object $user, \stdClass $entry, int $statuscode): void {
-        // Find the existing attendee record.
         $attendees = facetoface_get_attendees($session->id);
         $found = null;
+
+        // Find the attendee record by email.
         foreach ($attendees as $attendee) {
             if ($attendee->email === $entry->email) {
                 $found = $attendee;
                 break;
             }
         }
+
+        // If user never signed up, skip.
         if (!$found) {
-            // Possibly throw an exception or skip silently if user isn't found in attendance.
             return;
         }
 
-        // Mark attendance.
         $data = (object) [
             's' => $session->id,
             'submissionid_' . $found->submissionid => $statuscode,
@@ -517,10 +580,11 @@ class booking_manager_ext {
         facetoface_take_attendance($data);
     }
 
+    /**
+     * Returns all records.
+     */
     public function get_records(): array {
-        // If we’re using a file, parse it into $this->records first.
         if ($this->usefile) {
-            // Convert the iterator into an array.
             $this->records = iterator_to_array($this->get_iterator());
         }
         return $this->records;

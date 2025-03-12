@@ -213,7 +213,7 @@ if ($ADMIN->fulltree) {
 
 }
 
-// External page for bulk upload.
+// External page for bulk upload sessions.
 $bulkupload = new admin_externalpage( 'modfacetoface_sitebulkupload',
     get_string('f2fbulksessions', 'mod_facetoface'),
     new moodle_url('/mod/facetoface/sitebulkupload.php'),
@@ -222,6 +222,7 @@ $bulkupload = new admin_externalpage( 'modfacetoface_sitebulkupload',
 
 $ADMIN->add('modfacetoface', $bulkupload);
 
+// External page for bulk upload attendance.
 $uploadextpage = new admin_externalpage(
     'modfacetoface_upload_ext',
     get_string('uploadbookings', 'mod_facetoface'),
@@ -230,4 +231,5 @@ $uploadextpage = new admin_externalpage(
 );
 $ADMIN->add('modfacetoface', $uploadextpage);
 
+// Disables Moodle's default settings page.
 $settings = null;

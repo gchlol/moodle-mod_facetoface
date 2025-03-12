@@ -46,8 +46,13 @@ class upload_bookings_form_ext extends \moodleform {
         $mform->addElement('header', 'settingsheader', get_string('upload'));
 
         $url = new moodle_url('/mod/facetoface/booking_example.csv');
-        $link = html_writer::link($url, 'example.csv');
-        $mform->addElement('static', 'examplecsv', get_string('facetoface:examplecsv', 'mod_facetoface'), $link);
+        $link = html_writer::link( $url,
+            get_string('examplecsvfilename', 'mod_facetoface')
+        );
+        $mform->addElement('static', 'examplecsv',
+            get_string('facetoface:examplecsv', 'mod_facetoface'),
+            $link
+        );
 
         $maxbytes = get_max_upload_file_size($CFG->maxbytes, 0);
         $mform->addElement('filemanager', 'csvfile', get_string('facetoface:uploadbookingsfile', 'mod_facetoface'), null, [
@@ -66,7 +71,7 @@ class upload_bookings_form_ext extends \moodleform {
         $mform->addElement('advcheckbox', 'caseinsensitive', get_string('caseinsensitive', 'mod_facetoface'));
         $mform->setDefault('caseinsensitive', true);
 
-        // Whether or not the form should process what has been uploaded.
+        // Hidden fields that control processing.
         $mform->addElement('hidden', 'validate');
         $mform->setType('validate', PARAM_INT);
 

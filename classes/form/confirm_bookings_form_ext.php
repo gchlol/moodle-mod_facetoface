@@ -46,7 +46,7 @@ class confirm_bookings_form_ext extends moodleform {
         // Suppress email checkbox.
         $mform->addElement('advcheckbox', 'suppressemail', get_string('suppressemail', 'facetoface'), '', [], [0, 1]);
         $mform->addHelpButton('suppressemail', 'suppressemail', 'facetoface');
-        $mform->setType('supressemail', PARAM_BOOL);
+        $mform->setType('suppressemail', PARAM_BOOL);
 
         // Reference to the uploaded file.
         $mform->addElement('hidden', 'fileid', $fileid);
@@ -65,6 +65,7 @@ class confirm_bookings_form_ext extends moodleform {
             'post',
             true
         )));
+
         $htmlbuttons .= $OUTPUT->single_button($backurl, get_string('back'), 'get', ['class' => 'ml-3']);
 
         $htmlbuttons = html_writer::tag('div', $htmlbuttons, ['class' => 'd-flex gap-2']);
