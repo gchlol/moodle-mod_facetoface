@@ -8,8 +8,6 @@
 
     Data attributes required for JS:
     * data-attendance-sheet-item
-    * data-attendance-remove-row
-    * data-value
     * data-attendance-sheet-config-remove-row
     * data-remove-value
 
@@ -20,51 +18,41 @@
     * value - Text displayed in the table's current cell.
 
     Example context (json):
-    {
-        'id'     => 0,
-        'labels' => {
-            {
-                'value' => 'Name', // "Name" in the first column
-                'first' => true    // indicates we include the hidden input + drag handle
-            },
-            {
-                'value' => ''      // second column is empty by default
-            }
+    [
+        {
+            "column": 0
+        },
+        {
+            "column": "Mentor Name"
+        },
+        {
+            "column": "Pass/Fail",
+            "value": "Pass/Fail"
         }
-    }
+    ]
 }}
 
-<tr data-attendance-sheet-config-item data-value="{{id}}" {{#editable}}data-changeable="{{type}}"{{/editable}}>
+<tr data-attendance-sheet-config-item {{#editable}}data-changeable="{{type}}"{{/editable}}>
     <td>
         {{#editable}}
-            <input name="item_ids[]" type="hidden" value="{{id}}" />
             {{> core/drag_handle}}
-            <input type="text" name="column_names[]" value="{{labels.0.value}}" />
+            <input type="text" name="column_names[]" />
         {{/editable}}
         {{^editable}}
-            {{#labels}}
-                {{#first}}
-                    <input name="item_ids[]" type="hidden" value="{{../id}}" />
-                    {{> core/drag_handle}}
-                    {{value}}
-                {{/first}}
-            {{/labels}}
+            {{> core/drag_handle}}
+            {{column}}
         {{/editable}}
     </td>
     <td>
-        {{^editable}}
-            {{#labels}}
-                {{^first}}
-                    {{value}}
-                {{/first}}
-            {{/labels}}
-        {{/editable}}
         {{#editable}}
-            <input type="text" name="header_values[]" value="{{defaultvalue}}" />
+            <input type="text" name="header_values[]" />
+        {{/editable}}
+        {{^editable}}
+            {{value}}
         {{/editable}}
     </td>
     <td class="action-column">
-        <a href="#" data-attendance-sheet-config-remove-row data-remove-value="{{id}}">
+        <a href="#" data-attendance-sheet-config-remove-row>
             {{#pix}} t/delete, core, {{#str}}modform:removerow, mod_facetoface{{/str}} {{/pix}}
         </a>
     </td>

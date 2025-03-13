@@ -14,15 +14,17 @@ use mod_facetoface\enum\enum_base;
 
 defined('MOODLE_INTERNAL') || die();
 
-function get_attendance_config_folder($CFG) {
-    $datafolder = $CFG->dataroot . '/mod_facetoface';
+function get_attendance_config_folder($CFG): string
+{
+    $datafolder = $CFG->dataroot . '/mod/facetoface';
     if (!is_dir($datafolder)) {
         mkdir($datafolder, 0775, true);
     }
     return $datafolder;
 }
 
-function get_attendance_config_file($CFG, $USER) {
+function get_attendance_config_file($CFG, $USER): string
+{
     return get_attendance_config_folder($CFG) . '/attendance_sheet_config_' . $USER->id . '.json';
 }
 
