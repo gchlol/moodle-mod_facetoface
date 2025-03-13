@@ -10,12 +10,10 @@
 global $CFG, $USER;
 
 use mod_facetoface\enum\attendance_column;
-use mod_facetoface\enum\enum_base;
 
 defined('MOODLE_INTERNAL') || die();
 
-function get_attendance_config_folder($CFG): string
-{
+function get_attendance_config_folder($CFG): string {
     $datafolder = $CFG->dataroot . '/mod/facetoface';
     if (!is_dir($datafolder)) {
         mkdir($datafolder, 0775, true);
@@ -23,14 +21,8 @@ function get_attendance_config_folder($CFG): string
     return $datafolder;
 }
 
-function get_attendance_config_file($CFG, $USER): string
-{
+function get_attendance_config_file($CFG, $USER): string {
     return get_attendance_config_folder($CFG) . '/attendance_sheet_config_' . $USER->id . '.json';
-}
-
-class attendance_column_json extends enum_base {
-    const COLUMN = 0;
-    const DEFAULT_VALUE = 1;
 }
 
 /**
@@ -39,46 +31,20 @@ class attendance_column_json extends enum_base {
  * The .json file will have content similar to:
  * [
  *     {
- *         "id": "1741142236659",
- *         "labels": [
- *             {
- *                 "value": 0,
- *                 "first": true
- *             },
- *             {
- *                 "value": ""
- *             }
- *         ]
+ *         "column": 0
  *     },
  *     {
- *         "id": "1741142241147",
- *         "labels": [
- *             {
- *                 "value": "Mentor Name",
- *                 "first": true
- *             },
- *             {
- *                 "value": ""
- *             }
- *         ]
+ *         "column": "Mentor Name"
  *     },
  *     {
- *         "id": "1741142265872",
- *         "labels": [
- *             {
- *                 "value": "Pass/Fail",
- *                 "first": true
- *             },
- *             {
- *                 "value": "Pass/Fail"
- *             }
- *         ]
+ *         "column": "Pass/Fail",
+ *         "value": "Pass/Fail"
  *     }
  * ]
  *
  * @param string $filePath Path to the .json file.
- * @return array $configured_columns An array of values from labels[0]['value'] => labels[1]['value'] for all items.
- *               e.g. [0=>"", "h"=>"", "a"=>"b"] in the example.
+ * @return array $configured_columns An array of values from item['column'] => item['value'] for all items.
+ *               e.g. [0=>"", "Mentor Name"=>"", "Pass/Fail"=>"Pass/Fail"] in the example.
  */
 function read_columns_pairs_from_json($filePath) {
 
@@ -89,17 +55,15 @@ function read_columns_pairs_from_json($filePath) {
     $jsonContent = file_get_contents($filePath);
 
     // Decode the JSON into an associative array.
-    $data = json_decode($jsonContent, true);
+    $associative_array = json_decode($jsonContent, true);
     if (json_last_error() !== JSON_ERROR_NONE) {
         throw new Exception("Error decoding JSON: " . json_last_error_msg());
     }
 
-    // Loop through each item and extract the "Column" and "Default Value" pair.
     $configured_columns = [];
-    foreach ($data as $item) {
-        if (isset($item['labels'][attendance_column_json::COLUMN]['value'])) {
-            $configured_columns[$item['labels'][attendance_column_json::COLUMN]['value']] =
-                $item['labels'][attendance_column_json::DEFAULT_VALUE]['value'];
+    foreach ($associative_array as $item) {
+        if (isset($item['column'])) {
+            $configured_columns[$item['column']] = $item['value'];
         }
     }
 
@@ -118,20 +82,9 @@ function save_attendance_sheet_config(array $attendance_array, string $jsonfile)
 
     $output = [];
     foreach ($attendance_array as $value) {
-        // Generate a unique id based on the current time in milliseconds.
-        $id = (string)round(microtime(true) * 1000);
-        // Pause briefly to ensure unique IDs.
-        usleep(1000);
-
-        // For value 2, cast to string to match the expected output.
-        $first_value = ($value === 2) ? (string)$value : $value;
-
         $output[] = [
-            'id' => $id,
-            'labels' => [
-                ['value' => $first_value, 'first' => true],
-                ['value' => ""]
-            ]
+            'column' => $value,
+            'value' => ""
         ];
     }
 
@@ -139,7 +92,6 @@ function save_attendance_sheet_config(array $attendance_array, string $jsonfile)
     if (file_put_contents($jsonfile, $jsondata) === false) {
         throw new Exception('Failed to save configuration.');
     }
-
     chmod($jsonfile, 0775);
 
     return true;

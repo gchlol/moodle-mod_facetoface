@@ -51,20 +51,18 @@ class attendance_sheet_settings {
 
         // Process each attendance item.
         foreach ($this->attendanceitems as &$item) {
-            if (isset($item['labels'][attendance_column_json::COLUMN]['value'])) {
-                $column = $item['labels'][attendance_column_json::COLUMN]['value'];
-                // If the saved column is numeric (i.e. an enum value), convert it back to its display string.
-                if (is_numeric($column) && isset($attendance_columns_enums_to_names[$column])) {
+            if (isset($item['column'])) {
+                $column = $item['column'];
+
+                if (is_int($column) && isset($attendance_columns_enums_to_names[$column])) {
                     $column = $attendance_columns_enums_to_names[$column];
-                    $item['labels'][attendance_column_json::COLUMN]['value'] = $column;
+                    $item['column'] = $column;
                 }
+
+                $item['editable'] = false;
                 if ($column === 'Header Only' || $column === 'Header and Rows') {
                     $item['editable'] = true;
-                    $item['defaultvalue'] = isset($item['labels'][attendance_column_json::DEFAULT_VALUE]['value']) ? $item['labels'][attendance_column_json::DEFAULT_VALUE]['value'] : '';
-                    // Preserve the original type to know which default value to save.
-                    $item['type'] = $column;
-                } else {
-                    $item['editable'] = false;
+                    $item['value'] = isset($item['value']) ? $item['value'] : '';
                 }
             }
         }
@@ -295,8 +293,8 @@ class attendance_sheet_settings {
                         let configData = [];
                         let rows = this.tbodyElement.querySelectorAll("[data-attendance-sheet-config-item]");
                         rows.forEach(row => {
-                            let id = row.getAttribute("data-value");
                             let cells = row.querySelectorAll("td");
+                            
                             let columnName = "";
                             let inputCol = cells[0].querySelector("input[name=\'column_names[]\']");
                             if (inputCol) {
@@ -304,6 +302,7 @@ class attendance_sheet_settings {
                             } else {
                                 columnName = cells[0].textContent.trim();
                             }
+                            
                             let defaultValue = "";
                             let input = cells[1].querySelector("input");
                             if (input) {
@@ -311,13 +310,11 @@ class attendance_sheet_settings {
                             } else {
                                 defaultValue = cells[1].textContent.trim();
                             }
+                            
                             let item = {
-                                id: id,
-                                labels: [
-                                    { value: columnName, first: true }
-                                ]
+                                column: columnName, 
+                                value: defaultValue
                             };
-                            item.labels.push({ value: defaultValue });
                             configData.push(item);
                         });
                         let xhr = new XMLHttpRequest();
