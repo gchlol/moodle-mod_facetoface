@@ -115,15 +115,6 @@ function read_columns_pairs_from_json($filePath) {
  * @throws Exception If the data folder cannot be created or the configuration file cannot be written.
  */
 function save_attendance_sheet_config(array $attendance_array, string $jsonfile) {
-    global $CFG;
-
-    // Define the data folder.
-    $datafolder = $CFG->dataroot . '/mod_facetoface';
-    if (!is_dir($datafolder)) {
-        if (!mkdir($datafolder, 0775, true)) {
-            throw new Exception('Failed to create data folder.');
-        }
-    }
 
     $output = [];
     foreach ($attendance_array as $value) {
