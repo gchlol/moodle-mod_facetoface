@@ -26,27 +26,12 @@ function get_attendance_config_file($CFG, $USER): string {
 }
 
 /**
- * Read included head columns from .json file.
- *
- * The .json file will have content similar to:
- * [
- *     {
- *         "column": 0
- *     },
- *     {
- *         "column": "Mentor Name"
- *     },
- *     {
- *         "column": "Pass/Fail",
- *         "value": "Pass/Fail"
- *     }
- * ]
+ * Read a .json file.
  *
  * @param string $filePath Path to the .json file.
- * @return array $configured_columns An array of values from item['column'] => item['value'] for all items.
- *               e.g. [0=>"", "Mentor Name"=>"", "Pass/Fail"=>"Pass/Fail"] in the example.
+ * @return array An array of .json content.
  */
-function read_columns_pairs_from_json($filePath) {
+function read_json(string $filePath): array {
 
     if (!file_exists($filePath)) {
         throw new Exception("JSON file not found: " . $filePath);
@@ -54,20 +39,12 @@ function read_columns_pairs_from_json($filePath) {
 
     $jsonContent = file_get_contents($filePath);
 
-    // Decode the JSON into an associative array.
-    $associative_array = json_decode($jsonContent, true);
+    $json_content = json_decode($jsonContent, true);
     if (json_last_error() !== JSON_ERROR_NONE) {
         throw new Exception("Error decoding JSON: " . json_last_error_msg());
     }
 
-    $configured_columns = [];
-    foreach ($associative_array as $item) {
-        if (isset($item['column'])) {
-            $configured_columns[$item['column']] = $item['value'];
-        }
-    }
-
-    return $configured_columns;
+    return $json_content;
 }
 
 /**
@@ -104,12 +81,12 @@ function save_attendance_sheet_config(array $attendance_array, string $jsonfile)
  * @param string $jsonfile The .json file path. Containing the updated attendance sheet columns and default values.
  * @param stdClass $instance The SQL table. Containing the legacy attendance sheet columns.
  *        Generally obtained with `$instance = $DB->get_record('facetoface', [ 'id' => $session->facetoface ]);`
- * @return array<int|string, string> The columns and default values the user set up in a .json format.
+ * @return array The content in the updated .json format.
  */
-function return_updated_configured_columns_and_defaults(string $jsonfile, stdClass $instance) {
+function return_updated_json_content(string $jsonfile, stdClass $instance) {
     // Already have updated configured columns with default values in .json file.
     if (file_exists($jsonfile)) {
-        return read_columns_pairs_from_json($jsonfile);
+        return read_json($jsonfile);
     }
 
     // If not, check the SQL database has the legacy column values.
@@ -130,5 +107,35 @@ function return_updated_configured_columns_and_defaults(string $jsonfile, stdCla
 
     // Save the old or default column values to
     save_attendance_sheet_config($configured_columns, $jsonfile);
-    return read_columns_pairs_from_json($jsonfile);
+    return read_json($jsonfile);
+}
+
+/**
+ * Maps items to an associative array using 'column' as key and 'value' as value.
+ *
+ *  Example:
+ *  Input:
+ *  [
+ *      ['column' => 'Name', 'value' => ''],
+ *      ['column' => 'Pass\/Fail', 'value' => 'Pass\/Fail']
+ *  ]
+ *
+ *  Output:
+ *  [
+ *      'name' => '',
+ *      'Pass\/Fail' => 'Pass\/Fail'
+ *  ]
+ *
+ * @param array $json_content Items with 'column' and 'value' keys.
+ * @return array The associative array.
+ */
+function parse_json_to_associative_array(array $json_content): array {
+    $associative_array = [];
+    foreach ($json_content as $item) {
+        if (isset($item['column'])) {
+            $associative_array[$item['column']] = $item['value'];
+        }
+    }
+
+    return $associative_array;
 }

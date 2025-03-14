@@ -18,33 +18,38 @@ defined('MOODLE_INTERNAL') || die();
 class attendance_sheet_settings {
     protected $attendanceitems;
     protected $data;
-    protected $defaultjsonfile;
+    protected $jsonfile;
 
     public function __construct() {
-        global $CFG, $USER, $PAGE;
+        global $CFG, $USER, $PAGE, $DB;
 
         $PAGE->requires->css(new moodle_url('/mod/facetoface/style/attendance_sheet_config_styles.css'));
 
-        $this->defaultjsonfile = get_attendance_config_file($CFG, $USER);
+        $jsonfile = get_attendance_config_file($CFG, $USER);
+        
+        $session_id = 2; // required_param('session', PARAM_INT);
+        $session = facetoface_get_session($session_id);
+        $instance = $DB->get_record('facetoface', [ 'id' => $session->facetoface ]);
+//
+//        $defaultData = [];
+//
+//        // If the JSON file does not exist, create it with the default data.
+//        if (!file_exists($this->jsonfile)) {
+//            file_put_contents($this->jsonfile, json_encode($defaultData, JSON_PRETTY_PRINT));
+//            chmod($this->jsonfile, 0775);
+//        }
+//
+//        // Read and decode the JSON file to get attendance items.
+//        $jsoncontent = file_get_contents($this->jsonfile);
+//        $decoded = json_decode($jsoncontent, true);
+//        if (is_array($decoded)) {
+//            $this->attendanceitems = $decoded;
+//        } else {
+//            // Fallback to default data if JSON decoding fails.
+//            $this->attendanceitems = $defaultData;
+//        }
 
-        $defaultData = [];
-
-        // If the JSON file does not exist, create it with the default data.
-        if (!file_exists($this->defaultjsonfile)) {
-            file_put_contents($this->defaultjsonfile, json_encode($defaultData, JSON_PRETTY_PRINT));
-
-            chmod($this->defaultjsonfile, 0775);
-        }
-
-        // Read and decode the JSON file to get attendance items.
-        $jsoncontent = file_get_contents($this->defaultjsonfile);
-        $decoded = json_decode($jsoncontent, true);
-        if (is_array($decoded)) {
-            $this->attendanceitems = $decoded;
-        } else {
-            // Fallback to default data if JSON decoding fails.
-            $this->attendanceitems = $defaultData;
-        }
+        $this->attendanceitems = return_updated_json_content($jsonfile, $instance);
 
         // Map the attendance_sheet table GUI header names to their corresponding enum values.
         $attendance_columns_enums_to_names = attendance_column::map_attendance_columns_enums_to_names();

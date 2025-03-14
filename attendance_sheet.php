@@ -17,7 +17,6 @@ use context_course;
 use html_writer;
 use mod_facetoface\custom_capability_checker;
 use mod_facetoface\enum\attendance_column;
-use mod_facetoface\enum\enum_base;
 use mod_facetoface\session;
 use mod_facetoface\util\enum_util;
 use stdClass;
@@ -148,11 +147,11 @@ if ($trainer_roles) {
 
 // region Attendees Table
 // Headings
-$configured_columnsanddefaults = return_updated_configured_columns_and_defaults(
+$json_content = return_updated_json_content(
     get_attendance_config_file($CFG, $USER),
     $instance
 );
-//$configured_columnsanddefaults = read_columns_pairs_from_json($CFG->dataroot . '/mod_facetoface/attendance_sheet_config_' . $USER->id . '.json');
+$configured_columnsanddefaults = parse_json_to_associative_array($json_content);
 $configured_columns = array_keys($configured_columnsanddefaults);
 $column_options = enum_util::menu_options(attendance_column::class);
 $data->headings = [];
