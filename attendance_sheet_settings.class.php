@@ -20,34 +20,17 @@ class attendance_sheet_settings {
     protected $data;
     protected $jsonfile;
 
-    public function __construct() {
+    public function __construct(int $instanceid) {
         global $CFG, $USER, $PAGE, $DB;
+
+        $this->instanceid = $instanceid;
 
         $PAGE->requires->css(new moodle_url('/mod/facetoface/style/attendance_sheet_config_styles.css'));
 
         $jsonfile = get_attendance_config_file($CFG, $USER);
-        
-        $session_id = 2; // required_param('session', PARAM_INT);
-        $session = facetoface_get_session($session_id);
+
+        $session = facetoface_get_session($this->instanceid);
         $instance = $DB->get_record('facetoface', [ 'id' => $session->facetoface ]);
-//
-//        $defaultData = [];
-//
-//        // If the JSON file does not exist, create it with the default data.
-//        if (!file_exists($this->jsonfile)) {
-//            file_put_contents($this->jsonfile, json_encode($defaultData, JSON_PRETTY_PRINT));
-//            chmod($this->jsonfile, 0775);
-//        }
-//
-//        // Read and decode the JSON file to get attendance items.
-//        $jsoncontent = file_get_contents($this->jsonfile);
-//        $decoded = json_decode($jsoncontent, true);
-//        if (is_array($decoded)) {
-//            $this->attendanceitems = $decoded;
-//        } else {
-//            // Fallback to default data if JSON decoding fails.
-//            $this->attendanceitems = $defaultData;
-//        }
 
         $this->attendanceitems = return_updated_json_content($jsonfile, $instance);
 

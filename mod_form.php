@@ -284,7 +284,7 @@ class mod_facetoface_mod_form extends moodleform_mod {
         require_once 'attendance_sheet_settings.class.php';
 
         // Create an instance and insert the settings into the form.
-        $attendanceSettings = new attendance_sheet_settings();
+        $attendanceSettings = new attendance_sheet_settings($this->current->instance);
         $attendanceSettings->add_to_form($mform);
 
         $data = (object) ['confirmationmessage' => $confirmationmessagedata];
