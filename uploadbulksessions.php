@@ -15,13 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Upload form for csv file to handle enrolment of bookings in bulk.
+ * Handles bulk session uploads for the Face-to-Face module.
+ * Manages CSV validation, preview, and session creation.
  *
- * @author     Jonas Sajonas
- * @copyright  GCHLOL, 2025
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package     mod_facetoface
+ * @copyright   2025 Gold Coast Health
+ * @author      Jonas Sajonas
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 require_once('../../config.php');
 require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 

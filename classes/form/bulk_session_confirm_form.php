@@ -22,11 +22,13 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir.'/formslib.php');
 
 /**
- * Processing confirm form for bulk session uploads.
+ * Confirmation form for bulk session uploads in Face-to-Face module.
+ * Allows users to suppress emails and proceed with session processing.
  *
- * @author    Jonas Sajonas
- * @copyright GCHLOL, 2025
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package     mod_facetoface
+ * @copyright   2025 Gold Coast Health
+ * @author      Jonas Sajonas
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class bulk_session_confirm_form extends moodleform {
 

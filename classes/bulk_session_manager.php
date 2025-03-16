@@ -21,11 +21,14 @@ use Generator;
 use DateTime;
 
 /**
- * Bulk sessions manager.
+ * Manages bulk session creation for Face-to-Face module.
+ * Handles CSV parsing, validation, and session creation.
+ * Supports file uploads and array-based records.
  *
- * @author Jonas Sajonas
- * @copyright GCHLOL, 2025
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package     mod_facetoface
+ * @copyright   2025 Gold Coast Health
+ * @author      Jonas Sajonas
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class bulk_session_manager {
     /** @var int Facetoface instance ID */
