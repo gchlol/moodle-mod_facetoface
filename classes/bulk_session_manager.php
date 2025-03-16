@@ -40,9 +40,11 @@ class bulk_session_manager {
     /** @var array Validation errors */
     private $errors = [];
 
-    /** Avoid undefined properties */
-    private $usefile;
-    private $file;
+    /** @var bool Indicates whether a file is used */
+    private $usefile = false;
+
+    /** @var stored_file|null Reference to uploaded file */
+    private $file = null;
 
     /** @var bool Will ignore case when matching users */
     private $caseinsensitive = false;
