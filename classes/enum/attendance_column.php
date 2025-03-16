@@ -32,11 +32,14 @@ class attendance_column extends enum_base {
     private static $inverseattendancecolumnsmap = null;
 
     /**
-     * Constructor initializes the attendance columns map.
+     * Constructor initialises the attendance columns map.
+     * This is a Singleton. You should call the static methods directly:
+     * attendance_column::map_attendance_columns_names_to_enums()
+     * attendance_column::map_attendance_columns_enums_to_names()
      *
      * @throws \coding_exception
      */
-    public function __construct() {
+    private function __construct() {
         if (is_null(self::$attendancecolumnsmap)) {
             self::$attendancecolumnsmap = [
                 get_string('attendancecolumn:0', 'facetoface') => self::NAME,
@@ -57,7 +60,6 @@ class attendance_column extends enum_base {
      */
     public static function map_attendance_columns_names_to_enums(): array {
         if (is_null(self::$attendancecolumnsmap)) {
-            // Ensure the constructor runs to initialize the map.
             new self();
         }
         return self::$attendancecolumnsmap;
@@ -69,12 +71,10 @@ class attendance_column extends enum_base {
      * @return array<int, string>
      */
     public static function map_attendance_columns_enums_to_names(): array {
-        if (is_null(self::$attendancecolumnsmap)) {
-            // Ensure the constructor runs to initialize the map.
-            new self();
-        }
         if (is_null(self::$inverseattendancecolumnsmap)) {
-            self::$inverseattendancecolumnsmap = array_flip(self::$attendancecolumnsmap);
+            self::$inverseattendancecolumnsmap = array_flip(
+                self::map_attendance_columns_names_to_enums()
+            );
         }
         return self::$inverseattendancecolumnsmap;
     }
