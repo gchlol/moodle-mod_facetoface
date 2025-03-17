@@ -140,7 +140,7 @@ if ($process && $fileid && $f) {
              'context'  => $modulecontext,
              'objectid' => $f,
          ];
-         $event = \mod_facetoface\event\csv_processed::create($params);
+         $event = \mod_facetoface\event\csv_processed_bulksession::create($params);
          $event->add_record_snapshot('facetoface', $facetoface);
          $event->trigger();
 
