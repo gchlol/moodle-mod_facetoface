@@ -53,7 +53,7 @@ class csv_processed_bulksession extends \core\event\base {
      * @return string
      */
     public static function get_name() {
-        return get_string('eventcsvprocessed', 'mod_facetoface');
+        return get_string('eventcsvprocessedbulksession', 'mod_facetoface');
     }
 
     /**
