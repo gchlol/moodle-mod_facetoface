@@ -20,6 +20,7 @@ use moodle_exception;
 use Generator;
 use DateTime;
 use context_user;
+use stdClass;
 
 /**
  * Manages bulk session creation for Face-to-Face module.
@@ -286,7 +287,7 @@ class bulk_session_manager {
         global $DB;
 
         foreach ($this->records as $record) {
-            $session = new \stdClass();
+            $session = new stdClass();
 
             // Always use facetoface instance ID.
             $session->facetoface = $this->facetofaceid;
@@ -377,7 +378,7 @@ class bulk_session_manager {
             }
 
             // Insert session date into mdl_facetoface_sessions_dates.
-            $sessionsdate = new \stdClass();
+            $sessionsdate = new stdClass();
             $sessionsdate->sessionid = $sessionid;
             $sessionsdate->timestart = $session->starttime;
             $sessionsdate->timefinish = $session->finishtime;
