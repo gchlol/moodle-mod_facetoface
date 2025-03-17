@@ -23,7 +23,7 @@ require_once($CFG->libdir.'/formslib.php');
 
 /**
  * Confirmation form for bulk session uploads in Face-to-Face module.
- * Allows users to suppress emails and proceed with session processing.
+ * Allows users to proceed with session processing.
  *
  * @package     mod_facetoface
  * @copyright   2025 Gold Coast Health
@@ -40,9 +40,6 @@ class bulk_session_confirm_form extends moodleform {
 
         $f = $this->_customdata['f'] ?? 0;
         $fileid = $this->_customdata['fileid'] ?? 0;
-
-        $mform->addElement('advcheckbox', 'suppressemail', get_string('suppressemail', 'facetoface'));
-        $mform->setType('suppressemail', PARAM_BOOL);
 
         // Hidden fields.
         $mform->addElement('hidden', 'f', $f);

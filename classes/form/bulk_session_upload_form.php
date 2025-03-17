@@ -96,10 +96,6 @@ class bulk_session_upload_form extends \moodleform {
         // Add the static element using the HTML table.
         $mform->addElement('static', 'csvuploadhelp', '', $tablehtml);
 
-        // Additional checkbox for case-insensitive matching.
-        $mform->addElement('advcheckbox', 'caseinsensitive', get_string('caseinsensitive', 'mod_facetoface'));
-        $mform->setDefault('caseinsensitive', true);
-
         // Hidden field to validate/process after upload.
         $mform->addElement('hidden', 'validate', 1);
         $mform->setType('validate', PARAM_INT);

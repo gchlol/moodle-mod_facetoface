@@ -38,7 +38,6 @@ $heading = get_string('facetoface:validatebulksessions', 'facetoface');
 $fileid = optional_param('fileid', 0, PARAM_INT);
 $validate = optional_param('validate', 0, PARAM_INT);
 $process = optional_param('process', 0, PARAM_INT);
-$caseinsensitive = optional_param('caseinsensitive', false, PARAM_BOOL);
 
 if (!$facetoface = $DB->get_record('facetoface', ['id' => $f])) {
         throw new moodle_exception('error:incorrectfacetofaceid', 'facetoface');
@@ -67,11 +66,10 @@ if ($validate) {
     $data = $mform->get_data();
     $fileid = $data->csvfile ?: 0;
 
-    $mform = new bulk_session_confirm_form(null, ['f' => $f, 'fileid' => $fileid, 'caseinsensitive' => $caseinsensitive]);
+    $mform = new bulk_session_confirm_form(null, ['f' => $f, 'fileid' => $fileid]);
 
     $manager = new bulk_session_manager($f);
     $manager->load_from_file($fileid);
-    $manager->set_case_insensitive($caseinsensitive);
 
     $errors = $manager->validate();
 
@@ -127,14 +125,9 @@ if ($validate) {
 if ($process && $fileid && $f) {
     $manager = new bulk_session_manager($f);
     $manager->load_from_file($fileid);
-    $manager->set_case_insensitive($caseinsensitive);
 
     $confirmform = new bulk_session_confirm_form(null, ['f' => $f, 'fileid' => $fileid]);
     $confirmdata = $confirmform->get_data();
-
-    if (!empty($confirmdata->suppressemail)) {
-        $manager->suppress_email();
-    }
 
      $errors = $manager->validate();
 
