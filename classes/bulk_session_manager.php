@@ -24,7 +24,7 @@ use context_user;
 /**
  * Manages bulk session creation for Face-to-Face module.
  * Handles CSV parsing, validation, and session creation.
- * Supports file uploads and array-based records.
+ * Supports file uploads.
  *
  * @package     mod_facetoface
  * @copyright   2025 Gold Coast Health
@@ -77,22 +77,10 @@ class bulk_session_manager {
         if (count($files) != 1) {
             throw new moodle_exception('error:cannotloadfile', 'mod_facetoface');
         }
+
         $this->file = current($files);
 
         return true;
-    }
-
-    /**
-     * Loads the CSV records from an in-memory array.
-     *
-     * @param array $records Array of CSV rows to process
-     * @return self Fluent return for chaining
-     */
-    public function load_from_array(array $records) {
-        $this->usefile = false;
-        $this->records = $records;
-
-        return $this;
     }
 
     /**
@@ -129,6 +117,7 @@ class bulk_session_manager {
             foreach ($this->records as $record) {
                 yield $record;
             }
+
             return;
         }
 
