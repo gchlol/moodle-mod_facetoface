@@ -19,6 +19,7 @@ namespace mod_facetoface;
 use moodle_exception;
 use Generator;
 use DateTime;
+use context_user;
 
 /**
  * Manages bulk session creation for Face-to-Face module.
@@ -32,42 +33,45 @@ use DateTime;
  */
 class bulk_session_manager {
     /** @var int Facetoface instance ID */
-    private $facetofaceid;
+    private int $facetofaceid;
 
     /** @var array Parsed CSV records */
-    private $records = [];
+    private array $records = [];
 
     /** @var array Validation errors */
-    private $errors = [];
+    private array $errors = [];
 
     /** @var bool Indicates whether a file is used */
-    private $usefile = false;
+    private bool $usefile = false;
 
     /** @var stored_file|null Reference to uploaded file */
-    private $file = null;
+    private ?\stored_file $file = null;
 
     /**
      * Constructor.
      *
-     * @param int $facetofaceid
+     * Creates a new bulk session manager tied to a specific Face-to-Face instance.
+     *
+     * @param int $facetofaceid ID of the Face-to-Face activity
      */
     public function __construct(int $facetofaceid) {
         $this->facetofaceid = $facetofaceid;
     }
 
     /**
-     * Load CSV data from a file (given its fileid).
+     * Loads CSV data from a draft file area (by file ID).
+     * Throws an exception if the file cannot be loaded or doesn't exist.
      *
-     * @param int $fileid
-     *
-     * @return bool true if loaded successfully, false otherwise
+     * @param int $fileid The draft file ID
+     * @return bool True on success (throws exception on error)
      */
     public function load_from_file(int $fileid) {
         global $USER;
+
         $this->usefile = true;
 
         $fs = get_file_storage();
-        $usercontext = \context_user::instance($USER->id);
+        $usercontext = context_user::instance($USER->id);
         $files = $fs->get_area_files($usercontext->id, 'user', 'draft', $fileid, 'id', false);
 
         if (count($files) != 1) {
@@ -79,7 +83,10 @@ class bulk_session_manager {
     }
 
     /**
-     * Load in records to process from an array.
+     * Loads the CSV records from an in-memory array.
+     *
+     * @param array $records Array of CSV rows to process
+     * @return self Fluent return for chaining
      */
     public function load_from_array(array $records) {
         $this->usefile = false;
@@ -89,9 +96,9 @@ class bulk_session_manager {
     }
 
     /**
-     * Get headers for records.
+     * Returns the column headers expected for CSV input.
      *
-     * @return array
+     * @return array An indexed array of column headers
      */
     public static function get_headers() {
         return [
@@ -113,9 +120,9 @@ class bulk_session_manager {
     }
 
     /**
-     * Get an iterator for records.
+     * Provides a record iterator for CSV rows, either from memory or a file.
      *
-     * @return Generator
+     * @return \Generator Yields each CSV record as an associative array
      */
     private function get_iterator(): \Generator {
         if (!$this->usefile) {
@@ -148,8 +155,9 @@ class bulk_session_manager {
     }
 
     /**
-     * Validate loaded CSV records.
-     * @return array an array of error messages (empty if no errors)
+     * Validates the loaded CSV records for required fields, types, etc.
+     *
+     * @return array A list of validation errors
      */
     public function validate() {
         // If using file, load records from iterator.
@@ -231,9 +239,11 @@ class bulk_session_manager {
     }
 
     /**
-     * Process valid records to create sessions.
+     * Processes valid records to create new Face-to-Face sessions.
+     * Inserts the session and its schedule into the database.
+     * If any errors occur, they are stored in $this->errors.
      *
-     * @return bool true on success, false if any errors occurred
+     * @return bool True if all sessions were created successfully, false otherwise
      */
     public function process() {
         global $DB;
@@ -330,17 +340,19 @@ class bulk_session_manager {
     }
 
     /**
-     * Get validation or processing errors.
+     * Retrieves any validation or processing errors encountered.
      *
-     * @return array array of error messages
+     * @return array A list of error entries
      */
     public function get_errors() {
         return $this->errors;
     }
 
     /**
-     * Get parsed CSV records.
-     * @return array List of valid records.
+     * Retrieves the CSV records after they've been loaded.
+     * If a file is used, it will parse and return the data.
+     *
+     * @return array List of CSV records as associative arrays
      */
     public function get_records() {
         if ($this->usefile) {
