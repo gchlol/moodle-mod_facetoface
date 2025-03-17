@@ -218,7 +218,7 @@ $capabilities = [
         )
     ),
 
-    // GCHLOL MF Ability to upload and process bookings via CSV.
+    // GCHLOL MF Ability to upload and process bulk sessions via CSV.
     'mod/facetoface:uploadbulksessions' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_COURSE,
