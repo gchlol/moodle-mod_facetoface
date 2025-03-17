@@ -892,17 +892,17 @@ $string['error:invaliddiscountcost'] = 'Discount cost must be a valid number.';
 $string['examplecsv'] = 'example.csv';
 $string['eventcsvprocessedbulksession'] = 'Bulk session CSV processed';
 $string['facetoface:uploadsessionfiledesc'] =
-"Session date/time known|Required: yes / no
-Start date|Required: Format: YYYY-MM-DD
-Start time|Required: Format: HH:MM
-Finish date|Required: Format: YYYY-MM-DD
-Finish time|Required: Format: HH:MM
-Allow cancelations|Required: yes / no
+"Session Date/Time Known|Required: yes / no
+Start Date|Required: Format: YYYY-MM-DD
+Start Time|Required: Format: HH:MM
+Finish Date|Required: Format: YYYY-MM-DD
+Finish Time|Required: Format: HH:MM
+Allow Cancelations|Required: yes / no
 Capacity|Required: Whole number
-Allow overbookings|Required: yes / no
+Allow Overbookings|Required: yes / no
 Duration|Required: Numeric value in minutes
 Normal Cost|Optional: Numeric value
 Discount Cost|Optional: Numeric value
 Details|Session description
-Custom field short name|Optional
-Custom field value|Optional";
+Customfield_Shortname|Optional
+Customfield_Value|Optional";

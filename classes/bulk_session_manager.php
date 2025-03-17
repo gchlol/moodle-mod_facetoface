@@ -90,7 +90,7 @@ class bulk_session_manager {
      */
     public static function get_headers() {
         return [
-            'Session Date/Time known',
+            'Session Date/Time Known',
             'Start Date',
             'Start Time',
             'Finish Date',
@@ -152,115 +152,128 @@ class bulk_session_manager {
      *
      * @return array A list of validation errors
      */
-    public function validate() {
+    public function validate(): array {
         // If using file, load records from iterator.
         if ($this->usefile) {
             $this->records = iterator_to_array($this->get_iterator());
         }
 
         foreach ($this->records as $index => $record) {
+
+            // Trim all fields first.
             foreach ($record as $key => $value) {
                 $record[$key] = trim($value);
             }
 
-            // Required: Start Date and Start Time.
+            // Start Date + Time.
             if (
-                empty($record['Start date'])
-                || empty($record['Start time'])
+                empty($record['Start Date']) ||
+                empty($record['Start Time'])
             ) {
                 $this->errors[] = [$index, get_string('error:missingstarttime', 'facetoface')];
-
-            } else {
-                $date = DateTime::createFromFormat('d/m/Y H:i', $record['Start date'] . ' ' . $record['Start time']);
-                if ($date) {
-                    $record['Start date and time'] = $date->format('Y-m-d H:i');
-
-                } else {
-                    $this->errors[] = [$index, get_string('error:invalidstarttime', 'facetoface')
-                    . ": {$record['Start date']} {$record['Start time']}"];
-                }
+                // Skip further validation for this row.
+                continue;
             }
 
-            // Required: Finish Date and Finish Time.
+            $startdt = DateTime::createFromFormat('d/m/Y H:i', $record['Start Date'].' '.$record['Start Time']);
+            if (!$startdt) {
+                $this->errors[] = [
+                    $index,
+                    get_string('error:invalidstarttime', 'facetoface').": {$record['Start Date']} {$record['Start Time']}"
+                ];
+                continue;
+            }
+            // If valid, store the combined date/time back into $record.
+            $record['Start Date and Time'] = $startdt->format('Y-m-d H:i');
+
+            // Finish Date + Time.
             if (
-                empty($record['Finish date'])
-                || empty($record['Finish time'])
+                empty($record['Finish Date']) ||
+                empty($record['Finish Time'])
             ) {
                 $this->errors[] = [$index, get_string('error:missingfinishtime', 'facetoface')];
-
-            } else {
-                $date = DateTime::createFromFormat('d/m/Y H:i', $record['Finish date'] . ' ' . $record['Finish time']);
-                if ($date) {
-                    $record['finish date and time'] = $date->format('Y-m-d H:i');
-
-                } else {
-                    $this->errors[] = [$index, get_string('error:invalidfinishtime', 'facetoface')
-                    . ": {$record['Finish date']} {$record['Finish time']}"];
-                }
+                continue;
             }
 
-            // Ensure Start time is before Finish time.
+            $finishdt = DateTime::createFromFormat('d/m/Y H:i', $record['Finish Date'].' '.$record['Finish Time']);
+            if (!$finishdt) {
+                $this->errors[] = [
+                    $index,
+                    get_string('error:invalidfinishtime', 'facetoface').": {$record['Finish Date']} {$record['Finish Time']}"
+                ];
+                continue;
+            }
+            $record['Finish Date and Time'] = $finishdt->format('Y-m-d H:i');
+
+            // Ensure Start < Finish.
+            $starttime = strtotime($record['Start Date and Time']);
+            $finishtime = strtotime($record['Finish Date and Time']);
             if (
-                !empty($record['Start date and time'])
-                && !empty($record['finish date and time'])
+                $starttime &&
+                $finishtime &&
+                $starttime >= $finishtime
             ) {
-                $starttime = strtotime($record['Start date and time']);
-                $finishtime = strtotime($record['finish date and time']);
-                if (
-                    $starttime
-                    && $finishtime
-                    && $starttime >= $finishtime
-                ) {
-                    $this->errors[] = [$index, get_string('error:starttimeafterfinish', 'facetoface')];
-                }
+                $this->errors[] = [$index, get_string('error:starttimeafterfinish', 'facetoface')];
+                continue;
             }
 
-            // Required: Capacity (must be a number).
+            // Capacity (required).
             if (
-                !isset($record['Capacity'])
-                || !is_numeric($record['Capacity'])
-                || (int)$record['Capacity'] <= 0
+                !isset($record['Capacity']) ||
+                !is_numeric($record['Capacity']) ||
+                (int)$record['Capacity'] <= 0
             ) {
                 $this->errors[] = [$index, get_string('error:invalidcapacity', 'facetoface')];
+                continue;
             }
 
-            // Required: Duration (must be a number).
+            // Duration (required).
             if (
-                !isset($record['Duration'])
-                || !is_numeric($record['Duration'])
-                || (int)$record['Duration'] <= 0
+                !isset($record['Duration']) ||
+                !is_numeric($record['Duration']) ||
+                (int)$record['Duration'] <= 0
             ) {
                 $this->errors[] = [$index, get_string('error:invalidduration', 'facetoface')];
+                continue;
             }
 
-            // Optional: Normal Cost (must be a valid number if provided).
+            // Normal Cost (optional).
             if (
-                !empty($record['Normal Cost'])
-                && !is_numeric($record['Normal Cost'])
+                !empty($record['Normal Cost']) &&
+                !is_numeric($record['Normal Cost'])
             ) {
                 $this->errors[] = [$index, get_string('error:invalidnormalcost', 'facetoface')];
+                continue;
             }
 
-            // Optional: Discount Cost (must be a valid number if provided).
+            // Discount Cost (optional).
             if (
-                !empty($record['Discount Cost'])
-                && !is_numeric($record['Discount Cost'])
+                !empty($record['Discount Cost']) &&
+                !is_numeric($record['Discount Cost'])
             ) {
                 $this->errors[] = [$index, get_string('error:invaliddiscountcost', 'facetoface')];
+                continue;
             }
 
-            // Required: Allow Cancelations (must be "yes" or "no").
-            if (!in_array(strtolower($record['allow cancelations'] ?? ''), ['yes', 'no'], true)) {
+            // Allow Cancelations (required, "yes" or "no").
+            $allowcancel = strtolower($record['Allow Cancelations'] ?? '');
+            if (!in_array($allowcancel, ['yes', 'no'], true)) {
                 $this->errors[] = [$index, get_string('error:invalidallowcancel', 'facetoface')];
+                continue;
             }
 
-            // Required: Allow Overbookings (must be "yes" or "no").
-            if (!in_array(strtolower($record['Allow overbookings'] ?? ''), ['yes', 'no'], true)) {
+            // Allow Overbookings (required, "yes" or "no").
+            $allowover = strtolower($record['Allow Overbookings'] ?? '');
+            if (!in_array($allowover, ['yes', 'no'], true)) {
                 $this->errors[] = [$index, get_string('error:invalidallowoverbook', 'facetoface')];
+                continue;
             }
+
         }
+
         return $this->errors;
     }
+
 
     /**
      * Processes valid records to create new Face-to-Face sessions.
@@ -279,36 +292,36 @@ class bulk_session_manager {
             $session->facetoface = $this->facetofaceid;
 
             // Session date/time known: default yes.
-            $session->datetimeknown = isset($record['Session date/time known'])
-                ? ($record['Session date/time known'] === 'no' ? 0 : 1)
+            $session->datetimeknown = isset($record['Session Date/Time Known'])
+                ? ($record['Session Date/Time Known'] === 'no' ? 0 : 1)
                 : 1;
 
             // Combine Start Date and Time.
             $session->starttime = (
-                !empty($record['Start date'])
-                && !empty($record['Start time']))
-            ? strtotime(str_replace('/', '-', $record['Start date'] . ' ' . $record['Start time']))
+                !empty($record['Start Date']) &&
+                !empty($record['Start Time']))
+            ? strtotime(str_replace('/', '-', $record['Start Date'] . ' ' . $record['Start Time']))
             : null;
 
             // Combine Finish Date and Time.
             $session->finishtime = (
-                !empty($record['Finish date'])
-                && !empty($record['Finish time']))
-            ? strtotime(str_replace('/', '-', $record['Finish date'] . ' ' . $record['Finish time']))
+                !empty($record['Finish Date']) &&
+                !empty($record['Finish Time']))
+            ? strtotime(str_replace('/', '-', $record['Finish Date'] . ' ' . $record['Finish Time']))
             : null;
 
             if (
-                $session->datetimeknown
-                && (empty($session->starttime)
-                || empty($session->finishtime))
+                $session->datetimeknown &&
+                (empty($session->starttime) ||
+                empty($session->finishtime))
             ) {
                 $this->errors[] = get_string('error:invaliddatetimedata', 'facetoface');
                 continue; // Skip if invalid.
             }
 
             // Allow sign up cancellations: default yes.
-            $session->allowcancel = isset($record['allow cancelations'])
-                ? ($record['allow cancelations'] === 'no' ? 0 : 1)
+            $session->allowcancel = isset($record['Allow Cancelations'])
+                ? ($record['Allow Cancelations'] === 'no' ? 0 : 1)
                 : 1;
 
             // Capacity: default to 10 if not provided.
@@ -317,12 +330,14 @@ class bulk_session_manager {
                 : 10;
 
             // Allow overbooking: default yes.
-            $session->overbook = isset($record['Allow overbookings'])
-                ? ($record['Allow overbookings'] === 'no' ? 0 : 1)
+            $session->overbook = isset($record['Allow Overbookings'])
+                ? ($record['Allow Overbookings'] === 'no' ? 0 : 1)
                 : 1;
 
             // Duration is required.
-            $session->duration = isset($record['Duration']) && is_numeric($record['Duration'])
+            $session->duration = isset(
+                $record['Duration']) &&
+                is_numeric($record['Duration'])
                 ? (int) $record['Duration']
                 : 0;
 
@@ -343,11 +358,11 @@ class bulk_session_manager {
 
             // Handle custom fields if both shortname and value exist.
             if (
-                !empty($record['customfield_shortname'])
-                && isset($record['customfield_value'])
+                !empty($record['Customfield_Shortname'])
+                && isset($record['Customfield_Value'])
             ) {
                 $session->customfields = [
-                    $record['customfield_shortname'] => $record['customfield_value'],
+                    $record['Customfield_Shortname'] => $record['Customfield_Value'],
                 ];
             }
 
