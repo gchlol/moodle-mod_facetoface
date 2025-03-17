@@ -241,7 +241,6 @@ function print_session_list($courseid, $facetoface, $location) {
             $viewattendees,
             $editsessions,
             !$bulksignup,
-            $uploadbulksessions,
             $uploadbookings,
             $deletesessions // GCHLOL - MF - Added $deletesessions
         );

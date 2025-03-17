@@ -172,5 +172,7 @@ $mform = new bulk_session_upload_form(null, ['f' => $f]);
 $mform->set_data(['f' => $f, 'validate' => 1]);
 
 echo $OUTPUT->header();
+
 $mform->display();
+
 echo $OUTPUT->footer();
