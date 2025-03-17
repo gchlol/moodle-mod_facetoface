@@ -33,6 +33,12 @@ use mod_facetoface\bulk_session_manager;
 
 $f = optional_param('f', 0, PARAM_INT);
 $PAGE->set_url(new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]));
+
+$heading = get_string('facetoface:validatebulksessions', 'facetoface');
+$PAGE->set_pagelayout('standard');
+$PAGE->set_title($heading);
+$PAGE->set_heading($heading);
+
 $fileid = optional_param('fileid', 0, PARAM_INT);
 $validate = optional_param('validate', 0, PARAM_INT);
 $process = optional_param('process', 0, PARAM_INT);
@@ -56,8 +62,6 @@ require_capability('mod/facetoface:uploadbulksessions', $context);
 
 
 if ($validate) {
-    $heading = get_string('facetoface:validatebulksessions', 'facetoface');
-
     $mform = new bulk_session_upload_form(null);
     $data = $mform->get_data();
     $fileid = $data->csvfile ?: 0;
@@ -165,9 +169,6 @@ if ($process && $fileid && $f) {
 $heading = get_string('facetoface:uploadbulksessions', 'facetoface');
 $mform = new bulk_session_upload_form(null, ['f' => $f]);
 $mform->set_data(['f' => $f, 'validate' => 1]);
-$PAGE->set_pagelayout('standard');
-$PAGE->set_title($heading);
-$PAGE->set_heading($heading);
 
 echo $OUTPUT->header();
 $mform->display();
