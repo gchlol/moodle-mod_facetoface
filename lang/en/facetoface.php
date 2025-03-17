@@ -889,7 +889,7 @@ $string['error:invalidallowoverbook'] = 'Allow overbookings must be "yes" or "no
 $string['error:invalidduration'] = 'Duration must be a positive number.';
 $string['error:invalidnormalcost'] = 'Normal cost must be a valid number.';
 $string['error:invaliddiscountcost'] = 'Discount cost must be a valid number.';
-
+$string['eventcsvprocessedbulksession'] = 'Bulk session CSV processed';
 $string['facetoface:uploadsessionfiledesc'] =
 "Session date/time known|Required: yes / no
 Start date|Required: Format: YYYY-MM-DD
