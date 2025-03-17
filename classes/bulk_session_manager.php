@@ -293,23 +293,31 @@ class bulk_session_manager {
             $session->facetoface = $this->facetofaceid;
 
             // Session date/time known: default yes.
-            $session->datetimeknown = isset($record['Session Date/Time Known'])
-                ? ($record['Session Date/Time Known'] === 'no' ? 0 : 1)
-                : 1;
+            $session->datetimeknown = 1;
+            if (
+                isset($record['Session Date/Time Known']) &&
+                $record['Session Date/Time Known'] === 'no'
+            ) {
+                $session->datetimeknown = 0;
+            }
 
             // Combine Start Date and Time.
-            $session->starttime = (
+            $session->starttime = null;
+            if (
                 !empty($record['Start Date']) &&
-                !empty($record['Start Time']))
-            ? strtotime(str_replace('/', '-', $record['Start Date'] . ' ' . $record['Start Time']))
-            : null;
+                !empty($record['Start Time'])
+            ) {
+                $session->starttime = strtotime(str_replace('/', '-', $record['Start Date'] . ' ' . $record['Start Time']));
+            }
 
             // Combine Finish Date and Time.
-            $session->finishtime = (
+            $session->finishtime = null;
+            if (
                 !empty($record['Finish Date']) &&
-                !empty($record['Finish Time']))
-            ? strtotime(str_replace('/', '-', $record['Finish Date'] . ' ' . $record['Finish Time']))
-            : null;
+                !empty($record['Finish Time'])
+            ) {
+                $session->finishtime = strtotime(str_replace('/', '-', $record['Finish Date'] . ' ' . $record['Finish Time']));
+            }
 
             if (
                 $session->datetimeknown &&
@@ -320,42 +328,68 @@ class bulk_session_manager {
                 continue; // Skip if invalid.
             }
 
-            // Allow sign up cancellations: default yes.
-            $session->allowcancel = isset($record['Allow Cancelations'])
-                ? ($record['Allow Cancelations'] === 'no' ? 0 : 1)
-                : 1;
+            // Allow sign-up cancellations: default yes.
+            $session->allowcancel = 1;
+            if (
+                isset($record['Allow Cancelations']) &&
+                $record['Allow Cancelations'] === 'no'
+            ) {
+                $session->allowcancel = 0;
+            }
 
             // Capacity: default to 10 if not provided.
-            $session->capacity = !empty($record['Capacity'])
-                ? (int) $record['Capacity']
-                : 10;
+            $session->capacity = 10;
+            if (
+                !empty($record['Capacity']) &&
+                is_numeric($record['Capacity'])
+            ) {
+                $session->capacity = (int) $record['Capacity'];
+            }
 
             // Allow overbooking: default yes.
-            $session->overbook = isset($record['Allow Overbookings'])
-                ? ($record['Allow Overbookings'] === 'no' ? 0 : 1)
-                : 1;
+            $session->overbook = 1;
+            if (
+                isset($record['Allow Overbookings']) &&
+                $record['Allow Overbookings'] === 'no'
+            ) {
+                $session->overbook = 0;
+            }
 
             // Duration is required.
-            $session->duration = isset(
-                $record['Duration']) &&
+            $session->duration = 0;
+            if (
+                isset($record['Duration']) &&
                 is_numeric($record['Duration'])
-                ? (int) $record['Duration']
-                : 0;
+            ) {
+                $session->duration = (int)$record['Duration'];
+            }
 
             // Normal Cost: optional.
-            $session->normalcost = isset($record['Normal Cost'])
-                ? $record['Normal Cost']
-                : null;
+            $session->normalcost = null;
+            if (
+                isset($record['Normal Cost']) &&
+                is_numeric($record['Normal Cost'])
+            ) {
+                $session->normalcost = $record['Normal Cost'];
+            }
 
             // Discount Cost: optional.
-            $session->discountcost = isset($record['Discount Cost'])
-                ? $record['Discount Cost']
-                : null;
+            $session->discountcost = null;
+            if (
+                isset($record['Discount Cost']) &&
+                is_numeric($record['Discount Cost'])
+            ) {
+                $session->discountcost = $record['Discount Cost'];
+            }
 
             // Details: optional.
-            $session->details = !empty($record['Details'])
-                ? $record['Details']
-                : '';
+            $session->details = '';
+            if (
+                !empty($record['Details']) &&
+                is_string($record['Details'])
+            ) {
+                $session->details = $record['Details'];
+            }
 
             // Handle custom fields if both shortname and value exist.
             if (
