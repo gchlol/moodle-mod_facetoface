@@ -255,12 +255,13 @@ function print_session_list($courseid, $facetoface, $location) {
     }
 
     if ($uploadbulksessions) {
-        $adduploadlink = html_writer::link(
+        $uploadbulksessionslink = html_writer::link(
             new moodle_url('uploadbulksessions.php', ['f' => $facetoface->id]),
             get_string('facetoface:uploadbulksessions', 'facetoface')
         );
-        echo html_writer::tag('p', $adduploadlink);
+        echo html_writer::tag('p', $uploadbulksessionslink);
     }
+
 
     if ($uploadbookings) {
         $adduploadlink = html_writer::link(
