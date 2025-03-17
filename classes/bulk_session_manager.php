@@ -90,29 +90,29 @@ class bulk_session_manager {
      */
     public static function get_headers() {
         return [
-            'Session date/time known',
-            'Start date',
-            'Start time',
-            'Finish date',
-            'Finish time',
-            'allow cancelations',
+            'Session Date/Time known',
+            'Start Date',
+            'Start Time',
+            'Finish Date',
+            'Finish Time',
+            'Allow Cancelations',
             'Capacity',
-            'Allow overbookings',
+            'Allow Overbookings',
             'Duration',
             'Normal Cost',
             'Discount Cost',
             'Details',
-            'customfield_shortname',
-            'customfield_value',
+            'Customfield_Shortname',
+            'Customfield_Value',
         ];
     }
 
     /**
      * Provides a record iterator for CSV rows, either from memory or a file.
      *
-     * @return \Generator Yields each CSV record as an associative array
+     * @return Generator Yields each CSV record as an associative array
      */
-    private function get_iterator(): \Generator {
+    private function get_iterator(): Generator {
         if (!$this->usefile) {
             foreach ($this->records as $record) {
                 yield $record;
@@ -130,14 +130,18 @@ class bulk_session_manager {
 
         try {
             while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
+
                 if (count($data) !== $numheaders) {
                     throw new moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface');
                 }
+
                 foreach ($data as &$field) {
                     $field = trim($field, "'");
                 }
+
                 yield array_combine($headers, $data);
             }
+
         } finally {
             fclose($handle);
         }
@@ -160,12 +164,17 @@ class bulk_session_manager {
             }
 
             // Required: Start Date and Start Time.
-            if (empty($record['Start date']) || empty($record['Start time'])) {
+            if (
+                empty($record['Start date'])
+                || empty($record['Start time'])
+            ) {
                 $this->errors[] = [$index, get_string('error:missingstarttime', 'facetoface')];
+
             } else {
                 $date = DateTime::createFromFormat('d/m/Y H:i', $record['Start date'] . ' ' . $record['Start time']);
                 if ($date) {
                     $record['Start date and time'] = $date->format('Y-m-d H:i');
+
                 } else {
                     $this->errors[] = [$index, get_string('error:invalidstarttime', 'facetoface')
                     . ": {$record['Start date']} {$record['Start time']}"];
@@ -173,12 +182,17 @@ class bulk_session_manager {
             }
 
             // Required: Finish Date and Finish Time.
-            if (empty($record['Finish date']) || empty($record['Finish time'])) {
+            if (
+                empty($record['Finish date'])
+                || empty($record['Finish time'])
+            ) {
                 $this->errors[] = [$index, get_string('error:missingfinishtime', 'facetoface')];
+
             } else {
                 $date = DateTime::createFromFormat('d/m/Y H:i', $record['Finish date'] . ' ' . $record['Finish time']);
                 if ($date) {
                     $record['finish date and time'] = $date->format('Y-m-d H:i');
+
                 } else {
                     $this->errors[] = [$index, get_string('error:invalidfinishtime', 'facetoface')
                     . ": {$record['Finish date']} {$record['Finish time']}"];
@@ -186,31 +200,52 @@ class bulk_session_manager {
             }
 
             // Ensure Start time is before Finish time.
-            if (!empty($record['Start date and time']) && !empty($record['finish date and time'])) {
+            if (
+                !empty($record['Start date and time'])
+                && !empty($record['finish date and time'])
+            ) {
                 $starttime = strtotime($record['Start date and time']);
                 $finishtime = strtotime($record['finish date and time']);
-                if ($starttime && $finishtime && $starttime >= $finishtime) {
+                if (
+                    $starttime
+                    && $finishtime
+                    && $starttime >= $finishtime
+                ) {
                     $this->errors[] = [$index, get_string('error:starttimeafterfinish', 'facetoface')];
                 }
             }
 
             // Required: Capacity (must be a number).
-            if (!isset($record['Capacity']) || !is_numeric($record['Capacity']) || (int)$record['Capacity'] <= 0) {
+            if (
+                !isset($record['Capacity'])
+                || !is_numeric($record['Capacity'])
+                || (int)$record['Capacity'] <= 0
+            ) {
                 $this->errors[] = [$index, get_string('error:invalidcapacity', 'facetoface')];
             }
 
             // Required: Duration (must be a number).
-            if (!isset($record['Duration']) || !is_numeric($record['Duration']) || (int)$record['Duration'] <= 0) {
+            if (
+                !isset($record['Duration'])
+                || !is_numeric($record['Duration'])
+                || (int)$record['Duration'] <= 0
+            ) {
                 $this->errors[] = [$index, get_string('error:invalidduration', 'facetoface')];
             }
 
             // Optional: Normal Cost (must be a valid number if provided).
-            if (!empty($record['Normal Cost']) && !is_numeric($record['Normal Cost'])) {
+            if (
+                !empty($record['Normal Cost'])
+                && !is_numeric($record['Normal Cost'])
+            ) {
                 $this->errors[] = [$index, get_string('error:invalidnormalcost', 'facetoface')];
             }
 
             // Optional: Discount Cost (must be a valid number if provided).
-            if (!empty($record['Discount Cost']) && !is_numeric($record['Discount Cost'])) {
+            if (
+                !empty($record['Discount Cost'])
+                && !is_numeric($record['Discount Cost'])
+            ) {
                 $this->errors[] = [$index, get_string('error:invaliddiscountcost', 'facetoface')];
             }
 
@@ -249,16 +284,24 @@ class bulk_session_manager {
                 : 1;
 
             // Combine Start Date and Time.
-            $session->starttime = (!empty($record['Start date']) && !empty($record['Start time']))
+            $session->starttime = (
+                !empty($record['Start date'])
+                && !empty($record['Start time']))
             ? strtotime(str_replace('/', '-', $record['Start date'] . ' ' . $record['Start time']))
             : null;
 
             // Combine Finish Date and Time.
-            $session->finishtime = (!empty($record['Finish date']) && !empty($record['Finish time']))
+            $session->finishtime = (
+                !empty($record['Finish date'])
+                && !empty($record['Finish time']))
             ? strtotime(str_replace('/', '-', $record['Finish date'] . ' ' . $record['Finish time']))
             : null;
 
-            if ($session->datetimeknown && (empty($session->starttime) || empty($session->finishtime))) {
+            if (
+                $session->datetimeknown
+                && (empty($session->starttime)
+                || empty($session->finishtime))
+            ) {
                 $this->errors[] = get_string('error:invaliddatetimedata', 'facetoface');
                 continue; // Skip if invalid.
             }
@@ -299,7 +342,10 @@ class bulk_session_manager {
                 : '';
 
             // Handle custom fields if both shortname and value exist.
-            if (!empty($record['customfield_shortname']) && isset($record['customfield_value'])) {
+            if (
+                !empty($record['customfield_shortname'])
+                && isset($record['customfield_value'])
+            ) {
                 $session->customfields = [
                     $record['customfield_shortname'] => $record['customfield_value'],
                 ];
