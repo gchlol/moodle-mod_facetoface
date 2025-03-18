@@ -80,14 +80,14 @@ function handle_bulk_upload_errors($errors) {
     ];
 
     foreach ($errors as $error) {
-        if (is_array($error) && count($error) >= 2) {
-            $line = $error[0];
-            $messages = array_slice($error, 1);
-            foreach ($messages as $message) {
-                $table->data[] = [$line, $message];
-            }
-        } else {
+        if (!is_array($error) || count($error) < 2) {
             $table->data[] = ["-", is_string($error) ? $error : json_encode($error)];
+            continue;
+        }
+        $line = $error[0];
+        $messages = array_slice($error, 1);
+        foreach ($messages as $message) {
+            $table->data[] = [$line, $message];
         }
     }
 
