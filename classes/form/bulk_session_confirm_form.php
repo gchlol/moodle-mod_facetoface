@@ -41,12 +41,13 @@ class bulk_session_confirm_form extends moodleform {
     public function definition(): void {
         $mform = $this->_form;
 
-        $facetofaceid = $this->_customdata['facetofaceid'] ?? 0;
+        // Retrieve the new parameter f2did from custom data.
+        $f2did = $this->_customdata['f'] ?? 0;
         $fileid = $this->_customdata['fileid'] ?? 0;
 
-        // Hidden fields.
-        $mform->addElement('hidden', 'facetofaceid', $facetofaceid);
-        $mform->setType('facetofaceid', PARAM_INT);
+        // Add hidden fields using the new name.
+        $mform->addElement('hidden', 'f', $f2did);
+        $mform->setType('f', PARAM_INT);
 
         $mform->addElement('hidden', 'fileid', $fileid);
         $mform->setType('fileid', PARAM_INT);
@@ -54,10 +55,11 @@ class bulk_session_confirm_form extends moodleform {
         $mform->addElement('hidden', 'process', 1);
         $mform->setType('process', PARAM_INT);
 
-        // Button group (confirm + cancel).
+        // Add button group (confirm + cancel).
         $this->add_action_buttons(
             true,
             get_string('facetoface:confirmandprocess', 'mod_facetoface')
         );
     }
 }
+

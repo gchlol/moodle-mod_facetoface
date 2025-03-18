@@ -896,12 +896,12 @@ $string['error:invalidstarttime'] = 'Start date/time is invalid: {$a->date} {$a-
 $string['error:invalidfinishtime'] = 'Finish date/time is invalid: {$a->date} {$a->time}';
 $string['eventcsvprocessedbulksession'] = 'Bulk session CSV processed';
 
-// Table headers
+// Table headers.
 $string['upload_field'] = 'Field';
 $string['upload_required'] = 'Required?';
 $string['upload_format'] = 'Format';
 
-// Fields
+// Fields.
 $string['upload_field_sessiondatetime'] = 'Session Date/Time Known';
 $string['upload_field_startdate'] = 'Start Date';
 $string['upload_field_starttime'] = 'Start Time';
@@ -916,13 +916,13 @@ $string['upload_field_discountcost'] = 'Discount Cost';
 $string['upload_field_details'] = 'Details';
 $string['upload_field_customfield'] = 'Customfield_<suffix>';
 
-// Required? values
+// Required? values.
 $string['upload_req_yesno'] = 'No';
 $string['upload_req_yes'] = 'Yes';
 $string['upload_req_no'] = 'No';
 $string['upload_req_optional'] = 'Optional';
 
-// Format column
+// Format column.
 $string['upload_format_na'] = 'N/A';
 $string['upload_format_date'] = 'DD/MM/YYYY';
 $string['upload_format_time'] = 'HH:MM';

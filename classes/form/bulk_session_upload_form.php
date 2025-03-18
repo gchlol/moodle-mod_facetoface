@@ -46,8 +46,8 @@ class bulk_session_upload_form extends \moodleform {
 
         $mform = $this->_form;
 
-        $facetofaceid = $this->_customdata['f'] ?? 0;
-        $mform->addElement('hidden', 'f', $facetofaceid);
+        $f2fid = $this->_customdata['f'] ?? 0;
+        $mform->addElement('hidden', 'f', $f2fid);
         $mform->setType('f', PARAM_INT);
 
         $mform->addElement('header', 'settingsheader', get_string('facetoface:uploadbulksessions', 'mod_facetoface'));
@@ -73,115 +73,105 @@ class bulk_session_upload_form extends \moodleform {
         $mform->setType('csvfile', PARAM_INT);
         $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
 
-        // Build a table with 3 columns: Field, Required?, Format.
+        // Build a table with 3 columns: Field, Required, Format.
         $table = new html_table();
         $table->head = [
-            get_string('upload_field', 'mod_facetoface'),    // e.g. "Field"
-            get_string('upload_required', 'mod_facetoface'), // e.g. "Required?"
-            get_string('upload_format', 'mod_facetoface')    // e.g. "Format"
+            get_string('upload_field', 'mod_facetoface'),
+            get_string('upload_required', 'mod_facetoface'),
+            get_string('upload_format', 'mod_facetoface')
         ];
 
         // 1) Session Date/Time Known
         $table->data[] = [
-            get_string('upload_field_sessiondatetime', 'mod_facetoface'),  // "Session Date/Time Known"
-            get_string('upload_req_yesno', 'mod_facetoface'),              // "yes/no"
-            get_string('upload_format_na', 'mod_facetoface')               // "N/A"
+            get_string('upload_field_sessiondatetime', 'mod_facetoface'),
+            get_string('upload_req_yesno', 'mod_facetoface'),
+            get_string('upload_format_na', 'mod_facetoface')
         ];
 
-        // 2) Start Date
         $table->data[] = [
             get_string('upload_field_startdate', 'mod_facetoface'),
             get_string('upload_req_yes', 'mod_facetoface'),
-            get_string('upload_format_date', 'mod_facetoface') // "DD/MM/YYYY"
+            get_string('upload_format_date', 'mod_facetoface')
         ];
 
-        // 3) Start Time
         $table->data[] = [
             get_string('upload_field_starttime', 'mod_facetoface'),
             get_string('upload_req_yes', 'mod_facetoface'),
-            get_string('upload_format_time', 'mod_facetoface') // "HH:MM"
+            get_string('upload_format_time', 'mod_facetoface')
         ];
 
-        // 4) Finish Date
         $table->data[] = [
             get_string('upload_field_finishdate', 'mod_facetoface'),
             get_string('upload_req_yes', 'mod_facetoface'),
             get_string('upload_format_date', 'mod_facetoface')
         ];
 
-        // 5) Finish Time
         $table->data[] = [
             get_string('upload_field_finishtime', 'mod_facetoface'),
             get_string('upload_req_yes', 'mod_facetoface'),
             get_string('upload_format_time', 'mod_facetoface')
         ];
 
-        // 6) Allow Cancellations
         $table->data[] = [
             get_string('upload_field_allowcancellations', 'mod_facetoface'),
             get_string('upload_req_yesno', 'mod_facetoface'),
             get_string('upload_format_na', 'mod_facetoface')
         ];
 
-        // 7) Capacity
         $table->data[] = [
             get_string('upload_field_capacity', 'mod_facetoface'),
             get_string('upload_req_yes', 'mod_facetoface'),
             get_string('upload_format_numeric', 'mod_facetoface')
         ];
 
-        // 8) Allow Overbookings
         $table->data[] = [
             get_string('upload_field_allowoverbookings', 'mod_facetoface'),
             get_string('upload_req_yesno', 'mod_facetoface'),
             get_string('upload_format_na', 'mod_facetoface')
         ];
 
-        // 9) Duration
         $table->data[] = [
             get_string('upload_field_duration', 'mod_facetoface'),
             get_string('upload_req_yes', 'mod_facetoface'),
-            get_string('upload_format_numericmins', 'mod_facetoface') // e.g. "Numeric value in minutes"
+            get_string('upload_format_numericmins', 'mod_facetoface')
         ];
 
-        // 10) Normal Cost
         $table->data[] = [
             get_string('upload_field_normalcost', 'mod_facetoface'),
             get_string('upload_req_optional', 'mod_facetoface'),
             get_string('upload_format_numeric', 'mod_facetoface')
         ];
 
-        // 11) Discount Cost
         $table->data[] = [
             get_string('upload_field_discountcost', 'mod_facetoface'),
             get_string('upload_req_optional', 'mod_facetoface'),
             get_string('upload_format_numeric', 'mod_facetoface')
         ];
 
-        // 12) Details
         $table->data[] = [
             get_string('upload_field_details', 'mod_facetoface'),
             get_string('upload_req_optional', 'mod_facetoface'),
-            get_string('upload_format_string', 'mod_facetoface') // e.g. "Any text"
+            get_string('upload_format_string', 'mod_facetoface')
         ];
 
-        // 13) Customfield_<suffix>
         $table->data[] = [
             get_string('upload_field_customfield', 'mod_facetoface'),
             get_string('upload_req_optional', 'mod_facetoface'),
-            get_string('upload_format_customfield', 'mod_facetoface') // e.g. "Acceptable suffixes: location, room, trainer"
+            get_string('upload_format_customfield', 'mod_facetoface')
         ];
 
-        // Convert the table to HTML.
         $tablehtml = html_writer::table($table);
 
-        // Add the table as a static element in the form.
+        // Add the table as a static element.
         $mform->addElement('static', 'csvuploadhelp', '', $tablehtml);
 
         // Hidden field to validate/process after upload.
         $mform->addElement('hidden', 'validate', 1);
         $mform->setType('validate', PARAM_INT);
 
-        $mform->addElement('submit', 'submit', get_string('facetoface:uploadandpreviewbulk', 'mod_facetoface'));
+        $this->add_action_buttons(
+            true,
+            get_string('facetoface:uploadandpreviewbulk', 'mod_facetoface')
+        );
     }
 }
