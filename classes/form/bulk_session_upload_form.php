@@ -33,8 +33,7 @@ class bulk_session_upload_form extends \moodleform {
      * Build form for importing bookings.
      *
      * {@inheritDoc}
-     *
-     * @see \moodleform::definition()
+     * @see \moodleform::definition().
      */
     public function definition() {
         global $CFG;

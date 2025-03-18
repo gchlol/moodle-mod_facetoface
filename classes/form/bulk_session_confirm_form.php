@@ -19,6 +19,7 @@ namespace mod_facetoface\form;
 use moodleform;
 
 defined('MOODLE_INTERNAL') || die();
+
 require_once($CFG->libdir.'/formslib.php');
 
 /**
@@ -33,17 +34,19 @@ require_once($CFG->libdir.'/formslib.php');
 class bulk_session_confirm_form extends moodleform {
 
     /**
-     * Form definition.
+     * Builds confirmation form for bulk session processing.
+     *
+     * @return void
      */
-    public function definition() {
+    public function definition(): void {
         $mform = $this->_form;
 
-        $f = $this->_customdata['f'] ?? 0;
+        $facetofaceid = $this->_customdata['facetofaceid'] ?? 0;
         $fileid = $this->_customdata['fileid'] ?? 0;
 
         // Hidden fields.
-        $mform->addElement('hidden', 'f', $f);
-        $mform->setType('f', PARAM_INT);
+        $mform->addElement('hidden', 'facetofaceid', $facetofaceid);
+        $mform->setType('facetofaceid', PARAM_INT);
 
         $mform->addElement('hidden', 'fileid', $fileid);
         $mform->setType('fileid', PARAM_INT);
@@ -51,7 +54,7 @@ class bulk_session_confirm_form extends moodleform {
         $mform->addElement('hidden', 'process', 1);
         $mform->setType('process', PARAM_INT);
 
-        // Add a group of buttons.
+        // Button group (confirm + cancel).
         $buttonarray = [];
         $buttonarray[] = $mform->createElement('submit', 'confirmbtn',
             get_string('facetoface:confirmandprocess', 'mod_facetoface'));

@@ -51,9 +51,7 @@ class bulk_session_manager {
     /**
      * Constructor.
      *
-     * Creates a new bulk session manager tied to a specific Face-to-Face instance.
-     *
-     * @param int $facetofaceid ID of the Face-to-Face activity
+     * @param int $facetofaceid ID of the Face-to-Face activity.
      */
     public function __construct(int $facetofaceid) {
         $this->facetofaceid = $facetofaceid;
@@ -63,8 +61,8 @@ class bulk_session_manager {
      * Loads CSV data from a draft file area (by file ID).
      * Throws an exception if the file cannot be loaded or doesn't exist.
      *
-     * @param int $fileid The draft file ID
-     * @return bool True on success (throws exception on error)
+     * @param int $fileid The draft file ID.
+     * @return bool True on success (throws exception on error).
      */
     public function load_from_file(int $fileid) {
         global $USER;
@@ -87,7 +85,7 @@ class bulk_session_manager {
     /**
      * Returns the column headers expected for CSV input.
      *
-     * @return array An indexed array of column headers
+     * @return array An indexed array of column headers.
      */
     public static function get_headers() {
         return [
@@ -109,7 +107,7 @@ class bulk_session_manager {
     /**
      * Provides a record iterator for CSV rows, either from memory or a file.
      *
-     * @return Generator Yields each CSV record as an associative array
+     * @return Generator Yields each CSV record as an associative array.
      */
     private function get_iterator(): Generator {
         if (!$this->usefile) {
@@ -166,7 +164,7 @@ class bulk_session_manager {
     /**
      * Validates the loaded CSV records for required fields, types, etc.
      *
-     * @return array A list of validation errors
+     * @return array A list of validation errors.
      */
     public function validate(): array {
         // If using file, load records from iterator.
@@ -191,15 +189,19 @@ class bulk_session_manager {
                 continue;
             }
 
-            $startdt = DateTime::createFromFormat('d/m/Y H:i', $record['Start Date'].' '.$record['Start Time']);
+            $startdt = DateTime::createFromFormat('d/m/Y H:i', $record['Start Date'] . ' ' . $record['Start Time']);
             if (!$startdt) {
+                $params = (object)[
+                    'date' => $record['Start Date'],
+                    'time' => $record['Start Time']
+                ];
                 $this->errors[] = [
                     $index,
-                    get_string('error:invalidstarttime', 'facetoface').": {$record['Start Date']} {$record['Start Time']}"
+                    get_string('error:invalidstarttime', 'facetoface', $params)
                 ];
-
                 continue;
             }
+
             // If valid, store the combined date/time back into $record.
             $record['Start Date and Time'] = $startdt->format('Y-m-d H:i');
 
@@ -214,13 +216,20 @@ class bulk_session_manager {
             }
 
             $finishdt = DateTime::createFromFormat('d/m/Y H:i', $record['Finish Date'].' '.$record['Finish Time']);
+            $finishdt = DateTime::createFromFormat('d/m/Y H:i', $record['Finish Date'].' '.$record['Finish Time']);
             if (!$finishdt) {
+                $params = (object)[
+                    'date' => $record['Finish Date'],
+                    'time' => $record['Finish Time']
+                ];
                 $this->errors[] = [
                     $index,
-                    get_string('error:invalidfinishtime', 'facetoface').": {$record['Finish Date']} {$record['Finish Time']}"
+                    get_string('error:invalidfinishtime', 'facetoface', $params)
                 ];
+
                 continue;
             }
+
             $record['Finish Date and Time'] = $finishdt->format('Y-m-d H:i');
 
             // Ensure Start < Finish.
@@ -305,7 +314,7 @@ class bulk_session_manager {
      * Inserts the session and its schedule into the database.
      * If any errors occur, they are stored in $this->errors.
      *
-     * @return bool True if all sessions were created successfully, false otherwise
+     * @return bool True if all sessions were created successfully, false otherwise.
      */
     public function process() {
         global $DB;
@@ -391,8 +400,10 @@ class bulk_session_manager {
             $sessionsdate->sessionid  = $sessionid;
             $sessionsdate->timestart  = $session->starttime;
             $sessionsdate->timefinish = $session->finishtime;
-            if (!$DB->insert_record('facetoface_sessions_dates', $sessionsdate)) {
-                $this->errors[] = get_string('error:failedtoinsertdates', 'facetoface')." (ID: $sessionid)";
+            $sessionsdateid = $DB->insert_record('facetoface_sessions_dates', $sessionsdate);
+
+            if (!$sessionsdateid) {
+                $this->errors[] = get_string('error:failedtoinsertdates', 'facetoface') . " (ID: $sessionid)";
             }
 
             // Save any custom fields via the same approach as single-session.
@@ -415,7 +426,7 @@ class bulk_session_manager {
     /**
      * Retrieves any validation or processing errors encountered.
      *
-     * @return array A list of error entries
+     * @return array A list of error entries.
      */
     public function get_errors() {
         return $this->errors;
@@ -425,7 +436,7 @@ class bulk_session_manager {
      * Retrieves the CSV records after they've been loaded.
      * If a file is used, it will parse and return the data.
      *
-     * @return array List of CSV records as associative arrays
+     * @return array List of CSV records as associative arrays.
      */
     public function get_records() {
         if ($this->usefile) {
