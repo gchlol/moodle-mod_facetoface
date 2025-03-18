@@ -23,6 +23,7 @@
  * @author      Jonas Sajonas
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 require_once('../../config.php');
 require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 
@@ -65,8 +66,37 @@ $PAGE->set_heading($heading);
 // Instantiate the upload form once.
 $uploadform = new bulk_session_upload_form(null, ['f' => $f]);
 
+// Helper function to display errors and exit.
+function handle_bulk_upload_errors($errors) {
+    global $OUTPUT;
+    echo $OUTPUT->header();
+    echo $OUTPUT->notification(get_string('error:bulkuploadfileerrorsfound', 'mod_facetoface', count($errors)), 'error');
+
+    $table = new html_table();
+    $table->attributes['class'] = 'f2fbookingsuploadlist m-auto generaltable mb-2';
+    $table->head = [
+        get_string('uucsvline', 'tool_uploaduser'),
+        get_string('status', 'facetoface')
+    ];
+
+    foreach ($errors as $error) {
+        if (is_array($error) && count($error) >= 2) {
+            $line = $error[0];
+            $messages = array_slice($error, 1);
+            foreach ($messages as $message) {
+                $table->data[] = [$line, $message];
+            }
+        } else {
+            $table->data[] = ["-", is_string($error) ? $error : json_encode($error)];
+        }
+    }
+
+    echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
+    echo $OUTPUT->footer();
+    exit;
+}
+
 if ($validate) {
-    // Use the already instantiated upload form to retrieve data.
     $uploaddata = $uploadform->get_data();
 
     if ($uploadform->is_cancelled()) {
@@ -86,34 +116,7 @@ if ($validate) {
     $errors = $manager->validate();
 
     if (!empty($errors)) {
-         echo $OUTPUT->header();
-         echo $OUTPUT->notification(get_string('error:bulkuploadfileerrorsfound', 'mod_facetoface', count($errors)), 'error');
-
-         // Display errors in a table.
-         $table = new html_table();
-         $table->attributes['class'] = 'f2fbookingsuploadlist m-auto generaltable mb-2';
-         $table->head = [
-             get_string('uucsvline', 'tool_uploaduser'),
-             get_string('status', 'facetoface')
-         ];
-
-         foreach ($errors as $error) {
-             if (is_array($error) && count($error) >= 2) {
-                 $line = $error[0];
-                 $messages = array_slice($error, 1);
-                 foreach ($messages as $message) {
-                     $table->data[] = [$line, $message];
-                 }
-
-             } else {
-                 $table->data[] = ["-", is_string($error) ? $error : json_encode($error)];
-             }
-         }
-
-         echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
-         echo $OUTPUT->footer();
-
-         exit;
+         handle_bulk_upload_errors($errors);
 
     } else {
          echo $OUTPUT->header();
@@ -180,14 +183,7 @@ if ($process && $fileid && $f) {
          );
     }
 
-    // If errors exist, redirect back with error message.
-    $errmsg = get_string('error:bulkuploadfileerrorsfound', 'mod_facetoface', count($errors));
-    redirect(
-         new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]),
-         $errmsg,
-         null,
-         notification::NOTIFY_ERROR
-    );
+    handle_bulk_upload_errors($errors);
 }
 
 // Default display: show the upload form.
