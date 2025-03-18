@@ -378,6 +378,7 @@ class bulk_session_manager {
             }
 
             $session->timecreated = time();
+            $session->timemodified = time();
 
             $sessionid = $DB->insert_record('facetoface_sessions', $session);
             if (!$sessionid) {
