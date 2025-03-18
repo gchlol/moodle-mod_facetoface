@@ -70,6 +70,7 @@ class bulk_session_upload_form extends \moodleform {
                 'return_types'  => FILE_INTERNAL | FILE_EXTERNAL,
             ]
         );
+
         $mform->setType('csvfile', PARAM_INT);
         $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
 

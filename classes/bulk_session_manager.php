@@ -112,9 +112,11 @@ class bulk_session_manager {
      */
     private function get_iterator(): Generator {
         if (!$this->usefile) {
+
             foreach ($this->records as $record) {
                 yield $record;
             }
+
             return;
         }
 
@@ -124,7 +126,11 @@ class bulk_session_manager {
 
         // Read the first row as the header.
         $headerline = fgetcsv($handle, $maxlinelength, $delimiter);
-        if ($headerline === false || empty($headerline)) {
+
+        if (
+            $headerline === false ||
+            empty($headerline)
+            ) {
             fclose($handle);
             throw new moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface',
                 get_string('error:noheaderrow', 'facetoface'));
@@ -150,16 +156,21 @@ class bulk_session_manager {
 
         try {
             while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
+
                 if (count($data) !== count($headerline)) {
                     throw new moodle_exception('error:invalidcsvrow', 'facetoface');
                 }
+
                 foreach ($data as &$field) {
                     $field = trim($field, "'");
                 }
                 unset($field);
+
                 $row = array_combine($headerline, $data);
                 yield $row;
+
             }
+
         } finally {
             fclose($handle);
         }
@@ -200,10 +211,12 @@ class bulk_session_manager {
                     'date' => $record['Start Date'],
                     'time' => $record['Start Time']
                 ];
+
                 $this->errors[] = [
                     $index,
                     get_string('error:invalidstarttime', 'facetoface', $params)
                 ];
+
                 continue;
             }
 
@@ -222,11 +235,13 @@ class bulk_session_manager {
 
             $finishdt = DateTime::createFromFormat('d/m/Y H:i', $record['Finish Date'].' '.$record['Finish Time']);
             $finishdt = DateTime::createFromFormat('d/m/Y H:i', $record['Finish Date'].' '.$record['Finish Time']);
+
             if (!$finishdt) {
                 $params = (object)[
                     'date' => $record['Finish Date'],
                     'time' => $record['Finish Time']
                 ];
+
                 $this->errors[] = [
                     $index,
                     get_string('error:invalidfinishtime', 'facetoface', $params)
@@ -240,6 +255,7 @@ class bulk_session_manager {
             // Ensure Start < Finish.
             $starttime = strtotime($record['Start Date and Time']);
             $finishtime = strtotime($record['Finish Date and Time']);
+
             if (
                 $starttime &&
                 $finishtime &&
@@ -307,7 +323,6 @@ class bulk_session_manager {
 
                 continue;
             }
-
         }
 
         return $this->errors;
@@ -326,6 +341,7 @@ class bulk_session_manager {
 
         $allcustomfields = facetoface_get_session_customfields();
         $customfieldsbyshortname = [];
+
         foreach ($allcustomfields as $field) {
             $customfieldsbyshortname[$field->shortname] = $field;
         }
@@ -424,6 +440,7 @@ class bulk_session_manager {
                 }
             }
         }
+
         return empty($this->errors);
     }
 

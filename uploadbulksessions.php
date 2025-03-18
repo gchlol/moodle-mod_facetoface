@@ -85,6 +85,7 @@ function handle_bulk_upload_errors($errors) {
             $table->data[] = ["-", is_string($error) ? $error : json_encode($error)];
             continue;
         }
+
         $line = $error[0];
         $messages = array_slice($error, 1);
 
@@ -130,6 +131,7 @@ if ($validate) {
     if (empty($records)) {
         echo $OUTPUT->notification(get_string('facetoface:norecordsfound', 'facetoface'), 'info');
     }
+
     if (!empty($records)) {
         $table = new html_table();
         $table->attributes['class'] = 'f2fconfirmuploadlist m-auto generaltable mb-2';
@@ -166,7 +168,6 @@ if (
     }
 
     $confirmdata = $confirmform->get_data();
-
     $errors = $manager->validate();
 
     if (empty($errors)) {
@@ -176,6 +177,7 @@ if (
              'context'  => $modulecontext,
              'objectid' => $f,
          ];
+
          $event = \mod_facetoface\event\csv_processed_bulksession::create($params);
          $event->add_record_snapshot('facetoface', $facetoface);
          $event->trigger();
@@ -195,5 +197,7 @@ if (
 $uploadform->set_data(['f' => $f, 'validate' => 1]);
 
 echo $OUTPUT->header();
+
 $uploadform->display();
+
 echo $OUTPUT->footer();
