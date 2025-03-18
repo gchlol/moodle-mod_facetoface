@@ -86,6 +86,7 @@ function handle_bulk_upload_errors($errors) {
         }
         $line = $error[0];
         $messages = array_slice($error, 1);
+
         foreach ($messages as $message) {
             $table->data[] = [$line, $message];
         }
@@ -93,6 +94,7 @@ function handle_bulk_upload_errors($errors) {
 
     echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
     echo $OUTPUT->footer();
+
     exit;
 }
 
@@ -148,7 +150,11 @@ if ($validate) {
     }
 }
 
-if ($process && $fileid && $f) {
+if (
+    $process &&
+    $fileid &&
+    $f
+    ) {
     $manager = new bulk_session_manager($f);
     $manager->load_from_file($fileid);
 
