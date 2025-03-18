@@ -898,11 +898,11 @@ Start Time|Required: Format: HH:MM
 Finish Date|Required: Format: YYYY-MM-DD
 Finish Time|Required: Format: HH:MM
 Allow Cancelations|Required: yes / no
-Capacity|Required: Whole number
+Capacity|Required: Numeric value
 Allow Overbookings|Required: yes / no
 Duration|Required: Numeric value in minutes
 Normal Cost|Optional: Numeric value
 Discount Cost|Optional: Numeric value
-Details|Session description
-Customfield_<suffix> Acceptable suffixes: location, room, trainer|Optional: description
+Details|Optional: Session Description
+Customfield_<suffix>|Optional: Description, Acceptable suffixes: location, room, trainer
 ";
