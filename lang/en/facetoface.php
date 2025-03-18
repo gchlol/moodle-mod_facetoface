@@ -905,5 +905,4 @@ Normal Cost|Optional: Numeric value
 Discount Cost|Optional: Numeric value
 Details|Session description
 Customfield_<suffix> Acceptable suffixes: location, room, trainer|Optional: description
-
 ";
