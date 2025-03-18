@@ -904,5 +904,6 @@ Duration|Required: Numeric value in minutes
 Normal Cost|Optional: Numeric value
 Discount Cost|Optional: Numeric value
 Details|Session description
-Customfield_Shortname|Optional
-Customfield_Value|Optional";
+Customfield_<suffix> Acceptable suffixes: location, room, trainer|Optional: description
+
+";
