@@ -21,6 +21,7 @@ use Generator;
 use DateTime;
 use context_user;
 use stdClass;
+use moodle_url
 
 /**
  * Manages bulk session creation for Face-to-Face module.
@@ -138,8 +139,12 @@ class bulk_session_manager {
         foreach ($requiredheaders as $required) {
             if (!in_array($required, $headerline, true)) {
                 fclose($handle);
-                throw new moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface',
-                    "Missing required column: {$required}");
+                throw new moodle_exception(
+                    'error:bookingsuploadfileheaderfieldmismatch',
+                    'mod_facetoface',
+                    new moodle_url('/mod/facetoface/view.php', ['f' => $this->facetofaceid]),
+                    "Missing required column: {$required}"
+                );
             }
         }
 

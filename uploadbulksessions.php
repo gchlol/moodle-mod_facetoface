@@ -69,6 +69,7 @@ $uploadform = new bulk_session_upload_form(null, ['f' => $f]);
 // Helper function to display errors and exit.
 function handle_bulk_upload_errors($errors) {
     global $OUTPUT;
+
     echo $OUTPUT->header();
     echo $OUTPUT->notification(get_string('error:bulkuploadfileerrorsfound', 'mod_facetoface', count($errors)), 'error');
 
@@ -103,7 +104,6 @@ if ($validate) {
 
     if ($uploadform->is_cancelled()) {
         redirect(new moodle_url('/mod/facetoface/view.php', ['f' => $f]));
-
         exit;
     }
 
@@ -117,38 +117,37 @@ if ($validate) {
 
     $errors = $manager->validate();
 
+    // If there are errors, handle them and exit.
     if (!empty($errors)) {
-         handle_bulk_upload_errors($errors);
-
-    } else {
-         echo $OUTPUT->header();
-         echo $OUTPUT->heading(get_string('facetoface:confirmbulkpreview', 'facetoface'), 3);
-
-         $records = $manager->get_records();
-
-        if (!empty($records)) {
-            $table = new html_table();
-            $table->attributes['class'] = 'f2fconfirmuploadlist m-auto generaltable mb-2';
-            $table->head = bulk_session_manager::get_headers();
-
-            foreach ($records as $record) {
-                $table->data[] = array_values($record);
-            }
-
-            echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
-
-        } else {
-
-            echo $OUTPUT->notification(get_string('facetoface:norecordsfound', 'facetoface'), 'info');
-        }
-
-         // Display the confirm form.
-         $confirmform->display();
-         echo $OUTPUT->footer();
-
-         exit;
+        handle_bulk_upload_errors($errors);
     }
+
+    // If no errors, display the CSV preview.
+    echo $OUTPUT->header();
+    echo $OUTPUT->heading(get_string('facetoface:confirmbulkpreview', 'facetoface'), 3);
+
+    $records = $manager->get_records();
+    if (empty($records)) {
+        echo $OUTPUT->notification(get_string('facetoface:norecordsfound', 'facetoface'), 'info');
+    }
+    if (!empty($records)) {
+        $table = new html_table();
+        $table->attributes['class'] = 'f2fconfirmuploadlist m-auto generaltable mb-2';
+        $table->head = bulk_session_manager::get_headers();
+
+        foreach ($records as $record) {
+            $table->data[] = array_values($record);
+        }
+        echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
+    }
+
+    // Display the confirm form.
+    $confirmform->display();
+    echo $OUTPUT->footer();
+    exit;
 }
+
+
 
 if (
     $process &&
