@@ -21,7 +21,7 @@ use moodle_url;
 use moodleform;
 use single_button;
 
-defined('MOODLE_INTERNAL') || die();
+defined('MOODLE_INTERNAL') || die;
 require_once($CFG->libdir . '/formslib.php');
 
 /**

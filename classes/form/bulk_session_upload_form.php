@@ -16,7 +16,13 @@
 
 namespace mod_facetoface\form;
 
+use moodleform;
+use moodle_url;
+use html_writer;
+use html_table;
+
 defined('MOODLE_INTERNAL') || die();
+
 require_once($CFG->dirroot.'/repository/lib.php');
 
 /**
@@ -28,71 +34,148 @@ require_once($CFG->dirroot.'/repository/lib.php');
  * @author      Jonas Sajonas
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 class bulk_session_upload_form extends \moodleform {
     /**
-     * Build form for importing bookings.
+     * Build form for importing Face-to-Face session data.
      *
-     * {@inheritDoc}
-     * @see \moodleform::definition().
+     * @return void
      */
-    public function definition() {
+    public function definition(): void {
         global $CFG;
 
         $mform = $this->_form;
 
-        $f = $this->_customdata['f'] ?? 0;
-        $mform->addElement('hidden', 'f', $f);
+        $facetofaceid = $this->_customdata['f'] ?? 0;
+        $mform->addElement('hidden', 'f', $facetofaceid);
         $mform->setType('f', PARAM_INT);
 
         $mform->addElement('header', 'settingsheader', get_string('facetoface:uploadbulksessions', 'mod_facetoface'));
 
         // Example CSV link.
-        $url = new \moodle_url('/mod/facetoface/example_bulk.csv');
-        $link = \html_writer::link($url, get_string('examplecsv', 'mod_facetoface'));
+        $url = new moodle_url('/mod/facetoface/example_bulk.csv');
+        $link = html_writer::link($url, get_string('examplecsv', 'mod_facetoface'));
         $mform->addElement('static', 'example_bulkcsv', get_string('facetoface:examplecsv', 'mod_facetoface'), $link);
 
         // File manager for CSV upload.
-        $maxbytes = get_max_upload_file_size($CFG->maxbytes, 0);
-        $mform->addElement('filemanager', 'csvfile', get_string('facetoface:uploadsessionfile', 'mod_facetoface'), null, [
-            'subdirs' => 0,
-            'maxfiles' => 1,
-            'accepted_types' => 'csv',
-            'maxbytes' => $maxbytes,
-            'return_types' => FILE_INTERNAL | FILE_EXTERNAL,
-        ]);
-
+        $maxbytes = get_max_upload_file_size($CFG->maxbytes);
+        $mform->addElement('filemanager', 'csvfile',
+            get_string('facetoface:uploadsessionfile', 'mod_facetoface'),
+            null,
+            [
+                'subdirs'       => 0,
+                'maxfiles'      => 1,
+                'accepted_types' => 'csv',
+                'maxbytes'      => $maxbytes,
+                'return_types'  => FILE_INTERNAL | FILE_EXTERNAL,
+            ]
+        );
         $mform->setType('csvfile', PARAM_INT);
         $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
 
-        // Get the restructured description.
-        $desc = get_string('facetoface:uploadsessionfiledesc', 'mod_facetoface');
+        // Build a table with 3 columns: Field, Required?, Format.
+        $table = new html_table();
+        $table->head = [
+            get_string('upload_field', 'mod_facetoface'),    // e.g. "Field"
+            get_string('upload_required', 'mod_facetoface'), // e.g. "Required?"
+            get_string('upload_format', 'mod_facetoface')    // e.g. "Format"
+        ];
 
-        // Split into rows by newlines.
-        $rows = explode("\n", $desc);
+        // 1) Session Date/Time Known
+        $table->data[] = [
+            get_string('upload_field_sessiondatetime', 'mod_facetoface'),  // "Session Date/Time Known"
+            get_string('upload_req_yesno', 'mod_facetoface'),              // "yes/no"
+            get_string('upload_format_na', 'mod_facetoface')               // "N/A"
+        ];
 
-        // Start building the table HTML.
-        $tablehtml = '<table class="uploadsessiondesc" border="1" cellspacing="0" cellpadding="5">';
-        $tablehtml .= '<thead><tr><th>Field</th><th>Description</th></tr></thead><tbody>';
+        // 2) Start Date
+        $table->data[] = [
+            get_string('upload_field_startdate', 'mod_facetoface'),
+            get_string('upload_req_yes', 'mod_facetoface'),
+            get_string('upload_format_date', 'mod_facetoface') // "DD/MM/YYYY"
+        ];
 
-        // Process each row.
-        foreach ($rows as $row) {
-            $row = trim($row);
-            if (!empty($row)) {
-                // Split the row by the pipe delimiter.
-                $parts = explode('|', $row);
-                if (count($parts) == 2) {
-                    $field = trim($parts[0]);
-                    $descpart = trim($parts[1]);
-                    $tablehtml .= '<tr>';
-                    $tablehtml .= '<td>' . htmlspecialchars($field) . '</td>';
-                    $tablehtml .= '<td>' . htmlspecialchars($descpart) . '</td>';
-                    $tablehtml .= '</tr>';
-                }
-            }
-        }
-        $tablehtml .= '</tbody></table>';
+        // 3) Start Time
+        $table->data[] = [
+            get_string('upload_field_starttime', 'mod_facetoface'),
+            get_string('upload_req_yes', 'mod_facetoface'),
+            get_string('upload_format_time', 'mod_facetoface') // "HH:MM"
+        ];
 
-        // Add the static element using the HTML table.
+        // 4) Finish Date
+        $table->data[] = [
+            get_string('upload_field_finishdate', 'mod_facetoface'),
+            get_string('upload_req_yes', 'mod_facetoface'),
+            get_string('upload_format_date', 'mod_facetoface')
+        ];
+
+        // 5) Finish Time
+        $table->data[] = [
+            get_string('upload_field_finishtime', 'mod_facetoface'),
+            get_string('upload_req_yes', 'mod_facetoface'),
+            get_string('upload_format_time', 'mod_facetoface')
+        ];
+
+        // 6) Allow Cancellations
+        $table->data[] = [
+            get_string('upload_field_allowcancellations', 'mod_facetoface'),
+            get_string('upload_req_yesno', 'mod_facetoface'),
+            get_string('upload_format_na', 'mod_facetoface')
+        ];
+
+        // 7) Capacity
+        $table->data[] = [
+            get_string('upload_field_capacity', 'mod_facetoface'),
+            get_string('upload_req_yes', 'mod_facetoface'),
+            get_string('upload_format_numeric', 'mod_facetoface')
+        ];
+
+        // 8) Allow Overbookings
+        $table->data[] = [
+            get_string('upload_field_allowoverbookings', 'mod_facetoface'),
+            get_string('upload_req_yesno', 'mod_facetoface'),
+            get_string('upload_format_na', 'mod_facetoface')
+        ];
+
+        // 9) Duration
+        $table->data[] = [
+            get_string('upload_field_duration', 'mod_facetoface'),
+            get_string('upload_req_yes', 'mod_facetoface'),
+            get_string('upload_format_numericmins', 'mod_facetoface') // e.g. "Numeric value in minutes"
+        ];
+
+        // 10) Normal Cost
+        $table->data[] = [
+            get_string('upload_field_normalcost', 'mod_facetoface'),
+            get_string('upload_req_optional', 'mod_facetoface'),
+            get_string('upload_format_numeric', 'mod_facetoface')
+        ];
+
+        // 11) Discount Cost
+        $table->data[] = [
+            get_string('upload_field_discountcost', 'mod_facetoface'),
+            get_string('upload_req_optional', 'mod_facetoface'),
+            get_string('upload_format_numeric', 'mod_facetoface')
+        ];
+
+        // 12) Details
+        $table->data[] = [
+            get_string('upload_field_details', 'mod_facetoface'),
+            get_string('upload_req_optional', 'mod_facetoface'),
+            get_string('upload_format_string', 'mod_facetoface') // e.g. "Any text"
+        ];
+
+        // 13) Customfield_<suffix>
+        $table->data[] = [
+            get_string('upload_field_customfield', 'mod_facetoface'),
+            get_string('upload_req_optional', 'mod_facetoface'),
+            get_string('upload_format_customfield', 'mod_facetoface') // e.g. "Acceptable suffixes: location, room, trainer"
+        ];
+
+        // Convert the table to HTML.
+        $tablehtml = html_writer::table($table);
+
+        // Add the table as a static element in the form.
         $mform->addElement('static', 'csvuploadhelp', '', $tablehtml);
 
         // Hidden field to validate/process after upload.
