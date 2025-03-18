@@ -55,11 +55,9 @@ class bulk_session_confirm_form extends moodleform {
         $mform->setType('process', PARAM_INT);
 
         // Button group (confirm + cancel).
-        $buttonarray = [];
-        $buttonarray[] = $mform->createElement('submit', 'confirmbtn',
-            get_string('facetoface:confirmandprocess', 'mod_facetoface'));
-        $buttonarray[] = $mform->createElement('cancel');
-
-        $mform->addGroup($buttonarray, 'buttonar', '', ' ', false);
+        $this->add_action_buttons(
+            true,
+            get_string('facetoface:confirmandprocess', 'mod_facetoface')
+        );
     }
 }
