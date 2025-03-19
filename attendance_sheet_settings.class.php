@@ -109,7 +109,8 @@ class attendance_sheet_settings {
                     removeRowIconHtml: ' . json_encode($removerowicon) . ',
                     removeRowText: ' . json_encode($removerowtext) . ',
                     saveConfigUrl: "/mod/facetoface/save_config.php",
-                    sesskey: (typeof M !== "undefined" && M.cfg && M.cfg.sesskey) ? M.cfg.sesskey : ""
+                    sesskey: (typeof M !== "undefined" && M.cfg && M.cfg.sesskey) ? M.cfg.sesskey : "",
+                    instanceid: ' . json_encode($this->instanceid) . '
                 };
 
                 new AttendanceSheetConfig(params).init();
@@ -127,6 +128,7 @@ class attendance_sheet_settings {
                     this.removeRowText = params.removeRowText;
                     this.saveConfigUrl = params.saveConfigUrl;
                     this.sesskey = params.sesskey;
+                    this.instanceid = params.instanceid;
                 }
 
                 init() {
@@ -316,7 +318,9 @@ class attendance_sheet_settings {
                                 }
                             }
                         };
-                        let paramsStr = "sesskey=" + encodeURIComponent(this.sesskey) + "&config_data=" + encodeURIComponent(JSON.stringify(configData));
+                        let paramsStr = "sesskey=" + encodeURIComponent(this.sesskey) +
+                                        "&instanceid=" + encodeURIComponent(this.instanceid) +
+                                        "&config_data=" + encodeURIComponent(JSON.stringify(configData));
                         xhr.send(paramsStr);
                     });
                 }
