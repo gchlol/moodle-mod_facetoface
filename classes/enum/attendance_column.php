@@ -33,9 +33,7 @@ class attendance_column extends enum_base {
 
     /**
      * Constructor initialises the attendance columns map.
-     * This is a Singleton. You should call the static methods directly:
-     * attendance_column::map_attendance_columns_names_to_enums()
-     * attendance_column::map_attendance_columns_enums_to_names()
+     * This is a Singleton. You should call the static methods directly.
      *
      * @throws \coding_exception
      */
@@ -77,5 +75,19 @@ class attendance_column extends enum_base {
             );
         }
         return self::$inverseattendancecolumnsmap;
+    }
+
+    public static function map_array_key_to_enums(array $array, string $key): array {
+        $attendance_columns_names_to_enums = self::map_attendance_columns_names_to_enums();
+
+        foreach ($array as &$item) {
+            if (!isset($item[$key])) {
+                continue;
+            }
+
+            $item[$key] = $attendance_columns_names_to_enums[$item[$key]] ?? $item[$key];
+        }
+
+        return $array;
     }
 }
