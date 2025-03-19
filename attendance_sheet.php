@@ -10,8 +10,6 @@
 
 namespace classes\data;
 
-global $USER;
-
 use attendance_config_constants;
 use context_course;
 use html_writer;
@@ -148,7 +146,7 @@ if ($trainer_roles) {
 // region Attendees Table
 // Headings
 $json_content = return_updated_json_content(
-    get_attendance_config_file($CFG, $USER),
+    get_attendance_config_file($CFG, $session_id),
     $instance
 );
 $configured_columnsanddefaults = parse_json_to_associative_array($json_content);

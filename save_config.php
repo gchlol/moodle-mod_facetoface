@@ -7,6 +7,7 @@
  * @author     Yucheng Zhu
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+global $USER;
 
 use mod_facetoface\enum\attendance_column;
 
@@ -14,9 +15,6 @@ require_once('../../config.php');
 require_once("$CFG->dirroot/mod/facetoface/classes/data/attendance_sheet_io.php");
 
 require_sesskey(); // CSRF protection.
-
-global $USER;
-
 require_login();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['config_data'])) {

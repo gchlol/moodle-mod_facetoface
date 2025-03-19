@@ -21,13 +21,13 @@ class attendance_sheet_settings {
     protected $jsonfile;
 
     public function __construct(int $instanceid) {
-        global $CFG, $USER, $PAGE, $DB;
+        global $CFG, $PAGE, $DB;
 
         $this->instanceid = $instanceid;
 
         $PAGE->requires->css(new moodle_url('/mod/facetoface/style/attendance_sheet_config_styles.css'));
 
-        $jsonfile = get_attendance_config_file($CFG, $USER);
+        $jsonfile = get_attendance_config_file($CFG, $this->instanceid);
 
         $instance = $DB->get_record('facetoface', [ 'id' => $this->instanceid ]);
 

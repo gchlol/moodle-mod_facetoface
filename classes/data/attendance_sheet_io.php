@@ -18,11 +18,12 @@ function get_attendance_config_folder($CFG): string {
     if (!is_dir($datafolder)) {
         mkdir($datafolder, 0775, true);
     }
+
     return $datafolder;
 }
 
-function get_attendance_config_file($CFG, $USER): string {
-    return get_attendance_config_folder($CFG) . '/attendance_sheet_config_' . $USER->id . '.json';
+function get_attendance_config_file($CFG, int $instanceid): string {
+    return get_attendance_config_folder($CFG) . '/attendance_sheet_config_' . $instanceid . '.json';
 }
 
 /**
@@ -97,6 +98,7 @@ function return_updated_json_content(string $jsonfile, stdClass $instance) {
         $instance->attendancesheetcolumns !== ''
     ) {
         $configured_columns = explode(',', $instance->attendancesheetcolumns);
+
     } else { // Apply reasonable defaults if not configured.
         $configured_columns = [
             attendance_column::NAME,
@@ -107,6 +109,7 @@ function return_updated_json_content(string $jsonfile, stdClass $instance) {
 
     // Save the old or default column values to
     save_attendance_sheet_config($configured_columns, $jsonfile);
+
     return read_json($jsonfile);
 }
 
