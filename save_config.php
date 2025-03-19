@@ -32,10 +32,10 @@ $attendance_columns_names_to_enums = attendance_column::map_attendance_columns_n
 // Loop over each configuration item and, if the first label matches a fixed column,
 // replace its value with the corresponding enum value.
 foreach ($configdata as &$item) {
-    if (isset($item['labels'][0]['value'])) {
-        $colvalue = $item['labels'][0]['value'];
+    if (isset($item['column'])) {
+        $colvalue = $item['column'];
         if (isset($attendance_columns_names_to_enums[$colvalue])) {
-            $item['labels'][0]['value'] = $attendance_columns_names_to_enums[$colvalue];
+            $item['column'] = $attendance_columns_names_to_enums[$colvalue];
         }
     }
 }
