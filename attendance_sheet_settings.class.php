@@ -29,8 +29,7 @@ class attendance_sheet_settings {
 
         $jsonfile = get_attendance_config_file($CFG, $USER);
 
-        $session = facetoface_get_session($this->instanceid);
-        $instance = $DB->get_record('facetoface', [ 'id' => $session->facetoface ]);
+        $instance = $DB->get_record('facetoface', [ 'id' => $this->instanceid ]);
 
         $this->attendanceitems = return_updated_json_content($jsonfile, $instance);
 
