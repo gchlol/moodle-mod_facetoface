@@ -23,7 +23,10 @@ function get_attendance_config_folder($CFG): string {
 }
 
 function get_attendance_config_file($CFG, int $instanceid): string {
-    return get_attendance_config_folder($CFG) . '/attendance_sheet_config_' . $instanceid . '.json';
+    $jsonfile = get_attendance_config_folder($CFG) . '/attendance_sheet_config_' . $instanceid . '.json';
+    chmod($jsonfile, 0775);
+
+    return $jsonfile;
 }
 
 /**
@@ -70,7 +73,6 @@ function save_attendance_sheet_config(array $attendance_array, string $jsonfile)
     if (file_put_contents($jsonfile, $jsondata) === false) {
         throw new Exception('Failed to save configuration.');
     }
-    chmod($jsonfile, 0775);
 
     return true;
 }

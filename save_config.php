@@ -29,8 +29,6 @@ if ($configdata === null) {
 // Map the attendance_sheet table GUI header names to their corresponding enum values.
 $attendance_columns_names_to_enums = attendance_column::map_attendance_columns_names_to_enums();
 
-// Loop over each configuration item and, if the first label matches a fixed column,
-// replace its value with the corresponding enum value.
 foreach ($configdata as &$item) {
     if (isset($item['column'])) {
         $colvalue = $item['column'];
@@ -42,9 +40,11 @@ foreach ($configdata as &$item) {
 
 // Save the configuration to the JSON file.
 $jsonfile = get_attendance_config_file($CFG, $instanceid);
-$result = file_put_contents(get_attendance_config_file($CFG, $instanceid), json_encode($configdata, JSON_PRETTY_PRINT));
+$result = file_put_contents(
+    get_attendance_config_file($CFG, $instanceid),
+    json_encode($configdata, JSON_PRETTY_PRINT)
+);
+
 if ($result === false) {
     die('Failed to save configuration.');
 }
-
-chmod($jsonfile, 0775);
