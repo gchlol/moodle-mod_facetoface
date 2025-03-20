@@ -865,8 +865,7 @@ $string['attendancecolumn:3'] = 'Org Unit';
 $string['attendancecolumn:4'] = 'Position';
 $string['attendancecolumn:5'] = 'Stream';
 $string['attendancecolumn:6'] = 'Paypoint';
-$string['attendancecolumn:headeronly'] = 'Header Only';
-$string['attendancecolumn:headerandrows'] = 'Header and Rows';
+$string['attendancecolumn:customcolumn'] = 'Custom Column';
 
 // Attendance Sheet Configuration
 $string['headertextcolumn'] = 'Column';

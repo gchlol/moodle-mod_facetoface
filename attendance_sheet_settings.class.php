@@ -47,7 +47,7 @@ class attendance_sheet_settings {
                 }
 
                 $item['editable'] = false;
-                if ($column === 'Header Only' || $column === 'Header and Rows') {
+                if ($column === 'Custom Column') {
                     $item['editable'] = true;
                     $item['value'] = isset($item['value']) ? $item['value'] : '';
                 }
@@ -233,12 +233,12 @@ class attendance_sheet_settings {
                         let tr = document.createElement("tr");
                         tr.setAttribute("data-attendance-sheet-config-item", "");
                         tr.setAttribute("data-value", rowId);
-                        if (selectedValue === "Header Only" || selectedValue === "Header and Rows") {
+                        if (selectedValue === "Custom Column") {
                             tr.setAttribute("data-changeable", selectedValue);
                         }
 
                         let td1 = document.createElement("td");
-                        if (selectedValue === "Header Only" || selectedValue === "Header and Rows") {
+                        if (selectedValue === "Custom Column") {
                             td1.innerHTML =
                                 \'<input name="item_ids[]" type="hidden" value="\' + rowId + \'" />\' +
                                 this.dragHandleHtml +
@@ -251,9 +251,7 @@ class attendance_sheet_settings {
                         }
 
                         let td2 = document.createElement("td");
-                        if (selectedValue === "Header Only") {
-                            td2.innerHTML = "";
-                        } else if (selectedValue === "Header and Rows") {
+                        if (selectedValue === "Custom Column") {
                             td2.innerHTML = \'<input type="text" name="header_values[]" placeholder="Enter default value" class="attendance-sheet-config__table--not-first__input" />\';
                         } else if (["Name", "Payroll", "Email", "Org Unit", "Position", "Stream", "Paypoint"].indexOf(selectedValue) !== -1) {
                             td2.innerHTML = "";
