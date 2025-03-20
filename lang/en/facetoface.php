@@ -869,7 +869,7 @@ $string['attendancecolumn:customcolumn'] = 'Custom Column';
 
 // Attendance Sheet Configuration
 $string['headertextcolumn'] = 'Column';
-$string['headertextdefaultvalue'] = 'Default Value';
+$string['headertextrowvalue'] = 'Row Value';
 $string['modform:emptytext'] = 'There are no items, use the <strong>Settings ➔ Attendance Sheet</strong> section to add some';
 $string['modform:removerow'] = 'Remove Row';
 $string['additem'] = 'Add Item...';

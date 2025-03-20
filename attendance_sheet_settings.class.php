@@ -58,7 +58,7 @@ class attendance_sheet_settings {
         $this->data = [
             'uniqid'             => uniqid(),
             'header_text_column' => get_string('headertextcolumn', 'facetoface'),
-            'header_text_value'  => get_string('headertextdefaultvalue', 'facetoface'),
+            'header_text_value'  => get_string('headertextrowvalue', 'facetoface'),
             'empty_table'        => empty($this->attendanceitems),
             'attendance_items'   => $this->attendanceitems,
         ];
