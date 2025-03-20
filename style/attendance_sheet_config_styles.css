@@ -53,10 +53,6 @@
     align-items: center;
 }
 
-.attendance-sheet-config__table--not-first__input  {
-    width: 100%;
-}
-
 /* Row colours in Attendance Sheet Table */
 .attendance-sheet-config__table tbody tr:nth-child(odd) {
     background-color: #F5F5F5;

@@ -255,7 +255,7 @@ class attendance_sheet_settings {
 
                         let td2 = document.createElement("td");
                         if (selectedValue === "Custom Column") {
-                            td2.innerHTML = \'<input type="text" name="header_values[]" placeholder="Enter default value" class="form-control attendance-sheet-config__table--not-first__input" />\';
+                            td2.innerHTML = \'<input type="text" name="header_values[]" placeholder="Enter default value" class="form-control" />\';
                         } else if (["Name", "Payroll", "Email", "Org Unit", "Position", "Stream", "Paypoint"].indexOf(selectedValue) !== -1) {
                             td2.innerHTML = "";
                         } else {
