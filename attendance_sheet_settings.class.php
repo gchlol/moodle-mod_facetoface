@@ -242,7 +242,7 @@ class attendance_sheet_settings {
                             td1.innerHTML =
                                 \'<input name="item_ids[]" type="hidden" value="\' + rowId + \'" />\' +
                                 this.dragHandleHtml +
-                                \'<input type="text" name="column_names[]" placeholder="Enter column name" class="attendance-sheet-config__table--first__input" />\';
+                                \'<input type="text" name="column_names[]" placeholder="Enter column name" class="form-control attendance-sheet-config__table--first__input" />\';
                         } else {
                             td1.innerHTML =
                                 \'<input name="item_ids[]" type="hidden" value="\' + rowId + \'" />\' +
@@ -252,7 +252,7 @@ class attendance_sheet_settings {
 
                         let td2 = document.createElement("td");
                         if (selectedValue === "Custom Column") {
-                            td2.innerHTML = \'<input type="text" name="header_values[]" placeholder="Enter default value" class="attendance-sheet-config__table--not-first__input" />\';
+                            td2.innerHTML = \'<input type="text" name="header_values[]" placeholder="Enter default value" class="form-control attendance-sheet-config__table--not-first__input" />\';
                         } else if (["Name", "Payroll", "Email", "Org Unit", "Position", "Stream", "Paypoint"].indexOf(selectedValue) !== -1) {
                             td2.innerHTML = "";
                         } else {
