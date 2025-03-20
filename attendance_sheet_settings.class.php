@@ -241,11 +241,11 @@ class attendance_sheet_settings {
                         let td1 = document.createElement("td");
                         if (selectedValue === "Custom Column") {
                             td1.innerHTML =
-                                \'<input name="item_ids[]" type="hidden" value="\' + rowId + \'" />\' +
-                                \'<span style="display:inline-flex; align-items:center;">\' +
+                                \' <input name="item_ids[]" type="hidden" value="\' + rowId + \'" /> \' +
+                                \' <span class="attendance-sheet-config__table__cell--first__input"> \' +
                                     this.dragHandleHtml +
-                                    \'<input type="text" name="column_names[]" placeholder="Enter column name" class="attendance-sheet-config__table--first__input form-control" style="flex:1; margin-left:5px;" />\' +
-                                \'</span>\';
+                                    \' <input type="text" name="column_names[]" placeholder="Enter column name" class="form-control" /> \' +
+                                \' </span>\';
                         } else {
                             td1.innerHTML =
                                 \'<input name="item_ids[]" type="hidden" value="\' + rowId + \'" />\' +

@@ -48,8 +48,9 @@
     border-radius: 5px;
 }
 
-.attendance-sheet-config__table--first__input {
-    width: 90%; /* Leave 10% to accommodate for the drag icon */
+.attendance-sheet-config__table__cell--first__input {
+    display: flex;
+    align-items: center;
 }
 
 .attendance-sheet-config__table--not-first__input  {
