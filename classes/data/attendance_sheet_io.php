@@ -54,7 +54,7 @@ function read_json(string $filePath): array {
 /**
  * Saves attendance sheet configuration to a JSON file.
  *
- * @param array $attendance_array Array of integers representing attendance items.
+ * @param array<int> $attendance_array Array of integers representing attendance items.
  * @param string $jsonfile The JSON file path to save attencance_sheet columns and their default values.
  * @return bool True on success.
  * @throws Exception If the data folder cannot be created or the configuration file cannot be written.
@@ -101,18 +101,19 @@ function return_updated_json_content(string $jsonfile, stdClass $instance) {
         isset($instance->attendancesheetcolumns) &&
         $instance->attendancesheetcolumns !== ''
     ) {
-        $configured_columns = explode(',', $instance->attendancesheetcolumns);
+        $columns = $instance->attendancesheetcolumns;
+        $configuredcolumns = !empty($columns) ? array_map('intval', explode(',', $columns)) : [];
 
     } else { // Apply reasonable defaults if not configured.
-        $configured_columns = [
+        $configuredcolumns = [
             attendance_column::NAME,
             attendance_column::USERNAME,
             attendance_column::POSITION,
         ];
     }
 
-    // Save the old or default column values to
-    save_attendance_sheet_config($configured_columns, $jsonfile);
+    // Save the old or default column values to .json
+    save_attendance_sheet_config($configuredcolumns, $jsonfile);
 
     return read_json($jsonfile);
 }
