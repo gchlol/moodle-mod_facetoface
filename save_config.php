@@ -26,7 +26,7 @@ if ($configdata === null) {
     die('Invalid configuration data.');
 }
 
-attendance_column::map_array_key_to_enums($configdata, 'column');
+$configdata = attendance_column::map_array_key_to_enums($configdata, 'column');
 
 // Save the configuration to the JSON file.
 $jsonfile = get_attendance_config_file($CFG, $instanceid);
