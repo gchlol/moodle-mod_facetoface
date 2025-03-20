@@ -219,6 +219,7 @@ class attendance_sheet_settings {
                 }
 
                 initAddRowDropdown() {
+                
                     this.addRowDropdown.addEventListener("change", (e) => {
                         let selectedValue = e.target.value;
                         if (!selectedValue) {
@@ -241,8 +242,10 @@ class attendance_sheet_settings {
                         if (selectedValue === "Custom Column") {
                             td1.innerHTML =
                                 \'<input name="item_ids[]" type="hidden" value="\' + rowId + \'" />\' +
-                                this.dragHandleHtml +
-                                \'<input type="text" name="column_names[]" placeholder="Enter column name" class="form-control attendance-sheet-config__table--first__input" />\';
+                                \'<span style="display:inline-flex; align-items:center;">\' +
+                                    this.dragHandleHtml +
+                                    \'<input type="text" name="column_names[]" placeholder="Enter column name" class="attendance-sheet-config__table--first__input form-control" style="flex:1; margin-left:5px;" />\' +
+                                \'</span>\';
                         } else {
                             td1.innerHTML =
                                 \'<input name="item_ids[]" type="hidden" value="\' + rowId + \'" />\' +
