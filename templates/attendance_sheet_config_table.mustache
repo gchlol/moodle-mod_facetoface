@@ -53,57 +53,52 @@
 }}
 
 <link rel="stylesheet" type="text/css" href="{{{wwwroot}}}/mod/facetoface/style/attendance_sheet_config_styles.css">
-<div id="facetoface-attendance-sheet-config-table-{{uniqid}}">
-    <div>
-        <div class="row">
-            <div style="width: 100%;">
-                <!-- Hidden input to store the JSON configuration data before form submission -->
-                <input type="hidden" name="config_data" id="config_data" value="">
-                <table class="attendance-sheet-config__table w-100 table-sm table-hover generaltable" data-attendance-sheet-config-table>
-                    <thead>
-                    <tr>
-                        <th data-table-header>{{header_text_column}}</th>
-                        <th data-table-header colspan="2">
-                            <div class="attendance-sheet-config__default-value-header">
-                                <span>{{header_text_value}}</span>
-                                <select data-attendance-sheet-config-add-row class="custom-select attendance-sheet-config__dropdown-add-item">
-                                    <option value="" hidden>
-                                        {{#str}}additem, mod_facetoface{{/str}}
-                                    </option>
-                                    <option value="Name">{{#str}}attendancecolumn:0, mod_facetoface{{/str}}</option>
-                                    <option value="Payroll">{{#str}}attendancecolumn:1, mod_facetoface{{/str}}</option>
-                                    <option value="Email">{{#str}}attendancecolumn:2, mod_facetoface{{/str}}</option>
-                                    <option value="Org Unit">{{#str}}attendancecolumn:3, mod_facetoface{{/str}}</option>
-                                    <option value="Position">{{#str}}attendancecolumn:4, mod_facetoface{{/str}}</option>
-                                    <option value="Stream">{{#str}}attendancecolumn:5, mod_facetoface{{/str}}</option>
-                                    <option value="Paypoint">{{#str}}attendancecolumn:6, mod_facetoface{{/str}}</option>
-                                    <option value="Custom Column">{{#str}}attendancecolumn:customcolumn, mod_facetoface{{/str}}</option>
-                                </select>
-                            </div>
-                        </th>
-                    </tr>
-                    </thead>
+    <div style="width: 100%;">
+        <!-- Hidden input to store the JSON configuration data before form submission -->
+        <input type="hidden" name="config_data" id="config_data" value="">
+        <table class="attendance-sheet-config__table w-100 table-sm table-hover generaltable" data-attendance-sheet-config-table>
+            <thead>
+            <tr>
+                <th data-table-header>{{header_text_column}}</th>
+                <th data-table-header colspan="2">
+                    <div class="attendance-sheet-config__default-value-header">
+                        <span>{{header_text_value}}</span>
+                        <select data-attendance-sheet-config-add-row class="custom-select attendance-sheet-config__dropdown-add-item">
+                            <option value="" hidden>
+                                {{#str}}additem, mod_facetoface{{/str}}
+                            </option>
+                            <option value="Name">{{#str}}attendancecolumn:0, mod_facetoface{{/str}}</option>
+                            <option value="Payroll">{{#str}}attendancecolumn:1, mod_facetoface{{/str}}</option>
+                            <option value="Email">{{#str}}attendancecolumn:2, mod_facetoface{{/str}}</option>
+                            <option value="Org Unit">{{#str}}attendancecolumn:3, mod_facetoface{{/str}}</option>
+                            <option value="Position">{{#str}}attendancecolumn:4, mod_facetoface{{/str}}</option>
+                            <option value="Stream">{{#str}}attendancecolumn:5, mod_facetoface{{/str}}</option>
+                            <option value="Paypoint">{{#str}}attendancecolumn:6, mod_facetoface{{/str}}</option>
+                            <option value="Custom Column">{{#str}}attendancecolumn:customcolumn, mod_facetoface{{/str}}</option>
+                        </select>
+                    </div>
+                </th>
+            </tr>
+            </thead>
 
-                    <tbody data-attendance-sheet-config-items>
-                    <!-- "Empty" row displayed if no items exist -->
-                    <tr class="empty" {{^empty_table}}hidden{{/empty_table}}>
-                        <td colspan="3">
-                            {{#str}}modform:emptytext, mod_facetoface{{/str}}
-                        </td>
-                    </tr>
+            <tbody data-attendance-sheet-config-items>
+            <!-- "Empty" row displayed if no items exist -->
+            <tr class="empty" {{^empty_table}}hidden{{/empty_table}}>
+                <td colspan="3">
+                    {{#str}}modform:emptytext, mod_facetoface{{/str}}
+                </td>
+            </tr>
 
-                    <!-- Render existing rows from attendance_items -->
-                    {{#attendance_items}}
-                        {{> mod_facetoface/attendance_sheet_config_row}}
-                    {{/attendance_items}}
-                    </tbody>
-                </table>
-                <!-- Save Config and Cancel buttons -->
-                <div class="attendance-sheet-config__button-container mt-3">
-                    <button type="submit" id="save-config" class="attendance-sheet-config__button attendance-sheet-config__button--save">Save Config</button>
-                    <button type="button" id="cancel-config" class="attendance-sheet-config__button attendance-sheet-config__button--cancel">Cancel</button>
-                </div>
-            </div>
+            <!-- Render existing rows from attendance_items -->
+            {{#attendance_items}}
+                {{> mod_facetoface/attendance_sheet_config_row}}
+            {{/attendance_items}}
+            </tbody>
+        </table>
+        <!-- Save Config and Cancel buttons -->
+        <div class="attendance-sheet-config__button-container mt-3">
+            <button type="submit" id="save-config" class="attendance-sheet-config__button attendance-sheet-config__button--save">Save Config</button>
+            <button type="button" id="cancel-config" class="attendance-sheet-config__button attendance-sheet-config__button--cancel">Cancel</button>
         </div>
-    </div>
+
 </div>
