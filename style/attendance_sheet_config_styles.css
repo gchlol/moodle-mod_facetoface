@@ -25,13 +25,28 @@
 }
 
 .attendance-sheet-config__label {
-    width: 25%;
+    width: 100%;
+    padding-bottom: 1em;
+
+    @media (min-width: 768px) {
+        width: 33.3333333333%;
+    }
+
+    @media (min-width: 1024px) {
+        width: 25%;
+    }
 }
 
 .attendance-sheet-config__table {
-    width: 75%;
-    padding: 0;
-    margin: 0;
+    width: 100%;
+
+    @media (min-width: 768px) {
+        width: 66.6666666667%;
+    }
+
+    @media (min-width: 1024px) {
+        width: 75%;
+    }
 }
 
 /* Adjust action column cell width to match content (trash can icon) */
