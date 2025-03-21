@@ -16,7 +16,10 @@
 }
 
 .attendance-sheet-config__table {
-    width: 100%;
+    width: 75%;
+    padding: 0;
+    margin: 0;
+
 }
 
 /* Adjust action column cell width to match content (trash can icon) */
