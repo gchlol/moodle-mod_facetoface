@@ -12,24 +12,14 @@
     * data-remove-value
 
     Context variables required for this template:
-    * id - ID of the item being displayed.
-    * labels - Array of label objects, each containing a 'value', and possibly 'first' to indicate the drag handle.
-    * first - If the table cell is in the first column, it needs to be draggable to move the whole row.
-    * value - Text displayed in the table's current cell.
+    * column - Column namestring or enum (if defined).
+    * value - Default value.
 
     Example context (json):
-    [
-        {
-            "column": 0
-        },
-        {
-            "column": "Mentor Name"
-        },
-        {
-            "column": "Pass/Fail",
-            "value": "Pass/Fail"
-        }
-    ]
+    {
+        "column": "Pass/Fail",
+        "value": "Pass/Fail"
+    }
 }}
 
 <tr data-attendance-sheet-config-item {{#editable}}data-changeable="{{type}}"{{/editable}}>

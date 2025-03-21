@@ -13,43 +13,30 @@
     *
 
     Context variables required for this template:
-    * uniqid               - a unique ID for the table container
     * header_text_column   - the text label for the first column heading
     * header_text_value    - the text label for the second column heading
     * empty_table          - boolean indicating if no attendance items exist
     * attendance_items     - array of attendance item data to display in the table
 
     Additional details:
-    * The third column in the table header originally contained a dropdown for adding new items.
+    * The second column in the table header originally contained a dropdown for adding new items.
     * Each row in the table body is rendered using the partial: mod_facetoface/attendance_sheet_config_row
 
     Example context (json):
-    {
+    [
         {
-            'id'     => 0,
-            'labels' => {
-                {
-                    'value' => 'Name', // "Name" in the first column
-                    'first' => true    // indicates we include the hidden input + drag handle
-                },
-                {
-                    'value' => ''      // second column is empty by default
-                }
-            }
+            "column": 0,
+            "value": ""
         },
         {
-            'id'     => 1,
-            'labels' => {
-                {
-                    'value' => 'Pass/Fail', // "Pass/Fail" in the first column
-                    'first' => true
-                },
-                {
-                    'value' => 'Pass/Fail'  // second column has "Pass/Fail"
-                }
-            }
+            "column": 1,
+            "value": ""
+        },
+        {
+            "column": 2,
+            "value": ""
         }
-    };
+    ]
 }}
 
 <link rel="stylesheet" type="text/css" href="{{{wwwroot}}}/mod/facetoface/style/attendance_sheet_config_styles.css">
