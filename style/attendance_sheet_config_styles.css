@@ -15,11 +15,19 @@
     align-items: center;
 }
 
+.attendance-sheet-config__container {
+    display: flex;
+    align-items: flex-start;
+}
+
+.attendance-sheet-config__label {
+    width: 25%;
+}
+
 .attendance-sheet-config__table {
     width: 75%;
     padding: 0;
     margin: 0;
-
 }
 
 /* Adjust action column cell width to match content (trash can icon) */
