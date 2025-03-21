@@ -2,16 +2,17 @@
 
 /* Block: attendance-sheet-config */
 .attendance-sheet-config__dropdown-add-item {
-    width: 100%;
+    width: auto;
     height: 100%;
     background-color: #fff;
     border: 1px solid #ccc;
     border-radius: 5px;
 }
 
-.attendance-sheet-config__dropdown-add-item option {
-    background-color: #fff;
-    border-radius: 5px;
+.attendance-sheet-config__default-value-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 /* Button container styling */
