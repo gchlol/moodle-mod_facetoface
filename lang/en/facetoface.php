@@ -482,7 +482,8 @@ click ‘Yes’<br>
 rebook if required<br><br>
 If you have any enquiries about the session, please contact the course facilitator.<br><br>
 Regards<br>
-Learning and Development team';
+Learning and Development team
+';
 $string['setting:defaultconfirmationsubject'] = 'Default subject line for confirmation emails.';
 $string['setting:defaultconfirmationsubject_caption'] = 'Confirmation subject';
 $string['setting:defaultconfirmationsubjectdefault'] = 'Course booking confirmation: [facetofacename], [starttime]-[finishtime], [sessiondate]';
