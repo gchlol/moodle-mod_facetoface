@@ -193,12 +193,26 @@ class attendance_sheet_settings {
                         e.currentTarget.classList.remove("over");
                     };
 
+                    // Modified handleDrop to insert the dragged row rather than swap content.
                     const handleDrop = (e) => {
                         if (e.stopPropagation) { e.stopPropagation(); }
                         if (dragSrc !== e.currentTarget) {
-                            let srcHTML = dragSrc.innerHTML;
-                            dragSrc.innerHTML = e.currentTarget.innerHTML;
-                            e.currentTarget.innerHTML = srcHTML;
+                            const target = e.currentTarget;
+                            const targetRect = target.getBoundingClientRect();
+                            const dropPosition = e.clientY - targetRect.top;
+                            const insertBefore = dropPosition < (targetRect.height / 2);
+                            if (dragSrc.parentNode) {
+                                dragSrc.parentNode.removeChild(dragSrc);
+                            }
+                            if (insertBefore) {
+                                target.parentNode.insertBefore(dragSrc, target);
+                            } else {
+                                if (target.nextSibling) {
+                                    target.parentNode.insertBefore(dragSrc, target.nextSibling);
+                                } else {
+                                    target.parentNode.appendChild(dragSrc);
+                                }
+                            }
                         }
                         return false;
                     };

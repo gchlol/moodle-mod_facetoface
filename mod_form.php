@@ -279,11 +279,9 @@ class mod_facetoface_mod_form extends moodleform_mod {
         $mform->setDefault('attendancesheetshowlogo', 1);
         $mform->addHelpButton('attendancesheetshowlogo', 'modform:showlogo', 'mod_facetoface');
 
-        // Call Attendance Sheet settings from another file.
-        // Include the class file.
+        // Insert the Attendance Sheet settings into the form.
         require_once 'attendance_sheet_settings.class.php';
 
-        // Create an instance and insert the settings into the form.
         $attendanceSettings = new attendance_sheet_settings($this->current->instance);
         $attendanceSettings->add_to_form($mform);
 
