@@ -76,8 +76,8 @@ class attendance_sheet_settings {
         // Render the table using the Mustache template.
         $tablehtml = $OUTPUT->render_from_template('mod_facetoface/attendance_sheet_config_table', $this->data);
         // Wrap the table with a container that includes a left-hand label "Column config".
-        $output .= '<div class="attendance-sheet-config__wrapper" style="display: flex; align-items: flex-start;">';
-        $output .= '<div class="edw-form-label d-inline">Column config</div>';
+        $output .= '<div class="attendance-sheet-config__wrapper">';
+        $output .= '<div class="d-flex align-items-center flex-gap-1 inner edw-form-label d-inline">Column config</div>';
         $output .= '<div class="attendance-sheet-config__table">' . $tablehtml . '</div>';
         $output .= '</div>';
 
