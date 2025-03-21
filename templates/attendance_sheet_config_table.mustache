@@ -20,7 +20,7 @@
     * attendance_items     - array of attendance item data to display in the table
 
     Additional details:
-    * The third column in the table header contains a dropdown for adding new items.
+    * The third column in the table header originally contained a dropdown for adding new items.
     * Each row in the table body is rendered using the partial: mod_facetoface/attendance_sheet_config_row
 
     Example context (json):
@@ -63,22 +63,23 @@
                     <thead>
                     <tr>
                         <th data-table-header>{{header_text_column}}</th>
-                        <th data-table-header>{{header_text_value}}</th>
-                        <!-- 3rd column: the dropdown menu -->
-                        <th data-table-header>
-                            <select data-attendance-sheet-config-add-row class="attendance-sheet-config__dropdown-add-item">
-                                <option value="" hidden>
-                                    {{#str}}additem, mod_facetoface{{/str}}
-                                </option>
-                                <option value="Name">{{#str}}attendancecolumn:0, mod_facetoface{{/str}}</option>
-                                <option value="Payroll">{{#str}}attendancecolumn:1, mod_facetoface{{/str}}</option>
-                                <option value="Email">{{#str}}attendancecolumn:2, mod_facetoface{{/str}}</option>
-                                <option value="Org Unit">{{#str}}attendancecolumn:3, mod_facetoface{{/str}}</option>
-                                <option value="Position">{{#str}}attendancecolumn:4, mod_facetoface{{/str}}</option>
-                                <option value="Stream">{{#str}}attendancecolumn:5, mod_facetoface{{/str}}</option>
-                                <option value="Paypoint">{{#str}}attendancecolumn:6, mod_facetoface{{/str}}</option>
-                                <option value="Custom Column">{{#str}}attendancecolumn:customcolumn, mod_facetoface{{/str}}</option>
-                            </select>
+                        <th data-table-header colspan="2">
+                            <div class="default-value-header">
+                                <span>{{header_text_value}}</span>
+                                <select data-attendance-sheet-config-add-row class="attendance-sheet-config__dropdown-add-item">
+                                    <option value="" hidden>
+                                        {{#str}}additem, mod_facetoface{{/str}}
+                                    </option>
+                                    <option value="Name">{{#str}}attendancecolumn:0, mod_facetoface{{/str}}</option>
+                                    <option value="Payroll">{{#str}}attendancecolumn:1, mod_facetoface{{/str}}</option>
+                                    <option value="Email">{{#str}}attendancecolumn:2, mod_facetoface{{/str}}</option>
+                                    <option value="Org Unit">{{#str}}attendancecolumn:3, mod_facetoface{{/str}}</option>
+                                    <option value="Position">{{#str}}attendancecolumn:4, mod_facetoface{{/str}}</option>
+                                    <option value="Stream">{{#str}}attendancecolumn:5, mod_facetoface{{/str}}</option>
+                                    <option value="Paypoint">{{#str}}attendancecolumn:6, mod_facetoface{{/str}}</option>
+                                    <option value="Custom Column">{{#str}}attendancecolumn:customcolumn, mod_facetoface{{/str}}</option>
+                                </select>
+                            </div>
                         </th>
                     </tr>
                     </thead>
