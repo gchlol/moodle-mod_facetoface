@@ -74,7 +74,12 @@ class attendance_sheet_settings {
         $output = '';
 
         // Render the table using the Mustache template.
-        $output .= $OUTPUT->render_from_template('mod_facetoface/attendance_sheet_config_table', $this->data);
+        $tablehtml = $OUTPUT->render_from_template('mod_facetoface/attendance_sheet_config_table', $this->data);
+        // Wrap the table with a container that includes a left-hand label "Column config".
+        $output .= '<div class="attendance-sheet-config-wrapper" style="display: flex; align-items: flex-start;">';
+        $output .= '<div class="attendance-sheet-config-label" style="margin-right: 10px; font-weight: bold;">Column config</div>';
+        $output .= '<div class="attendance-sheet-config-table">' . $tablehtml . '</div>';
+        $output .= '</div>';
 
         // Prepare the exact HTML for the Moodle drag handle partial.
         $draghandlehtml = $OUTPUT->render_from_template('core/drag_handle', []);
