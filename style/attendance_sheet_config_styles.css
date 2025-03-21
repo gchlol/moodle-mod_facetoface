@@ -15,6 +15,12 @@
     align-items: center;
 }
 
+/* Adjust action column cell width to match content (trash can icon) */
+.attendance-sheet-config__table .action-column {
+    width: 1%;
+    white-space: nowrap;
+}
+
 /* Button container styling */
 .attendance-sheet-config__button-container {
     text-align: right;
