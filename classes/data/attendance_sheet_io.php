@@ -71,7 +71,7 @@ function save_attendance_sheet_config(array $attendance_array, string $jsonfile)
 
     $output = attendance_column::map_array_key_to_enums($output, 'column');
 
-    $jsondata = json_encode($output, JSON_PRETTY_PRINT);
+    $jsondata = json_encode($output);
     if (file_put_contents($jsonfile, $jsondata) === false) {
         throw new Exception('Failed to save configuration.');
     }
