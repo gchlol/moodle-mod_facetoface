@@ -128,14 +128,13 @@ class bulk_session_manager {
         // Read the first row as the header.
         $headerline = fgetcsv($handle, $maxlinelength, $delimiter);
 
-        if (
-            $headerline === false ||
-            empty($headerline)
-        ) {
+        if (empty($headerline)) {
             fclose($handle);
-
-            throw new moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface',
-                get_string('error:noheaderrow', 'facetoface'));
+            throw new moodle_exception(
+                'error:bookingsuploadfileheaderfieldmismatch',
+                'mod_facetoface',
+                get_string('error:noheaderrow', 'facetoface')
+            );
         }
 
         foreach ($headerline as &$field) {
@@ -148,10 +147,10 @@ class bulk_session_manager {
             if (!in_array($required, $headerline, true)) {
                 fclose($handle);
                 throw new moodle_exception(
-                    'error:bookingsuploadfileheaderfieldmismatch',
+                    'error:missingrequiredcolumn',
                     'mod_facetoface',
-                    new moodle_url('/mod/facetoface/view.php', ['f' => $this->facetofaceid]),
-                    "Missing required column: {$required}"
+                    new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $this->facetofaceid]),
+                    $required
                 );
             }
         }
@@ -159,7 +158,9 @@ class bulk_session_manager {
         try {
             while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
                 if (count($data) !== count($headerline)) {
-                    throw new moodle_exception('error:invalidcsvrow', 'facetoface');
+                    throw new moodle_exception(
+                        'error:bookingsuploadfileheaderfieldmismatch',
+                        'facetoface');
                 }
 
                 foreach ($data as &$field) {

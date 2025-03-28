@@ -77,18 +77,26 @@ function handle_bulk_upload_errors($errors):void {
     global $OUTPUT;
 
     echo $OUTPUT->header();
-    echo $OUTPUT->notification(get_string('error:bulkuploadfileerrorsfound', 'mod_facetoface', count($errors)), 'error');
+    echo $OUTPUT->notification(get_string(
+        'error:uploadsessionserrorsfound',
+        'mod_facetoface',
+        count($errors)
+    ), 'error');
 
     $table = new html_table();
     $table->attributes['class'] = 'f2fbookingsuploadlist m-auto generaltable mb-2';
     $table->head = [
-        get_string('uucsvline', 'tool_uploaduser'),
-        get_string('status', 'facetoface'),
+        get_string('f2fcsvline', 'mod_facetoface'),
+        get_string('status', 'mod_facetoface'),
     ];
 
     foreach ($errors as $error) {
-        if (!is_array($error) || count($error) < 2) {
+        if (
+            !is_array($error) ||
+            count($error) < 2
+        ) {
             $table->data[] = ["-", is_string($error) ? $error : json_encode($error)];
+
             continue;
         }
 
@@ -111,6 +119,7 @@ if ($validate) {
 
     if ($uploadform->is_cancelled()) {
         redirect(new moodle_url('/mod/facetoface/view.php', ['f' => $f]));
+
         exit;
     }
 
