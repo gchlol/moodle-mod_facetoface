@@ -92,19 +92,19 @@ class attendance_sheet_settings {
         // and saving config via AJAX. All variables outside functions are passed as parameters.
         $output .= '<script>
             document.addEventListener("DOMContentLoaded", () => {
-                let tableElement = document.querySelector("[data-attendance-sheet-config-table]");
+                const tableElement = document.querySelector("[data-attendance-sheet-config-table]");
                 if (!tableElement) {
                     return;
                 }
-                let tbodyElement = tableElement.querySelector("[data-attendance-sheet-config-items]");
+                const tbodyElement = tableElement.querySelector("[data-attendance-sheet-config-items]");
                 if (!tbodyElement) {
                     return;
                 }
-                let addRowDropdown = tableElement.querySelector("[data-attendance-sheet-config-add-row]");
-                let saveButton = document.getElementById("save-config");
-                let cancelButton = document.getElementById("cancel-config");
+                const addRowDropdown = tableElement.querySelector("[data-attendance-sheet-config-add-row]");
+                const saveButton = document.getElementById("save-config");
+                const cancelButton = document.getElementById("cancel-config");
 
-                let params = {
+                const params = {
                     tableElement: tableElement,
                     tbodyElement: tbodyElement,
                     addRowDropdown: addRowDropdown,
@@ -118,241 +118,217 @@ class attendance_sheet_settings {
                     instanceid: ' . json_encode($this->instanceid) . '
                 };
 
-                new AttendanceSheetConfig(params).init();
+                initAttendanceSheetConfig(params);
             });
 
-            class AttendanceSheetConfig {
-                constructor(params) {
-                    this.tableElement = params.tableElement;
-                    this.tbodyElement = params.tbodyElement;
-                    this.addRowDropdown = params.addRowDropdown;
-                    this.saveButton = params.saveButton;
-                    this.cancelButton = params.cancelButton;
-                    this.dragHandleHtml = params.dragHandleHtml;
-                    this.removeRowIconHtml = params.removeRowIconHtml;
-                    this.removeRowText = params.removeRowText;
-                    this.saveConfigUrl = params.saveConfigUrl;
-                    this.sesskey = params.sesskey;
-                    this.instanceid = params.instanceid;
+            function initAttendanceSheetConfig(params) {
+                initRowDeletion(params.tbodyElement);
+                initDragAndDrop(params);
+                if (params.addRowDropdown) {
+                    initAddRowDropdown(params);
                 }
-
-                init() {
-                    this.initRowDeletion();
-                    this.initDragAndDrop();
-                    if (this.addRowDropdown) {
-                        this.initAddRowDropdown();
-                    }
-                    if (this.saveButton) {
-                        this.initSaveButton();
-                    }
-                    if (this.cancelButton) {
-                        this.initCancelButton();
-                    }
+                if (params.saveButton) {
+                    initSaveButton(params);
                 }
-
-                initRowDeletion() {
-                    this.tbodyElement.addEventListener("click", (e) => {
-                        let removeRowTrigger = e.target.closest("[data-attendance-sheet-config-remove-row]");
-                        if (removeRowTrigger) {
-                            e.preventDefault();
-                            let row = removeRowTrigger.closest("[data-attendance-sheet-config-item]");
-                            if (row) {
-                                row.remove();
-                            }
-                            if (!this.tbodyElement.querySelector("[data-attendance-sheet-config-item]")) {
-                                let emptyRow = this.tbodyElement.querySelector(".empty");
-                                if (emptyRow) {
-                                    emptyRow.hidden = false;
-                                }
-                            }
-                        }
-                    });
+                if (params.cancelButton) {
+                    initCancelButton(params);
                 }
+            }
 
-                initDragAndDrop() {
-                    let dragSrc = null;
-
-                    const handleDragStart = (e) => {
-                        dragSrc = e.currentTarget;
-                        e.dataTransfer.effectAllowed = "move";
-                        e.dataTransfer.setData("text/plain", null);
-                        e.currentTarget.classList.add("dragging");
-                    };
-
-                    const handleDragOver = (e) => {
-                        if (e.preventDefault) { e.preventDefault(); }
-                        e.dataTransfer.dropEffect = "move";
-                        return false;
-                    };
-
-                    const handleDragEnter = (e) => {
-                        e.currentTarget.classList.add("over");
-                    };
-
-                    const handleDragLeave = (e) => {
-                        e.currentTarget.classList.remove("over");
-                    };
-
-                    // Modified handleDrop to insert the dragged row rather than swap content.
-                    const handleDrop = (e) => {
-                        if (e.stopPropagation) { e.stopPropagation(); }
-                        if (dragSrc !== e.currentTarget) {
-                            const target = e.currentTarget;
-                            const targetRect = target.getBoundingClientRect();
-                            const dropPosition = e.clientY - targetRect.top;
-                            const insertBefore = dropPosition < (targetRect.height / 2);
-                            if (dragSrc.parentNode) {
-                                dragSrc.parentNode.removeChild(dragSrc);
-                            }
-                            if (insertBefore) {
-                                target.parentNode.insertBefore(dragSrc, target);
-                            } else {
-                                if (target.nextSibling) {
-                                    target.parentNode.insertBefore(dragSrc, target.nextSibling);
-                                } else {
-                                    target.parentNode.appendChild(dragSrc);
-                                }
-                            }
-                        }
-                        return false;
-                    };
-
-                    const handleDragEnd = () => {
-                        let rows = this.tbodyElement.querySelectorAll("[data-attendance-sheet-config-item]");
-                        rows.forEach(row => row.classList.remove("over", "dragging"));
-                    };
-
-                    const bindDragEvents = (row) => {
-                        row.setAttribute("draggable", "true");
-                        row.addEventListener("dragstart", handleDragStart, false);
-                        row.addEventListener("dragenter", handleDragEnter, false);
-                        row.addEventListener("dragover", handleDragOver, false);
-                        row.addEventListener("dragleave", handleDragLeave, false);
-                        row.addEventListener("drop", handleDrop, false);
-                        row.addEventListener("dragend", handleDragEnd, false);
-                    };
-
-                    let rows = this.tbodyElement.querySelectorAll("[data-attendance-sheet-config-item]");
-                    rows.forEach(row => bindDragEvents(row));
-                    this.bindDragEvents = bindDragEvents;
-                }
-
-                initAddRowDropdown() {
-                
-                    this.addRowDropdown.addEventListener("change", (e) => {
-                        let selectedValue = e.target.value;
-                        if (!selectedValue) {
-                            return;
-                        }
-                        e.target.value = "";
-                        let emptyRow = this.tbodyElement.querySelector(".empty");
-                        if (emptyRow) {
-                            emptyRow.hidden = true;
-                        }
-                        let rowId = Date.now();
-                        let tr = document.createElement("tr");
-                        tr.setAttribute("data-attendance-sheet-config-item", "");
-                        tr.setAttribute("data-value", rowId);
-                        if (selectedValue === "Custom Column") {
-                            tr.setAttribute("data-changeable", selectedValue);
-                        }
-
-                        let td1 = document.createElement("td");
-                        if (selectedValue === "Custom Column") {
-                            td1.innerHTML =
-                                \' <input name="item_ids[]" type="hidden" value="\' + rowId + \'" /> \' +
-                                \' <span class="attendance-sheet-config__table__cell--first__input"> \' +
-                                    this.dragHandleHtml +
-                                    \' <input type="text" name="column_names[]" placeholder="Enter column name" class="form-control" /> \' +
-                                \' </span>\';
-                        } else {
-                            td1.innerHTML =
-                                \'<input name="item_ids[]" type="hidden" value="\' + rowId + \'" />\' +
-                                this.dragHandleHtml +
-                                selectedValue;
-                        }
-
-                        let td2 = document.createElement("td");
-                        if (selectedValue === "Custom Column") {
-                            td2.innerHTML = \'<input type="text" name="header_values[]" placeholder="Enter default value" class="form-control" />\';
-                        } else if (["Name", "Payroll", "Email", "Org Unit", "Position", "Stream", "Paypoint"].indexOf(selectedValue) !== -1) {
-                            td2.innerHTML = "";
-                        } else {
-                            td2.innerHTML = \'<input type="text" name="header_values[]" />\';
-                        }
-
-                        let td3 = document.createElement("td");
-                        td3.classList.add("action-column");
-                        td3.innerHTML =
-                            \'<a href="#" data-attendance-sheet-config-remove-row data-remove-value="\' + rowId + \'">\' +
-                            this.removeRowIconHtml + " " + this.removeRowText +
-                            \'</a>\';
-                        tr.appendChild(td1);
-                        tr.appendChild(td2);
-                        tr.appendChild(td3);
-                        this.tbodyElement.appendChild(tr);
-                        if (typeof this.bindDragEvents === "function") {
-                            this.bindDragEvents(tr);
-                        }
-                    });
-                }
-
-                initSaveButton() {
-                    this.saveButton.addEventListener("click", (e) => {
-                        let configData = [];
-                        let rows = this.tbodyElement.querySelectorAll("[data-attendance-sheet-config-item]");
-                        rows.forEach(row => {
-                            let cells = row.querySelectorAll("td");
-                            
-                            let columnName = "";
-                            let inputCol = cells[0].querySelector("input[name=\'column_names[]\']");
-                            if (inputCol) {
-                                columnName = inputCol.value.trim();
-                            } else {
-                                columnName = cells[0].textContent.trim();
-                            }
-                            
-                            let defaultValue = "";
-                            let input = cells[1].querySelector("input");
-                            if (input) {
-                                defaultValue = input.value.trim();
-                            } else {
-                                defaultValue = cells[1].textContent.trim();
-                            }
-                            
-                            let item = {
-                                column: columnName, 
-                                value: defaultValue
-                            };
-                            configData.push(item);
-                        });
-                        let xhr = new XMLHttpRequest();
-                        xhr.open("POST", this.saveConfigUrl, false);
-                        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                        xhr.onreadystatechange = () => {
-                            if (xhr.readyState === 4) {
-                                if (xhr.status === 200) {
-                                    alert("Configuration saved successfully.");
-                                } else {
-                                    alert("Failed to save configuration. Status Code: " + xhr.status);
-                                }
-                            }
-                        };
-                        let paramsStr = "sesskey=" + encodeURIComponent(this.sesskey) +
-                                        "&instanceid=" + encodeURIComponent(this.instanceid) +
-                                        "&config_data=" + encodeURIComponent(JSON.stringify(configData));
-                        xhr.send(paramsStr);
-                    });
-                }
-
-                initCancelButton() {
-                    this.cancelButton.addEventListener("click", (e) => {
+            function initRowDeletion(tbodyElement) {
+                tbodyElement.addEventListener("click", function(e) {
+                    const removeRowTrigger = e.target.closest("[data-attendance-sheet-config-remove-row]");
+                    if (removeRowTrigger) {
                         e.preventDefault();
-                        if (confirm("Do you want to cancel the change? All unsaved items in the text field will be lost.")) {
-                            location.reload();
+                        const row = removeRowTrigger.closest("[data-attendance-sheet-config-item]");
+                        if (row) {
+                            row.remove();
                         }
+                        if (!tbodyElement.querySelector("[data-attendance-sheet-config-item]")) {
+                            const emptyRow = tbodyElement.querySelector(".empty");
+                            if (emptyRow) {
+                                emptyRow.hidden = false;
+                            }
+                        }
+                    }
+                });
+            }
+
+            function initDragAndDrop(params) {
+                let dragSrc = null;
+
+                const handleDragStart = function(e) {
+                    dragSrc = e.currentTarget;
+                    e.dataTransfer.effectAllowed = "move";
+                    e.dataTransfer.setData("text/plain", null);
+                    e.currentTarget.classList.add("dragging");
+                };
+
+                const handleDragOver = function(e) {
+                    if (e.preventDefault) { e.preventDefault(); }
+                    e.dataTransfer.dropEffect = "move";
+                    return false;
+                };
+
+                const handleDragEnter = function(e) {
+                    e.currentTarget.classList.add("over");
+                };
+
+                const handleDragLeave = function(e) {
+                    e.currentTarget.classList.remove("over");
+                };
+
+                const handleDrop = function(e) {
+                    if (e.stopPropagation) { e.stopPropagation(); }
+                    if (dragSrc !== e.currentTarget) {
+                        const target = e.currentTarget;
+                        const targetRect = target.getBoundingClientRect();
+                        const dropPosition = e.clientY - targetRect.top;
+                        const insertBefore = dropPosition < (targetRect.height / 2);
+                        if (dragSrc.parentNode) {
+                            dragSrc.parentNode.removeChild(dragSrc);
+                        }
+                        if (insertBefore) {
+                            target.parentNode.insertBefore(dragSrc, target);
+                        } else {
+                            if (target.nextSibling) {
+                                target.parentNode.insertBefore(dragSrc, target.nextSibling);
+                            } else {
+                                target.parentNode.appendChild(dragSrc);
+                            }
+                        }
+                    }
+                    return false;
+                };
+
+                const handleDragEnd = function(e) {
+                    const rows = params.tbodyElement.querySelectorAll("[data-attendance-sheet-config-item]");
+                    rows.forEach(function(row) { row.classList.remove("over", "dragging"); });
+                };
+
+                const bindDragEvents = function(row) {
+                    row.setAttribute("draggable", "true");
+                    row.addEventListener("dragstart", handleDragStart, false);
+                    row.addEventListener("dragenter", handleDragEnter, false);
+                    row.addEventListener("dragover", handleDragOver, false);
+                    row.addEventListener("dragleave", handleDragLeave, false);
+                    row.addEventListener("drop", handleDrop, false);
+                    row.addEventListener("dragend", handleDragEnd, false);
+                };
+
+                const rows = params.tbodyElement.querySelectorAll("[data-attendance-sheet-config-item]");
+                rows.forEach(function(row) { bindDragEvents(row); });
+                params.bindDragEvents = bindDragEvents;
+            }
+
+            function initAddRowDropdown(params) {
+                params.addRowDropdown.addEventListener("change", function(e) {
+                    const selectedValue = e.target.value;
+                    if (!selectedValue) {
+                        return;
+                    }
+                    e.target.value = "";
+                    const emptyRow = params.tbodyElement.querySelector(".empty");
+                    if (emptyRow) {
+                        emptyRow.hidden = true;
+                    }
+                    const rowId = Date.now();
+                    const tr = document.createElement("tr");
+                    tr.setAttribute("data-attendance-sheet-config-item", "");
+                    tr.setAttribute("data-value", rowId);
+                    if (selectedValue === "Custom Column") {
+                        tr.setAttribute("data-changeable", selectedValue);
+                    }
+                    const td1 = document.createElement("td");
+                    if (selectedValue === "Custom Column") {
+                        td1.innerHTML =
+                            \' <input name="item_ids[]" type="hidden" value="\' + rowId + \'" /> \' +
+                            \' <span class="attendance-sheet-config__table__cell--first__input"> \' +
+                                params.dragHandleHtml +
+                                \' <input type="text" name="column_names[]" placeholder="Enter column name" class="form-control" /> \' +
+                            \' </span>\';
+                    } else {
+                        td1.innerHTML =
+                            \'<input name="item_ids[]" type="hidden" value="\' + rowId + \'" />\' +
+                            params.dragHandleHtml +
+                            selectedValue;
+                    }
+                    const td2 = document.createElement("td");
+                    if (selectedValue === "Custom Column") {
+                        td2.innerHTML = \'<input type="text" name="header_values[]" placeholder="Enter default value" class="form-control" />\';
+                    } else if (["Name", "Payroll", "Email", "Org Unit", "Position", "Stream", "Paypoint"].indexOf(selectedValue) !== -1) {
+                        td2.innerHTML = "";
+                    } else {
+                        td2.innerHTML = \'<input type="text" name="header_values[]" />\';
+                    }
+                    const td3 = document.createElement("td");
+                    td3.classList.add("action-column");
+                    td3.innerHTML =
+                        \'<a href="#" data-attendance-sheet-config-remove-row data-remove-value="\' + rowId + \'">\' +
+                        params.removeRowIconHtml + " " + params.removeRowText +
+                        \'</a>\';
+                    tr.appendChild(td1);
+                    tr.appendChild(td2);
+                    tr.appendChild(td3);
+                    params.tbodyElement.appendChild(tr);
+                    if (typeof params.bindDragEvents === "function") {
+                        params.bindDragEvents(tr);
+                    }
+                });
+            }
+
+            function initSaveButton(params) {
+                params.saveButton.addEventListener("click", function(e) {
+                    const configData = [];
+                    const rows = params.tbodyElement.querySelectorAll("[data-attendance-sheet-config-item]");
+                    rows.forEach(function(row) {
+                        const cells = row.querySelectorAll("td");
+                        let columnName = "";
+                        const inputCol = cells[0].querySelector("input[name=\'column_names[]\']");
+                        if (inputCol) {
+                            columnName = inputCol.value.trim();
+                        } else {
+                            columnName = cells[0].textContent.trim();
+                        }
+                        let defaultValue = "";
+                        const input = cells[1].querySelector("input");
+                        if (input) {
+                            defaultValue = input.value.trim();
+                        } else {
+                            defaultValue = cells[1].textContent.trim();
+                        }
+                        const item = {
+                            column: columnName, 
+                            value: defaultValue
+                        };
+                        configData.push(item);
                     });
-                }
+                    const xhr = new XMLHttpRequest();
+                    xhr.open("POST", params.saveConfigUrl, false);
+                    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                    xhr.onreadystatechange = function() {
+                        if (xhr.readyState === 4) {
+                            if (xhr.status === 200) {
+                                alert("Configuration saved successfully.");
+                            } else {
+                                alert("Failed to save configuration. Status Code: " + xhr.status);
+                            }
+                        }
+                    };
+                    const paramsStr = "sesskey=" + encodeURIComponent(params.sesskey) +
+                                      "&instanceid=" + encodeURIComponent(params.instanceid) +
+                                      "&config_data=" + encodeURIComponent(JSON.stringify(configData));
+                    xhr.send(paramsStr);
+                });
+            }
+
+            function initCancelButton(params) {
+                params.cancelButton.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    if (confirm("Do you want to cancel the change? All unsaved items in the text field will be lost.")) {
+                        location.reload();
+                    }
+                });
             }
         </script>';
 
