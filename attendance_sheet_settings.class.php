@@ -96,10 +96,12 @@ class attendance_sheet_settings {
                 if (!tableElement) {
                     return;
                 }
+                
                 const tbodyElement = tableElement.querySelector("[data-attendance-sheet-config-items]");
                 if (!tbodyElement) {
                     return;
                 }
+                
                 const addRowDropdown = tableElement.querySelector("[data-attendance-sheet-config-add-row]");
                 const saveButton = document.getElementById("save-config");
                 const cancelButton = document.getElementById("cancel-config");
@@ -138,17 +140,20 @@ class attendance_sheet_settings {
             function initRowDeletion(tbodyElement) {
                 tbodyElement.addEventListener("click", function(e) {
                     const removeRowTrigger = e.target.closest("[data-attendance-sheet-config-remove-row]");
-                    if (removeRowTrigger) {
-                        e.preventDefault();
-                        const row = removeRowTrigger.closest("[data-attendance-sheet-config-item]");
-                        if (row) {
-                            row.remove();
-                        }
-                        if (!tbodyElement.querySelector("[data-attendance-sheet-config-item]")) {
-                            const emptyRow = tbodyElement.querySelector(".empty");
-                            if (emptyRow) {
-                                emptyRow.hidden = false;
-                            }
+                    if (!removeRowTrigger) {
+                        return;
+                    }
+                    
+                    e.preventDefault();
+                    const row = removeRowTrigger.closest("[data-attendance-sheet-config-item]");
+                    if (row) {
+                        row.remove();
+                    }
+                    
+                    if (!tbodyElement.querySelector("[data-attendance-sheet-config-item]")) {
+                        const emptyRow = tbodyElement.querySelector(".empty");
+                        if (emptyRow) {
+                            emptyRow.hidden = false;
                         }
                     }
                 });
@@ -165,7 +170,7 @@ class attendance_sheet_settings {
                 };
 
                 const handleDragOver = function(e) {
-                    if (e.preventDefault) { e.preventDefault(); }
+                    e.preventDefault();
                     e.dataTransfer.dropEffect = "move";
                     return false;
                 };
@@ -179,24 +184,31 @@ class attendance_sheet_settings {
                 };
 
                 const handleDrop = function(e) {
-                    if (e.stopPropagation) { e.stopPropagation(); }
-                    if (dragSrc !== e.currentTarget) {
-                        const target = e.currentTarget;
-                        const targetRect = target.getBoundingClientRect();
-                        const dropPosition = e.clientY - targetRect.top;
-                        const insertBefore = dropPosition < (targetRect.height / 2);
-                        if (dragSrc.parentNode) {
-                            dragSrc.parentNode.removeChild(dragSrc);
-                        }
-                        if (insertBefore) {
-                            target.parentNode.insertBefore(dragSrc, target);
-                        } else {
-                            if (target.nextSibling) {
-                                target.parentNode.insertBefore(dragSrc, target.nextSibling);
-                            } else {
-                                target.parentNode.appendChild(dragSrc);
-                            }
-                        }
+                    if (e.stopPropagation) {
+                        e.stopPropagation();
+                    }
+                    if (dragSrc === e.currentTarget) {
+                        return false;
+                    }
+                    
+                    const target = e.currentTarget;
+                    const targetRect = target.getBoundingClientRect();
+                    const dropPosition = e.clientY - targetRect.top;
+                    const insertBefore = dropPosition < (targetRect.height / 2);
+                    
+                    if (dragSrc.parentNode) {
+                        dragSrc.parentNode.removeChild(dragSrc);
+                    }
+                    
+                    if (insertBefore) {
+                        target.parentNode.insertBefore(dragSrc, target);
+                        return false;
+                    }
+                    
+                    if (target.nextSibling) {
+                        target.parentNode.insertBefore(dragSrc, target.nextSibling);
+                    } else {
+                        target.parentNode.appendChild(dragSrc);
                     }
                     return false;
                 };
@@ -227,18 +239,22 @@ class attendance_sheet_settings {
                     if (!selectedValue) {
                         return;
                     }
+                    
                     e.target.value = "";
                     const emptyRow = params.tbodyElement.querySelector(".empty");
                     if (emptyRow) {
                         emptyRow.hidden = true;
                     }
+                    
                     const rowId = Date.now();
                     const tr = document.createElement("tr");
                     tr.setAttribute("data-attendance-sheet-config-item", "");
                     tr.setAttribute("data-value", rowId);
+                    
                     if (selectedValue === "Custom Column") {
                         tr.setAttribute("data-changeable", selectedValue);
                     }
+                    
                     const td1 = document.createElement("td");
                     if (selectedValue === "Custom Column") {
                         td1.innerHTML =
@@ -253,6 +269,7 @@ class attendance_sheet_settings {
                             params.dragHandleHtml +
                             selectedValue;
                     }
+                    
                     const td2 = document.createElement("td");
                     if (selectedValue === "Custom Column") {
                         td2.innerHTML = \'<input type="text" name="header_values[]" placeholder="Enter default value" class="form-control" />\';
@@ -261,16 +278,19 @@ class attendance_sheet_settings {
                     } else {
                         td2.innerHTML = \'<input type="text" name="header_values[]" />\';
                     }
+                    
                     const td3 = document.createElement("td");
                     td3.classList.add("action-column");
                     td3.innerHTML =
                         \'<a href="#" data-attendance-sheet-config-remove-row data-remove-value="\' + rowId + \'">\' +
                         params.removeRowIconHtml + " " + params.removeRowText +
                         \'</a>\';
+                    
                     tr.appendChild(td1);
                     tr.appendChild(td2);
                     tr.appendChild(td3);
                     params.tbodyElement.appendChild(tr);
+                    
                     if (typeof params.bindDragEvents === "function") {
                         params.bindDragEvents(tr);
                     }
@@ -283,26 +303,19 @@ class attendance_sheet_settings {
                     const rows = params.tbodyElement.querySelectorAll("[data-attendance-sheet-config-item]");
                     rows.forEach(function(row) {
                         const cells = row.querySelectorAll("td");
-                        let columnName = "";
                         const inputCol = cells[0].querySelector("input[name=\'column_names[]\']");
-                        if (inputCol) {
-                            columnName = inputCol.value.trim();
-                        } else {
-                            columnName = cells[0].textContent.trim();
-                        }
-                        let defaultValue = "";
-                        const input = cells[1].querySelector("input");
-                        if (input) {
-                            defaultValue = input.value.trim();
-                        } else {
-                            defaultValue = cells[1].textContent.trim();
-                        }
+                        const columnName = inputCol ? inputCol.value.trim() : cells[0].textContent.trim();
+                        
+                        const inputVal = cells[1].querySelector("input");
+                        const defaultValue = inputVal ? inputVal.value.trim() : cells[1].textContent.trim();
+                        
                         const item = {
                             column: columnName, 
                             value: defaultValue
                         };
                         configData.push(item);
                     });
+                    
                     const xhr = new XMLHttpRequest();
                     xhr.open("POST", params.saveConfigUrl, false);
                     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
