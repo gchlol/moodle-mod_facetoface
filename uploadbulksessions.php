@@ -31,6 +31,7 @@ use core\output\notification;
 use mod_facetoface\form\bulk_session_upload_form;
 use mod_facetoface\form\bulk_session_confirm_form;
 use mod_facetoface\bulk_session_manager;
+use mod_facetoface\event\csv_processed_bulksession;
 
 $f = required_param('f', PARAM_INT);
 $PAGE->set_url(new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]));
@@ -66,8 +67,13 @@ $PAGE->set_heading($heading);
 // Instantiate the upload form once.
 $uploadform = new bulk_session_upload_form(null, ['f' => $f]);
 
-// Helper function to display errors and exit.
-function handle_bulk_upload_errors($errors) {
+/**
+ * Displays bulk-upload errors and ends execution.
+ *
+ * @param array $errors An array of errors to display.
+ * @return void
+ */
+function handle_bulk_upload_errors($errors):void {
     global $OUTPUT;
 
     echo $OUTPUT->header();
@@ -77,7 +83,7 @@ function handle_bulk_upload_errors($errors) {
     $table->attributes['class'] = 'f2fbookingsuploadlist m-auto generaltable mb-2';
     $table->head = [
         get_string('uucsvline', 'tool_uploaduser'),
-        get_string('status', 'facetoface')
+        get_string('status', 'facetoface'),
     ];
 
     foreach ($errors as $error) {
@@ -140,22 +146,22 @@ if ($validate) {
         foreach ($records as $record) {
             $table->data[] = array_values($record);
         }
+
         echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
     }
 
     // Display the confirm form.
     $confirmform->display();
     echo $OUTPUT->footer();
+
     exit;
 }
-
-
 
 if (
     $process &&
     $fileid &&
     $f
-    ) {
+) {
     $manager = new bulk_session_manager($f);
     $manager->load_from_file($fileid);
 
@@ -171,23 +177,23 @@ if (
     $errors = $manager->validate();
 
     if (empty($errors)) {
-         $manager->process();
+        $manager->process();
 
-         $params = [
-             'context'  => $modulecontext,
-             'objectid' => $f,
-         ];
+        $params = [
+            'context'  => $modulecontext,
+            'objectid' => $f,
+        ];
 
-         $event = \mod_facetoface\event\csv_processed_bulksession::create($params);
-         $event->add_record_snapshot('facetoface', $facetoface);
-         $event->trigger();
+        $event = csv_processed_bulksession::create($params);
+        $event->add_record_snapshot('facetoface', $facetoface);
+        $event->trigger();
 
-         redirect(
-             new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]),
-             get_string('facetoface:bulksessionsprocessed', 'mod_facetoface'),
-             null,
-             notification::NOTIFY_SUCCESS
-         );
+        redirect(
+            new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $f]),
+            get_string('facetoface:bulksessionsprocessed', 'mod_facetoface'),
+            null,
+            notification::NOTIFY_SUCCESS
+        );
     }
 
     handle_bulk_upload_errors($errors);

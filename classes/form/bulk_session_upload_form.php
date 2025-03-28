@@ -34,8 +34,7 @@ require_once($CFG->dirroot.'/repository/lib.php');
  * @author      Jonas Sajonas
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-class bulk_session_upload_form extends \moodleform {
+class bulk_session_upload_form extends moodleform {
     /**
      * Build form for importing Face-to-Face session data.
      *
@@ -79,86 +78,85 @@ class bulk_session_upload_form extends \moodleform {
         $table->head = [
             get_string('upload_field', 'mod_facetoface'),
             get_string('upload_required', 'mod_facetoface'),
-            get_string('upload_format', 'mod_facetoface')
+            get_string('upload_format', 'mod_facetoface'),
         ];
 
-        // 1) Session Date/Time Known
         $table->data[] = [
             get_string('upload_field_sessiondatetime', 'mod_facetoface'),
             get_string('upload_req_yesno', 'mod_facetoface'),
-            get_string('upload_format_na', 'mod_facetoface')
+            get_string('upload_format_na', 'mod_facetoface'),
         ];
 
         $table->data[] = [
             get_string('upload_field_startdate', 'mod_facetoface'),
             get_string('upload_req_yes', 'mod_facetoface'),
-            get_string('upload_format_date', 'mod_facetoface')
+            get_string('upload_format_date', 'mod_facetoface'),
         ];
 
         $table->data[] = [
             get_string('upload_field_starttime', 'mod_facetoface'),
             get_string('upload_req_yes', 'mod_facetoface'),
-            get_string('upload_format_time', 'mod_facetoface')
+            get_string('upload_format_time', 'mod_facetoface'),
         ];
 
         $table->data[] = [
             get_string('upload_field_finishdate', 'mod_facetoface'),
             get_string('upload_req_yes', 'mod_facetoface'),
-            get_string('upload_format_date', 'mod_facetoface')
+            get_string('upload_format_date', 'mod_facetoface'),
         ];
 
         $table->data[] = [
             get_string('upload_field_finishtime', 'mod_facetoface'),
             get_string('upload_req_yes', 'mod_facetoface'),
-            get_string('upload_format_time', 'mod_facetoface')
+            get_string('upload_format_time', 'mod_facetoface'),
         ];
 
         $table->data[] = [
             get_string('upload_field_allowcancellations', 'mod_facetoface'),
             get_string('upload_req_yesno', 'mod_facetoface'),
-            get_string('upload_format_na', 'mod_facetoface')
+            get_string('upload_format_na', 'mod_facetoface'),
         ];
 
         $table->data[] = [
             get_string('upload_field_capacity', 'mod_facetoface'),
             get_string('upload_req_yes', 'mod_facetoface'),
-            get_string('upload_format_numeric', 'mod_facetoface')
+            get_string('upload_format_numeric', 'mod_facetoface'),
         ];
 
         $table->data[] = [
             get_string('upload_field_allowoverbookings', 'mod_facetoface'),
             get_string('upload_req_yesno', 'mod_facetoface'),
-            get_string('upload_format_na', 'mod_facetoface')
+            get_string('upload_format_na', 'mod_facetoface'),
         ];
 
         $table->data[] = [
             get_string('upload_field_duration', 'mod_facetoface'),
             get_string('upload_req_yes', 'mod_facetoface'),
-            get_string('upload_format_numericmins', 'mod_facetoface')
+            get_string('upload_format_numericmins', 'mod_facetoface'),
         ];
 
         $table->data[] = [
             get_string('upload_field_normalcost', 'mod_facetoface'),
             get_string('upload_req_optional', 'mod_facetoface'),
-            get_string('upload_format_numeric', 'mod_facetoface')
+            get_string('upload_format_numeric', 'mod_facetoface'),
         ];
 
         $table->data[] = [
             get_string('upload_field_discountcost', 'mod_facetoface'),
             get_string('upload_req_optional', 'mod_facetoface'),
-            get_string('upload_format_numeric', 'mod_facetoface')
+            get_string('upload_format_numeric', 'mod_facetoface'),
         ];
 
         $table->data[] = [
             get_string('upload_field_details', 'mod_facetoface'),
             get_string('upload_req_optional', 'mod_facetoface'),
-            get_string('upload_format_string', 'mod_facetoface')
+            get_string('upload_format_string', 'mod_facetoface'),
         ];
 
         $table->data[] = [
             get_string('upload_field_customfield', 'mod_facetoface'),
             get_string('upload_req_optional', 'mod_facetoface'),
-            get_string('upload_format_customfield', 'mod_facetoface')
+            get_string('upload_format_customfield', 'mod_facetoface'),
         ];
 
         $tablehtml = html_writer::table($table);

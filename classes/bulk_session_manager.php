@@ -22,6 +22,7 @@ use DateTime;
 use context_user;
 use stdClass;
 use moodle_url;
+use stored_file;
 
 /**
  * Manages bulk session creation for Face-to-Face module.
@@ -47,7 +48,7 @@ class bulk_session_manager {
     private bool $usefile = false;
 
     /** @var stored_file|null Reference to uploaded file */
-    private ?\stored_file $file = null;
+    private ?stored_file $file = null;
 
     /**
      * Constructor.
@@ -59,13 +60,14 @@ class bulk_session_manager {
     }
 
     /**
-     * Loads CSV data from a draft file area (by file ID).
+     * Loads CSV data from a draft file area.
      * Throws an exception if the file cannot be loaded or doesn't exist.
      *
      * @param int $fileid The draft file ID.
-     * @return bool True on success (throws exception on error).
+     * @return bool True on success.
+     * @throws moodle_exception If the file cannot be loaded.
      */
-    public function load_from_file(int $fileid) {
+    public function load_from_file(int $fileid):bool {
         global $USER;
 
         $this->usefile = true;
@@ -88,7 +90,7 @@ class bulk_session_manager {
      *
      * @return array An indexed array of column headers.
      */
-    public static function get_headers() {
+    public static function get_headers():array {
         return [
             'Session Date/Time Known',
             'Start Date',
@@ -112,7 +114,6 @@ class bulk_session_manager {
      */
     private function get_iterator(): Generator {
         if (!$this->usefile) {
-
             foreach ($this->records as $record) {
                 yield $record;
             }
@@ -130,8 +131,9 @@ class bulk_session_manager {
         if (
             $headerline === false ||
             empty($headerline)
-            ) {
+        ) {
             fclose($handle);
+
             throw new moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface',
                 get_string('error:noheaderrow', 'facetoface'));
         }
@@ -156,7 +158,6 @@ class bulk_session_manager {
 
         try {
             while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
-
                 if (count($data) !== count($headerline)) {
                     throw new moodle_exception('error:invalidcsvrow', 'facetoface');
                 }
@@ -168,9 +169,7 @@ class bulk_session_manager {
 
                 $row = array_combine($headerline, $data);
                 yield $row;
-
             }
-
         } finally {
             fclose($handle);
         }
@@ -189,7 +188,6 @@ class bulk_session_manager {
         }
 
         foreach ($this->records as $index => $record) {
-
             // Trim all fields first.
             foreach ($record as $key => $value) {
                 $record[$key] = trim($value);
@@ -209,12 +207,12 @@ class bulk_session_manager {
             if (!$startdt) {
                 $params = (object)[
                     'date' => $record['Start Date'],
-                    'time' => $record['Start Time']
+                    'time' => $record['Start Time'],
                 ];
 
                 $this->errors[] = [
                     $index,
-                    get_string('error:invalidstarttime', 'facetoface', $params)
+                    get_string('error:invalidstarttime', 'facetoface', $params),
                 ];
 
                 continue;
@@ -234,17 +232,15 @@ class bulk_session_manager {
             }
 
             $finishdt = DateTime::createFromFormat('d/m/Y H:i', $record['Finish Date'].' '.$record['Finish Time']);
-            $finishdt = DateTime::createFromFormat('d/m/Y H:i', $record['Finish Date'].' '.$record['Finish Time']);
-
             if (!$finishdt) {
                 $params = (object)[
                     'date' => $record['Finish Date'],
-                    'time' => $record['Finish Time']
+                    'time' => $record['Finish Time'],
                 ];
 
                 $this->errors[] = [
                     $index,
-                    get_string('error:invalidfinishtime', 'facetoface', $params)
+                    get_string('error:invalidfinishtime', 'facetoface', $params),
                 ];
 
                 continue;
@@ -336,7 +332,7 @@ class bulk_session_manager {
      *
      * @return bool True if all sessions were created successfully, false otherwise.
      */
-    public function process() {
+    public function process():bool {
         global $DB;
 
         $allcustomfields = facetoface_get_session_customfields();
@@ -351,59 +347,91 @@ class bulk_session_manager {
             $session->facetoface = $this->facetofaceid;
 
             $session->datetimeknown = 1;
-            if (!empty($record['Session Date/Time Known']) &&
+            if (
+                !empty($record['Session Date/Time Known']) &&
                 $record['Session Date/Time Known'] === 'no'
             ) {
                 $session->datetimeknown = 0;
             }
 
             $session->starttime = null;
-            if (!empty($record['Start Date']) && !empty($record['Start Time'])) {
+            if (
+                !empty($record['Start Date']) &&
+                !empty($record['Start Time'])
+            ) {
                 $session->starttime = strtotime(str_replace('/', '-', $record['Start Date'].' '.$record['Start Time']));
             }
 
             $session->finishtime = null;
-            if (!empty($record['Finish Date']) && !empty($record['Finish Time'])) {
+            if (
+                !empty($record['Finish Date']) &&
+                !empty($record['Finish Time'])
+            ) {
                 $session->finishtime = strtotime(str_replace('/', '-', $record['Finish Date'].' '.$record['Finish Time']));
             }
 
-            if ($session->datetimeknown && (empty($session->starttime) || empty($session->finishtime))) {
+            if (
+                $session->datetimeknown &&
+                (empty($session->starttime) ||
+                empty($session->finishtime))
+            ) {
                 $this->errors[] = get_string('error:invaliddatetimedata', 'facetoface');
                 continue;
             }
 
             $session->allowcancel = 1;
-            if (!empty($record['Allow Cancellations']) && $record['Allow Cancellations'] === 'no') {
+            if (
+                !empty($record['Allow Cancellations']) &&
+                $record['Allow Cancellations'] === 'no'
+            ) {
                 $session->allowcancel = 0;
             }
 
             $session->capacity = 10;
-            if (!empty($record['Capacity']) && is_numeric($record['Capacity'])) {
+            if (
+                !empty($record['Capacity']) &&
+                is_numeric($record['Capacity'])
+            ) {
                 $session->capacity = (int)$record['Capacity'];
             }
 
             $session->overbook = 1;
-            if (!empty($record['Allow Overbookings']) && $record['Allow Overbookings'] === 'no') {
+            if (
+                !empty($record['Allow Overbookings']) &&
+                $record['Allow Overbookings'] === 'no'
+            ) {
                 $session->overbook = 0;
             }
 
             $session->duration = 0;
-            if (!empty($record['Duration']) && is_numeric($record['Duration'])) {
+            if (
+                !empty($record['Duration']) &&
+                is_numeric($record['Duration'])
+            ) {
                 $session->duration = (int)$record['Duration'];
             }
 
             $session->normalcost = null;
-            if (!empty($record['Normal Cost']) && is_numeric($record['Normal Cost'])) {
+            if (
+                !empty($record['Normal Cost']) &&
+                is_numeric($record['Normal Cost'])
+            ) {
                 $session->normalcost = $record['Normal Cost'];
             }
 
             $session->discountcost = null;
-            if (!empty($record['Discount Cost']) && is_numeric($record['Discount Cost'])) {
+            if (
+                !empty($record['Discount Cost']) &&
+                is_numeric($record['Discount Cost'])
+            ) {
                 $session->discountcost = $record['Discount Cost'];
             }
 
             $session->details = '';
-            if (!empty($record['Details']) && is_string($record['Details'])) {
+            if (
+                !empty($record['Details']) &&
+                is_string($record['Details'])
+            ) {
                 $session->details = $record['Details'];
             }
 
@@ -413,6 +441,7 @@ class bulk_session_manager {
             $sessionid = $DB->insert_record('facetoface_sessions', $session);
             if (!$sessionid) {
                 $this->errors[] = get_string('error:failedtocreatesession', 'facetoface');
+
                 continue;
             }
 
@@ -450,7 +479,7 @@ class bulk_session_manager {
      *
      * @return array A list of error entries.
      */
-    public function get_errors() {
+    public function get_errors():array {
         return $this->errors;
     }
 
@@ -458,12 +487,13 @@ class bulk_session_manager {
      * Retrieves the CSV records after they've been loaded.
      * If a file is used, it will parse and return the data.
      *
-     * @return array List of CSV records as associative arrays.
+     * @return array List of CSV records.
      */
-    public function get_records() {
+    public function get_records():array {
         if ($this->usefile) {
             $this->records = iterator_to_array($this->get_iterator());
         }
+
         return $this->records;
     }
 }

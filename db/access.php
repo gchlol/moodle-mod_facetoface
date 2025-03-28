@@ -220,12 +220,12 @@ $capabilities = [
 
     // GCHLOL JS Ability to upload and process bulk sessions via CSV.
     'mod/facetoface:uploadbulksessions' => [
-    'captype' => 'write',
-    'contextlevel' => CONTEXT_COURSE,
-    'archetypes' => [
-        'teacher' => CAP_ALLOW,
-        'editingteacher' => CAP_ALLOW,
-        'manager' => CAP_ALLOW,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => [
+            'teacher' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW,
         ],
     ],
 

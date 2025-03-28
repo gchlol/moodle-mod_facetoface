@@ -20,7 +20,6 @@ use moodle_url;
 use html_writer;
 
 defined('MOODLE_INTERNAL') || die();
-
 require_once($CFG->dirroot . '/repository/lib.php');
 
 /**
@@ -36,7 +35,8 @@ class upload_bookings_form extends \moodleform {
     /**
      * Build form for importing bookings.
      *
-     * @return void
+     * {@inheritDoc}
+     * @see \moodleform::definition()
      */
     public function definition() {
         global $CFG;

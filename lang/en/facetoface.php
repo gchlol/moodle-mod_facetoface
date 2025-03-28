@@ -881,8 +881,6 @@ $string['error:failedtocreatesession'] = 'Failed to create session';
 $string['error:filenotloaded'] = 'File could not be loaded.';
 $string['error:invaliddatetimedata'] = 'Invalid Date Time data.';
 $string['error:bulkuploadfileerrorsfound'] = 'Errors were found in the uploaded file. Bookings cannot be processed until they are resolved.';
-$string['error:invalidstarttime'] = 'Start date and time is invalid.';
-$string['error:invalidfinishtime'] = 'Finish date and time is invalid.';
 $string['error:starttimeafterfinish'] = 'Start time must be before the finish time.';
 $string['error:invalidcapacity'] = 'Capacity must be a positive number.';
 $string['error:invalidallowoverbook'] = 'Allow overbookings must be "yes" or "no".';
@@ -898,7 +896,7 @@ $string['eventcsvprocessedbulksession'] = 'Bulk session CSV processed';
 
 // Table headers.
 $string['upload_field'] = 'Field';
-$string['upload_required'] = 'Required?';
+$string['upload_required'] = 'Required';
 $string['upload_format'] = 'Format';
 
 // Fields.
@@ -916,7 +914,7 @@ $string['upload_field_discountcost'] = 'Discount Cost';
 $string['upload_field_details'] = 'Details';
 $string['upload_field_customfield'] = 'Customfield_<suffix>';
 
-// Required? values.
+// Required values.
 $string['upload_req_yesno'] = 'No';
 $string['upload_req_yes'] = 'Yes';
 $string['upload_req_no'] = 'No';

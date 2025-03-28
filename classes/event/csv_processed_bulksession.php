@@ -15,6 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace mod_facetoface\event;
+use moodle_url;
+use coding_exception;
+use core\event\base;
 
 /**
  * The mod_facetoface CSV bulk session processed event.
@@ -24,14 +27,15 @@ namespace mod_facetoface\event;
  * @author      Jonas Sajonas
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class csv_processed_bulksession extends \core\event\base {
+
+class csv_processed_bulksession extends base {
 
     /**
      * Init method.
      *
      * @return void
      */
-    protected function init() {
+    protected function init():void {
         $this->data['crud'] = 'r';
         $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
         $this->data['objecttable'] = 'facetoface';
@@ -42,7 +46,7 @@ class csv_processed_bulksession extends \core\event\base {
      *
      * @return string
      */
-    public function get_description() {
+    public function get_description():string {
         return "The user with id '$this->userid' has processed an uploaded CSV file for bulk session bookings " .
             "in the facetoface instance with the course module id '$this->contextinstanceid'.";
     }
@@ -52,30 +56,30 @@ class csv_processed_bulksession extends \core\event\base {
      *
      * @return string
      */
-    public static function get_name() {
+    public static function get_name():string {
         return get_string('eventcsvprocessedbulksession', 'mod_facetoface');
     }
 
     /**
      * Get URL related to the action
      *
-     * @return \moodle_url
+     * @return moodle_url
      */
-    public function get_url() {
-        return new \moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $this->objectid]);
+    public function get_url():moodle_url {
+        return new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $this->objectid]);
     }
 
     /**
      * Custom validation.
      *
-     * @throws \coding_exception
+     * @throws coding_exception
      * @return void
      */
-    protected function validate_data() {
+    protected function validate_data():void {
         parent::validate_data();
 
         if ($this->contextlevel != CONTEXT_MODULE) {
-            throw new \coding_exception('Context level must be CONTEXT_MODULE.');
+            throw new coding_exception('Context level must be CONTEXT_MODULE.');
         }
     }
 }
