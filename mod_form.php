@@ -283,7 +283,7 @@ class mod_facetoface_mod_form extends moodleform_mod {
         require_once 'attendance_sheet_settings.class.php';
 
         $attendanceSettings = new attendance_sheet_settings($this->current->instance);
-        $attendanceSettings->add_to_form($mform);
+        $mform->addElement('html', $attendanceSettings->render());
 
         $data = (object) ['confirmationmessage' => $confirmationmessagedata];
         $this->set_data($data);

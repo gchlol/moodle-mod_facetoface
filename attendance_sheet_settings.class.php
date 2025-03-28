@@ -347,14 +347,5 @@ class attendance_sheet_settings {
 
         return $output;
     }
-
-    /**
-     * Inserts the rendered attendance sheet settings into the given Moodle form.
-     *
-     * @param moodleform $mform The Moodle form instance.
-     */
-    public function add_to_form(&$mform) {
-        $mform->addElement('html', $this->render());
-    }
 }
 ?>
