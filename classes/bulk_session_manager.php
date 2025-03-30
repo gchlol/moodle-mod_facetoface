@@ -137,11 +137,6 @@ class bulk_session_manager {
             );
         }
 
-        foreach ($headerline as &$field) {
-            $field = trim($field, "'");
-        }
-        unset($field);
-
         $requiredheaders = self::get_headers();
         foreach ($requiredheaders as $required) {
             if (in_array($required, $headerline, true)) {
@@ -154,32 +149,23 @@ class bulk_session_manager {
             throw new moodle_exception(
                 'error:missingrequiredcolumn',
                 'mod_facetoface',
-                new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $this->facetofaceid]),
+                new moodle_url('/mod/facetoface/uploadbulksessions.php',
+                ['f' => $this->facetofaceid]),
                 $required
             );
         }
 
-        try {
-            while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
-                if (count($data) !== count($headerline)) {
-                    throw new moodle_exception(
-                        'error:bookingsuploadfileheaderfieldmismatch',
-                        'facetoface');
-                }
-
-                foreach ($data as &$field) {
-                    $field = trim($field, "'");
-                }
-                unset($field);
-
-                $row = array_combine($headerline, $data);
-                yield $row;
+        while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
+            if (count($data) !== count($headerline)) {
+                throw new moodle_exception(
+                    'error:bookingsuploadfileheaderfieldmismatch',
+                    'facetoface');
             }
-        } finally {
-            fclose($handle);
+
+            $row = array_combine($headerline, $data);
+            yield $row;
         }
     }
-
 
     /**
      * Validates the loaded CSV records for required fields, types, etc.
