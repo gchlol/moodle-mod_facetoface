@@ -925,12 +925,12 @@ $string['upload_req_no'] = 'No';
 $string['upload_req_optional'] = 'Optional';
 
 // Format column.
-$string['upload_format_na'] = 'N/A';
-$string['upload_format_date'] = 'DD/MM/YYYY';
+$string['upload_format_na'] = 'Yes or No';
+$string['upload_format_date'] = 'DD / MM / YYYY';
 $string['upload_format_time'] = 'HH:MM';
-$string['upload_format_numeric'] = 'Numeric';
-$string['upload_format_numericmins'] = 'Numeric (minutes)';
-$string['upload_format_string'] = 'Any text';
-$string['upload_format_customfield'] = 'Any text';
+$string['upload_format_numeric'] = 'Number';
+$string['upload_format_numericmins'] = 'Minutes';
+$string['upload_format_string'] = 'Text';
+$string['upload_format_customfield'] = 'Text';
 $string['f2fcsvline'] = 'CSV line';
 

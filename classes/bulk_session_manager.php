@@ -144,15 +144,19 @@ class bulk_session_manager {
 
         $requiredheaders = self::get_headers();
         foreach ($requiredheaders as $required) {
-            if (!in_array($required, $headerline, true)) {
-                fclose($handle);
-                throw new moodle_exception(
-                    'error:missingrequiredcolumn',
-                    'mod_facetoface',
-                    new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $this->facetofaceid]),
-                    $required
-                );
+            if (in_array($required, $headerline, true)) {
+
+                continue;
             }
+
+            // Handle error case.
+            fclose($handle);
+            throw new moodle_exception(
+                'error:missingrequiredcolumn',
+                'mod_facetoface',
+                new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $this->facetofaceid]),
+                $required
+            );
         }
 
         try {
