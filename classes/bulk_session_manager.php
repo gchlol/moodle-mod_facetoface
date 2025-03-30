@@ -162,8 +162,7 @@ class bulk_session_manager {
                     'facetoface');
             }
 
-            $row = array_combine($headerline, $data);
-            yield $row;
+            yield array_combine($headerline, $data);
         }
     }
 
@@ -444,21 +443,32 @@ class bulk_session_manager {
             $sessionsdateid = $DB->insert_record('facetoface_sessions_dates', $sessionsdate);
 
             if (!$sessionsdateid) {
-                $this->errors[] = get_string('error:failedtoinsertdates', 'facetoface') . " (ID: $sessionid)";
+                $this->errors[] = get_string('error:failedtocreatedates', 'facetoface', $sessionid);
             }
 
             // Save any custom fields via the same approach as single-session.
             foreach ($record as $column => $value) {
-                if (strpos($column, 'Customfield_') === 0) {
-                    $shortname = substr($column, strlen('Customfield_'));
-                    if (isset($customfieldsbyshortname[$shortname])) {
-                        $field = $customfieldsbyshortname[$shortname];
-                        if (!facetoface_save_customfield_value($field->id, $value, $sessionid, 'session')) {
-                            $this->errors[] = get_string('error:couldnotsavecustomfield', 'facetoface')." ($shortname)";
-                        }
-                    }
+                // If the column does not start with "Customfield_", skip it.
+                if (strpos($column, 'Customfield_') !== 0) {
+                    continue;
+
+                }
+
+                $shortname = substr($column, strlen('Customfield_'));
+
+                // If we don’t have a matching custom field for $shortname, skip it.
+                if (!isset($customfieldsbyshortname[$shortname])) {
+
+                    continue;
+                }
+
+                // Otherwise, save the custom field.
+                $field = $customfieldsbyshortname[$shortname];
+                if (!facetoface_save_customfield_value($field->id, $value, $sessionid, 'session')) {
+                    $this->errors[] = get_string('error:couldnotsavecustomfield', 'facetoface') . " ($shortname)";
                 }
             }
+
         }
 
         return empty($this->errors);

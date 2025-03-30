@@ -891,8 +891,7 @@ $string['error:invalidallowoverbook'] = 'Allow overbookings must be "yes" or "no
 $string['error:invalidduration'] = 'Duration must be a positive number.';
 $string['error:invalidnormalcost'] = 'Normal cost must be a valid number.';
 $string['error:invaliddiscountcost'] = 'Discount cost must be a valid number.';
-$string['error:failedtoinsertdates'] = 'Failed to insert session dates.';
-
+$string['error:failedtocreatedates'] = 'Failed to create dates for session #{$a}';
 $string['examplecsv'] = 'example.csv';
 $string['error:invalidstarttime'] = 'Start date/time is invalid: {$a->date} {$a->time}';
 $string['error:invalidfinishtime'] = 'Finish date/time is invalid: {$a->date} {$a->time}';
