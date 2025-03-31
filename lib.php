@@ -316,8 +316,8 @@ function facetoface_fix_settings($facetoface) {
     if (empty($facetoface->attendancesheetcolumns)) {
         $facetoface->attendancesheetcolumns = null;
 
-    } else {
-        $facetoface->attendancesheetcolumns = implode(',', array_keys($facetoface->attendancesheetcolumns));
+    //} else {
+    //    $facetoface->attendancesheetcolumns = implode(',', array_keys($facetoface->attendancesheetcolumns));
     }
 }
 

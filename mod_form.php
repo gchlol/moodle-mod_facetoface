@@ -285,6 +285,13 @@ class mod_facetoface_mod_form extends moodleform_mod {
         $attendanceSettings = new attendance_sheet_settings($this->current->instance);
         $mform->addElement('html', $attendanceSettings->render());
 
+        $mform->addElement(
+            'textarea',
+            'attendancesheetcolumns',
+            get_string('email:message', 'facetoface'),
+            'wrap="virtual" rows="15" cols="70"'
+        );
+
         $data = (object) ['confirmationmessage' => $confirmationmessagedata];
         $this->set_data($data);
         $features = new stdClass;
@@ -330,16 +337,26 @@ class mod_facetoface_mod_form extends moodleform_mod {
             ];
         }
 
-        if (
-            !isset($defaultvalues['attendancesheetcolumns']) ||
-            $defaultvalues['attendancesheetcolumns'] === ''
-        ) {
-            $defaultvalues['attendancesheetcolumns'] = [];
-
-        } else {
-            $keys = explode(',', $defaultvalues['attendancesheetcolumns']);
-            $defaultvalues['attendancesheetcolumns'] = array_fill_keys($keys, 1);
+        if ($this->current->instance
+            && isset($defaultvalues['attendancesheetcolumns'])
+            && !is_array($defaultvalues['attendancesheetcolumns'])) {
+            $defaultvalues['attendancesheetcolumns'] = '0,1';
+            //    [
+            //    'format' => $defaultvalues['attendancesheetcolumns'] ?? FORMAT_HTML,
+            //    'text' => $defaultvalues['attendancesheetcolumns'],
+            //];
         }
+
+        //if (
+        //    !isset($defaultvalues['attendancesheetcolumns']) ||
+        //    $defaultvalues['attendancesheetcolumns'] === ''
+        //) {
+        //    $defaultvalues['attendancesheetcolumns'] = [];
+        //
+        //} else {
+        //    $keys = explode(',', $defaultvalues['attendancesheetcolumns']);
+        //    $defaultvalues['attendancesheetcolumns'] = array_fill_keys($keys, 1);
+        //}
     }
 
     /**
