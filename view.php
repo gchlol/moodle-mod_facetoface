@@ -38,7 +38,6 @@ global $DB, $OUTPUT;
 
 $id = optional_param('id', 0, PARAM_INT); // Course Module ID.
 $f = optional_param('f', 0, PARAM_INT); // Facetoface ID.
-// $f2fid = optional_param('f', 0, PARAM_INT); // Facetoface ID duplicate for uploadbulksessions.
 $location = optional_param('location', '', PARAM_TEXT); // Location.
 $download = optional_param('download', '', PARAM_ALPHA); // Download attendance.
 

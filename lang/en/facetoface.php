@@ -841,17 +841,17 @@ $string['addtoallsessions'] = 'Add users to all (upcoming) sessions';
 $string['addtoallsessions_help'] = 'Use this option if you want to add users to all upcoming Face-to-Face sessions. When this uption is toggled, the selected users will be added to this session and all other future sessions in the activity.';
 $string['caseinsensitive'] = 'Case insensitive';
 
-// GCHLOL - MF - Removed delete from 'editsessions', added deletesessions, custom features.
+// GCHLOL - MF - Removed delete from 'editsessions', added deletesessions, custom features
 $string['facetoface:addmyattendees'] = 'Add my attendees to a Face-to-face session';
 $string['facetoface:deletesessions'] = 'Delete Face-to-face sessions';
 $string['facetoface:editsessions'] = 'Add, edit and copy Face-to-face sessions';
 $string['facetoface:removemyattendees'] = 'Remove my attendees from a Face-to-face session';
 
-// Core.
+// Core
 $string['session:strftimedate'] = '';
 $string['session:strftimetime'] = '';
 
-// Pages.
+// Pages
 $string['attendees:print'] = 'Print';
 $string['attendancesheet:heading'] = 'Attendance Sheet';
 $string['attendancesheet:logfacilitator'] = 'Facilitator';
@@ -860,7 +860,7 @@ $string['attendancesheet:signature'] = 'Signature';
 $string['modform:showlogo'] = 'Show site logo';
 $string['modform:showlogo_help'] = 'Controls whether the site logo is included in the header of the attendance sheet';
 
-// Enum.
+// Enum
 $string['attendancecolumn:0'] = 'Name';
 $string['attendancecolumn:1'] = 'Payroll';
 $string['attendancecolumn:2'] = 'Email';
