@@ -286,11 +286,11 @@ class mod_facetoface_mod_form extends moodleform_mod {
         $mform->addElement('html', $attendanceSettings->render());
 
         $mform->addElement(
-            'textarea',
+            'hidden',
             'attendancesheetcolumns',
-            get_string('email:message', 'facetoface'),
-            'wrap="virtual" rows="15" cols="70"'
+            '0,1'
         );
+        $mform->setType('attendancesheetcolumns', PARAM_RAW);
 
         $data = (object) ['confirmationmessage' => $confirmationmessagedata];
         $this->set_data($data);
