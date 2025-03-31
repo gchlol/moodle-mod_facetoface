@@ -73,7 +73,28 @@ class bulk_session_upload_form extends moodleform {
         $mform->setType('csvfile', PARAM_INT);
         $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
 
-        // Build a table with 3 columns: Field, Required, Format.
+        // Generate the table HTML via the helper function.
+        $tablehtml = $this->generate_csv_help_table();
+
+        // Add the table as a static element.
+        $mform->addElement('static', 'csvuploadhelp', '', $tablehtml);
+
+        // Hidden field to validate/process after upload.
+        $mform->addElement('hidden', 'validate', 1);
+        $mform->setType('validate', PARAM_INT);
+
+        $this->add_action_buttons(
+            true,
+            get_string('facetoface:uploadandpreviewbulk', 'mod_facetoface')
+        );
+    }
+
+    /**
+     * Creates the HTML table describing the required CSV fields.
+     *
+     * @return string HTML for the help table.
+     */
+    private function generate_csv_help_table(): string {
         $table = new html_table();
         $table->head = [
             get_string('upload_field', 'mod_facetoface'),
@@ -81,6 +102,7 @@ class bulk_session_upload_form extends moodleform {
             get_string('upload_format', 'mod_facetoface'),
         ];
 
+        // Table rows for each field.
         $table->data[] = [
             get_string('upload_field_sessiondatetime', 'mod_facetoface'),
             get_string('upload_req_yesno', 'mod_facetoface'),
@@ -159,18 +181,8 @@ class bulk_session_upload_form extends moodleform {
             get_string('upload_format_customfield', 'mod_facetoface'),
         ];
 
-        $tablehtml = html_writer::table($table);
-
-        // Add the table as a static element.
-        $mform->addElement('static', 'csvuploadhelp', '', $tablehtml);
-
-        // Hidden field to validate/process after upload.
-        $mform->addElement('hidden', 'validate', 1);
-        $mform->setType('validate', PARAM_INT);
-
-        $this->add_action_buttons(
-            true,
-            get_string('facetoface:uploadandpreviewbulk', 'mod_facetoface')
-        );
+        // Return the rendered HTML.
+        return html_writer::table($table);
     }
+
 }

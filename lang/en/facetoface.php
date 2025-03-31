@@ -182,7 +182,7 @@ $string['error:couldnotdeletenotice'] = 'Could not delete site notice';
 $string['error:couldnotdeletesession'] = 'Could not delete session';
 $string['error:couldnotdeletetrainer'] = 'Could not delete a Face-to-Face session trainer';
 $string['error:couldnotfindsession'] = 'Could not find the newly inserted session';
-$string['error:couldnotsavecustomfield'] = 'Could not save custom field';
+$string['error:couldnotsavecustomfieldshort'] = 'Could not save custom field with short name "{$a}"';
 $string['error:couldnotupdatecalendar'] = 'Could not update session event in the calendar.';
 $string['error:couldnotupdatefield'] = 'Could not update custom session field.';
 $string['error:couldnotupdatemanageremail'] = 'Could not update manager email address.';
@@ -918,7 +918,7 @@ $string['upload_field_details'] = 'Details';
 $string['upload_field_customfield'] = 'Customfield_<suffix>';
 
 // Required values.
-$string['upload_req_yesno'] = 'No';
+$string['upload_req_yesno'] = 'Yes';
 $string['upload_req_yes'] = 'Yes';
 $string['upload_req_no'] = 'No';
 $string['upload_req_optional'] = 'Optional';

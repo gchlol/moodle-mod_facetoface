@@ -465,10 +465,9 @@ class bulk_session_manager {
                 // Otherwise, save the custom field.
                 $field = $customfieldsbyshortname[$shortname];
                 if (!facetoface_save_customfield_value($field->id, $value, $sessionid, 'session')) {
-                    $this->errors[] = get_string('error:couldnotsavecustomfield', 'facetoface') . " ($shortname)";
+                    $this->errors[] = get_string('error:couldnotsavecustomfieldshort', 'facetoface', $shortname);
                 }
             }
-
         }
 
         return empty($this->errors);
