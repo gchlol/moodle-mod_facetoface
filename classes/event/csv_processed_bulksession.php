@@ -66,7 +66,7 @@ class csv_processed_bulksession extends base {
      * @return moodle_url
      */
     public function get_url():moodle_url {
-        return new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f' => $this->objectid]);
+        return new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => $this->objectid]);
     }
 
     /**

@@ -45,9 +45,9 @@ class bulk_session_upload_form extends moodleform {
 
         $mform = $this->_form;
 
-        $f2fid = $this->_customdata['f'] ?? 0;
-        $mform->addElement('hidden', 'f', $f2fid);
-        $mform->setType('f', PARAM_INT);
+        $f2fid = $this->_customdata['f2fid'] ?? 0;
+        $mform->addElement('hidden', 'f2fid', $f2fid);
+        $mform->setType('f2fid', PARAM_INT);
 
         $mform->addElement(
             'header',

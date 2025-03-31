@@ -38,6 +38,7 @@ global $DB, $OUTPUT;
 
 $id = optional_param('id', 0, PARAM_INT); // Course Module ID.
 $f = optional_param('f', 0, PARAM_INT); // Facetoface ID.
+// $f2fid = optional_param('f', 0, PARAM_INT); // Facetoface ID duplicate for uploadbulksessions.
 $location = optional_param('location', '', PARAM_TEXT); // Location.
 $download = optional_param('download', '', PARAM_ALPHA); // Download attendance.
 
@@ -256,7 +257,7 @@ function print_session_list($courseid, $facetoface, $location) {
 
     if ($uploadbulksessions) {
         $uploadbulksessionslink = html_writer::link(
-            new moodle_url('uploadbulksessions.php', ['f' => $facetoface->id]),
+            new moodle_url('uploadbulksessions.php', ['f2fid' => $facetoface->id]),
             get_string('facetoface:uploadbulksessions', 'facetoface')
         );
         echo html_writer::tag('p', $uploadbulksessionslink);

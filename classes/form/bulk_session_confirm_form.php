@@ -41,13 +41,13 @@ class bulk_session_confirm_form extends moodleform {
     public function definition(): void {
         $mform = $this->_form;
 
-        // Retrieve the new parameter f2did from custom data.
-        $f2did = $this->_customdata['f'] ?? 0;
+        // Retrieve the new parameter f2fid from custom data.
+        $f2fid = $this->_customdata['f2fid'] ?? 0;
         $fileid = $this->_customdata['fileid'] ?? 0;
 
         // Add hidden fields using the new name.
-        $mform->addElement('hidden', 'f', $f2did);
-        $mform->setType('f', PARAM_INT);
+        $mform->addElement('hidden', 'f2fid', $f2fid);
+        $mform->setType('f2fid', PARAM_INT);
 
         $mform->addElement('hidden', 'fileid', $fileid);
         $mform->setType('fileid', PARAM_INT);
@@ -62,4 +62,3 @@ class bulk_session_confirm_form extends moodleform {
         );
     }
 }
-
