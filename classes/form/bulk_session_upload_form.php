@@ -105,113 +105,96 @@ class bulk_session_upload_form extends moodleform {
     }
 
     /**
-     * Creates the HTML table describing the required CSV fields.
+     * Builds and returns an HTML table describing the required CSV fields for bulk sessions.
      *
      * @return string HTML for the help table.
      */
     private function generate_csv_help_table(): string {
         $table = new html_table();
 
-        // Header.
         $table->head = [
             get_string('csvuploadhelp:field', 'mod_facetoface'),
             get_string('csvuploadhelp:requirement', 'mod_facetoface'),
             get_string('csvuploadhelp:format', 'mod_facetoface'),
         ];
 
-        // Session date / time known.
-        $table->data[] = [
-            get_string('csvuploadhelp:fieldsessiondatetime', 'mod_facetoface'),
-            get_string('csvuploadhelp:required', 'mod_facetoface'),
-            get_string('csvuploadhelp:yesorno', 'mod_facetoface'),
+        $rows = [
+            [
+                'field' => 'csvuploadhelp:fieldsessiondatetime',
+                'requirement' => 'csvuploadhelp:required',
+                'format' => 'csvuploadhelp:yesorno',
+            ],
+            [
+                'field' => 'csvuploadhelp:startdate',
+                'requirement' => 'csvuploadhelp:required',
+                'format' => 'csvuploadhelp:date',
+            ],
+            [
+                'field' => 'csvuploadhelp:starttime',
+                'requirement' => 'csvuploadhelp:required',
+                'format' => 'csvuploadhelp:time',
+            ],
+            [
+                'field' => 'csvuploadhelp:finishdate',
+                'requirement' => 'csvuploadhelp:required',
+                'format' => 'csvuploadhelp:date',
+            ],
+            [
+                'field' => 'csvuploadhelp:finishtime',
+                'requirement' => 'csvuploadhelp:required',
+                'format' => 'csvuploadhelp:time',
+            ],
+            [
+                'field' => 'csvuploadhelp:allowcancellations',
+                'requirement' => 'csvuploadhelp:optional',
+                'format' => 'csvuploadhelp:yesorno',
+            ],
+            [
+                'field' => 'csvuploadhelp:capacity',
+                'requirement' => 'csvuploadhelp:required',
+                'format' => 'csvuploadhelp:num',
+            ],
+            [
+                'field' => 'csvuploadhelp:allowoverbookings',
+                'requirement' => 'csvuploadhelp:optional',
+                'format' => 'csvuploadhelp:yesorno',
+            ],
+            [
+                'field' => 'csvuploadhelp:duration',
+                'requirement' => 'csvuploadhelp:required',
+                'format' => 'csvuploadhelp:mins',
+            ],
+            [
+                'field' => 'csvuploadhelp:cost',
+                'requirement' => 'csvuploadhelp:optional',
+                'format' => 'csvuploadhelp:num',
+            ],
+            [
+                'field' => 'csvuploadhelp:discount',
+                'requirement' => 'csvuploadhelp:optional',
+                'format' => 'csvuploadhelp:num',
+            ],
+            [
+                'field' => 'csvuploadhelp:details',
+                'requirement' => 'csvuploadhelp:optional',
+                'format' => 'csvuploadhelp:text',
+            ],
+            [
+                'field' => 'csvuploadhelp:customfield',
+                'requirement' => 'csvuploadhelp:optional',
+                'format' => 'csvuploadhelp:text',
+            ],
         ];
 
-        // Start date.
-        $table->data[] = [
-            get_string('csvuploadhelp:startdate', 'mod_facetoface'),
-            get_string('csvuploadhelp:required', 'mod_facetoface'),
-            get_string('csvuploadhelp:date', 'mod_facetoface'),
-        ];
+        // Build each table row by looping over the $rows array.
+        foreach ($rows as $row) {
+            $table->data[] = [
+                get_string($row['field'], 'mod_facetoface'),
+                get_string($row['requirement'], 'mod_facetoface'),
+                get_string($row['format'], 'mod_facetoface'),
+            ];
+        }
 
-        // Start time.
-        $table->data[] = [
-            get_string('csvuploadhelp:starttime', 'mod_facetoface'),
-            get_string('csvuploadhelp:required', 'mod_facetoface'),
-            get_string('csvuploadhelp:time', 'mod_facetoface'),
-        ];
-
-        // Finish date.
-        $table->data[] = [
-            get_string('csvuploadhelp:finishdate', 'mod_facetoface'),
-            get_string('csvuploadhelp:required', 'mod_facetoface'),
-            get_string('csvuploadhelp:date', 'mod_facetoface'),
-        ];
-
-        // Finish time.
-        $table->data[] = [
-            get_string('csvuploadhelp:finishtime', 'mod_facetoface'),
-            get_string('csvuploadhelp:required', 'mod_facetoface'),
-            get_string('csvuploadhelp:time', 'mod_facetoface'),
-        ];
-
-        // Allow cancellations.
-        $table->data[] = [
-            get_string('csvuploadhelp:allowcancellations', 'mod_facetoface'),
-            get_string('csvuploadhelp:optional', 'mod_facetoface'),
-            get_string('csvuploadhelp:yesorno', 'mod_facetoface'),
-        ];
-
-        // Capacity.
-        $table->data[] = [
-            get_string('csvuploadhelp:capacity', 'mod_facetoface'),
-            get_string('csvuploadhelp:required', 'mod_facetoface'),
-            get_string('csvuploadhelp:num', 'mod_facetoface'),
-        ];
-
-        // Allow overbookings.
-        $table->data[] = [
-            get_string('csvuploadhelp:allowoverbookings', 'mod_facetoface'),
-            get_string('csvuploadhelp:optional', 'mod_facetoface'),
-            get_string('csvuploadhelp:yesorno', 'mod_facetoface'),
-        ];
-
-        // Duration.
-        $table->data[] = [
-            get_string('csvuploadhelp:duration', 'mod_facetoface'),
-            get_string('csvuploadhelp:required', 'mod_facetoface'),
-            get_string('csvuploadhelp:mins', 'mod_facetoface'),
-        ];
-
-        // Normal Cost.
-        $table->data[] = [
-            get_string('csvuploadhelp:cost', 'mod_facetoface'),
-            get_string('csvuploadhelp:optional', 'mod_facetoface'),
-            get_string('csvuploadhelp:num', 'mod_facetoface'),
-        ];
-
-        // Discount Cost.
-        $table->data[] = [
-            get_string('csvuploadhelp:discount', 'mod_facetoface'),
-            get_string('csvuploadhelp:optional', 'mod_facetoface'),
-            get_string('csvuploadhelp:num', 'mod_facetoface'),
-        ];
-
-        // Details.
-        $table->data[] = [
-            get_string('csvuploadhelp:details', 'mod_facetoface'),
-            get_string('csvuploadhelp:optional', 'mod_facetoface'),
-            get_string('csvuploadhelp:text', 'mod_facetoface'),
-        ];
-
-        // Custom fields.
-        $table->data[] = [
-            get_string('csvuploadhelp:customfield', 'mod_facetoface'),
-            get_string('csvuploadhelp:optional', 'mod_facetoface'),
-            get_string('csvuploadhelp:text', 'mod_facetoface'),
-        ];
-
-        // Return the rendered HTML.
         return html_writer::table($table);
     }
-
 }
