@@ -77,11 +77,10 @@ function handle_bulk_upload_errors($errors):void {
     global $OUTPUT;
 
     echo $OUTPUT->header();
-    echo $OUTPUT->notification(get_string(
-        'error:uploadsessionserrorsfound',
-        'mod_facetoface',
-        count($errors)
-    ), 'error');
+    echo $OUTPUT->notification(
+        get_string('error:uploadsessionserrorsfound', 'mod_facetoface', count($errors)),
+        notification::NOTIFY_ERROR
+    );
 
     $table = new html_table();
     $table->attributes['class'] = 'f2fbookingsuploadlist m-auto generaltable mb-2';
