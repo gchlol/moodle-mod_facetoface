@@ -200,14 +200,14 @@ class bulk_session_upload_form extends moodleform {
         $table->data[] = [
             get_string('csvuploadhelp:details', 'mod_facetoface'),
             get_string('csvuploadhelp:optional', 'mod_facetoface'),
-            get_string('csvuploadhelp:stringtext', 'mod_facetoface'),
+            get_string('csvuploadhelp:text', 'mod_facetoface'),
         ];
 
         // Custom fields.
         $table->data[] = [
             get_string('csvuploadhelp:customfield', 'mod_facetoface'),
             get_string('csvuploadhelp:optional', 'mod_facetoface'),
-            get_string('csvuploadhelp:customfieldtext', 'mod_facetoface'),
+            get_string('csvuploadhelp:text', 'mod_facetoface'),
         ];
 
         // Return the rendered HTML.

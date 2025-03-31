@@ -920,6 +920,5 @@ $string['csvuploadhelp:date'] = 'DD/MM/YYYY';
 $string['csvuploadhelp:time'] = 'HH:MM';
 $string['csvuploadhelp:num'] = 'Number';
 $string['csvuploadhelp:mins'] = 'Minutes';
-$string['csvuploadhelp:stringtext'] = 'Text';
-$string['csvuploadhelp:customfieldtext'] = 'Text';
+$string['csvuploadhelp:text'] = 'Text';
 $string['f2fcsvline'] = 'CSV line';
