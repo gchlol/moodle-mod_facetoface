@@ -150,7 +150,7 @@ class bulk_session_manager {
                 'error:missingrequiredcolumn',
                 'mod_facetoface',
                 new moodle_url('/mod/facetoface/uploadbulksessions.php',
-                ['f' => $this->facetofaceid]),
+                ['f2fid' => $this->facetofaceid]),
                 $required
             );
         }

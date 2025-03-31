@@ -149,10 +149,18 @@ if ($validate) {
     if (!empty($records)) {
         $table = new html_table();
         $table->attributes['class'] = 'f2fconfirmuploadlist m-auto generaltable mb-2';
-        $table->head = bulk_session_manager::get_headers();
+
+        $firstrecord = reset($records);
+        $headers = array_keys($firstrecord);
+
+        $table->head = $headers;
 
         foreach ($records as $record) {
-            $table->data[] = array_values($record);
+            $rowdata = [];
+            foreach ($headers as $h) {
+                $rowdata[] = $record[$h] ?? '';
+            }
+            $table->data[] = $rowdata;
         }
 
         echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
@@ -160,6 +168,7 @@ if ($validate) {
 
     // Display the confirm form.
     $confirmform->display();
+
     echo $OUTPUT->footer();
 
     exit;
