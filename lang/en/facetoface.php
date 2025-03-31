@@ -896,40 +896,30 @@ $string['examplecsv'] = 'example.csv';
 $string['error:invalidstarttime'] = 'Start date/time is invalid: {$a->date} {$a->time}';
 $string['error:invalidfinishtime'] = 'Finish date/time is invalid: {$a->date} {$a->time}';
 $string['eventcsvprocessedbulksession'] = 'Bulk session CSV processed';
-
-// Table headers.
-$string['upload_field'] = 'Field';
-$string['upload_required'] = 'Required';
-$string['upload_format'] = 'Format';
-
-// Fields.
-$string['upload_field_sessiondatetime'] = 'Session Date/Time Known';
-$string['upload_field_startdate'] = 'Start Date';
-$string['upload_field_starttime'] = 'Start Time';
-$string['upload_field_finishdate'] = 'Finish Date';
-$string['upload_field_finishtime'] = 'Finish Time';
-$string['upload_field_allowcancellations'] = 'Allow Cancellations';
-$string['upload_field_capacity'] = 'Capacity';
-$string['upload_field_allowoverbookings'] = 'Allow Overbookings';
-$string['upload_field_duration'] = 'Duration';
-$string['upload_field_normalcost'] = 'Normal Cost';
-$string['upload_field_discountcost'] = 'Discount Cost';
-$string['upload_field_details'] = 'Details';
-$string['upload_field_customfield'] = 'Customfield_<suffix>';
-
-// Required values.
-$string['upload_req_yesno'] = 'Yes';
-$string['upload_req_yes'] = 'Yes';
-$string['upload_req_no'] = 'No';
-$string['upload_req_optional'] = 'Optional';
-
-// Format column.
+$string['csvuploadhelp:field'] = 'Field';
+$string['csvuploadhelp:requirement'] = 'Requirement';
+$string['csvuploadhelp:format'] = 'Format';
+$string['csvuploadhelp:fieldsessiondatetime'] = 'Session Date/Time Known';
+$string['csvuploadhelp:startdate'] = 'Start Date';
+$string['csvuploadhelp:starttime'] = 'Start Time';
+$string['csvuploadhelp:finishdate'] = 'Finish Date';
+$string['csvuploadhelp:finishtime'] = 'Finish Time';
+$string['csvuploadhelp:allowcancellations'] = 'Allow Cancellations';
+$string['csvuploadhelp:capacity'] = 'Capacity';
+$string['csvuploadhelp:allowoverbookings'] = 'Allow Overbookings';
+$string['csvuploadhelp:duration'] = 'Duration';
+$string['csvuploadhelp:cost'] = 'Normal Cost';
+$string['csvuploadhelp:discount'] = 'Discount Cost';
+$string['csvuploadhelp:details'] = 'Details';
+$string['csvuploadhelp:customfield'] = 'Customfield_<suffix>';
+$string['csvuploadhelp:yesorno'] = 'Yes or No';
+$string['csvuploadhelp:required'] = 'Required';
+$string['csvuploadhelp:optional'] = 'Optional';
 $string['upload_format_na'] = 'Yes or No';
-$string['upload_format_date'] = 'DD / MM / YYYY';
-$string['upload_format_time'] = 'HH:MM';
-$string['upload_format_numeric'] = 'Number';
-$string['upload_format_numericmins'] = 'Minutes';
-$string['upload_format_string'] = 'Text';
-$string['upload_format_customfield'] = 'Text';
+$string['csvuploadhelp:date'] = 'DD/MM/YYYY';
+$string['csvuploadhelp:time'] = 'HH:MM';
+$string['csvuploadhelp:num'] = 'Number';
+$string['csvuploadhelp:mins'] = 'Minutes';
+$string['csvuploadhelp:stringtext'] = 'Text';
+$string['csvuploadhelp:customfieldtext'] = 'Text';
 $string['f2fcsvline'] = 'CSV line';
-
