@@ -14,24 +14,25 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace mod_facetoface;
+
+use moodle_exception;
+use Generator;
+use DateTime;
+use context_user;
+use moodle_url;
+
 /**
+ * Manages bulk session creation for Face-to-Face module sitewide.
+ * Handles CSV parsing, validation, and session creation.
+ * Supports file uploads.
+ *
  * @package   mod_facetoface
  * @copyright 2025, Gold Coast Health
  * @author    Jonas Sajonas
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-namespace mod_facetoface;
-
-defined('MOODLE_INTERNAL') || die();
-
-use moodle_exception;
-use Generator;
-use DateTime;
-
-
 class site_bulk_manager {
-
     /** @var array Parsed CSV records */
     private $records = [];
 
@@ -39,37 +40,32 @@ class site_bulk_manager {
     private $errors = [];
 
     /** @var bool $Indicates whether records are being loaded */
-    private $usefile;
+    private $usefile = false;
 
     /** @var file object containing CSV data. */
-    private $file;
-
-    /** @var bool Will ignore case when matching users */
-    private $caseinsensitive = false;
-
-    /** @var bool When true, confirmation emails are not sent. */
-    private $suppressemail = false;
+    private $file = null;
 
     /**
      * Constructor.
-     * @param int $facetofaceid
      */
     public function __construct() {
     }
 
     /**
-     * Load CSV data from a file (given its fileid).
-     * @param int $fileid
-     * @return bool true if loaded successfully, false otherwise
+     * Loads CSV data from a draft file area.
+     * Throws an exception if the file cannot be loaded or doesn't exist.
+     *
+     * @param int $fileid The draft file ID.
+     * @return bool True on success.
+     * @throws moodle_exception If the file cannot be loaded.
      */
-    public function load_from_file(int $fileid) {
+    public function load_from_file(int $fileid):bool {
         global $USER;
 
         $this->usefile = true;
-        $fs = get_file_storage();
-        $usercontext = \context_user::instance($USER->id);
 
-        // Retrieve the files from the draft area; we expect exactly one CSV file.
+        $fs = get_file_storage();
+        $usercontext = context_user::instance($USER->id);
         $files = $fs->get_area_files($usercontext->id, 'user', 'draft', $fileid, 'id', false);
 
         if (count($files) != 1) {
@@ -80,23 +76,13 @@ class site_bulk_manager {
         return true;
     }
 
-    /**
-     * Load in records to process from an array.
-     * @param array $records
-     * @return self
-     */
-    public function load_from_array(array $records) {
-        $this->usefile = false;
-        $this->records = $records;
-        return $this;
-    }
 
     /**
-     * Returns the column headers used by the CSV.
+     * Returns the column headers expected for CSV input.
      *
-     * @return array
+     * @return array An indexed array of column headers.
      */
-    public static function get_headers() {
+    public static function get_headers():array {
         return [
             'Course shortname',
             'Face-to-face activity name',
@@ -118,20 +104,16 @@ class site_bulk_manager {
     }
 
     /**
-     * Iterator yields records either from $this->records
-     * or from CSV file stored in $this->file.
+     * Provides a record iterator for CSV rows, either from memory or a file.
      *
-     * Generator avoid loading all data at once.
-     *
-     * @return \Generator Yields row arrays with header-value pairs.
-     * @throws moodle_exception If there's a mismatch.
+     * @return Generator Yields each CSV record as an associative array.
      */
-    private function get_iterator(): \Generator {
-        // If the manager is not using a file, simply yield from $this->records.
+    private function get_iterator(): Generator {
         if (!$this->usefile) {
             foreach ($this->records as $record) {
                 yield $record;
             }
+
             return;
         }
 
@@ -140,28 +122,41 @@ class site_bulk_manager {
         $maxlinelength = 1000;
         $delimiter = ',';
 
-        // Extract the headers and skip header line.
-        $headers = self::get_headers();
-        $numheaders = count($headers);
+        $headerline = fgetcsv($handle, $maxlinelength, $delimiter);
 
-        // Skip the first line.
-        fgets($handle);
-
-        try {
-            // Read each subsequent line of CSV until EOF.
-            while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
-                if (count($data) !== $numheaders) {
-                    throw new moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface');
-                }
-                // Trim any surrounding single quotes.
-                foreach ($data as &$field) {
-                    $field = trim($field, "'");
-                }
-                yield array_combine($headers, $data);
-            }
-        } finally {
-            // Close the file.
+        if (empty($headerline)) {
             fclose($handle);
+            throw new moodle_exception(
+                'error:bookingsuploadfileheaderfieldmismatch',
+                'mod_facetoface',
+                get_string('error:noheaderrow', 'facetoface')
+            );
+        }
+
+        $requiredheaders = self::get_headers();
+        foreach ($requiredheaders as $required) {
+            if (in_array($required, $headerline, true)) {
+
+                continue;
+            }
+
+            // Handle error case.
+            fclose($handle);
+            throw new moodle_exception(
+                'error:missingrequiredcolumn',
+                'mod_facetoface',
+                $required
+            );
+        }
+
+        while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
+            if (count($data) !== count($headerline)) {
+                throw new moodle_exception(
+                    'error:bookingsuploadfileheaderfieldmismatch',
+                    'facetoface');
+            }
+
+            yield array_combine($headerline, $data);
         }
     }
 

@@ -151,6 +151,9 @@ $string['error:sessionalreadystarted'] = 'Unable to use session {$a}, as it whic
 $string['error:userisnotenrolledintocourse'] = 'User {$a} is not enrolled into this course.';
 $string['error:bookingsuploadfileerrorsfound'] = '{$a} errors were found in the uploaded file. Bookings cannot be processed until they are resolved.';
 $string['error:bookingsuploadfileheaderfieldmismatch'] = 'Mismatched number of fields in the uploaded file on row {$a}.';
+$string['error:noheaderrow'] = 'No header row found in the uploaded file.';
+$string['error:missingrequiredcolumn'] = 'Missing required column: {$a}';
+$string['error:invalidallowcancel'] = 'You must specify either "yes" or "no" for Allow Cancellations.';
 $string['error:sessionoverbooked'] = 'Session ID {$a->session} overbooked by {$a->amount} person(s).';
 $string['error:sessiondoesnotexist'] = 'Session ID {$a} does not exist';
 $string['error:userdoesnotexist'] = 'User {$a} does not exist';
@@ -865,7 +868,6 @@ $string['attendancecolumn:3'] = 'Org Unit';
 $string['attendancecolumn:4'] = 'Position';
 $string['attendancecolumn:5'] = 'Stream';
 $string['attendancecolumn:6'] = 'Paypoint';
-
 // Site wide bulk upload.
 $string['f2fbulksessions'] = 'Upload sessions';
 $string['facetoface:settings'] = 'Settings';
@@ -900,3 +902,58 @@ Custom field value|Optional
 ";
 $string['error:choosecsv'] = 'Please choose a CSV file before continuing.';
 $string['error:bulkuploadfileerrorsfound'] = 'There were {$a} errors found in your CSV file.';
+
+
+// Bulk Upload Sessions.
+$string['facetoface:uploadbulksessions'] = 'Upload Bulk Sessions';
+$string['facetoface:uploadsessionfile'] = 'Upload Bulk Session CSV File';
+$string['facetoface:uploadandpreviewbulk'] = 'Upload & Preview Bulk Sessions';
+$string['facetoface:bulkuploadsuccess'] = 'Bulk sessions uploaded successfully.';
+$string['facetoface:confirmbulkpreview'] = 'Bulk Upload Preview';
+$string['facetoface:bulksessionsprocessed'] = 'Bulk sessions have been successfully processed.';
+$string['facetoface:validatebulksessions'] = 'Validate Bulk Sessions Upload';
+$string['error:bulkuploaderrors'] = 'Errors were found in the bulk upload file.';
+$string['error:missingstarttime'] = 'Start date and time is required.';
+$string['error:missingfinishtime'] = 'Finish date and time is required.';
+$string['error:failedtocreatesession'] = 'Failed to create session';
+$string['error:filenotloaded'] = 'File could not be loaded.';
+$string['error:invaliddatetimedata'] = 'Invalid Date Time data.';
+$string['error:bulkuploadfileerrorsfound'] = 'Errors were found in the uploaded file. Bookings cannot be processed until they are resolved.';
+$string['error:uploadsessionserrorsfound'] = 'Errors were found in the uploaded file. Sessions cannot be processed until they are resolved.';
+$string['error:couldnotsavecustomfieldshort'] = 'Could not save custom field with short name "{$a}"';
+$string['error:starttimeafterfinish'] = 'Start time must be before the finish time.';
+$string['error:invalidcapacity'] = 'Capacity must be a positive number.';
+$string['error:invalidallowoverbook'] = 'Allow overbookings must be "yes" or "no".';
+$string['error:invalidduration'] = 'Duration must be a positive number.';
+$string['error:invalidnormalcost'] = 'Normal cost must be a valid number.';
+$string['error:invaliddiscountcost'] = 'Discount cost must be a valid number.';
+$string['error:failedtocreatedates'] = 'Failed to create dates for session #{$a}';
+$string['examplecsv'] = 'example.csv';
+$string['error:invalidstarttime'] = 'Start date/time is invalid: {$a->date} {$a->time}';
+$string['error:invalidfinishtime'] = 'Finish date/time is invalid: {$a->date} {$a->time}';
+$string['eventcsvprocessedbulksession'] = 'Bulk session CSV processed';
+$string['csvuploadhelp:field'] = 'Field';
+$string['csvuploadhelp:requirement'] = 'Requirement';
+$string['csvuploadhelp:format'] = 'Format';
+$string['csvuploadhelp:fieldsessiondatetime'] = 'Session Date/Time Known';
+$string['csvuploadhelp:startdate'] = 'Start Date';
+$string['csvuploadhelp:starttime'] = 'Start Time';
+$string['csvuploadhelp:finishdate'] = 'Finish Date';
+$string['csvuploadhelp:finishtime'] = 'Finish Time';
+$string['csvuploadhelp:allowcancellations'] = 'Allow Cancellations';
+$string['csvuploadhelp:capacity'] = 'Capacity';
+$string['csvuploadhelp:allowoverbookings'] = 'Allow Overbookings';
+$string['csvuploadhelp:duration'] = 'Duration';
+$string['csvuploadhelp:cost'] = 'Normal Cost';
+$string['csvuploadhelp:discount'] = 'Discount Cost';
+$string['csvuploadhelp:details'] = 'Details';
+$string['csvuploadhelp:customfield'] = 'Customfield_&lt;shortname&gt;';
+$string['csvuploadhelp:yesorno'] = 'Yes or No';
+$string['csvuploadhelp:required'] = 'Required';
+$string['csvuploadhelp:optional'] = 'Optional';
+$string['csvuploadhelp:date'] = 'DD/MM/YYYY';
+$string['csvuploadhelp:time'] = 'HH:MM';
+$string['csvuploadhelp:num'] = 'Number';
+$string['csvuploadhelp:mins'] = 'Minutes';
+$string['csvuploadhelp:text'] = 'Text';
+$string['f2fcsvline'] = 'CSV line';
