@@ -182,7 +182,6 @@ class bulk_session_manager {
         }
 
         foreach ($this->records as $index => $record) {
-            // Trim all fields first.
             foreach ($record as $key => $value) {
                 $record[$key] = trim($value);
             }

@@ -21,6 +21,8 @@ use Generator;
 use DateTime;
 use context_user;
 use moodle_url;
+use stored_file;
+use stdClass;
 
 /**
  * Manages bulk session creation for Face-to-Face module sitewide.
@@ -39,11 +41,14 @@ class site_bulk_manager {
     /** @var array Validation errors */
     private $errors = [];
 
-    /** @var bool $Indicates whether records are being loaded */
-    private $usefile = false;
+    /** @var bool Indicates whether a file is used */
+    private bool $usefile = false;
 
-    /** @var file object containing CSV data. */
-    private $file = null;
+    /** @var stored_file|null Reference to uploaded file */
+    private ?stored_file $file = null;
+
+     /** @var bool Will ignore case when matching users */
+     private $caseinsensitive = false;
 
     /**
      * Constructor.
@@ -84,22 +89,20 @@ class site_bulk_manager {
      */
     public static function get_headers():array {
         return [
-            'Course shortname',
-            'Face-to-face activity name',
-            'Session date/time known',
-            'Start date',
-            'Start time',
-            'Finish date',
-            'Finish time',
-            'allow cancelations',
+            'Course Shortname',
+            'Face-to-Face Activity Name',
+            'Session Date/Time Known',
+            'Start Date',
+            'Start Time',
+            'Finish Date',
+            'Finish Time',
+            'Allow Cancellations',
             'Capacity',
-            'Allow overbookings',
+            'Allow Overbookings',
             'Duration',
             'Normal Cost',
             'Discount Cost',
             'Details',
-            'customfield_shortname',
-            'customfield_value',
         ];
     }
 
@@ -145,29 +148,34 @@ class site_bulk_manager {
             throw new moodle_exception(
                 'error:missingrequiredcolumn',
                 'mod_facetoface',
+                new moodle_url('/mod/facetoface/sitebulkupload.php'),
                 $required
             );
         }
 
-        while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
-            if (count($data) !== count($headerline)) {
-                throw new moodle_exception(
-                    'error:bookingsuploadfileheaderfieldmismatch',
-                    'facetoface');
-            }
+        try {
+            while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
+                if (count($data) !== count($headerline)) {
+                    throw new moodle_exception(
+                        'error:bookingsuploadfileheaderfieldmismatch',
+                        'facetoface'
+                    );
+                }
 
-            yield array_combine($headerline, $data);
+                yield array_combine($headerline, $data);
+            }
+        } finally {
+            fclose($handle);
         }
     }
 
     /**
-     * Validate loaded CSV records.
-     * Ensures the data meets our minimum requirements to create Face-to-face sessions.
+     * Validates the loaded CSV records for required fields, types, etc.
+     * Use DB to match records.
      *
-     * @return array An array of error messages.
-     * @throws moodle_exception If data structure is unexpectedly invalid.
+     * @return array A list of validation errors.
      */
-    public function validate() {
+    public function validate(): array {
         global $DB;
 
         // If using a file, parse its contents into $this->records before validation.
@@ -175,96 +183,185 @@ class site_bulk_manager {
             $this->records = iterator_to_array($this->get_iterator());
         }
 
-        // Go through each row and check for missing or invalid data.
         foreach ($this->records as $index => $record) {
-            $record = array_map('trim', $record);
-
-            if (empty($record['Course shortname'])) {
-                $this->errors[] = [$index, get_string('error:missingcourseshortname', 'facetoface')];
-            }
-            if (empty($record['Face-to-face activity name'])) {
-                $this->errors[] = [$index, get_string('error:missingf2fname', 'facetoface')];
+            foreach ($record as $key => $value) {
+                $record[$key] = trim($value);
             }
 
-            // Look up the course shortname.
-            $shortname = $record['Course shortname'] ?? '';
-            if (!empty($shortname)) {
-                // Moodle uses $DB->sql_equal for case-sensitive or -insensitive matching.
-                $shortnamecondition = $DB->sql_equal('shortname', ':shortname', !$this->caseinsensitive);
-                $course = $DB->get_record_select('course', $shortnamecondition, ['shortname' => $shortname]);
-                if (!$course) {
-                    $this->errors[] = [$index, get_string('error:course_not_found', 'facetoface') . " ({$shortname})"];
-                }
+            $shortname = $record['Course Shortname'] ?? '';
+            $f2fname   = $record['Face-to-Face Activity Name'] ?? '';
+
+            if (empty($shortname)) {
+                $this->errors[] = [
+                    $index,
+                    get_string('error:missingcourseshortname', 'facetoface')
+                ];
+
+                continue;
             }
 
-            // Validate the Face-to-face activity name in the same course.
-            $f2fname = $record['Face-to-face activity name'] ?? '';
-            $f2frecord = null;
+            if (empty($f2fname)) {
+                $this->errors[] = [
+                    $index,
+                    get_string('error:missingf2fname', 'facetoface')
+                ];
+
+                continue;
+            }
+
+            $shortnamecondition = $DB->sql_equal('shortname', ':shortname', !$this->caseinsensitive);
+            $course = $DB->get_record_select('course', $shortnamecondition, ['shortname' => $shortname]);
+
+            if (!$course) {
+                $this->errors[] = [$index, get_string('error:course_not_found', 'facetoface', $shortname)];
+
+                continue;
+            }
 
             // Ensures $course->id might be undefined if $course is null, so fallback to 0 in that scenario.
             $courseid = $course ? $course->id : 0;
 
-            if (!empty($f2fname)) {
-                $f2frecord = $DB->get_record('facetoface', ['course' => $courseid, 'name'   => $f2fname
-                ]);
+            $f2frecord = $DB->get_record('facetoface', ['course' => $courseid, 'name' => $f2fname]);
 
-                if (!$f2frecord) {
-                    $this->errors[] = [$index, get_string('error:f2f_not_found', 'facetoface')
-                        . " (Course: {$shortname} | Name: {$f2fname})"
-                    ];
-                }
+            if (!$f2frecord) {
+                $this->errors[] = [$index, get_string(
+                        'error:f2f_not_found',
+                        'facetoface',
+                        (object)[
+                            'shortname' => $shortname,
+                            'f2fname'   => $f2fname
+                        ]
+                    )
+                ];
+
+                continue;
             }
 
-            // Validate date/time fields.
-            if (empty($record['Start date']) || empty($record['Start time'])) {
-                $this->errors[] = [ $index, get_string('error:missingstarttime', 'facetoface')];
-            } else {
-                // Attempt to parse the date/time string using the format 'd/m/Y H:i'.
-                 $datetime = DateTime::createFromFormat(
-                     'd/m/Y H:i', $record['Start date'] . ' ' . $record['Start time']
-                 );
-                if (!$datetime) {
-                    $this->errors[] = [ $index, get_string('error:invalidstarttime', 'facetoface')
-                    . ": {$record['Start date']} {$record['Start time']}"];
-                }
+            // Start Date + Time.
+            if (
+                empty($record['Start Date']) ||
+                empty($record['Start Time'])
+            ) {
+                $this->errors[] = [$index, get_string('error:missingstarttime', 'facetoface')];
+
+                continue;
             }
 
-            if (empty($record['Finish date']) || empty($record['Finish time'])) {
-                $this->errors[] = [ $index, get_string('error:missingfinishtime', 'facetoface')];
-            } else {
-                $datetime = DateTime::createFromFormat(
-                    'd/m/Y H:i',
-                    $record['Finish date'] . ' ' . $record['Finish time']
-                );
-                if (!$datetime) {
-                    $this->errors[] = [
-                        $index,
-                        get_string('error:invalidfinishtime', 'facetoface') .
-                        ": {$record['Finish date']} {$record['Finish time']}"
-                    ];
-                }
+            $startdt = DateTime::createFromFormat('d/m/Y H:i', $record['Start Date'] . ' ' . $record['Start Time']);
+            if (!$startdt) {
+                $params = (object)[
+                    'date' => $record['Start Date'],
+                    'time' => $record['Start Time'],
+                ];
+
+                $this->errors[] = [
+                    $index,
+                    get_string('error:invalidstarttime', 'facetoface', $params),
+                ];
+
+                continue;
             }
 
-            // Validate numeric fields.
-            if (!isset($record['Capacity']) || !is_numeric($record['Capacity']) || (int)$record['Capacity'] <= 0) {
+            // If valid, store the combined date/time back into $record.
+            $record['Start Date and Time'] = $startdt->format('Y-m-d H:i');
+
+            // Finish Date + Time.
+            if (
+                empty($record['Finish Date']) ||
+                empty($record['Finish Time'])
+            ) {
+                $this->errors[] = [$index, get_string('error:missingfinishtime', 'facetoface')];
+
+                continue;
+            }
+
+            $finishdt = DateTime::createFromFormat('d/m/Y H:i', $record['Finish Date'].' '.$record['Finish Time']);
+            if (!$finishdt) {
+                $params = (object)[
+                    'date' => $record['Finish Date'],
+                    'time' => $record['Finish Time'],
+                ];
+
+                $this->errors[] = [
+                    $index,
+                    get_string('error:invalidfinishtime', 'facetoface', $params),
+                ];
+
+                continue;
+            }
+
+            $record['Finish Date and Time'] = $finishdt->format('Y-m-d H:i');
+
+            // Ensure Start < Finish.
+            $starttime = strtotime($record['Start Date and Time']);
+            $finishtime = strtotime($record['Finish Date and Time']);
+
+            if (
+                $starttime &&
+                $finishtime &&
+                $starttime >= $finishtime
+            ) {
+                $this->errors[] = [$index, get_string('error:starttimeafterfinish', 'facetoface')];
+
+                continue;
+            }
+
+            // Capacity (required).
+            if (
+                !isset($record['Capacity']) ||
+                !is_numeric($record['Capacity']) ||
+                (int)$record['Capacity'] <= 0
+            ) {
                 $this->errors[] = [$index, get_string('error:invalidcapacity', 'facetoface')];
-            }
-            if (!isset($record['Duration']) || !is_numeric($record['Duration']) || (int)$record['Duration'] <= 0) {
-                $this->errors[] = [$index, get_string('error:invalidduration', 'facetoface')];
-            }
-            if (!empty($record['Normal Cost']) && !is_numeric($record['Normal Cost'])) {
-                $this->errors[] = [$index, get_string('error:invalidnormalcost', 'facetoface')];
-            }
-            if (!empty($record['Discount Cost']) && !is_numeric($record['Discount Cost'])) {
-                $this->errors[] = [$index, get_string('error:invaliddiscountcost', 'facetoface')];
+
+                continue;
             }
 
-            // Validate yes/no fields for 'allow cancelations' and 'Allow overbookings'.
-            if (!in_array(strtolower($record['allow cancelations'] ?? ''), ['yes', 'no'], true)) {
-                $this->errors[] = [$index, get_string('error:invalidallowcancel', 'facetoface')];
+            // Duration (required).
+            if (
+                !isset($record['Duration']) ||
+                !is_numeric($record['Duration']) ||
+                (int)$record['Duration'] <= 0
+            ) {
+                $this->errors[] = [$index, get_string('error:invalidduration', 'facetoface')];
+
+                continue;
             }
-            if (!in_array(strtolower($record['Allow overbookings'] ?? ''), ['yes', 'no'], true)) {
+
+            // Normal Cost (optional).
+            if (
+                !empty($record['Normal Cost']) &&
+                !is_numeric($record['Normal Cost'])
+            ) {
+                $this->errors[] = [$index, get_string('error:invalidnormalcost', 'facetoface')];
+
+                continue;
+            }
+
+            // Discount Cost (optional).
+            if (
+                !empty($record['Discount Cost']) &&
+                !is_numeric($record['Discount Cost'])
+            ) {
+                $this->errors[] = [$index, get_string('error:invaliddiscountcost', 'facetoface')];
+
+                continue;
+            }
+
+            // Allow Cancellations (required, "yes" or "no").
+            $allowcancel = strtolower($record['Allow Cancellations'] ?? '');
+            if (!in_array($allowcancel, ['yes', 'no'], true)) {
+                $this->errors[] = [$index, get_string('error:invalidallowcancel', 'facetoface')];
+
+                continue;
+            }
+
+            // Allow Overbookings (required, "yes" or "no").
+            $allowover = strtolower($record['Allow Overbookings'] ?? '');
+            if (!in_array($allowover, ['yes', 'no'], true)) {
                 $this->errors[] = [$index, get_string('error:invalidallowoverbook', 'facetoface')];
+
+                continue;
             }
         }
         return $this->errors;
@@ -276,15 +373,20 @@ class site_bulk_manager {
      *
      * @return bool true on success, false if any errors occurred
      */
-    public function process() {
+    public function process():bool {
         global $DB;
 
-        // Iterate over each record and build session data object.
-        foreach ($this->records as $record) {
-            $session = new \stdClass();
+        $allcustomfields = facetoface_get_session_customfields();
+        $customfieldsbyshortname = [];
 
-            // Look up the course.
-            $shortname = trim($record['Course shortname']);
+        foreach ($allcustomfields as $field) {
+            $customfieldsbyshortname[$field->shortname] = $field;
+        }
+
+        foreach ($this->records as $record) {
+            $session = new stdClass();
+
+            $shortname = trim($record['Course Shortname']);
             $shortnamecondition = $DB->sql_equal('shortname', ':shortname', !$this->caseinsensitive);
 
             $course = $DB->get_record_select(
@@ -294,14 +396,14 @@ class site_bulk_manager {
             );
 
             if (!$course) {
-                // If can't find the course, append an error and skip processing this record.
-                $this->errors[] = get_string('error:course_not_found', 'facetoface') . " ({$shortname})";
+                $this->errors[] = get_string('error:course_not_found', 'facetoface', $shortname);
+
                 continue;
             }
 
             // Look up the specific Face-to-face activity record.
             $courseid = $course->id;
-            $f2fname = trim($record['Face-to-face activity name']);
+            $f2fname = trim($record['Face-to-Face Activity Name']);
             $namecondition = $DB->sql_equal('name', ':f2fname', !$this->caseinsensitive);
             $where = $namecondition . ' AND course = :courseid';
             $params = [
@@ -312,95 +414,148 @@ class site_bulk_manager {
             $f2frecord = $DB->get_record_select('facetoface', $where, $params);
 
             if (!$f2frecord) {
-                // If no matching Face-to-face record an error and skip.
-                $this->errors[] = get_string('error:f2f_not_found', 'facetoface')
-                    . " (Course: {$shortname} | F2F Name: {$f2fname})";
+                $this->errors[] = get_string('error:f2f_not_found', 'facetoface', (object)[
+                    'shortname' => $shortname,
+                    'f2fname'   => $f2fname
+                ]);
+
                 continue;
             }
 
-            // Build session data object.
             $session->facetoface = $f2frecord->id;
-            $session->datetimeknown = isset($record['Session date/time known'])
-                ? ($record['Session date/time known'] === 'no' ? 0 : 1)
-                : 1;
 
-            // Session date/time known determines whether we have a definite schedule or not.
-            $session->starttime = (!empty($record['Start date']) && !empty($record['Start time']))
-                ? strtotime(str_replace('/', '-', $record['Start date'].' '.$record['Start time']))
-                : null;
-
-            // Parse start/finish times if provided.
-            $session->finishtime = (!empty($record['Finish date']) && !empty($record['Finish time']))
-                ? strtotime(str_replace('/', '-', $record['Finish date'].' '.$record['Finish time']))
-                : null;
-
-            // If datetimeknown is true, ensure both start and finish times are valid.
-            if ($session->datetimeknown && (empty($session->starttime) || empty($session->finishtime))) {
-                $this->errors[] = get_string('error:invaliddatetimedata', 'facetoface');
+            $session->datetimeknown = 1;
+            if (
+                !empty($record['Session Date/Time Known']) &&
+                $record['Session Date/Time Known'] === 'no'
+            ) {
+                $session->datetimeknown = 0;
             }
 
-            // Convert yes/no to 1/0 for allowcancel and overbook fields.
-            $session->allowcancel = isset($record['allow cancelations'])
-                ? ($record['allow cancelations'] === 'no' ? 0 : 1)
-                : 1;
+            $session->starttime = null;
+            if (
+                !empty($record['Start Date']) &&
+                !empty($record['Start Time'])
+            ) {
+                $session->starttime = strtotime(str_replace('/', '-', $record['Start Date'].' '.$record['Start Time']));
+            }
 
-             // Defaults to 10 if capacity is empty or not set.
-            $session->capacity = !empty($record['Capacity'])
-                ? (int) $record['Capacity']
-                : 10;
+            $session->finishtime = null;
+            if (
+                !empty($record['Finish Date']) &&
+                !empty($record['Finish Time'])
+            ) {
+                $session->finishtime = strtotime(str_replace('/', '-', $record['Finish Date'].' '.$record['Finish Time']));
+            }
 
-            $session->overbook = isset($record['Allow overbookings'])
-                ? ($record['Allow overbookings'] === 'no' ? 0 : 1)
-                : 1;
+            if (
+                $session->datetimeknown &&
+                (empty($session->starttime) ||
+                empty($session->finishtime))
+            ) {
+                $this->errors[] = get_string('error:invaliddatetimedata', 'facetoface');
+                continue;
+            }
 
-            // Convert the duration to an integer.
-            $session->duration = (isset($record['Duration']) && is_numeric($record['Duration']))
-                ? (int) $record['Duration']
-                : 0;
+            $session->allowcancel = 1;
+            if (
+                !empty($record['Allow Cancellations']) &&
+                $record['Allow Cancellations'] === 'no'
+            ) {
+                $session->allowcancel = 0;
+            }
 
-            // Optional cost fields (could be numeric or empty).
-            $session->normalcost = isset($record['Normal Cost'])
-                ? $record['Normal Cost']
-                : null;
+            $session->capacity = 10;
+            if (
+                !empty($record['Capacity']) &&
+                is_numeric($record['Capacity'])
+            ) {
+                $session->capacity = (int)$record['Capacity'];
+            }
 
-            // Optional cost fields.
-            $session->discountcost = isset($record['Discount Cost'])
-                ? $record['Discount Cost']
-                : null;
+            $session->overbook = 1;
+            if (
+                !empty($record['Allow Overbookings']) &&
+                $record['Allow Overbookings'] === 'no'
+            ) {
+                $session->overbook = 0;
+            }
 
-            // Optional details field.
-            $session->details = !empty($record['Details'])
-                ? $record['Details']
-                : '';
+            $session->duration = 0;
+            if (
+                !empty($record['Duration']) &&
+                is_numeric($record['Duration'])
+            ) {
+                $session->duration = (int)$record['Duration'];
+            }
 
-            // Handle custom fields.
-            // If we have a custom field shortname and a value, store it in $session->customfields.
-            if (!empty($record['customfield_shortname']) && isset($record['customfield_value'])) {
-                $session->customfields = [
-                    $record['customfield_shortname'] => $record['customfield_value'],
-                ];
+            $session->normalcost = null;
+            if (
+                !empty($record['Normal Cost']) &&
+                is_numeric($record['Normal Cost'])
+            ) {
+                $session->normalcost = $record['Normal Cost'];
+            }
+
+            $session->discountcost = null;
+            if (
+                !empty($record['Discount Cost']) &&
+                is_numeric($record['Discount Cost'])
+            ) {
+                $session->discountcost = $record['Discount Cost'];
+            }
+
+            $session->details = '';
+            if (
+                !empty($record['Details']) &&
+                is_string($record['Details'])
+            ) {
+                $session->details = $record['Details'];
             }
 
             $session->timecreated = time();
+            $session->timemodified = time();
 
-            // Insert new session into facetoface_sessions table.
             $sessionid = $DB->insert_record('facetoface_sessions', $session);
             if (!$sessionid) {
-                // If the insert fails, record the error and continue to the next record.
-                $this->errors[] = get_string('error:failedtocreatesession', 'facetoface')
-                    . ' (' . implode(', ', $record) . ')';
+                $this->errors[] = get_string('error:failedtocreatesession', 'facetoface');
+
                 continue;
             }
 
             // Insert session dates.
-            $sessionsdate = new \stdClass();
+            $sessionsdate = new stdClass();
             $sessionsdate->sessionid = $sessionid;
             $sessionsdate->timestart = $session->starttime;
             $sessionsdate->timefinish = $session->finishtime;
+            $sessionsdateid = $DB->insert_record('facetoface_sessions_dates', $sessionsdate);
 
-            if (!$DB->insert_record('facetoface_sessions_dates', $sessionsdate)) {
-                $this->errors[] = get_string('error:failedtoinsertdates', 'facetoface')
-                    . " for session ID {$sessionid}";
+            if (!$sessionsdateid) {
+                $this->errors[] = get_string('error:failedtocreatedates', 'facetoface', $sessionid);
+
+                continue;
+            }
+
+            foreach ($record as $column => $value) {
+                // If the column does not start with "Customfield_", skip it.
+                if (strpos($column, 'Customfield_') !== 0) {
+                    continue;
+
+                }
+
+                $shortname = substr($column, strlen('Customfield_'));
+
+                // If we don’t have a matching custom field for $shortname, skip it.
+                if (!isset($customfieldsbyshortname[$shortname])) {
+
+                    continue;
+                }
+
+                // Otherwise, save the custom field.
+                $field = $customfieldsbyshortname[$shortname];
+                if (!facetoface_save_customfield_value($field->id, $value, $sessionid, 'session')) {
+                    $this->errors[] = get_string('error:couldnotsavecustomfieldshort', 'facetoface', $shortname);
+                }
             }
         }
 
@@ -413,28 +568,21 @@ class site_bulk_manager {
      *
      * @return array array of error messages
      */
-    public function get_errors() {
+    public function get_errors():array {
         return $this->errors;
     }
 
     /**
-     * Retrieves parsed CSV records. If $this->usefile is true,
-     * this will parse the CSV via iterator.
+     * Retrieves the CSV records after they've been loaded.
+     * If a file is used, it will parse and return the data.
+     *
      * @return array
      */
-    public function get_records() {
-        // If using a file, parse it once and convert the entire iterator to an array.
+    public function get_records():array {
         if ($this->usefile) {
             $this->records = iterator_to_array($this->get_iterator());
         }
         return $this->records;
-    }
-
-    /**
-     * Suppress confirmation emails.
-     */
-    public function suppress_email() {
-        $this->suppressemail = true;
     }
 
     /**
