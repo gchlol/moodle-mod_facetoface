@@ -162,7 +162,6 @@ class bulk_session_manager {
                         'facetoface'
                     );
                 }
-
                 yield array_combine($headerline, $data);
             }
         } finally {
