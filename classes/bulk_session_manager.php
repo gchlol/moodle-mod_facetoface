@@ -155,14 +155,18 @@ class bulk_session_manager {
             );
         }
 
-        while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
-            if (count($data) !== count($headerline)) {
-                throw new moodle_exception(
-                    'error:bookingsuploadfileheaderfieldmismatch',
-                    'facetoface');
+        try {
+            while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
+                if (count($data) !== count($headerline)) {
+                    throw new moodle_exception(
+                        'error:bookingsuploadfileheaderfieldmismatch',
+                        'facetoface'
+                    );
+                }
+                yield array_combine($headerline, $data);
             }
-
-            yield array_combine($headerline, $data);
+        } finally {
+            fclose($handle);
         }
     }
 
