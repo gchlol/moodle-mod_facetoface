@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Handles bulk session uploads for the Face-to-Face module site level.
+ * Manages CSV validation, preview, and session creation.
  * @package   mod_facetoface
  * @copyright 2025, Gold Coast Health
  * @author    Jonas Sajonas
@@ -29,6 +31,7 @@ use core\output\notification;
 use mod_facetoface\form\site_bulk_session_upload_form;
 use mod_facetoface\form\site_bulk_session_confirm_form;
 use mod_facetoface\site_bulk_manager;
+use mod_facetoface\event\csv_processed_bulksession;
 
 // Set up the external admin page (in Site administration > Plugins > Face-to-face).
 admin_externalpage_setup('modfacetoface_sitebulkupload');
@@ -46,160 +49,155 @@ $PAGE->set_url('/mod/facetoface/sitebulkupload.php');
 $PAGE->set_title(get_string('f2fbulksessions', 'mod_facetoface'));
 $PAGE->set_heading(get_string('pluginname', 'mod_facetoface'));
 
-// If neither validate nor process is requested, we show the initial
-// form for uploading the CSV.
-if (!$validate && !$process) {
-    $mform = new site_bulk_session_upload_form(null, [
-        'validate' => 1
-    ]);
+/**
+ * Utility function to display bulk-upload errors and then stop execution.
+ *
+ * @param array $errors A list of errors (each error can be a simple string
+ *                      or an array of [lineNumber, message...]).
+ * @return void
+ */
+function display_bulk_upload_errors(array $errors): void {
+    global $OUTPUT;
 
     echo $OUTPUT->header();
-    $mform->display();
+    echo $OUTPUT->notification(
+        get_string('error:uploadsessionserrorsfound', 'mod_facetoface', count($errors)),
+        notification::NOTIFY_ERROR
+    );
+
+    $table = new html_table();
+    $table->attributes['class'] = 'f2fbookingsuploadlist m-auto generaltable mb-2';
+    $table->head = [
+        get_string('f2fcsvline', 'mod_facetoface'),
+        get_string('status', 'mod_facetoface'),
+    ];
+
+    foreach ($errors as $error) {
+        if (
+            !is_array($error) ||
+            count($error) < 2
+        ) {
+            $table->data[] = ["-", is_string($error) ? $error : json_encode($error)];
+
+            continue;
+        }
+
+        $line = $error[0];
+        $messages = array_slice($error, 1);
+
+        foreach ($messages as $message) {
+            $table->data[] = [$line, $message];
+        }
+    }
+
+    echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
     echo $OUTPUT->footer();
+
     exit;
 }
 
-// If 'validate' is requested, that means the user has just submitted the CSV file
-// and we need to parse it, check for errors, and then show a confirmation preview.
 if ($validate) {
-    $mform = new site_bulk_session_upload_form();
-    $data  = $mform->get_data();
+    $uploadform = new site_bulk_session_upload_form();
+    $data  = $uploadform->get_data();
 
-    // If no data or missing CSV file, show an error and redisplay the form.
-    if (!$data  || empty($data->csvfile)) {
-        echo $OUTPUT->header();
-        echo $OUTPUT->notification(get_string('error:choosecsv', 'mod_facetoface'), 'error');
-        $mform->display();
-        echo $OUTPUT->footer();
+    if ($uploadform->is_cancelled()) {
+        redirect(new moodle_url('/mod/facetoface/sitebulkupload.php'));
+
         exit;
     }
 
-    // Retrieve the stored file ID from upload form submission.
     $fileid = $data->csvfile ?: 0;
+
     $confirmform = new site_bulk_session_confirm_form(null, [
         'fileid' => $fileid,
         'caseinsensitive' => $caseinsensitive,
         'process' => 1
     ]);
 
-    // Prepare the bulk manager to validate the CSV data.
     $manager = new site_bulk_manager();
     $manager->load_from_file($fileid);
     $manager->set_case_insensitive($caseinsensitive);
     $errors = $manager->validate();
 
-    // If validation errors exist, display them and stop.
+    // If there are errors, handle them and exit.
     if (!empty($errors)) {
-        echo $OUTPUT->header();
-        echo $OUTPUT->notification(
-            get_string('error:bulkuploadfileerrorsfound', 'mod_facetoface', count($errors)),
-            notification::NOTIFY_ERROR
-        );
-
-        // Build a table to list all encountered errors.
-        $table = new html_table();
-        $table->attributes['class'] = 'f2fbookingsuploadlist generaltable mb-2';
-        $table->head = [
-            get_string('uucsvline', 'tool_uploaduser'),
-            get_string('status', 'facetoface')
-        ];
-
-        // Populate the table rows with error details.
-        foreach ($errors as $error) {
-            if (is_array($error) && count($error) >= 2) {
-                $line     = $error[0];
-                $messages = array_slice($error, 1);
-                foreach ($messages as $msg) {
-                    $table->data[] = [$line, $msg];
-                }
-            } else {
-                $table->data[] = ['-', is_string($error) ? $error : json_encode($error)];
-            }
-        }
-        echo html_writer::table($table);
-
-        // Provide a link back to the initial upload page.
-        echo html_writer::tag('p',
-        html_writer::link(
-            new moodle_url('/mod/facetoface/sitebulkupload.php'),
-            get_string('back')
-        )
-        );
-        echo $OUTPUT->footer();
-        exit;
+        handle_bulk_upload_errors($errors);
     }
 
-    // If no errors, retrieve the valid records for preview.
-    $records = $manager->get_records();
-
+     // If no errors, display the CSV preview.
     echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string('facetoface:confirmbulkpreview', 'mod_facetoface'), 3);
+    echo $OUTPUT->heading(get_string('facetoface:confirmbulkpreview', 'facetoface'), 3);
 
-    // Display a confirmation table of the records to be processed.
+    $records = $manager->get_records();
+    if (empty($records)) {
+        echo $OUTPUT->notification(get_string('facetoface:norecordsfound', 'facetoface'), 'info');
+    }
+
+    // If validation errors exist, display them and stop.
     if (!empty($records)) {
         $table = new html_table();
-        $table->attributes['class'] = 'f2fconfirmuploadlist generaltable mb-2';
-        $table->head = $manager->get_headers();
+        $table->attributes['class'] = 'f2fconfirmuploadlist m-auto generaltable mb-2';
+
+        $firstrecord = reset($records);
+        $headers = array_keys($firstrecord);
+
+        $table->head = $headers;
 
         foreach ($records as $record) {
-            $table->data[] = array_values($record);
+            $rowdata = [];
+            foreach ($headers as $h) {
+                $rowdata[] = $record[$h] ?? '';
+            }
+            $table->data[] = $rowdata;
         }
-        echo html_writer::table($table);
-    } else {
-        // If there are no valid records, show a notification instead.
-        echo $OUTPUT->notification(
-            get_string('facetoface:norecordsfound', 'mod_facetoface'),
-            notification::NOTIFY_INFO
-        );
+
+        echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
     }
 
     $confirmform->display();
+
     echo $OUTPUT->footer();
+
     exit;
 }
 
-// If 'process' is requested and we have a valid file ID,
-// this means the user confirmed the preview and now we do the final processing.
-if ($process && $fileid) {
-    // Load the manager again to process the file data.
+if (
+    $process &&
+    $fileid
+) {
     $manager = new site_bulk_manager();
     $manager->load_from_file($fileid);
     $manager->set_case_insensitive($caseinsensitive);
-
-    // Recreate the confirmation form to safely capture any final data (e.g., suppression of emails).
     $confirmform = new site_bulk_session_confirm_form();
 
-    // If the user has cancelled on the confirmation form, return to the main page.
     if ($confirmform->is_cancelled()) {
         redirect(new moodle_url('/mod/facetoface/sitebulkupload.php'));
+
+        exit;
     }
 
-    // Handle any form data (e.g., if email suppression was requested).
     $confirmdata = $confirmform->get_data();
-    if (!empty($confirmdata->suppressemail)) {
-        $manager->suppress_email();
-    }
-
-    // Validate once more (safety check) before processing.
     $errors = $manager->validate();
 
-    // Process data and redirect back with a success message.
     if (empty($errors)) {
         $manager->process();
+
+        $params = [
+            'context'  => $modulecontext,
+            'objectid' => $f2fid,
+        ];
+
+        $event = csv_processed_bulksession::create($params);
+        $event->add_record_snapshot('facetoface', $facetoface);
+        $event->trigger();
+
         redirect(
-            new moodle_url('/mod/facetoface/sitebulkupload.php'),
-            get_string('f2fbulksessionsdone', 'mod_facetoface'),
+            new moodle_url('/mod/facetoface/uploadbulksessions.php'),
+            get_string('facetoface:bulksessionsprocessed', 'mod_facetoface'),
             null,
             notification::NOTIFY_SUCCESS
         );
-    } else {
-        // If errors occur on the final pass, redirect with an error message.
-        $errmsg = get_string('error:bulkuploadfileerrorsfound', 'mod_facetoface', count($errors));
-        redirect(
-            new moodle_url('/mod/facetoface/sitebulkupload.php'),
-            $errmsg,
-            null,
-            notification::NOTIFY_ERROR
-        );
     }
+
+    handle_bulk_upload_errors($errors);
 }

@@ -590,7 +590,7 @@ class site_bulk_manager {
      *
      * @param bool $value
      */
-    public function set_case_insensitive(bool $value) {
+    public function set_case_insensitive(bool $value):void {
         $this->caseinsensitive = $value;
     }
 }

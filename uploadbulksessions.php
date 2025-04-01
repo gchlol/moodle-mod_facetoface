@@ -73,7 +73,7 @@ $uploadform = new bulk_session_upload_form(null, ['f2fid' => $f2fid]);
  * @param array $errors An array of errors to display.
  * @return void
  */
-function handle_bulk_upload_errors($errors):void {
+function handle_bulk_upload_errors(array $errors):void {
     global $OUTPUT;
 
     echo $OUTPUT->header();
@@ -129,7 +129,6 @@ if ($validate) {
 
     $manager = new bulk_session_manager($f2fid);
     $manager->load_from_file($fileid);
-
     $errors = $manager->validate();
 
     // If there are errors, handle them and exit.
@@ -166,7 +165,6 @@ if ($validate) {
         echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
     }
 
-    // Display the confirm form.
     $confirmform->display();
 
     echo $OUTPUT->footer();
@@ -181,7 +179,6 @@ if (
 ) {
     $manager = new bulk_session_manager($f2fid);
     $manager->load_from_file($fileid);
-
     $confirmform = new bulk_session_confirm_form(null, ['f2fid' => $f2fid, 'fileid' => $fileid]);
 
     if ($confirmform->is_cancelled()) {
