@@ -85,7 +85,7 @@ function handle_bulk_upload_errors($errors):void {
     $table = new html_table();
     $table->attributes['class'] = 'f2fbookingsuploadlist m-auto generaltable mb-2';
     $table->head = [
-        get_string('f2fcsvline', 'mod_facetoface'),
+        get_string('facetoface:csvline', 'mod_facetoface'),
         get_string('status', 'mod_facetoface'),
     ];
 
@@ -117,7 +117,7 @@ if ($validate) {
     $uploaddata = $uploadform->get_data();
 
     if ($uploadform->is_cancelled()) {
-        redirect(new moodle_url('/mod/facetoface/view.php', ['f2fid' => $f2fid]));
+        redirect(new moodle_url('/mod/facetoface/view.php', ['id' => $cm->id]));
 
         exit;
     }
