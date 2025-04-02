@@ -24,42 +24,45 @@ use core\event\base;
  *
  * @package     mod_facetoface
  * @copyright   2025 Gold Coast Health
- * @author       Jonas Sajonas
- * @license       https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author        Jonas Sajonas
+ * @license        https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class csv_processed_bulksession extends base {
+class csv_processed_sitebulksession extends base {
+
 
     /**
-     * Init method.
+     * Ini method.
      *
      * @return void
      */
     protected function init(): void {
         $this->data['crud'] = 'r';
         $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
-        $this->data['objecttable'] = 'facetoface';
+        $this->data['objectatable'] = '';
+    }
+
+    /**
+     * Returns name of the event.
+     *
+     * @return string
+     */
+    public static function get_name(): string {
+        return get_string('eventcsvprocessedsitebulksession, mod_facetoface');
     }
 
     /**
      * Returns description of what happened.
      *
-     * @return string
+     * @returns string
      */
     public function get_description(): string {
-        return get_string('event_csv_processed_bulk_session_description', 'mod_facetoface', [
-            'userid'            => $this->userid,
-            'contextinstanceid' => $this->contextinstanceid
-        ]);
+        return get_string(
+            'eventcsvprocessedsitewidebulksessions_description',
+            'mod_facetoface',
+            $this->userid
+        );
     }
 
-    /**
-     * Return localised event name.
-     *
-     * @return string
-     */
-    public static function get_name(): string {
-        return get_string('eventcsvprocessedbulksession', 'mod_facetoface');
-    }
 
     /**
      * Get URL related to the action
@@ -67,20 +70,16 @@ class csv_processed_bulksession extends base {
      * @return moodle_url
      */
     public function get_url(): moodle_url {
-        return new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => $this->objectid]);
+        return new moodle_url('/mod/facetoface/sitebulkupload.php');
     }
 
     /**
-     * Custom validation.
+     * Custom validation
      *
      * @throws coding_exception
      * @return void
      */
-    protected function validate_data(): void {
+    protected function validate_date(): void {
         parent::validate_data();
-
-        if ($this->contextlevel != CONTEXT_MODULE) {
-            throw new coding_exception('Context level must be CONTEXT_MODULE.');
-        }
     }
 }

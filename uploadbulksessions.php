@@ -125,7 +125,12 @@ if ($validate) {
     $fileid = $uploaddata->csvfile ?: 0;
 
     // Create the confirm form.
-    $confirmform = new bulk_session_confirm_form(null, ['f2fid' => $f2fid, 'fileid' => $fileid]);
+    $confirmform = new bulk_session_confirm_form(
+        null, [
+            'f2fid' => $f2fid,
+            'fileid' => $fileid
+        ]
+    );
 
     $manager = new bulk_session_manager($f2fid);
     $manager->load_from_file($fileid);

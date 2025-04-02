@@ -31,7 +31,7 @@ use core\output\notification;
 use mod_facetoface\form\site_bulk_session_upload_form;
 use mod_facetoface\form\site_bulk_session_confirm_form;
 use mod_facetoface\site_bulk_manager;
-use mod_facetoface\event\csv_processed_bulksession;
+use mod_facetoface\event\csv_processed_sitebulksession;
 
 // Set up the external admin page (in Site administration > Plugins > Face-to-face).
 admin_externalpage_setup('modfacetoface_sitebulkupload');
@@ -39,15 +39,17 @@ admin_externalpage_setup('modfacetoface_sitebulkupload');
 // Require site configuration capability.
 require_capability('moodle/site:config', context_system::instance());
 
-// Retrieve parameters to determine script flow.
+$PAGE->set_url('/mod/facetoface/sitebulkupload.php');
+$PAGE->set_title(get_string('f2fbulksessions', 'mod_facetoface'));
+$PAGE->set_heading(get_string('pluginname', 'mod_facetoface'));
+
 $validate = optional_param('validate', 0, PARAM_INT);
 $process  = optional_param('process', 0, PARAM_INT);
 $fileid   = optional_param('fileid', 0, PARAM_INT);
 $caseinsensitive = optional_param('caseinsensitive', false, PARAM_BOOL);
 
-$PAGE->set_url('/mod/facetoface/sitebulkupload.php');
-$PAGE->set_title(get_string('f2fbulksessions', 'mod_facetoface'));
-$PAGE->set_heading(get_string('pluginname', 'mod_facetoface'));
+// Instantiate the upload form once.
+$uploadform = new site_bulk_session_upload_form();
 
 /**
  * Utility function to display bulk-upload errors and then stop execution.
@@ -68,7 +70,7 @@ function display_bulk_upload_errors(array $errors): void {
     $table = new html_table();
     $table->attributes['class'] = 'f2fbookingsuploadlist m-auto generaltable mb-2';
     $table->head = [
-        get_string('f2fcsvline', 'mod_facetoface'),
+        get_string('facetoface:csvline', 'mod_facetoface'),
         get_string('status', 'mod_facetoface'),
     ];
 
@@ -97,7 +99,6 @@ function display_bulk_upload_errors(array $errors): void {
 }
 
 if ($validate) {
-    $uploadform = new site_bulk_session_upload_form();
     $data  = $uploadform->get_data();
 
     if ($uploadform->is_cancelled()) {
@@ -108,11 +109,13 @@ if ($validate) {
 
     $fileid = $data->csvfile ?: 0;
 
-    $confirmform = new site_bulk_session_confirm_form(null, [
-        'fileid' => $fileid,
-        'caseinsensitive' => $caseinsensitive,
-        'process' => 1
-    ]);
+    $confirmform = new site_bulk_session_confirm_form(
+        null, [
+            'fileid' => $fileid,
+            'caseinsensitive' => $caseinsensitive,
+            'process' => 1
+        ]
+    );
 
     $manager = new site_bulk_manager();
     $manager->load_from_file($fileid);
@@ -168,7 +171,7 @@ if (
     $manager = new site_bulk_manager();
     $manager->load_from_file($fileid);
     $manager->set_case_insensitive($caseinsensitive);
-    $confirmform = new site_bulk_session_confirm_form();
+    $confirmform = new site_bulk_session_confirm_form(null, ['fileid' => $fileid]);
 
     if ($confirmform->is_cancelled()) {
         redirect(new moodle_url('/mod/facetoface/sitebulkupload.php'));
@@ -183,16 +186,14 @@ if (
         $manager->process();
 
         $params = [
-            'context'  => $modulecontext,
-            'objectid' => $f2fid,
+            'context' => context_system::instance(),
         ];
 
-        $event = csv_processed_bulksession::create($params);
-        $event->add_record_snapshot('facetoface', $facetoface);
+        $event = csv_processed_sitebulksession::create($params);
         $event->trigger();
 
         redirect(
-            new moodle_url('/mod/facetoface/uploadbulksessions.php'),
+            new moodle_url('/mod/facetoface/sitebulkupload.php'),
             get_string('facetoface:bulksessionsprocessed', 'mod_facetoface'),
             null,
             notification::NOTIFY_SUCCESS
