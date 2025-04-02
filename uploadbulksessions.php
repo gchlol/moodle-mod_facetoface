@@ -20,8 +20,8 @@
  *
  * @package     mod_facetoface
  * @copyright   2025 Gold Coast Health
- * @author      Jonas Sajonas
- * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author        Jonas Sajonas
+ * @license        https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once('../../config.php');
@@ -55,7 +55,7 @@ if (!$cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course
 
 require_course_login($course, true, $cm);
 
-$context       = context_course::instance($course->id);
+$context = context_course::instance($course->id);
 $modulecontext = context_module::instance($cm->id);
 require_capability('mod/facetoface:editsessions', $context);
 require_capability('mod/facetoface:uploadbulksessions', $context);
