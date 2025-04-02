@@ -46,7 +46,7 @@ class csv_processed_bulksession extends base {
      * @return string
      */
     public function get_description(): string {
-        return get_string('event_csv_processed_bulk_session_description', 'mod_facetoface', [
+        return get_string('eventcsvprocessedbulksessiondesc', 'mod_facetoface', [
             'userid'            => $this->userid,
             'contextinstanceid' => $this->contextinstanceid
         ]);

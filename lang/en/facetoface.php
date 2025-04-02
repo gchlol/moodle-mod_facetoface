@@ -932,9 +932,9 @@ $string['csvuploadhelp:field'] = 'Field';
 $string['csvuploadhelp:requirement'] = 'Requirement';
 $string['csvuploadhelp:format'] = 'Format';
 $string['eventcsvprocessedbulksession'] = 'Bulk session CSV processed';
-$string['eventcsvprocessedsitewidebulksessions_description'] =
+$string['eventcsvprocessedsitewidebulksessiondesc'] =
     'The user with id \'{$a}\' has processed a CSV file to create/update Face-to-Face sessions site-wide.';
-$string['event_csv_processed_bulk_session_description'] =
+$string['eventcsvprocessedbulksessiondesc'] =
     'The user with id \'{$a->userid}\' has processed an uploaded CSV file for bulk session bookings '
     . 'in the Face-to-Face instance with the course module id \'{$a->contextinstanceid}\'.';
 $string['csvuploadhelp:fieldsessiondatetime'] = 'Session Date/Time Known';
