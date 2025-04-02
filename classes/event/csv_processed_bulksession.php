@@ -24,8 +24,8 @@ use core\event\base;
  *
  * @package     mod_facetoface
  * @copyright   2025 Gold Coast Health
- * @author      Jonas Sajonas
- * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author        Jonas Sajonas
+ * @license        https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 class csv_processed_bulksession extends base {

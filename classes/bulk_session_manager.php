@@ -31,8 +31,8 @@ use stored_file;
  *
  * @package     mod_facetoface
  * @copyright   2025 Gold Coast Health
- * @author      Jonas Sajonas
- * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author        Jonas Sajonas
+ * @license        https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class bulk_session_manager {
     /** @var int Facetoface instance ID */
@@ -454,8 +454,8 @@ class bulk_session_manager {
             foreach ($record as $column => $value) {
                 // If the column does not start with "Customfield_", skip it.
                 if (strpos($column, 'Customfield_') !== 0) {
-                    continue;
 
+                    continue;
                 }
 
                 $shortname = substr($column, strlen('Customfield_'));
