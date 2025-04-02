@@ -31,8 +31,8 @@ require_once($CFG->dirroot.'/repository/lib.php');
  *
  * @package     mod_facetoface
  * @copyright   2025 Gold Coast Health
- * @author      Jonas Sajonas
- * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author       Jonas Sajonas
+ * @license       https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class bulk_session_upload_form extends moodleform {
     /**

@@ -27,8 +27,8 @@ require_once($CFG->libdir.'/formslib.php');
  *
  * @package   mod_facetoface
  * @copyright 2025, Gold Coast Health
- * @author    Jonas Sajonas
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author      Jonas Sajonas
+ * @license      http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class site_bulk_session_confirm_form extends moodleform {
 
@@ -42,15 +42,6 @@ class site_bulk_session_confirm_form extends moodleform {
 
         // Retrieve file ID from customdata, which references CSV file in draft.
         $fileid = $this->_customdata['fileid'] ?? 0;
-
-        // Checkbox to allow user to suppress email notifications.
-        $mform->addElement(
-            'advcheckbox',
-            'suppressemail',
-            get_string('suppressemail', 'facetoface')
-        );
-
-        $mform->setType('suppressemail', PARAM_BOOL);
 
         // Hidden element to store file ID and pass it to form submission.
         $mform->addElement('hidden', 'fileid', $fileid);

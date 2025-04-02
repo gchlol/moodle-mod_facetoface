@@ -368,6 +368,7 @@ class bulk_session_manager {
                 empty($session->finishtime))
             ) {
                 $this->errors[] = get_string('error:invaliddatetimedata', 'facetoface');
+
                 continue;
             }
 
