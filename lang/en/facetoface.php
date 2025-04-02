@@ -920,3 +920,6 @@ $string['csvuploadhelp:time'] = 'HH:MM';
 $string['csvuploadhelp:num'] = 'Number';
 $string['csvuploadhelp:mins'] = 'Minutes';
 $string['csvuploadhelp:text'] = 'Text';
+$string['eventcsvprocessedbulksessiondesc'] =
+    'The user with id \'{$a->userid}\' has processed an uploaded CSV file for bulk session bookings '
+    . 'in the Face-to-Face instance with the course module id \'{$a->contextinstanceid}\'.';

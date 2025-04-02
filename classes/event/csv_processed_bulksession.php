@@ -46,9 +46,11 @@ class csv_processed_bulksession extends base {
      *
      * @return string
      */
-    public function get_description():string {
-        return "The user with id '$this->userid' has processed an uploaded CSV file for bulk session bookings " .
-            "in the facetoface instance with the course module id '$this->contextinstanceid'.";
+    public function get_description(): string {
+        return get_string('eventcsvprocessedbulksessiondesc', 'mod_facetoface', [
+            'userid'            => $this->userid,
+            'contextinstanceid' => $this->contextinstanceid
+        ]);
     }
 
     /**
