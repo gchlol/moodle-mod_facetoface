@@ -31,8 +31,8 @@ use stored_file;
  *
  * @package     mod_facetoface
  * @copyright   2025 Gold Coast Health
- * @author      Jonas Sajonas
- * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author        Jonas Sajonas
+ * @license        https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class bulk_session_manager {
     /** @var int Facetoface instance ID */
@@ -107,7 +107,7 @@ class bulk_session_manager {
     }
 
     /**
-     * Provides a record iterator for CSV rows, either from memory or a file.
+     * Provides a record iterator for CSV rows, either from file.
      *
      * @return Generator Yields each CSV record as an associative array.
      */
@@ -452,8 +452,8 @@ class bulk_session_manager {
             foreach ($record as $column => $value) {
                 // If the column does not start with "Customfield_", skip it.
                 if (strpos($column, 'Customfield_') !== 0) {
-                    continue;
 
+                    continue;
                 }
 
                 $shortname = substr($column, strlen('Customfield_'));
@@ -482,6 +482,7 @@ class bulk_session_manager {
      * @return array A list of error entries.
      */
     public function get_errors():array {
+
         return $this->errors;
     }
 

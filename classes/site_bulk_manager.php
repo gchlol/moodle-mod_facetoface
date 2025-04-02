@@ -31,15 +31,15 @@ use stdClass;
  *
  * @package   mod_facetoface
  * @copyright 2025, Gold Coast Health
- * @author    Jonas Sajonas
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author      Jonas Sajonas
+ * @license      http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class site_bulk_manager {
     /** @var array Parsed CSV records */
-    private $records = [];
+    private array $records = [];
 
     /** @var array Validation errors */
-    private $errors = [];
+    private array $errors = [];
 
     /** @var bool Indicates whether a file is used */
     private bool $usefile = false;
@@ -107,7 +107,7 @@ class site_bulk_manager {
     }
 
     /**
-     * Provides a record iterator for CSV rows, either from memory or a file.
+     * Provides a record iterator for CSV rows, either from file.
      *
      * @return Generator Yields each CSV record as an associative array.
      */
@@ -161,7 +161,6 @@ class site_bulk_manager {
                         'facetoface'
                     );
                 }
-
                 yield array_combine($headerline, $data);
             }
         } finally {
@@ -582,6 +581,7 @@ class site_bulk_manager {
         if ($this->usefile) {
             $this->records = iterator_to_array($this->get_iterator());
         }
+
         return $this->records;
     }
 

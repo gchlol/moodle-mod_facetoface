@@ -202,3 +202,11 @@ if (
 
     handle_bulk_upload_errors($errors);
 }
+
+$uploadform->set_data(['validate' => 1]);
+
+echo $OUTPUT->header();
+
+$uploadform->display();
+
+echo $OUTPUT->footer();
