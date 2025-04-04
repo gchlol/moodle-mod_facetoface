@@ -101,7 +101,7 @@ class booking_manager_ext {
         return [
             'course',
             'facetofacename',
-            'email',
+            'username',
             'session',
             'status',
             'discountcode',
@@ -200,7 +200,7 @@ class booking_manager_ext {
                 if (!is_enrolled($coursecontext, $userid)) {
                     $rowerrors[] = [
                         $row,
-                        new lang_string('error:userisnotenrolledintocourse', 'mod_facetoface', $entry->email)
+                        new lang_string('error:userisnotenrolledintocourse', 'mod_facetoface', $entry->username)
                     ];
                 }
             }
@@ -224,12 +224,15 @@ class booking_manager_ext {
     }
 
     /**
-     * Finds users by email, respecting case-sensitivity as configured.
+     * Match users for a given username.
+     *
+     * @param string $fields to return
+     * @return array of users with specified fields
      */
-    private function match_users(string $email, string $fields): array {
+    private function match_users(string $username, string $fields): array {
         global $DB;
-        $equals = $DB->sql_equal('email', ':email', !$this->caseinsensitive);
-        return $DB->get_records_select('user', $equals, ['email' => $email], 'id', $fields);
+        $equals = $DB->sql_equal('username', 'username', !$this->caseinsensitive);
+        return $DB->get_records_select('user', $equals, ['username' => $username], 'id', $fields);
     }
 
     /**
@@ -385,19 +388,19 @@ class booking_manager_ext {
     }
 
     /**
-     * Check that exactly one user matches the given email
+     * Check that exactly one user matches the given username
      * and return the user’s ID if found.
      */
     private function check_user(\stdClass $entry, int $row): array {
         $errors = [];
         $userid = null;
 
-        // Attempt to find user(s) by email.
-        $userids = $this->match_users($entry->email, 'id');
+        // Attempt to find user(s) by username.
+        $userids = $this->match_users($entry->username, 'id');
         if (count($userids) > 1) {
-            $errors[] = [$row, new lang_string('error:multipleusersmatched', 'mod_facetoface', $entry->email)];
+            $errors[] = [$row, new lang_string('error:multipleusersmatched', 'mod_facetoface', $entry->username)];
         } else if (empty($userids)) {
-            $errors[] = [$row, new lang_string('error:userdoesnotexist', 'mod_facetoface', $entry->email)];
+            $errors[] = [$row, new lang_string('error:userdoesnotexist', 'mod_facetoface', $entry->username)];
         } else {
             // Exactly one user matched; store the user id.
             $userid = current($userids)->id;
@@ -466,15 +469,15 @@ class booking_manager_ext {
         global $DB;
 
         // Re-fetch user/session for safety.
-        $userrecord = current($this->match_users($entry->email, '*'));
+        $userrecord = current($this->match_users($entry->username, '*'));
         $session    = facetoface_get_session($entry->session);
 
         if (!$userrecord) {
             throw new \moodle_exception(
-                'error:usernotfoundbyemail',
+                'error:usernotfoundbyusername',
                 'mod_facetoface',
                 '',
-                (object)['email' => $entry->email]
+                (object)['username' => $entry->username]
             );
         }
         if (!$session) {
@@ -560,9 +563,9 @@ class booking_manager_ext {
         $attendees = facetoface_get_attendees($session->id);
         $found = null;
 
-        // Find the attendee record by email.
+        // Find the attendee record by username.
         foreach ($attendees as $attendee) {
-            if ($attendee->email === $entry->email) {
+            if ($attendee->username === $entry->username) {
                 $found = $attendee;
                 break;
             }
