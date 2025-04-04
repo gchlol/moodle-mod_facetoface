@@ -913,10 +913,10 @@ $string['facetoface:uploadbookingsextfiledesc'] = "
 Fields expected:
 - Course Shortname (Required)
 - Face-to-face activity name (required)
-- Email address (required)
+- Username (required)
 - Session number (required)
 - Discount code (optional)
-- Notification type (optional - valid options are 'email', 'ical', or 'both')
+- Notification type (optional - valid options are 'cancelled', 'booked', waitlisted, no_show, partially_attended, fully_attended)
 ";
 $string['uploadpreview'] = 'Preview';
 $string['error:coursenotfound'] = 'Course shortname \'{$a->course}\' not found (case-insensitive check: {$a->caseinsensitive})';
