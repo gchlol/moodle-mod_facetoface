@@ -237,7 +237,7 @@ $string['facetoface:uploadbookingsfiledesc'] = "
 Fields expected:
 - Username (required)
 - Session number (required)
-- Status (optional - valid options are 'booked', 'cancelled')
+- Status (optional - valid options are cancelled,  booked, waitlisted, no_show, partially_attended, and fully_attended)
 - Discount code (optional)
 - Notification type (optional - valid options are 'email', 'ical', or 'both')
 ";
@@ -915,8 +915,9 @@ Fields expected:
 - Face-to-face activity name (required)
 - Username (required)
 - Session number (required)
+- Status (optional - valid options are cancelled,  booked, waitlisted, no_show, partially_attended, and fully_attended)
 - Discount code (optional)
-- Notification type (optional - valid options are 'cancelled', 'booked', waitlisted, no_show, partially_attended, fully_attended)
+- Notification type (optional - valid options are 'email', 'ical', or 'both')
 ";
 $string['uploadpreview'] = 'Preview';
 $string['error:coursenotfound'] = 'Course shortname \'{$a->course}\' not found (case-insensitive check: {$a->caseinsensitive})';
@@ -925,4 +926,3 @@ $string['error:sessionwrongf2f'] = 'Session {$a->sessionid} does not belong to F
 $string['error:usernotfoundbyemail'] = 'User not found for email: {$a->email}';
 $string['error:sessionnotfoundbyid'] = 'Session not found for ID: {$a->sessionid}';
 $string['examplecsvfilename'] = 'example.csv';
-
