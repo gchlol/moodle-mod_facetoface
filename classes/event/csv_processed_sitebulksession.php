@@ -38,7 +38,7 @@ class csv_processed_sitebulksession extends base {
     protected function init(): void {
         $this->data['crud'] = 'r';
         $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
-        $this->data['objectatable'] = '';
+        $this->data['objecttable'] = 0;
     }
 
     /**
@@ -79,7 +79,7 @@ class csv_processed_sitebulksession extends base {
      * @throws coding_exception
      * @return void
      */
-    protected function validate_date(): void {
+    protected function validate_data(): void {
         parent::validate_data();
     }
 }

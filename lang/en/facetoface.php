@@ -870,6 +870,7 @@ $string['attendancecolumn:5'] = 'Stream';
 $string['attendancecolumn:6'] = 'Paypoint';
 // Site wide bulk upload.
 $string['facetoface:sitebulksessions'] = 'Upload sessions';
+$string['f2fbulksessions'] = 'Upload sessions';
 $string['facetoface:settings'] = 'Settings';
 $string['facetoface:sitebulkuploadheader'] = 'Upload Bulk Sessions';
 $string['examplecsv']            = 'Example CSV file';
@@ -914,6 +915,8 @@ $string['eventcsvprocessedsitebulksessiondesc'] =
 $string['eventcsvprocessedbulksessiondesc'] =
     'The user with id \'{$a->userid}\' has processed an uploaded CSV file for bulk session bookings '
     . 'in the Face-to-Face instance with the course module id \'{$a->contextinstanceid}\'.';
+$string['csvuploadhelp:courseshortname'] = 'Course Shortname';
+$string['csvuploadhelp:activityname'] = 'Face-to-Face Activity Name';
 $string['csvuploadhelp:fieldsessiondatetime'] = 'Session Date/Time Known';
 $string['csvuploadhelp:startdate'] = 'Start Date';
 $string['csvuploadhelp:starttime'] = 'Start Time';
