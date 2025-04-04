@@ -869,39 +869,15 @@ $string['attendancecolumn:4'] = 'Position';
 $string['attendancecolumn:5'] = 'Stream';
 $string['attendancecolumn:6'] = 'Paypoint';
 // Site wide bulk upload.
-$string['f2fbulksessions'] = 'Upload sessions';
+$string['facetoface:sitebulksessions'] = 'Upload sessions';
 $string['facetoface:settings'] = 'Settings';
-$string['sitebulkuploadheader'] = 'Upload Bulk Sessions';
+$string['facetoface:sitebulkuploadheader'] = 'Upload Bulk Sessions';
 $string['examplecsv']            = 'Example CSV file';
-$string['f2fbulksessionsdone'] = 'Bulk upload of Face-to-Face sessions completed successfully.';
-$string['facetoface:confirmbulkpreview'] = 'Confirm Bulk Preview';
-$string['error:course_not_found'] = 'Could not find course with shortname: {$a}';
-$string['error:f2f_not_found'] = 'Could not find Face-to-Face in course "{$a->shortname}" with name "{$a->f2fname}".';
+$string['error:coursenotfound'] = 'Could not find course with shortname: {$a}';
+$string['error:f2fnotfound'] = 'Could not find Face-to-Face in course "{$a->shortname}" with name "{$a->f2fname}".';
 $string['error:bookingsuploadfileheaderfieldmismatch'] = 'The uploaded CSV does not match the expected columns.';
 $string['error:missingcourseshortname'] = 'No course shortname provided.';
 $string['error:missingf2fname'] = 'No Face-to-Face activity name provided.';
-$string['sitebulkuploadfiledesc'] = "
-Course shortname|Required: exact shortname of the course (e.g. COURSE08)
-Face-to-face activity name|Required: the activity name as it appears in the course
-Session date/time known|Required: yes / no
-Start date|Required: Format: YYYY-MM-DD
-Start time|Required: Format: HH:MM
-Finish date|Required: Format: YYYY-MM-DD
-Finish time|Required: Format: HH:MM
-Allow cancelations|Required: yes / no
-Capacity|Required: Whole number
-Allow overbookings|Required: yes / no
-Duration|Required: Numeric value in minutes
-Normal Cost|Optional: Numeric value
-Discount Cost|Optional: Numeric value
-Details|Session description
-Custom field short name|Optional
-Custom field value|Optional
-";
-$string['error:choosecsv'] = 'Please choose a CSV file before continuing.';
-$string['error:bulkuploadfileerrorsfound'] = 'There were {$a} errors found in your CSV file.';
-
-
 // Bulk Upload Sessions.
 $string['facetoface:validatebulksessions'] = 'Validate Bulk Sessions Upload';
 $string['error:uploadsessionserrorsfound'] = 'Errors were found in the uploaded file. Sessions cannot be processed until they are resolved.';
@@ -932,7 +908,8 @@ $string['csvuploadhelp:field'] = 'Field';
 $string['csvuploadhelp:requirement'] = 'Requirement';
 $string['csvuploadhelp:format'] = 'Format';
 $string['eventcsvprocessedbulksession'] = 'Bulk session CSV processed';
-$string['eventcsvprocessedsitewidebulksessiondesc'] =
+$string['eventscsvprocessedsitebulksession'] = 'Site Admin Bulk session CSV processed';
+$string['eventcsvprocessedsitebulksessiondesc'] =
     'The user with id \'{$a}\' has processed a CSV file to create/update Face-to-Face sessions site-wide.';
 $string['eventcsvprocessedbulksessiondesc'] =
     'The user with id \'{$a->userid}\' has processed an uploaded CSV file for bulk session bookings '
@@ -958,6 +935,3 @@ $string['csvuploadhelp:time'] = 'HH:MM';
 $string['csvuploadhelp:num'] = 'Number';
 $string['csvuploadhelp:mins'] = 'Minutes';
 $string['csvuploadhelp:text'] = 'Text';
-$string['eventcsvprocessedbulksessiondesc'] =
-    'The user with id \'{$a->userid}\' has processed an uploaded CSV file for bulk session bookings '
-    . 'in the Face-to-Face instance with the course module id \'{$a->contextinstanceid}\'.';

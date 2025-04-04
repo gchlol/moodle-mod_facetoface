@@ -212,7 +212,7 @@ class site_bulk_manager {
             $course = $DB->get_record_select('course', $shortnamecondition, ['shortname' => $shortname]);
 
             if (!$course) {
-                $this->errors[] = [$index, get_string('error:course_not_found', 'facetoface', $shortname)];
+                $this->errors[] = [$index, get_string('error:coursenotfound', 'facetoface', $shortname)];
 
                 continue;
             }
@@ -395,7 +395,7 @@ class site_bulk_manager {
             );
 
             if (!$course) {
-                $this->errors[] = get_string('error:course_not_found', 'facetoface', $shortname);
+                $this->errors[] = get_string('error:coursenotfound', 'facetoface', $shortname);
 
                 continue;
             }
@@ -413,7 +413,7 @@ class site_bulk_manager {
             $f2frecord = $DB->get_record_select('facetoface', $where, $params);
 
             if (!$f2frecord) {
-                $this->errors[] = get_string('error:f2f_not_found', 'facetoface', (object)[
+                $this->errors[] = get_string('error:f2fnotfound', 'facetoface', (object)[
                     'shortname' => $shortname,
                     'f2fname'   => $f2fname
                 ]);

@@ -57,7 +57,7 @@ class csv_processed_sitebulksession extends base {
      */
     public function get_description(): string {
         return get_string(
-            'eventcsvprocessedsitewidebulksessiondesc',
+            'eventcsvprocessedsitebulksessiondesc',
             'mod_facetoface',
             $this->userid
         );

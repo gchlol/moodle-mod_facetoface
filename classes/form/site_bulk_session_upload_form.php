@@ -58,7 +58,7 @@ class site_bulk_session_upload_form extends moodleform {
         $mform->addElement(
             'header',
             'sitebulkuploadheader',
-            get_string('sitebulkuploadheader', 'mod_facetoface')
+            get_string('facetoface:sitebulkuploadheader', 'mod_facetoface')
         );
 
         // Example CSV file.

@@ -40,7 +40,7 @@ admin_externalpage_setup('modfacetoface_sitebulkupload');
 require_capability('moodle/site:config', context_system::instance());
 
 $PAGE->set_url('/mod/facetoface/sitebulkupload.php');
-$PAGE->set_title(get_string('f2fbulksessions', 'mod_facetoface'));
+$PAGE->set_title(get_string('facetoface:sitebulksessions', 'mod_facetoface'));
 $PAGE->set_heading(get_string('pluginname', 'mod_facetoface'));
 
 $validate = optional_param('validate', 0, PARAM_INT);
