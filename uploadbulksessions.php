@@ -192,7 +192,6 @@ if (
         exit;
     }
 
-    $confirmdata = $confirmform->get_data();
     $errors = $manager->validate();
 
     if (empty($errors)) {
