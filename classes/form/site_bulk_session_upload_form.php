@@ -50,7 +50,7 @@ class site_bulk_session_upload_form extends moodleform {
         // Retrieve a validate flag from customdata, defaulting to 0 if not provided.
         $validateflag = $this->_customdata['validate'] ?? 0;
 
-        // Hidden element to store the validation flag and carry it through form submissions.
+        // Pass validation flag through the form.
         $mform->addElement('hidden', 'validate', $validateflag);
         $mform->setType('validate', PARAM_INT);
 
@@ -125,6 +125,16 @@ class site_bulk_session_upload_form extends moodleform {
         ];
 
         $rows = [
+            [
+                'field' => 'csvuploadhelp:courseshortname',
+                'requirement' => 'csvuploadhelp:required',
+                'format' => 'csvuploadhelp:text',
+            ],
+            [
+                'field' => 'csvuploadhelp:activityname',
+                'requirement' => 'csvuploadhelp:required',
+                'format' => 'csvuploadhelp:text',
+            ],
             [
                 'field' => 'csvuploadhelp:fieldsessiondatetime',
                 'requirement' => 'csvuploadhelp:required',
