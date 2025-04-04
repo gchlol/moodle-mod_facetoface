@@ -27,6 +27,9 @@ use context_user;
 use file_storage;
 use lang_string;
 use moodle_exception;
+use Generator;
+use stdClass;
+use Exception;
 
 /**
  * Extended booking manager for Face-to-face activities.
@@ -95,6 +98,7 @@ class booking_manager_ext {
 
     /**
      * Get the headers for the records.
+     *
      * @return array
      */
     public static function get_headers(): array {
@@ -115,11 +119,12 @@ class booking_manager_ext {
      * @return \Generator
      * @throws moodle_exception For invalid CSV structure.
      */
-    private function get_iterator(): \Generator {
+    private function get_iterator(): Generator {
         if (!$this->usefile) {
             foreach ($this->records as $record) {
                 yield $record;
             }
+
             return;
         }
 
@@ -129,7 +134,6 @@ class booking_manager_ext {
         $headers = self::get_headers();
         $numheaders = count($headers);
 
-        // Skip CSV header.
         fgets($handle);
 
         try {
@@ -141,7 +145,6 @@ class booking_manager_ext {
                 }
                 $record = array_combine($headers, $data);
 
-                // Trim fields.
                 foreach ($record as $key => $value) {
                     $record[$key] = trim($value);
                 }
@@ -193,7 +196,10 @@ class booking_manager_ext {
             $userid    = $usercheck['userid'];
 
             // Confirm user is enrolled in course.
-            if ($userid && $course) {
+            if (
+                $userid &&
+                $course
+            ) {
                 // Course context for enrollment checks.
                 $coursecontext = \context_course::instance($course->id);
 
@@ -232,6 +238,7 @@ class booking_manager_ext {
     private function match_users(string $username, string $fields): array {
         global $DB;
         $equals = $DB->sql_equal('username', 'username', !$this->caseinsensitive);
+
         return $DB->get_records_select('user', $equals, ['username' => $username], 'id', $fields);
     }
 
@@ -350,7 +357,7 @@ class booking_manager_ext {
         return [
             'errors' => $errors,
             'course' => $course,
-            'f2f'    => $f2f
+            'f2f'    => $f2f,
         ];
     }
 
@@ -366,7 +373,11 @@ class booking_manager_ext {
             $errors[] = [$row, new lang_string('error:sessiondoesnotexist', 'mod_facetoface', $entry->session)];
         }
 
-        if ($f2f && $session && $session->facetoface != $f2f->id) {
+        if (
+            $f2f &&
+            $session &&
+            $session->facetoface != $f2f->id
+        ) {
             $errors[] = [
                 $row,
                 get_string(
@@ -374,7 +385,7 @@ class booking_manager_ext {
                     'mod_facetoface',
                     (object)[
                         'sessionid'      => $entry->session,
-                        'facetofacename' => $entry->facetofacename
+                        'facetofacename' => $entry->facetofacename,
                     ]
                 )
             ];
@@ -383,7 +394,7 @@ class booking_manager_ext {
 
         return [
             'errors'  => $errors,
-            'session' => $session
+            'session' => $session,
         ];
     }
 
@@ -436,6 +447,7 @@ class booking_manager_ext {
             $sessioncapacitycache[$session->id]['capacity']--;
             $sessioncapacitycache[$session->id]['rows'][] = $row;
         }
+
         return $errors;
     }
 
@@ -459,6 +471,7 @@ class booking_manager_ext {
                 ];
             }
         }
+
         return $errors;
     }
 
@@ -522,9 +535,9 @@ class booking_manager_ext {
     /**
      * Cancels a user's booking. Throws exception if cancellation fails.
      */
-    private function process_cancellation(object $session, object $user, \stdClass $entry): void {
+    private function process_cancellation(object $session, object $user, stdClass $entry): void {
         if (!facetoface_user_cancel($session, $user->id, true, $cancelerr)) {
-            throw new \Exception($cancelerr);
+            throw new Exception($cancelerr);
         }
     }
 
@@ -536,7 +549,7 @@ class booking_manager_ext {
         object $f2f,
         object $course,
         object $user,
-        \stdClass $entry,
+        stdClass $entry,
         int $statuscode
     ): void {
         // If session date is unknown, booked => waitlisted.
@@ -559,7 +572,7 @@ class booking_manager_ext {
     /**
      * Marks a user's attendance for a given session.
      */
-    private function process_attendance(object $session, object $user, \stdClass $entry, int $statuscode): void {
+    private function process_attendance(object $session, object $user, stdClass $entry, int $statuscode): void {
         $attendees = facetoface_get_attendees($session->id);
         $found = null;
 
@@ -590,6 +603,7 @@ class booking_manager_ext {
         if ($this->usefile) {
             $this->records = iterator_to_array($this->get_iterator());
         }
+
         return $this->records;
     }
 }

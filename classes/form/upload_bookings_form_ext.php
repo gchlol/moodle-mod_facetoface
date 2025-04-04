@@ -34,9 +34,6 @@ class upload_bookings_form_ext extends \moodleform {
 
     /**
      * Build form for importing bookings.
-     *
-     * {@inheritDoc}
-     * @see \moodleform::definition()
      */
     public function definition() {
         global $CFG;
