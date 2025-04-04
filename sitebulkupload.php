@@ -93,6 +93,14 @@ function display_bulk_upload_errors(array $errors): void {
     }
 
     echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
+
+    echo $OUTPUT->single_button(
+        new moodle_url('/mod/facetoface/sitebulkupload.php'),
+        get_string('back'),
+        'get',
+        ['class' => 'mb-4']
+    );
+
     echo $OUTPUT->footer();
 
     exit;
@@ -124,12 +132,12 @@ if ($validate) {
 
     // If there are errors, handle them and exit.
     if (!empty($errors)) {
-        handle_bulk_upload_errors($errors);
+        display_bulk_upload_errors($errors);
     }
 
      // If no errors, display the CSV preview.
     echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string('facetoface:confirmbulkpreview', 'facetoface'), 3);
+    echo $OUTPUT->heading(get_string('facetoface:confirmbulkpreview', 'mod_facetoface'), 3);
 
     $records = $manager->get_records();
     if (empty($records)) {
@@ -168,18 +176,15 @@ if (
     $process &&
     $fileid
 ) {
-    $manager = new site_bulk_manager();
-    $manager->load_from_file($fileid);
-    $manager->set_case_insensitive($caseinsensitive);
     $confirmform = new site_bulk_session_confirm_form(null, ['fileid' => $fileid]);
 
     if ($confirmform->is_cancelled()) {
         redirect(new moodle_url('/mod/facetoface/sitebulkupload.php'));
-
-        exit;
     }
-
     $confirmdata = $confirmform->get_data();
+    $manager = new site_bulk_manager();
+    $manager->load_from_file($fileid);
+    $manager->set_case_insensitive($caseinsensitive);
     $errors = $manager->validate();
 
     if (empty($errors)) {
@@ -200,7 +205,7 @@ if (
         );
     }
 
-    handle_bulk_upload_errors($errors);
+    display_bulk_upload_errors($errors);
 }
 
 $uploadform->set_data(['validate' => 1]);
