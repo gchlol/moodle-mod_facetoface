@@ -47,8 +47,8 @@ class site_bulk_manager {
     /** @var stored_file|null Reference to uploaded file */
     private ?stored_file $file = null;
 
-     /** @var bool Will ignore case when matching users */
-     private $caseinsensitive = false;
+    /** @var bool Will ignore case when matching users */
+    private bool $caseinsensitive = false;
 
     /**
      * Constructor.
@@ -143,7 +143,6 @@ class site_bulk_manager {
                 continue;
             }
 
-            // Handle error case.
             fclose($handle);
             throw new moodle_exception(
                 'error:missingrequiredcolumn',
@@ -208,8 +207,9 @@ class site_bulk_manager {
                 continue;
             }
 
-            $shortnamecondition = $DB->sql_equal('shortname', ':shortname', !$this->caseinsensitive);
-            $course = $DB->get_record_select('course', $shortnamecondition, ['shortname' => $shortname]);
+            $matched = $this->match_records($shortname, $f2fname);
+            $course = $matched['course'];
+            $f2frecord = $matched['facetoface'];
 
             if (!$course) {
                 $this->errors[] = [$index, get_string('error:coursenotfound', 'facetoface', $shortname)];
@@ -217,14 +217,9 @@ class site_bulk_manager {
                 continue;
             }
 
-            // Ensures $course->id might be undefined if $course is null, so fallback to 0 in that scenario.
-            $courseid = $course ? $course->id : 0;
-
-            $f2frecord = $DB->get_record('facetoface', ['course' => $courseid, 'name' => $f2fname]);
-
             if (!$f2frecord) {
                 $this->errors[] = [$index, get_string(
-                        'error:f2f_not_found',
+                        'error:f2fnotfound',
                         'facetoface',
                         (object)[
                             'shortname' => $shortname,
@@ -386,31 +381,16 @@ class site_bulk_manager {
             $session = new stdClass();
 
             $shortname = trim($record['Course Shortname']);
-            $shortnamecondition = $DB->sql_equal('shortname', ':shortname', !$this->caseinsensitive);
-
-            $course = $DB->get_record_select(
-                'course',
-                $shortnamecondition,
-                ['shortname' => $shortname]
-            );
+            $f2fname = trim($record['Face-to-Face Activity Name']);
+            $matched = $this->match_records($shortname, $f2fname);
+            $course = $matched['course'];
+            $f2frecord = $matched['facetoface'];
 
             if (!$course) {
                 $this->errors[] = get_string('error:coursenotfound', 'facetoface', $shortname);
 
                 continue;
             }
-
-            // Look up the specific Face-to-face activity record.
-            $courseid = $course->id;
-            $f2fname = trim($record['Face-to-Face Activity Name']);
-            $namecondition = $DB->sql_equal('name', ':f2fname', !$this->caseinsensitive);
-            $where = $namecondition . ' AND course = :courseid';
-            $params = [
-                'f2fname' => $f2fname,
-                'courseid' => $courseid
-            ];
-
-            $f2frecord = $DB->get_record_select('facetoface', $where, $params);
 
             if (!$f2frecord) {
                 $this->errors[] = get_string('error:f2fnotfound', 'facetoface', (object)[
@@ -593,5 +573,37 @@ class site_bulk_manager {
      */
     public function set_case_insensitive(bool $value):void {
         $this->caseinsensitive = $value;
+    }
+
+    /**
+     * Finds a course and face-to-face activity by shortname and activity name.
+     *
+     * @param string $courseshortname The shortname of the course.
+     * @param string $activityname The name of the Face-to-Face activity.
+     * @return array An array with keys 'course' and 'facetoface' (or nulls if not found).
+     */
+    private function match_records(string $courseshortname, string $activityname): array {
+        global $DB;
+
+        $shortnamecondition = $DB->sql_equal('shortname', ':shortname', !$this->caseinsensitive);
+        $course = $DB->get_record_select('course', $shortnamecondition, ['shortname' => $courseshortname]);
+
+        if (!$course) {
+            return ['course' => null, 'facetoface' => null];
+        }
+
+        $namecondition = $DB->sql_equal('name', ':f2fname', !$this->caseinsensitive);
+        $where = $namecondition . ' AND course = :courseid';
+        $params = [
+            'f2fname' => $activityname,
+            'courseid' => $course->id
+        ];
+
+        $facetoface = $DB->get_record_select('facetoface', $where, $params);
+
+        return [
+            'course' => $course,
+            'facetoface' => $facetoface
+        ];
     }
 }
