@@ -235,8 +235,9 @@ $string['facetoface:confirmandprocess'] = 'Confirm and process';
 $string['facetoface:uploadbookingsfile'] = 'Bookings file';
 $string['facetoface:uploadbookingsfiledesc'] = "
 Fields expected:
-- Email address (required)
+- Username (required)
 - Session number (required)
+- Status (optional - valid options are 'booked', 'cancelled')
 - Discount code (optional)
 - Notification type (optional - valid options are 'email', 'ical', or 'both')
 ";
@@ -924,3 +925,4 @@ $string['error:sessionwrongf2f'] = 'Session {$a->sessionid} does not belong to F
 $string['error:usernotfoundbyemail'] = 'User not found for email: {$a->email}';
 $string['error:sessionnotfoundbyid'] = 'Session not found for ID: {$a->sessionid}';
 $string['examplecsvfilename'] = 'example.csv';
+
