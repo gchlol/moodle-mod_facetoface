@@ -1,5 +1,5 @@
-course,facetofacename,email,session,status,discountcode,notificationtype
-course01,activity01,student1@example.com,1,booked,DISCOUNT01,email
-course02,activity02,student2@example.com,2,cancelled,,ical
-course03,activity03,student3@example.com,3,booked,DISCOUNT02,both
-course04,activity04,student4@example.com,4,,,,
+course,facetofacename,username,session,status,discountcode,notificationtype
+course01,activity01,username1,1,booked,DISCOUNT01,email
+course02,activity02,username2,2,cancelled,,ical
+course03,activity03,username3,3,booked,DISCOUNT02,both
+course04,activity04,username4,4,,,,
