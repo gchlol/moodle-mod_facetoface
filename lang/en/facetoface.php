@@ -235,8 +235,9 @@ $string['facetoface:confirmandprocess'] = 'Confirm and process';
 $string['facetoface:uploadbookingsfile'] = 'Bookings file';
 $string['facetoface:uploadbookingsfiledesc'] = "
 Fields expected:
-- Email address (required)
+- Username (required)
 - Session number (required)
+- Status (optional - valid options are cancelled,  booked, waitlisted, no_show, partially_attended, and fully_attended)
 - Discount code (optional)
 - Notification type (optional - valid options are 'email', 'ical', or 'both')
 ";
