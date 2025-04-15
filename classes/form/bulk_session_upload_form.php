@@ -52,7 +52,7 @@ class bulk_session_upload_form extends moodleform {
         $mform->addElement(
             'header',
             'settingsheader',
-            get_string('facetoface:uploadbulksessions', 'mod_facetoface')
+            get_string('uploadbulksessions', 'mod_facetoface')
         );
 
         // Example CSV link.
@@ -61,14 +61,14 @@ class bulk_session_upload_form extends moodleform {
         $mform->addElement(
             'static',
             'example_bulkcsv',
-            get_string('facetoface:examplecsv', 'mod_facetoface'),
+            get_string('examplecsv', 'mod_facetoface'),
             $link
         );
 
         // File manager for CSV upload.
         $maxbytes = get_max_upload_file_size($CFG->maxbytes);
         $mform->addElement('filemanager', 'csvfile',
-            get_string('facetoface:uploadsessionfile', 'mod_facetoface'),
+            get_string('uploadsessionfile', 'mod_facetoface'),
             null,
             [
                 'subdirs'       => 0,
@@ -100,7 +100,7 @@ class bulk_session_upload_form extends moodleform {
 
         $this->add_action_buttons(
             true,
-            get_string('facetoface:uploadandpreviewbulk', 'mod_facetoface')
+            get_string('uploadandpreviewbulk', 'mod_facetoface')
         );
     }
 
