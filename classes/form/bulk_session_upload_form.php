@@ -29,10 +29,10 @@ require_once($CFG->dirroot.'/repository/lib.php');
  * Form for uploading bulk session CSV files in Face-to-Face module.
  * Provides file selection, validation, and preview before processing.
  *
- * @package     mod_facetoface
- * @copyright   2025 Gold Coast Health
- * @author        Jonas Sajonas
- * @license        https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_facetoface
+ * @copyright  2025 Gold Coast Health
+ * @author     Jonas Sajonas
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class bulk_session_upload_form extends moodleform {
     /**

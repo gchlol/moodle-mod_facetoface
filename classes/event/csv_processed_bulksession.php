@@ -22,12 +22,11 @@ use core\event\base;
 /**
  * The mod_facetoface CSV bulk session processed event.
  *
- * @package     mod_facetoface
- * @copyright   2025 Gold Coast Health
- * @author        Jonas Sajonas
- * @license        https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_facetoface
+ * @copyright  2025 Gold Coast Health
+ * @author     Jonas Sajonas
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class csv_processed_bulksession extends base {
 
     /**
@@ -35,7 +34,7 @@ class csv_processed_bulksession extends base {
      *
      * @return void
      */
-    protected function init():void {
+    protected function init(): void {
         $this->data['crud'] = 'r';
         $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
         $this->data['objecttable'] = 'facetoface';
@@ -58,7 +57,7 @@ class csv_processed_bulksession extends base {
      *
      * @return string
      */
-    public static function get_name():string {
+    public static function get_name(): string {
         return get_string('eventcsvprocessedbulksession', 'mod_facetoface');
     }
 
@@ -67,7 +66,7 @@ class csv_processed_bulksession extends base {
      *
      * @return moodle_url
      */
-    public function get_url():moodle_url {
+    public function get_url(): moodle_url {
         return new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => $this->objectid]);
     }
 
@@ -77,7 +76,7 @@ class csv_processed_bulksession extends base {
      * @throws coding_exception
      * @return void
      */
-    protected function validate_data():void {
+    protected function validate_data(): void {
         parent::validate_data();
 
         if ($this->contextlevel != CONTEXT_MODULE) {

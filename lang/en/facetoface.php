@@ -871,7 +871,7 @@ $string['attendancecolumn:6'] = 'Paypoint';
 
 // Bulk Upload Sessions.
 $string['facetoface:validatebulksessions'] = 'Validate Bulk Sessions Upload';
-$string['error:uploadsessionserrorsfound'] = 'Errors were found in the uploaded file. Sessions cannot be processed until they are resolved.';
+$string['error:uploadsessionserrorsfound'] = '{$a} errors were found in the uploaded file. Sessions cannot be processed until they are resolved.';
 $string['facetoface:csvline'] = 'CSV line';
 $string['facetoface:norecordsfound'] = 'No records found';
 $string['facetoface:bulksessionsprocessed'] = 'Bulk sessions have been successfully processed.';

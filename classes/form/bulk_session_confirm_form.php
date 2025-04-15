@@ -26,10 +26,10 @@ require_once($CFG->libdir.'/formslib.php');
  * Confirmation form for bulk session uploads in Face-to-Face module.
  * Allows users to proceed with session processing.
  *
- * @package     mod_facetoface
- * @copyright   2025 Gold Coast Health
- * @author        Jonas Sajonas
- * @license        https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_facetoface
+ * @copyright  2025 Gold Coast Health
+ * @author     Jonas Sajonas
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class bulk_session_confirm_form extends moodleform {
 
