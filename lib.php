@@ -1224,8 +1224,6 @@ function facetoface_get_attendees($sessionid) {
         AND ss.superceded != 1
         AND ss.statuscode >= ?
         ORDER BY
-            u.firstname,
-            u.lastname,
             sign.timecreated ASC,
             ss.timecreated ASC
     ", [$sessionid, MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED, $sessionid, MDL_F2F_STATUS_APPROVED]);
@@ -4679,7 +4677,7 @@ class facetoface_mycandidate_selector extends user_selector_base {
         $sql = "
               FROM  {user} u
                 $joinsstring
-              WHERE $where and 
+              WHERE $where and
                     u.suspended = 0 AND
                     u.id NOT IN
                     (
