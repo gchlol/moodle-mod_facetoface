@@ -593,7 +593,7 @@ function facetoface_update_attendees($session) {
     $course = $DB->get_record('course', ['id' => $facetoface->course]);
 
     // Update user status'.
-    $users = facetoface_get_attendees($session->id);
+    $users = facetoface_get_attendees_by_signup($session->id);
 
     if ($users) {
         // No/deleted session dates.
@@ -4898,4 +4898,56 @@ function facetoface_mark_complete($facetoface, $cmid, $userid, $timecompleted) {
     aggregate_completions($completion->id);
 
     return $result;
+}
+
+/**
+ * Get list of users attending a given session ordered by signup time.
+ *
+ * @access public
+ * @param integer Session ID
+ * @return array List of user records with signup details
+ */
+function facetoface_get_attendees_by_signup($sessionid) {
+    global $DB;
+
+    $usernamefields = facetoface_get_all_user_name_fields(true, 'u');
+    return $DB->get_records_sql("
+        SELECT  u.id, {$usernamefields},
+                u.email,
+                su.id AS submissionid,
+                s.discountcost,
+                su.discountcode,
+                su.notificationtype,
+                f.id AS facetofaceid,
+                f.course,
+                ss.grade,
+                ss.statuscode,
+                sign.timecreated
+        FROM    {facetoface} f
+                JOIN {facetoface_sessions} s ON
+                    s.facetoface = f.id
+                JOIN {facetoface_signups} su ON
+                    s.id = su.sessionid
+                JOIN {facetoface_signups_status} ss ON
+                    su.id = ss.signupid
+                LEFT JOIN (
+                    SELECT  ss.signupid,
+                            MAX(ss.timecreated) AS timecreated
+                    FROM    {facetoface_signups_status} ss
+                            JOIN {facetoface_signups} s ON
+                                s.id = ss.signupid AND
+                                s.sessionid = ?
+                    WHERE ss.statuscode IN (?,?)
+                    GROUP BY ss.signupid
+                ) sign ON
+                    su.id = sign.signupid
+                JOIN {user} u ON
+                    u.id = su.userid
+        WHERE   s.id = ? AND
+                ss.superceded <> 1 AND
+                ss.statuscode >= ?
+        ORDER BY
+                sign.timecreated ASC,
+                ss.timecreated ASC
+    ", [$sessionid, MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED, $sessionid, MDL_F2F_STATUS_APPROVED]);
 }
