@@ -4911,7 +4911,7 @@ function facetoface_mark_complete($facetoface, $cmid, $userid, $timecompleted) {
 function facetoface_get_attendees_by_signup(int $sessionid): array {
     global $DB;
 
-    $usernamefields = facetoface_get_all_user_name_fields(true, 'u');
+    $usernamefields = facetoface_get_all_user_name_fields(true, 'user');
 
     $sql = "
         SELECT  user.id,
@@ -4934,19 +4934,20 @@ function facetoface_get_attendees_by_signup(int $sessionid): array {
                     sessions.id = signups.sessionid
                 JOIN {facetoface_signups_status} status ON
                     signups.id = status.signupid
+
                 LEFT JOIN (
-                    SELECT  ss.signupid,
-                            MAX(ss.timecreated) AS timecreated
+                    SELECT  signup_status.signupid,
+                            MAX(signup_status.timecreated) AS timecreated
 
-                    FROM    {facetoface_signups_status} ss
-                            JOIN {facetoface_signups} s ON
-                                ss.signupid = s.id AND
-                                s.sessionid = :sessionid_sub
+                    FROM    {facetoface_signups_status} signup_status
+                            JOIN {facetoface_signups} signup ON
+                                signup_status.signupid = signup.id AND
+                                signup.sessionid = :sessionid_sub
 
-                    WHERE   ss.statuscode IN (:status_booked, :status_waitlisted)
-                    
+                    WHERE   signup_status.statuscode IN (:status_booked, :status_waitlisted)
+
                     GROUP BY
-                            ss.signupid
+                            signup_status.signupid
                 ) latest_status ON
                     signups.id = latest_status.signupid
                 JOIN {user} user ON
