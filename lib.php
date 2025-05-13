@@ -4937,11 +4937,14 @@ function facetoface_get_attendees_by_signup(int $sessionid): array {
                 LEFT JOIN (
                     SELECT  ss.signupid,
                             MAX(ss.timecreated) AS timecreated
+
                     FROM    {facetoface_signups_status} ss
                             JOIN {facetoface_signups} s ON
                                 ss.signupid = s.id AND
-                                ss.sessionid = :sessionid_sub
+                                s.sessionid = :sessionid_sub
+
                     WHERE   ss.statuscode IN (:status_booked, :status_waitlisted)
+                    
                     GROUP BY
                             ss.signupid
                 ) latest_status ON
