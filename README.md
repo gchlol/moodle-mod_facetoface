@@ -1,5 +1,3 @@
-[![3.11 and higher branch test](https://github.com/catalyst/moodle-mod_facetoface/actions/workflows/311-master.yml/badge.svg)](https://github.com/catalyst/moodle-mod_facetoface/actions/workflows/311-master.yml)
-
 Description
 ------------
 
@@ -36,7 +34,7 @@ Installation
 Changes
 --------
 
-(see the ChangeLog.txt file)
+(See git commit history)
 
 Copyright
 ---------
