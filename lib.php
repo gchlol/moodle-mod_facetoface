@@ -4915,7 +4915,7 @@ function facetoface_get_attendees_by_signup(int $sessionid): array {
 
     $sql = "
         SELECT  user.id,
-                " . $usernamefields . ",
+                $usernamefields,
                 user.email,
                 signups.id AS submissionid,
                 sessions.discountcost,
@@ -4923,17 +4923,17 @@ function facetoface_get_attendees_by_signup(int $sessionid): array {
                 signups.notificationtype,
                 facetoface.id AS facetofaceid,
                 facetoface.course,
-                status.grade,
-                status.statuscode,
+                signups_status.grade,
+                signups_status.statuscode,
                 latest_status.timecreated
 
         FROM    {facetoface} facetoface
                 JOIN {facetoface_sessions} sessions ON
                     sessions.facetoface = facetoface.id
                 JOIN {facetoface_signups} signups ON
-                    sessions.id = signups.sessionid
-                JOIN {facetoface_signups_status} status ON
-                    signups.id = status.signupid
+                    signups.sessionid = sessions.id
+                JOIN {facetoface_signups_status} signups_status ON
+                    signups_status.signupid = signups.id
 
                 LEFT JOIN (
                     SELECT  signup_status.signupid,
@@ -4941,7 +4941,7 @@ function facetoface_get_attendees_by_signup(int $sessionid): array {
 
                     FROM    {facetoface_signups_status} signup_status
                             JOIN {facetoface_signups} signup ON
-                                signup_status.signupid = signup.id AND
+                                signup.id = signup_status.signupid AND
                                 signup.sessionid = :sessionid_sub
 
                     WHERE   signup_status.statuscode IN (:status_booked, :status_waitlisted)
@@ -4949,17 +4949,18 @@ function facetoface_get_attendees_by_signup(int $sessionid): array {
                     GROUP BY
                             signup_status.signupid
                 ) latest_status ON
-                    signups.id = latest_status.signupid
-                JOIN {user} user ON
+                    latest_status.signupid = signups.id
+
+                    JOIN {user} user ON
                     user.id = signups.userid
 
-        WHERE   sessions.id = :sessionid_main
-                AND status.superceded <> 1
-                AND status.statuscode >= :status_approved
+        WHERE   sessions.id = :sessionid_main AND
+                signups_status.superceded <> 1 AND
+                signups_status.statuscode >= :status_approved
 
         ORDER BY
                 latest_status.timecreated ASC,
-                status.timecreated ASC
+                signups_status.timecreated ASC
     ";
 
     $params = [
