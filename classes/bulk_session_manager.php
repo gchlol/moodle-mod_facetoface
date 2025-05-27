@@ -497,7 +497,7 @@ class bulk_session_manager {
      *
      * @return array List of CSV records.
      */
-    public function get_records():array {
+    public function get_records(): array {
         if ($this->usefile) {
             $this->records = iterator_to_array($this->get_iterator());
         }

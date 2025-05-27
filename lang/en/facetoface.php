@@ -889,6 +889,7 @@ $string['error:invaliddatetimedata'] = 'Invalid Date Time data.';
 $string['error:failedtocreatesession'] = 'Failed to create session';
 $string['error:failedtocreatedates'] = 'Failed to create dates for session #{$a}';
 $string['error:couldnotsavecustomfieldshort'] = 'Could not save custom field with short name "{$a}"';
+$string['facetoface:uploadbulksessions'] = 'Upload Bulk Sessions';
 $string['uploadbulksessions'] = 'Upload Bulk Sessions';
 $string['uploadandpreviewbulk'] = 'Upload & Preview Bulk Sessions';
 $string['examplecsv'] = 'example.csv';
