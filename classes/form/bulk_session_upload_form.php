@@ -180,7 +180,16 @@ class bulk_session_upload_form extends moodleform {
                 'format' => 'csvuploadhelp:text',
             ],
             [
-                'field' => 'csvuploadhelp:customfield',
+                'field' => 'csvuploadhelp:customfieldfacility',
+                'requirement' => 'csvuploadhelp:optional',
+                'format' => 'csvuploadhelp:text',
+            ],    [
+                'field' => 'csvuploadhelp:customfieldlocation',
+                'requirement' => 'csvuploadhelp:optional',
+                'format' => 'csvuploadhelp:text',
+            ],
+            [
+                'field' => 'csvuploadhelp:customfieldroom',
                 'requirement' => 'csvuploadhelp:optional',
                 'format' => 'csvuploadhelp:text',
             ],
