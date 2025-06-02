@@ -54,27 +54,26 @@ class site_bulk_session_upload_form extends moodleform {
         $mform->addElement('hidden', 'validate', $validateflag);
         $mform->setType('validate', PARAM_INT);
 
-        // Add a header section to group form elements.
         $mform->addElement(
             'header',
             'sitebulkuploadheader',
-            get_string('facetoface:sitebulkuploadheader', 'mod_facetoface')
+            get_string('sitebulkuploadheader', 'mod_facetoface')
         );
 
         // Example CSV file.
-        $url = new moodle_url('/mod/facetoface/sitewide_bulkexample.csv');
-        $link = html_writer::link($url, get_string('examplecsv', 'mod_facetoface'));
+        $url = new moodle_url('/mod/facetoface/example_bulksessions.csv');
+        $link = html_writer::link($url, get_string('examplebulksessionscsv', 'mod_facetoface'));
         $mform->addElement(
             'static',
             'examplecsv',
-            get_string('facetoface:examplecsv', 'mod_facetoface'),
+            get_string('examplecsv', 'mod_facetoface'),
             $link
         );
 
         // File manager set for CSV upload.
         $maxbytes = get_max_upload_file_size($CFG->maxbytes, 0);
         $mform->addElement('filemanager', 'csvfile',
-            get_string('facetoface:uploadsessionfile', 'mod_facetoface'),
+            get_string('uploadsessionfile', 'mod_facetoface'),
             null,
             [
                 'subdirs' => 0,
@@ -100,13 +99,9 @@ class site_bulk_session_upload_form extends moodleform {
         // Add a static element to display CSV field descriptions.
         $mform->addElement('static', 'csvuploadhelp', '', $tablehtml);
 
-        // Checkbox to allow user to ignore case sensitivity when validating.
-        $mform->addElement('advcheckbox', 'caseinsensitive', get_string('caseinsensitive', 'mod_facetoface'));
-        $mform->setDefault('caseinsensitive', true);
-
         $this->add_action_buttons(
             true,
-            get_string('facetoface:uploadandpreviewbulk', 'mod_facetoface')
+            get_string('uploadandpreviewbulk', 'mod_facetoface')
         );
     }
 
@@ -196,7 +191,16 @@ class site_bulk_session_upload_form extends moodleform {
                 'format' => 'csvuploadhelp:text',
             ],
             [
-                'field' => 'csvuploadhelp:customfield',
+                'field' => 'csvuploadhelp:customfieldfacility',
+                'requirement' => 'csvuploadhelp:optional',
+                'format' => 'csvuploadhelp:text',
+            ],    [
+                'field' => 'csvuploadhelp:customfieldlocation',
+                'requirement' => 'csvuploadhelp:optional',
+                'format' => 'csvuploadhelp:text',
+            ],
+            [
+                'field' => 'csvuploadhelp:customfieldroom',
                 'requirement' => 'csvuploadhelp:optional',
                 'format' => 'csvuploadhelp:text',
             ],
