@@ -68,7 +68,7 @@ function display_bulk_upload_errors($errors): void {
     $table = new html_table();
     $table->attributes['class'] = 'f2fbookingsuploadlist m-auto generaltable mb-2';
     $table->head = [
-        get_string('facetoface:csvline', 'mod_facetoface'),
+        get_string('csvline', 'mod_facetoface'),
         get_string('status', 'mod_facetoface'),
     ];
 
@@ -137,7 +137,7 @@ if ($validate) {
 
     $records = $manager->get_records();
     if (empty($records)) {
-        echo $OUTPUT->notification(get_string('facetoface:norecordsfound', 'facetoface'), 'info');
+        echo $OUTPUT->notification(get_string('norecordsfound', 'facetoface'), 'info');
     }
 
     // If validation errors exist, display them and stop.
@@ -176,8 +176,10 @@ if (
 
     if ($confirmform->is_cancelled()) {
         redirect(new moodle_url('/mod/facetoface/sitebulkupload.php'));
+
+        exit;
     }
-    $confirmdata = $confirmform->get_data();
+
     $manager = new site_bulk_manager();
     $manager->load_from_file($fileid);
     $errors = $manager->validate();
