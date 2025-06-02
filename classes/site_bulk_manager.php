@@ -61,7 +61,7 @@ class site_bulk_manager {
      * @return bool True on success.
      * @throws moodle_exception If the file cannot be loaded.
      */
-    public function load_from_file(int $fileid):bool {
+    public function load_from_file(int $fileid): bool {
         global $USER;
 
         $this->usefile = true;
@@ -84,7 +84,7 @@ class site_bulk_manager {
      *
      * @return array An indexed array of column headers.
      */
-    public static function get_headers():array {
+    public static function get_headers(): array {
         return [
             'Course Shortname',
             'Face-to-Face Activity Name',
@@ -168,14 +168,11 @@ class site_bulk_manager {
 
     /**
      * Validates the loaded CSV records for required fields, types, etc.
-     * Use DB to match records.
      *
      * @return array A list of validation errors.
      */
     public function validate(): array {
-        global $DB;
-
-        // If using a file, parse its contents into $this->records before validation.
+        // If using file, load records from iterator.
         if ($this->usefile) {
             $this->records = iterator_to_array($this->get_iterator());
         }
@@ -398,7 +395,7 @@ class site_bulk_manager {
      *
      * @return bool true on success, false if any errors occurred
      */
-    public function process():bool {
+    public function process(): bool {
         global $DB;
 
         $allcustomfields = facetoface_get_session_customfields();
@@ -559,13 +556,12 @@ class site_bulk_manager {
                     $index,
                     get_string('error:failedtocreatedates', 'facetoface', $sessionid)
                 ];
-
-                continue;
             }
 
             foreach ($record as $column => $value) {
                 // If the column does not start with "Customfield_", skip it.
                 if (strpos($column, 'Customfield_') !== 0) {
+
                     continue;
 
                 }
@@ -630,21 +626,41 @@ class site_bulk_manager {
     private function match_records(string $courseshortname, string $activityname): array {
         global $DB;
 
-        $shortnamecondition = $DB->sql_equal('shortname', ':shortname', false);
-        $course = $DB->get_record_select('course', $shortnamecondition, ['shortname' => $courseshortname]);
+        $shortnamecondition = $DB->sql_equal(
+            'shortname',
+            ':shortname',
+            false
+        );
+
+        $course = $DB->get_record_select(
+            'course',
+            $shortnamecondition,
+            ['shortname' => $courseshortname]
+        );
 
         if (!$course) {
-            return ['course' => null, 'facetoface' => null];
+            return [
+                'course' => null,
+                'facetoface' => null];
         }
 
-        $namecondition = $DB->sql_equal('name', ':f2fname', false);
+        $namecondition = $DB->sql_equal(
+            'name',
+            ':f2fname',
+            false
+        );
+
         $where = $namecondition . ' AND course = :courseid';
         $params = [
             'f2fname' => $activityname,
             'courseid' => $course->id
         ];
 
-        $facetoface = $DB->get_record_select('facetoface', $where, $params);
+        $facetoface = $DB->get_record_select(
+            'facetoface',
+            $where,
+            $params
+        );
 
         return [
             'course' => $course,
