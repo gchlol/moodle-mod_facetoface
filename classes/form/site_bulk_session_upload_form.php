@@ -71,7 +71,7 @@ class site_bulk_session_upload_form extends moodleform {
         );
 
         // File manager set for CSV upload.
-        $maxbytes = get_max_upload_file_size($CFG->maxbytes, 0);
+        $maxbytes = get_max_upload_file_size($CFG->maxbytes);
         $mform->addElement('filemanager', 'csvfile',
             get_string('uploadsessionfile', 'mod_facetoface'),
             null,

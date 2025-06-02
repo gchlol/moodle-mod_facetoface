@@ -38,7 +38,7 @@ class site_bulk_session_confirm_form extends moodleform {
      *
      * @return void
      */
-    public function definition() {
+    public function definition(): void {
         $mform = $this->_form;
 
         // Retrieve file ID from customdata, which references CSV file in draft.

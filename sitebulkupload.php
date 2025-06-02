@@ -36,16 +36,16 @@ use mod_facetoface\event\csv_processed_sitebulksession;
 // Set up the external admin page (in Site administration > Plugins > Face-to-face).
 admin_externalpage_setup('modfacetoface_sitebulkupload');
 
+$fileid   = optional_param('fileid', 0, PARAM_INT);
+$validate = optional_param('validate', 0, PARAM_INT);
+$process  = optional_param('process', 0, PARAM_INT);
+
 // Require site configuration capability.
 require_capability('moodle/site:config', context_system::instance());
 
 $PAGE->set_url('/mod/facetoface/sitebulkupload.php');
 $PAGE->set_title(get_string('facetoface:sitebulksessions', 'mod_facetoface'));
 $PAGE->set_heading(get_string('pluginname', 'mod_facetoface'));
-
-$validate = optional_param('validate', 0, PARAM_INT);
-$process  = optional_param('process', 0, PARAM_INT);
-$fileid   = optional_param('fileid', 0, PARAM_INT);
 
 // Instantiate the upload form once.
 $uploadform = new site_bulk_session_upload_form();
@@ -133,7 +133,7 @@ if ($validate) {
 
      // If no errors, display the CSV preview.
     echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string('facetoface:confirmbulkpreview', 'mod_facetoface'), 3);
+    echo $OUTPUT->heading(get_string('confirmbulkpreview', 'mod_facetoface'), 3);
 
     $records = $manager->get_records();
     if (empty($records)) {
@@ -172,6 +172,8 @@ if (
     $process &&
     $fileid
 ) {
+    $manager = new site_bulk_manager();
+    $manager->load_from_file($fileid);
     $confirmform = new site_bulk_session_confirm_form(null, ['fileid' => $fileid]);
 
     if ($confirmform->is_cancelled()) {
@@ -180,26 +182,29 @@ if (
         exit;
     }
 
-    $manager = new site_bulk_manager();
-    $manager->load_from_file($fileid);
     $errors = $manager->validate();
 
     if (empty($errors)) {
-        $manager->process();
+        $success = $manager->process();
 
-        $params = [
-            'context' => context_system::instance(),
-        ];
+        if ($success) {
 
-        $event = csv_processed_sitebulksession::create($params);
-        $event->trigger();
+            $params = [
+                'context' => context_system::instance(),
+            ];
 
-        redirect(
-            new moodle_url('/mod/facetoface/sitebulkupload.php'),
-            get_string('facetoface:bulksessionsprocessed', 'mod_facetoface'),
-            null,
-            notification::NOTIFY_SUCCESS
-        );
+            $event = csv_processed_sitebulksession::create($params);
+            $event->trigger();
+
+            redirect(
+                new moodle_url('/mod/facetoface/sitebulkupload.php'),
+                get_string('facetoface:bulksessionsprocessed', 'mod_facetoface'),
+                null,
+                notification::NOTIFY_SUCCESS
+            );
+        } else {
+            display_bulk_upload_errors($manager->get_errors());
+        }
     }
 
     display_bulk_upload_errors($errors);
