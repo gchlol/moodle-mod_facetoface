@@ -19,6 +19,7 @@ namespace mod_facetoface\form;
 use moodleform;
 
 defined('MOODLE_INTERNAL') || die();
+
 require_once($CFG->libdir.'/formslib.php');
 
 /**
@@ -42,14 +43,9 @@ class site_bulk_session_confirm_form extends moodleform {
 
         // Retrieve file ID from customdata, which references CSV file in draft.
         $fileid = $this->_customdata['fileid'] ?? 0;
-        $caseinsensitive = $this->_customdata['caseinsensitive'] ?? true;
 
-        // Hidden element to store file ID and pass it to form submission.
         $mform->addElement('hidden', 'fileid', $fileid);
         $mform->setType('fileid', PARAM_INT);
-
-        $mform->addElement('hidden', 'caseinsensitive', $caseinsensitive);
-        $mform->setType('caseinsensitive', PARAM_BOOL);
 
         $mform->addElement('hidden', 'process', 1);
         $mform->setType('process', PARAM_INT);

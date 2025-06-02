@@ -46,7 +46,6 @@ $PAGE->set_heading(get_string('pluginname', 'mod_facetoface'));
 $validate = optional_param('validate', 0, PARAM_INT);
 $process  = optional_param('process', 0, PARAM_INT);
 $fileid   = optional_param('fileid', 0, PARAM_INT);
-$caseinsensitive = optional_param('caseinsensitive', false, PARAM_BOOL);
 
 // Instantiate the upload form once.
 $uploadform = new site_bulk_session_upload_form();
@@ -55,10 +54,9 @@ $uploadform = new site_bulk_session_upload_form();
  * Utility function to display bulk-upload errors and then stop execution.
  *
  * @param array $errors A list of errors (each error can be a simple string
- *                      or an array of [lineNumber, message...]).
  * @return void
  */
-function display_bulk_upload_errors(array $errors): void {
+function display_bulk_upload_errors($errors): void {
     global $OUTPUT;
 
     echo $OUTPUT->header();
@@ -84,7 +82,7 @@ function display_bulk_upload_errors(array $errors): void {
             continue;
         }
 
-        $line = $error[0];
+        $line = $error[0] + 2;
         $messages = array_slice($error, 1);
 
         foreach ($messages as $message) {
@@ -110,7 +108,7 @@ if ($validate) {
     $data  = $uploadform->get_data();
 
     if ($uploadform->is_cancelled()) {
-        redirect(new moodle_url('/mod/facetoface/sitebulkupload.php'));
+        redirect(new moodle_url('/admin/search.php') . '#linkmodules');
 
         exit;
     }
@@ -120,14 +118,12 @@ if ($validate) {
     $confirmform = new site_bulk_session_confirm_form(
         null, [
             'fileid' => $fileid,
-            'caseinsensitive' => $caseinsensitive,
             'process' => 1
         ]
     );
 
     $manager = new site_bulk_manager();
     $manager->load_from_file($fileid);
-    $manager->set_case_insensitive($caseinsensitive);
     $errors = $manager->validate();
 
     // If there are errors, handle them and exit.
@@ -184,7 +180,6 @@ if (
     $confirmdata = $confirmform->get_data();
     $manager = new site_bulk_manager();
     $manager->load_from_file($fileid);
-    $manager->set_case_insensitive($caseinsensitive);
     $errors = $manager->validate();
 
     if (empty($errors)) {

@@ -47,9 +47,6 @@ class site_bulk_manager {
     /** @var stored_file|null Reference to uploaded file */
     private ?stored_file $file = null;
 
-    /** @var bool Will ignore case when matching users */
-    private bool $caseinsensitive = false;
-
     /**
      * Constructor.
      */
@@ -120,7 +117,6 @@ class site_bulk_manager {
             return;
         }
 
-        // Open the file handle and read line by line.
         $handle = $this->file->get_content_file_handle();
         $maxlinelength = 1000;
         $delimiter = ',';
@@ -130,9 +126,8 @@ class site_bulk_manager {
         if (empty($headerline)) {
             fclose($handle);
             throw new moodle_exception(
-                'error:bookingsuploadfileheaderfieldmismatch',
-                'mod_facetoface',
-                get_string('error:noheaderrow', 'facetoface')
+                'error:noheaderrow',
+                'mod_facetoface'
             );
         }
 
@@ -153,14 +148,18 @@ class site_bulk_manager {
         }
 
         try {
+            $rownum = 2;
             while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
                 if (count($data) !== count($headerline)) {
                     throw new moodle_exception(
                         'error:bookingsuploadfileheaderfieldmismatch',
-                        'facetoface'
+                        'facetoface',
+                        '',
+                        $rownum
                     );
                 }
                 yield array_combine($headerline, $data);
+                $rownum++;
             }
         } finally {
             fclose($handle);
@@ -212,13 +211,18 @@ class site_bulk_manager {
             $f2frecord = $matched['facetoface'];
 
             if (!$course) {
-                $this->errors[] = [$index, get_string('error:coursenotfound', 'facetoface', $shortname)];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:coursenotfound', 'facetoface', $shortname)
+                ];
 
                 continue;
             }
 
             if (!$f2frecord) {
-                $this->errors[] = [$index, get_string(
+                $this->errors[] = [
+                    $index,
+                    get_string(
                         'error:f2fnotfound',
                         'facetoface',
                         (object)[
@@ -236,7 +240,10 @@ class site_bulk_manager {
                 empty($record['Start Date']) ||
                 empty($record['Start Time'])
             ) {
-                $this->errors[] = [$index, get_string('error:missingstarttime', 'facetoface')];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:missingstarttime', 'facetoface')
+                ];
 
                 continue;
             }
@@ -264,7 +271,10 @@ class site_bulk_manager {
                 empty($record['Finish Date']) ||
                 empty($record['Finish Time'])
             ) {
-                $this->errors[] = [$index, get_string('error:missingfinishtime', 'facetoface')];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:missingfinishtime', 'facetoface')
+                ];
 
                 continue;
             }
@@ -295,7 +305,10 @@ class site_bulk_manager {
                 $finishtime &&
                 $starttime >= $finishtime
             ) {
-                $this->errors[] = [$index, get_string('error:starttimeafterfinish', 'facetoface')];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:starttimeafterfinish', 'facetoface')
+                ];
 
                 continue;
             }
@@ -306,7 +319,10 @@ class site_bulk_manager {
                 !is_numeric($record['Capacity']) ||
                 (int)$record['Capacity'] <= 0
             ) {
-                $this->errors[] = [$index, get_string('error:invalidcapacity', 'facetoface')];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:invalidcapacity', 'facetoface')
+                ];
 
                 continue;
             }
@@ -317,7 +333,10 @@ class site_bulk_manager {
                 !is_numeric($record['Duration']) ||
                 (int)$record['Duration'] <= 0
             ) {
-                $this->errors[] = [$index, get_string('error:invalidduration', 'facetoface')];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:invalidduration', 'facetoface')
+                ];
 
                 continue;
             }
@@ -327,7 +346,10 @@ class site_bulk_manager {
                 !empty($record['Normal Cost']) &&
                 !is_numeric($record['Normal Cost'])
             ) {
-                $this->errors[] = [$index, get_string('error:invalidnormalcost', 'facetoface')];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:invalidnormalcost', 'facetoface')
+                ];
 
                 continue;
             }
@@ -337,7 +359,10 @@ class site_bulk_manager {
                 !empty($record['Discount Cost']) &&
                 !is_numeric($record['Discount Cost'])
             ) {
-                $this->errors[] = [$index, get_string('error:invaliddiscountcost', 'facetoface')];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:invaliddiscountcost', 'facetoface')
+                ];
 
                 continue;
             }
@@ -345,7 +370,10 @@ class site_bulk_manager {
             // Allow Cancellations (required, "yes" or "no").
             $allowcancel = strtolower($record['Allow Cancellations'] ?? '');
             if (!in_array($allowcancel, ['yes', 'no'], true)) {
-                $this->errors[] = [$index, get_string('error:invalidallowcancel', 'facetoface')];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:invalidallowcancel', 'facetoface')
+                ];
 
                 continue;
             }
@@ -353,7 +381,10 @@ class site_bulk_manager {
             // Allow Overbookings (required, "yes" or "no").
             $allowover = strtolower($record['Allow Overbookings'] ?? '');
             if (!in_array($allowover, ['yes', 'no'], true)) {
-                $this->errors[] = [$index, get_string('error:invalidallowoverbook', 'facetoface')];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:invalidallowoverbook', 'facetoface')
+                ];
 
                 continue;
             }
@@ -374,10 +405,10 @@ class site_bulk_manager {
         $customfieldsbyshortname = [];
 
         foreach ($allcustomfields as $field) {
-            $customfieldsbyshortname[$field->shortname] = $field;
+            $customfieldsbyshortname[strtolower($field->shortname)] = $field;
         }
 
-        foreach ($this->records as $record) {
+        foreach ($this->records as $index => $record) {
             $session = new stdClass();
 
             $shortname = trim($record['Course Shortname']);
@@ -387,16 +418,23 @@ class site_bulk_manager {
             $f2frecord = $matched['facetoface'];
 
             if (!$course) {
-                $this->errors[] = get_string('error:coursenotfound', 'facetoface', $shortname);
+                $this->errors[] = [
+                    $index,
+                    get_string('error:coursenotfound', 'facetoface', $shortname)];
 
                 continue;
             }
 
             if (!$f2frecord) {
-                $this->errors[] = get_string('error:f2fnotfound', 'facetoface', (object)[
-                    'shortname' => $shortname,
-                    'f2fname'   => $f2fname
-                ]);
+                $this->errors[] = [
+                    $index,
+                    get_string(
+                        'error:f2fnotfound',
+                        'facetoface',
+                        (object)['shortname' => $shortname,
+                        'f2fname'   => $f2fname]
+                        )
+                    ];
 
                 continue;
             }
@@ -432,7 +470,10 @@ class site_bulk_manager {
                 (empty($session->starttime) ||
                 empty($session->finishtime))
             ) {
-                $this->errors[] = get_string('error:invaliddatetimedata', 'facetoface');
+                $this->errors[] = [
+                    $index,
+                    get_string('error:invaliddatetimedata', 'facetoface')
+                ];
 
                 continue;
             }
@@ -498,7 +539,10 @@ class site_bulk_manager {
 
             $sessionid = $DB->insert_record('facetoface_sessions', $session);
             if (!$sessionid) {
-                $this->errors[] = get_string('error:failedtocreatesession', 'facetoface');
+                $this->errors[] = [
+                    $index,
+                    get_string('error:failedtocreatesession', 'facetoface')
+                ];
 
                 continue;
             }
@@ -511,7 +555,10 @@ class site_bulk_manager {
             $sessionsdateid = $DB->insert_record('facetoface_sessions_dates', $sessionsdate);
 
             if (!$sessionsdateid) {
-                $this->errors[] = get_string('error:failedtocreatedates', 'facetoface', $sessionid);
+                $this->errors[] = [
+                    $index,
+                    get_string('error:failedtocreatedates', 'facetoface', $sessionid)
+                ];
 
                 continue;
             }
@@ -523,10 +570,14 @@ class site_bulk_manager {
 
                 }
 
-                $shortname = substr($column, strlen('Customfield_'));
+                $shortname = strtolower(substr($column, strlen('Customfield_')));
 
                 // If we don’t have a matching custom field for $shortname, skip it.
                 if (!isset($customfieldsbyshortname[$shortname])) {
+                    $this->errors[] = [
+                        $index,
+                        get_string('error:unknowncustomfieldshort', 'facetoface', $shortname)
+                    ];
 
                     continue;
                 }
@@ -534,7 +585,10 @@ class site_bulk_manager {
                 // Otherwise, save the custom field.
                 $field = $customfieldsbyshortname[$shortname];
                 if (!facetoface_save_customfield_value($field->id, $value, $sessionid, 'session')) {
-                    $this->errors[] = get_string('error:couldnotsavecustomfieldshort', 'facetoface', $shortname);
+                    $this->errors[] = [
+                        $index,
+                        get_string('error:couldnotsavecustomfieldshort', 'facetoface', $shortname)
+                    ];
                 }
             }
         }
@@ -567,15 +621,6 @@ class site_bulk_manager {
     }
 
     /**
-     * Sets case-insensitive match value.
-     *
-     * @param bool $value
-     */
-    public function set_case_insensitive(bool $value):void {
-        $this->caseinsensitive = $value;
-    }
-
-    /**
      * Finds a course and face-to-face activity by shortname and activity name.
      *
      * @param string $courseshortname The shortname of the course.
@@ -585,14 +630,14 @@ class site_bulk_manager {
     private function match_records(string $courseshortname, string $activityname): array {
         global $DB;
 
-        $shortnamecondition = $DB->sql_equal('shortname', ':shortname', !$this->caseinsensitive);
+        $shortnamecondition = $DB->sql_equal('shortname', ':shortname', false);
         $course = $DB->get_record_select('course', $shortnamecondition, ['shortname' => $courseshortname]);
 
         if (!$course) {
             return ['course' => null, 'facetoface' => null];
         }
 
-        $namecondition = $DB->sql_equal('name', ':f2fname', !$this->caseinsensitive);
+        $namecondition = $DB->sql_equal('name', ':f2fname', false);
         $where = $namecondition . ' AND course = :courseid';
         $params = [
             'f2fname' => $activityname,
