@@ -99,7 +99,7 @@ function handle_bulk_upload_errors($errors): void {
             continue;
         }
 
-        $line = $error[0];
+        $line = $error[0] + 2;
         $messages = array_slice($error, 1);
 
         foreach ($messages as $message) {
