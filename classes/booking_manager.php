@@ -116,7 +116,7 @@ class booking_manager {
      */
     public static function get_headers(): array {
         return [
-            'email',
+            'username',
             'session',
             'status',
             'discountcode',
@@ -185,16 +185,16 @@ class booking_manager {
             $entry->discountcode = $entry->discountcode ?? '';
 
             // Validate and get user.
-            $userids = $this->match_users($entry->email, 'id');
+            $userids = $this->match_users($entry->username, 'id');
 
             // Multiple matched, ambiguous which is the real one.
             if (count($userids) > 1) {
-                $errors[] = [$row, new lang_string('error:multipleusersmatched', 'mod_facetoface', $entry->email)];
+                $errors[] = [$row, new lang_string('error:multipleusersmatched', 'mod_facetoface', $entry->username)];
             }
 
             // None matched at all - missing.
             if (empty($userids)) {
-                $errors[] = [$row, new lang_string('error:userdoesnotexist', 'mod_facetoface', $entry->email)];
+                $errors[] = [$row, new lang_string('error:userdoesnotexist', 'mod_facetoface', $entry->username)];
             } else {
                 $userid = current($userids)->id;
             }
@@ -248,7 +248,7 @@ class booking_manager {
 
             // Check user enrolment into the course.
             if (isset($userid) && !is_enrolled($this->coursecontext, $userid)) {
-                $errors[] = [$row, new lang_string('error:userisnotenrolledintocourse', 'mod_facetoface', $entry->email)];
+                $errors[] = [$row, new lang_string('error:userisnotenrolledintocourse', 'mod_facetoface', $entry->username)];
             }
 
             // Check to ensure valid notification types are used if set.
@@ -299,17 +299,15 @@ class booking_manager {
     }
 
     /**
-     * Match users for a given email, taking into account case sensitivity.
-     * @param string $email
-     * @param string $fields fields to return
-     * @return array of users, with specified fields
+     * Match users for a given username.
+     * @param string $fields to return
+     * @return array of users with specified fields
      */
-    private function match_users(string $email, string $fields): array {
+    private function match_users(string $username, string $fields): array {
         global $DB;
-        $equals = $DB->sql_equal('email', ':email', !$this->caseinsensitive);
-        return $DB->get_records_select('user', $equals, ['email' => $email], 'id', $fields);
+        $equals = $DB->sql_equal('username', ':username', !$this->caseinsensitive);
+        return $DB->get_records_select('user', $equals, ['username' => $username], 'id', $fields);
     }
-
     /**
      * Transform notification type to internal representation.
      *
@@ -341,7 +339,7 @@ class booking_manager {
 
         // Records should be valid at this point.
         foreach ($this->get_iterator() as $entry) {
-            $user = current($this->match_users($entry->email, '*'));
+            $user = current($this->match_users($entry->username, '*'));
             $session = facetoface_get_session($entry->session);
 
             // Get signup type.
@@ -390,7 +388,7 @@ class booking_manager {
                     $attendees = facetoface_get_attendees($session->id);
                     // Get matching attendee.
                     foreach ($attendees as $attendee) {
-                        if ($attendee->email === $entry->email) {
+                        if ($attendee->username === $entry->username) {
                             break;
                         }
                     }

@@ -238,8 +238,9 @@ $string['facetoface:confirmandprocess'] = 'Confirm and process';
 $string['facetoface:uploadbookingsfile'] = 'Bookings file';
 $string['facetoface:uploadbookingsfiledesc'] = "
 Fields expected:
-- Email address (required)
+- Username (required)
 - Session number (required)
+- Status (optional - valid options are cancelled,  booked, waitlisted, no_show, partially_attended, and fully_attended)
 - Discount code (optional)
 - Notification type (optional - valid options are 'email', 'ical', or 'both')
 ";
@@ -465,7 +466,28 @@ To re-schedule your booking you need to cancel this booking and then re-book a n
 
 You will receive a reminder [reminderperiod] business days before this course.
 ';
-$string['setting:defaultconfirmationmessagedefault2'] = '<p><b>Thank you for signing up!</b></p>';
+$string['setting:defaultconfirmationmessagedefault2'] = 'Dear [firstname]<br><br>
+This is to confirm that you are booked into the following session:<br><br>
+Course: Add the course name here<br>
+Session: [facetofacename]<br>
+Date(s): [alldates]<br>
+Facility: [session:facility]<br>
+Location: [session:location]<br>
+Room: [session:room]<br><br>
+*** Please arrive ten minutes prior to the session starting time ***<br><br>
+[details]<br><br>
+You will receive a reminder [reminderperiod] business days prior to the course. If you are unable to attend, please cancel your booking.<br><br>
+To re-schedule or cancel a booking:<br>
+return to the course at GCH-LOL<br>
+click the course session link<br>
+click ‘cancel booking’<br>
+enter a reason for the cancellation<br>
+click ‘Yes’<br>
+rebook if required<br><br>
+If you have any enquiries about the session, please contact the course facilitator.<br><br>
+Regards<br>
+Learning and Development team
+';
 $string['setting:defaultconfirmationsubject'] = 'Default subject line for confirmation emails.';
 $string['setting:defaultconfirmationsubject_caption'] = 'Confirmation subject';
 $string['setting:defaultconfirmationsubjectdefault'] = 'Course booking confirmation: [facetofacename], [starttime]-[finishtime], [sessiondate]';
@@ -868,6 +890,7 @@ $string['attendancecolumn:3'] = 'Org Unit';
 $string['attendancecolumn:4'] = 'Position';
 $string['attendancecolumn:5'] = 'Stream';
 $string['attendancecolumn:6'] = 'Paypoint';
+
 // Site wide bulk upload.
 $string['facetoface:sitebulksessions'] = 'Upload sessions';
 $string['f2fbulksessions'] = 'Upload sessions';
@@ -880,11 +903,11 @@ $string['error:bookingsuploadfileheaderfieldmismatch'] = 'The uploaded CSV does 
 $string['error:missingcourseshortname'] = 'No course shortname provided.';
 $string['error:missingf2fname'] = 'No Face-to-Face activity name provided.';
 // Bulk Upload Sessions.
-$string['facetoface:validatebulksessions'] = 'Validate Bulk Sessions Upload';
-$string['error:uploadsessionserrorsfound'] = 'Errors were found in the uploaded file. Sessions cannot be processed until they are resolved.';
-$string['facetoface:csvline'] = 'CSV line';
-$string['facetoface:norecordsfound'] = 'No records found';
-$string['facetoface:bulksessionsprocessed'] = 'Bulk sessions have been successfully processed.';
+$string['validatebulksessions'] = 'Validate Bulk Sessions Upload';
+$string['error:uploadsessionserrorsfound'] = '{$a} errors were found in the uploaded file. Sessions cannot be processed until they are resolved.';
+$string['csvline'] = 'CSV line';
+$string['norecordsfound'] = 'No records found';
+$string['bulksessionsprocessed'] = 'Bulk sessions have been successfully processed.';
 $string['error:missingstarttime'] = 'Start date and time is required.';
 $string['error:invalidstarttime'] = 'Start date/time is invalid: {$a->date} {$a->time}';
 $string['error:missingfinishtime'] = 'Finish date and time is required.';
@@ -900,11 +923,11 @@ $string['error:failedtocreatesession'] = 'Failed to create session';
 $string['error:failedtocreatedates'] = 'Failed to create dates for session #{$a}';
 $string['error:couldnotsavecustomfieldshort'] = 'Could not save custom field with short name "{$a}"';
 $string['facetoface:uploadbulksessions'] = 'Upload Bulk Sessions';
-$string['facetoface:uploadandpreviewbulk'] = 'Upload & Preview Bulk Sessions';
-$string['examplecsv'] = 'example.csv';
-$string['facetoface:uploadsessionfile'] = 'Upload Bulk Session CSV File';
-$string['facetoface:bulkuploadsuccess'] = 'Bulk sessions uploaded successfully.';
-$string['facetoface:confirmbulkpreview'] = 'Bulk Upload Preview';
+$string['uploadbulksessions'] = 'Upload multiple sessions';
+$string['uploadandpreviewbulk'] = 'Upload & Preview Bulk Sessions';
+$string['examplesessionscsv'] = 'example_sessions.csv';
+$string['uploadsessionfile'] = 'Upload Bulk Session CSV File';
+$string['confirmbulkpreview'] = 'Bulk Upload Preview';
 $string['csvuploadhelp:field'] = 'Field';
 $string['csvuploadhelp:requirement'] = 'Requirement';
 $string['csvuploadhelp:format'] = 'Format';
@@ -929,7 +952,9 @@ $string['csvuploadhelp:duration'] = 'Duration';
 $string['csvuploadhelp:cost'] = 'Normal Cost';
 $string['csvuploadhelp:discount'] = 'Discount Cost';
 $string['csvuploadhelp:details'] = 'Details';
-$string['csvuploadhelp:customfield'] = 'Customfield_&lt;shortname&gt;';
+$string['csvuploadhelp:customfieldfacility'] = 'Customfield_Facility';
+$string['csvuploadhelp:customfieldlocation'] = 'Customfield_Location';
+$string['csvuploadhelp:customfieldroom'] = 'Customfield_Room';
 $string['csvuploadhelp:yesorno'] = 'Yes or No';
 $string['csvuploadhelp:required'] = 'Required';
 $string['csvuploadhelp:optional'] = 'Optional';
@@ -938,3 +963,6 @@ $string['csvuploadhelp:time'] = 'HH:MM';
 $string['csvuploadhelp:num'] = 'Number';
 $string['csvuploadhelp:mins'] = 'Minutes';
 $string['csvuploadhelp:text'] = 'Text';
+$string['eventcsvprocessedbulksessiondesc'] =
+    'The user with id \'{$a->userid}\' has processed an uploaded CSV file for bulk session bookings '
+    . 'in the Face-to-Face instance with the course module id \'{$a->contextinstanceid}\'.';

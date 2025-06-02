@@ -18,10 +18,10 @@
  * Handles bulk session uploads for the Face-to-Face module.
  * Manages CSV validation, preview, and session creation.
  *
- * @package     mod_facetoface
- * @copyright   2025 Gold Coast Health
- * @author        Jonas Sajonas
- * @license        https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_facetoface
+ * @copyright  2025 Gold Coast Health
+ * @author     Jonas Sajonas
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once('../../config.php');
@@ -35,7 +35,7 @@ use mod_facetoface\event\csv_processed_bulksession;
 
 $f2fid = required_param('f2fid', PARAM_INT);
 $PAGE->set_url(new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => $f2fid]));
-$heading = get_string('facetoface:validatebulksessions', 'facetoface');
+$heading = get_string('validatebulksessions', 'facetoface');
 
 $fileid   = optional_param('fileid', 0, PARAM_INT);
 $validate = optional_param('validate', 0, PARAM_INT);
@@ -73,7 +73,7 @@ $uploadform = new bulk_session_upload_form(null, ['f2fid' => $f2fid]);
  * @param array $errors An array of errors to display.
  * @return void
  */
-function handle_bulk_upload_errors(array $errors):void {
+function handle_bulk_upload_errors($errors): void {
     global $OUTPUT;
 
     echo $OUTPUT->header();
@@ -85,7 +85,7 @@ function handle_bulk_upload_errors(array $errors):void {
     $table = new html_table();
     $table->attributes['class'] = 'f2fbookingsuploadlist m-auto generaltable mb-2';
     $table->head = [
-        get_string('facetoface:csvline', 'mod_facetoface'),
+        get_string('csvline', 'mod_facetoface'),
         get_string('status', 'mod_facetoface'),
     ];
 
@@ -99,7 +99,7 @@ function handle_bulk_upload_errors(array $errors):void {
             continue;
         }
 
-        $line = $error[0];
+        $line = $error[0] + 2;
         $messages = array_slice($error, 1);
 
         foreach ($messages as $message) {
@@ -108,6 +108,12 @@ function handle_bulk_upload_errors(array $errors):void {
     }
 
     echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
+
+    $backurl = new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => optional_param('f2fid', 0, PARAM_INT)]);
+    echo html_writer::start_div('mt-4 text-center');
+    echo html_writer::link($backurl, get_string('back'), ['class' => 'btn btn-secondary']);
+    echo html_writer::end_div();
+
     echo $OUTPUT->footer();
 
     exit;
@@ -143,11 +149,11 @@ if ($validate) {
 
     // If no errors, display the CSV preview.
     echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string('facetoface:confirmbulkpreview', 'facetoface'), 3);
+    echo $OUTPUT->heading(get_string('confirmbulkpreview', 'facetoface'), 3);
 
     $records = $manager->get_records();
     if (empty($records)) {
-        echo $OUTPUT->notification(get_string('facetoface:norecordsfound', 'facetoface'), 'info');
+        echo $OUTPUT->notification(get_string('norecordsfound', 'facetoface'), 'info');
     }
 
     if (!empty($records)) {
@@ -195,26 +201,31 @@ if (
     $errors = $manager->validate();
 
     if (empty($errors)) {
-        $manager->process();
+        $success = $manager->process();
 
-        $params = [
-            'context'  => $modulecontext,
-            'objectid' => $f2fid,
-        ];
+        if ($success) {
+            $params = [
+                'context'  => $modulecontext,
+                'objectid' => $f2fid,
+            ];
 
-        $event = csv_processed_bulksession::create($params);
-        $event->add_record_snapshot('facetoface', $facetoface);
-        $event->trigger();
+            $event = csv_processed_bulksession::create($params);
+            $event->add_record_snapshot('facetoface', $facetoface);
+            $event->trigger();
 
-        redirect(
-            new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => $f2fid]),
-            get_string('facetoface:bulksessionsprocessed', 'mod_facetoface'),
-            null,
-            notification::NOTIFY_SUCCESS
-        );
+            redirect(
+                new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => $f2fid]),
+                get_string('bulksessionsprocessed', 'mod_facetoface'),
+                null,
+                notification::NOTIFY_SUCCESS
+            );
+        } else {
+            handle_bulk_upload_errors($manager->get_errors());
+        }
     }
 
     handle_bulk_upload_errors($errors);
+
 }
 
 // Default display: show the upload form.

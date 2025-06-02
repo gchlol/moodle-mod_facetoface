@@ -29,10 +29,11 @@ use stored_file;
  * Handles CSV parsing, validation, and session creation.
  * Supports file uploads.
  *
- * @package     mod_facetoface
- * @copyright   2025 Gold Coast Health
- * @author        Jonas Sajonas
- * @license        https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_facetoface
+ * @copyright  2025 Gold Coast Health
+ * @author     Jonas Sajonas
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
  */
 class bulk_session_manager {
     /** @var int Facetoface instance ID */
@@ -67,7 +68,7 @@ class bulk_session_manager {
      * @return bool True on success.
      * @throws moodle_exception If the file cannot be loaded.
      */
-    public function load_from_file(int $fileid):bool {
+    public function load_from_file(int $fileid): bool {
         global $USER;
 
         $this->usefile = true;
@@ -89,7 +90,7 @@ class bulk_session_manager {
      *
      * @return array An indexed array of column headers.
      */
-    public static function get_headers():array {
+    public static function get_headers(): array {
         return [
             'Session Date/Time Known',
             'Start Date',
@@ -130,9 +131,8 @@ class bulk_session_manager {
         if (empty($headerline)) {
             fclose($handle);
             throw new moodle_exception(
-                'error:bookingsuploadfileheaderfieldmismatch',
-                'mod_facetoface',
-                get_string('error:noheaderrow', 'facetoface')
+                'error:noheaderrow',
+                'mod_facetoface'
             );
         }
 
@@ -155,14 +155,18 @@ class bulk_session_manager {
         }
 
         try {
+            $rownum = 2;
             while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
                 if (count($data) !== count($headerline)) {
                     throw new moodle_exception(
                         'error:bookingsuploadfileheaderfieldmismatch',
-                        'facetoface'
+                        'facetoface',
+                        '',
+                        $rownum
                     );
                 }
                 yield array_combine($headerline, $data);
+                $rownum++;
             }
         } finally {
             fclose($handle);
@@ -324,17 +328,17 @@ class bulk_session_manager {
      *
      * @return bool True if all sessions were created successfully, false otherwise.
      */
-    public function process():bool {
+    public function process(): bool {
         global $DB;
 
         $allcustomfields = facetoface_get_session_customfields();
         $customfieldsbyshortname = [];
 
         foreach ($allcustomfields as $field) {
-            $customfieldsbyshortname[$field->shortname] = $field;
+            $customfieldsbyshortname[strtolower($field->shortname)] = $field;
         }
 
-        foreach ($this->records as $record) {
+        foreach ($this->records as $index => $record) {
             $session = new stdClass();
             $session->facetoface = $this->facetofaceid;
 
@@ -433,7 +437,7 @@ class bulk_session_manager {
 
             $sessionid = $DB->insert_record('facetoface_sessions', $session);
             if (!$sessionid) {
-                $this->errors[] = get_string('error:failedtocreatesession', 'facetoface');
+                $this->errors[] = [$index, get_string('error:failedtocreatesession', 'facetoface')];
 
                 continue;
             }
@@ -446,7 +450,7 @@ class bulk_session_manager {
             $sessionsdateid = $DB->insert_record('facetoface_sessions_dates', $sessionsdate);
 
             if (!$sessionsdateid) {
-                $this->errors[] = get_string('error:failedtocreatedates', 'facetoface', $sessionid);
+                $this->errors[] = [$index, get_string('error:failedtocreatedates', 'facetoface', $sessionid)];
             }
 
             // Save any custom fields via the same approach as single-session.
@@ -457,10 +461,11 @@ class bulk_session_manager {
                     continue;
                 }
 
-                $shortname = substr($column, strlen('Customfield_'));
+                $shortname = strtolower(substr($column, strlen('Customfield_')));
 
                 // If we don’t have a matching custom field for $shortname, skip it.
                 if (!isset($customfieldsbyshortname[$shortname])) {
+                    $this->errors[] = [$index, get_string('error:unknowncustomfieldshort', 'facetoface', $shortname)];
 
                     continue;
                 }
@@ -468,7 +473,7 @@ class bulk_session_manager {
                 // Otherwise, save the custom field.
                 $field = $customfieldsbyshortname[$shortname];
                 if (!facetoface_save_customfield_value($field->id, $value, $sessionid, 'session')) {
-                    $this->errors[] = get_string('error:couldnotsavecustomfieldshort', 'facetoface', $shortname);
+                    $this->errors[] = [$index, get_string('error:couldnotsavecustomfieldshort', 'facetoface', $shortname)];
                 }
             }
         }
@@ -493,7 +498,7 @@ class bulk_session_manager {
      *
      * @return array List of CSV records.
      */
-    public function get_records():array {
+    public function get_records(): array {
         if ($this->usefile) {
             $this->records = iterator_to_array($this->get_iterator());
         }

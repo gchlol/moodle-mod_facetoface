@@ -29,10 +29,10 @@ require_once($CFG->dirroot.'/repository/lib.php');
  * Form for uploading bulk session CSV files in Face-to-Face module.
  * Provides file selection, validation, and preview before processing.
  *
- * @package     mod_facetoface
- * @copyright   2025 Gold Coast Health
- * @author        Jonas Sajonas
- * @license        https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_facetoface
+ * @copyright  2025 Gold Coast Health
+ * @author     Jonas Sajonas
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class bulk_session_upload_form extends moodleform {
     /**
@@ -52,15 +52,15 @@ class bulk_session_upload_form extends moodleform {
         $mform->addElement(
             'header',
             'settingsheader',
-            get_string('facetoface:uploadbulksessions', 'mod_facetoface')
+            get_string('uploadbulksessions', 'mod_facetoface')
         );
 
         // Example CSV link.
-        $url = new moodle_url('/mod/facetoface/example_bulk.csv');
-        $link = html_writer::link($url, get_string('examplecsv', 'mod_facetoface'));
+        $url = new moodle_url('/mod/facetoface/example_sessions.csv');
+        $link = html_writer::link($url, get_string('examplesessionscsv', 'mod_facetoface'));
         $mform->addElement(
             'static',
-            'example_bulkcsv',
+            'example_sessions_csv',
             get_string('facetoface:examplecsv', 'mod_facetoface'),
             $link
         );
@@ -68,7 +68,7 @@ class bulk_session_upload_form extends moodleform {
         // File manager for CSV upload.
         $maxbytes = get_max_upload_file_size($CFG->maxbytes);
         $mform->addElement('filemanager', 'csvfile',
-            get_string('facetoface:uploadsessionfile', 'mod_facetoface'),
+            get_string('uploadsessionfile', 'mod_facetoface'),
             null,
             [
                 'subdirs'       => 0,
@@ -100,7 +100,7 @@ class bulk_session_upload_form extends moodleform {
 
         $this->add_action_buttons(
             true,
-            get_string('facetoface:uploadandpreviewbulk', 'mod_facetoface')
+            get_string('uploadandpreviewbulk', 'mod_facetoface')
         );
     }
 
@@ -180,7 +180,16 @@ class bulk_session_upload_form extends moodleform {
                 'format' => 'csvuploadhelp:text',
             ],
             [
-                'field' => 'csvuploadhelp:customfield',
+                'field' => 'csvuploadhelp:customfieldfacility',
+                'requirement' => 'csvuploadhelp:optional',
+                'format' => 'csvuploadhelp:text',
+            ],    [
+                'field' => 'csvuploadhelp:customfieldlocation',
+                'requirement' => 'csvuploadhelp:optional',
+                'format' => 'csvuploadhelp:text',
+            ],
+            [
+                'field' => 'csvuploadhelp:customfieldroom',
                 'requirement' => 'csvuploadhelp:optional',
                 'format' => 'csvuploadhelp:text',
             ],

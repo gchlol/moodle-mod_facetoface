@@ -1,6 +1,0 @@
-Session Date/Time Known,Start Date,Start Time,Finish Date,Finish Time,Allow Cancellations,Capacity,Allow Overbookings,Duration,Normal Cost,Discount Cost,Details,Customfield_location
-yes,10/03/2025,09:00,10/03/2025,12:00,yes,20,no,180,100,80,Session about training,location,Room A1
-yes,15/04/2025,14:00,15/04/2025,16:30,no,50,yes,150,200,180,Leadership Workshop,venue,Conference Hall
-yes,20/06/2025,10:30,20/06/2025,12:30,yes,30,no,120,150,120,Technical session,trainer,John Doe
-yes,10/07/2025,08:00,10/07/2025,10:00,yes,40,no,120,90,70,New employee onboarding,department,HR
-yes,15/08/2025,11:00,15/08/2025,13:00,no,25,yes,120,120,90,Cybersecurity Awareness,location,Room B1

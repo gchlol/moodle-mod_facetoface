@@ -22,10 +22,10 @@ use core\event\base;
 /**
  * The mod_facetoface CSV bulk session processed event.
  *
- * @package     mod_facetoface
- * @copyright   2025 Gold Coast Health
- * @author        Jonas Sajonas
- * @license        https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_facetoface
+ * @copyright  2025 Gold Coast Health
+ * @author     Jonas Sajonas
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class csv_processed_bulksession extends base {
 
