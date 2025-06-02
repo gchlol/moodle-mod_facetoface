@@ -337,7 +337,7 @@ class bulk_session_manager {
         $customfieldsbyshortname = [];
 
         foreach ($allcustomfields as $field) {
-            $customfieldsbyshortname[$field->shortname] = $field;
+            $customfieldsbyshortname[strtolower($field->shortname)] = $field;
         }
 
         foreach ($this->records as $index => $record) {
@@ -462,10 +462,11 @@ class bulk_session_manager {
                     continue;
                 }
 
-                $shortname = substr($column, strlen('Customfield_'));
+                $shortname = strtolower(substr($column, strlen('Customfield_')));
 
                 // If we don’t have a matching custom field for $shortname, skip it.
                 if (!isset($customfieldsbyshortname[$shortname])) {
+                    $this->errors[] = [$index, get_string('error:unknowncustomfieldshort', 'facetoface', $shortname)];
 
                     continue;
                 }

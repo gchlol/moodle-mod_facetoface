@@ -108,6 +108,12 @@ function handle_bulk_upload_errors($errors): void {
     }
 
     echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
+
+    $backurl = new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => optional_param('f2fid', 0, PARAM_INT)]);
+    echo html_writer::start_div('mt-4 text-center');
+    echo html_writer::link($backurl, get_string('back'), ['class' => 'btn btn-secondary']);
+    echo html_writer::end_div();
+
     echo $OUTPUT->footer();
 
     exit;
@@ -194,26 +200,31 @@ if (
     $errors = $manager->validate();
 
     if (empty($errors)) {
-        $manager->process();
+        $success = $manager->process();
 
-        $params = [
-            'context'  => $modulecontext,
-            'objectid' => $f2fid,
-        ];
+        if ($success) {
+            $params = [
+                'context'  => $modulecontext,
+                'objectid' => $f2fid,
+            ];
 
-        $event = csv_processed_bulksession::create($params);
-        $event->add_record_snapshot('facetoface', $facetoface);
-        $event->trigger();
+            $event = csv_processed_bulksession::create($params);
+            $event->add_record_snapshot('facetoface', $facetoface);
+            $event->trigger();
 
-        redirect(
-            new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => $f2fid]),
-            get_string('bulksessionsprocessed', 'mod_facetoface'),
-            null,
-            notification::NOTIFY_SUCCESS
-        );
+            redirect(
+                new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => $f2fid]),
+                get_string('bulksessionsprocessed', 'mod_facetoface'),
+                null,
+                notification::NOTIFY_SUCCESS
+            );
+        } else {
+            handle_bulk_upload_errors($manager->get_errors());
+        }
     }
 
     handle_bulk_upload_errors($errors);
+
 }
 
 // Default display: show the upload form.
