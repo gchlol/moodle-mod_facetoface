@@ -198,7 +198,7 @@ if (
 
             redirect(
                 new moodle_url('/mod/facetoface/sitebulkupload.php'),
-                get_string('facetoface:bulksessionsprocessed', 'mod_facetoface'),
+                get_string('bulksessionsprocessed', 'mod_facetoface'),
                 null,
                 notification::NOTIFY_SUCCESS
             );
