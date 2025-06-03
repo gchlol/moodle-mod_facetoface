@@ -224,9 +224,9 @@ $ADMIN->add('modfacetoface', $bulkupload);
 
 // External page for bulk upload attendance.
 $uploadextpage = new admin_externalpage(
-    'modfacetoface_upload_ext',
+    'modfacetoface_uploadbulkattendance',
     get_string('uploadbookings', 'mod_facetoface'),
-    new moodle_url('/mod/facetoface/upload_ext.php'),
+    new moodle_url('/mod/facetoface/uploadbulkattendance.php'),
     'moodle/site:config'
 );
 $ADMIN->add('modfacetoface', $uploadextpage);
