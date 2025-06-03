@@ -36,10 +36,11 @@ $validate = optional_param('validate', 0, PARAM_INT);
 $process = optional_param('process', 0, PARAM_INT);
 $fileid = optional_param('fileid', 0, PARAM_INT);
 $caseinsensitive = optional_param('caseinsensitive', false, PARAM_BOOL);
+$heading = get_string('uploadbulkbookings', 'facetoface');
 
 $PAGE->set_url(new moodle_url('/mod/facetoface/upload_ext.php'));
-$PAGE->set_title(get_string('pickfacetofaceinstance', 'mod_facetoface'));
-$PAGE->set_heading(get_string('pluginname', 'mod_facetoface'));
+$PAGE->set_title($heading);
+$PAGE->set_heading($heading);
 
 // Show upload form, no actions yet.
 if (!$validate && !$process) {
@@ -98,7 +99,9 @@ function handle_csv_validation(int &$fileid, bool $caseinsensitive): void {
     // If no data or missing CSV, show error and re-display form.
     if (!$data || empty($data->csvfile)) {
         echo $OUTPUT->header();
+
         throw new moodle_exception('error:cannotloadfile', 'mod_facetoface');
+
         echo $OUTPUT->footer();
 
         return;
@@ -173,7 +176,12 @@ function handle_csv_processing(int $fileid, bool $caseinsensitive): void {
     if (!empty($errors)) {
         $errmsg = get_string('error:bulkuploadfileerrorsfound', 'mod_facetoface', count($errors));
 
-        redirect(new moodle_url('/mod/facetoface/upload_ext.php'), $errmsg, null, notification::NOTIFY_ERROR);
+        redirect(
+            new moodle_url('/mod/facetoface/upload_ext.php'),
+            $errmsg,
+            null,
+            notification::NOTIFY_ERROR
+        );
     }
 
     // Process actual bookings.
@@ -201,7 +209,10 @@ function display_errors_table(array $errors): void {
 
     $table = new html_table();
     $table->attributes['class'] = 'generaltable mb-3';
-    $table->head = [get_string('csvline', 'tool_uploaduser'), get_string('status')];
+    $table->head = [
+        get_string('csvline', 'tool_uploaduser'),
+        get_string('status')
+    ];
 
     foreach ($errors as $error) {
         $rownum = $error[0];

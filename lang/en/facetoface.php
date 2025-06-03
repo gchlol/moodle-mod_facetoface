@@ -964,6 +964,8 @@ $string['csvuploadhelp:time'] = 'HH:MM';
 $string['csvuploadhelp:num'] = 'Number';
 $string['csvuploadhelp:mins'] = 'Minutes';
 $string['csvuploadhelp:text'] = 'Text';
+// Bulk Upload Bookings.
+$string['uploadbulkbookings'] = 'Upload Bulk Bookings';
 $string['facetoface:uploadbookingsextfiledesc'] = "
 Fields expected:
 - Username (required)
@@ -971,5 +973,4 @@ Fields expected:
 - Status (optional - valid options are cancelled,  booked, waitlisted, no_show, partially_attended, and fully_attended)
 - Discount code (optional)
 - Notification type (optional - valid options are 'email', 'ical', or 'both')";
-$string['facetoface:uploadbookingsextfile'] = 'Upload Booking Extension File';
 $string['examplecsvfilename'] = 'example_bookings.csv';

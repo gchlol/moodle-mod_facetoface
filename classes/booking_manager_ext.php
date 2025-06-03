@@ -217,7 +217,13 @@ class booking_manager_ext {
             if ($session) {
                 $rowerrors = array_merge(
                     $rowerrors,
-                    $this->check_overbooking($entry, $session, $row, $timenow, $sessioncapacitycache)
+                    $this->check_overbooking(
+                        $entry,
+                        $session,
+                        $row,
+                        $timenow,
+                        $sessioncapacitycache
+                    )
                 );
             }
 
@@ -359,7 +365,7 @@ class booking_manager_ext {
         return [
             'errors' => $errors,
             'course' => $course,
-            'f2f'    => $f2f,
+            'f2f' => $f2f,
         ];
     }
 
@@ -372,7 +378,14 @@ class booking_manager_ext {
 
         $session = facetoface_get_session($entry->session);
         if (!$session) {
-            $errors[] = [$row, new lang_string('error:sessiondoesnotexist', 'mod_facetoface', $entry->session)];
+            $errors[] = [
+                $row,
+                new lang_string(
+                    'error:sessiondoesnotexist',
+                    'mod_facetoface',
+                    $entry->session
+                )
+            ];
         }
 
         if (
@@ -386,7 +399,7 @@ class booking_manager_ext {
                     'error:sessionwrongf2f',
                     'mod_facetoface',
                     (object)[
-                        'sessionid'      => $entry->session,
+                        'sessionid' => $entry->session,
                         'facetofacename' => $entry->facetofacename,
                     ]
                 )
@@ -395,7 +408,7 @@ class booking_manager_ext {
         }
 
         return [
-            'errors'  => $errors,
+            'errors' => $errors,
             'session' => $session,
         ];
     }
@@ -411,9 +424,15 @@ class booking_manager_ext {
         // Attempt to find user(s) by username.
         $userids = $this->match_users($entry->username, 'id');
         if (count($userids) > 1) {
-            $errors[] = [$row, new lang_string('error:multipleusersmatched', 'mod_facetoface', $entry->username)];
+            $errors[] = [
+                $row,
+                new lang_string('error:multipleusersmatched', 'mod_facetoface', $entry->username)
+            ];
         } else if (empty($userids)) {
-            $errors[] = [$row, new lang_string('error:userdoesnotexist', 'mod_facetoface', $entry->username)];
+            $errors[] = [
+                $row,
+                new lang_string('error:userdoesnotexist', 'mod_facetoface', $entry->username)
+            ];
         } else {
             // Exactly one user matched; store the user id.
             $userid = current($userids)->id;
@@ -437,15 +456,24 @@ class booking_manager_ext {
     ): array {
         $errors = [];
 
-        if ($entry->status === 'cancelled' && facetoface_has_session_started($session, $timenow)) {
+        if (
+            $entry->status === 'cancelled' &&
+            facetoface_has_session_started($session, $timenow)
+        ) {
             $errors[] = [$row, new lang_string('error:sessionalreadystarted', 'mod_facetoface', $entry->session)];
         }
 
-        if (!isset($sessioncapacitycache[$session->id]) && !$session->allowoverbook) {
+        if (
+            !isset($sessioncapacitycache[$session->id]) &&
+            !$session->allowoverbook
+        ) {
             $sessioncapacitycache[$session->id]['capacity'] =
                 $session->capacity - facetoface_get_num_attendees($session->id, MDL_F2F_STATUS_APPROVED);
         }
-        if (!$session->allowoverbook && $entry->status !== 'cancelled') {
+        if (
+            !$session->allowoverbook &&
+            $entry->status !== 'cancelled'
+        ) {
             $sessioncapacitycache[$session->id]['capacity']--;
             $sessioncapacitycache[$session->id]['rows'][] = $row;
         }

@@ -16,6 +16,7 @@
 
 namespace mod_facetoface\form;
 
+use moodleform;
 use moodle_url;
 use html_writer;
 
@@ -28,7 +29,7 @@ require_once($CFG->dirroot . '/repository/lib.php');
  * @author    Jonas Sajonas
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class upload_bookings_form_ext extends \moodleform {
+class upload_bookings_form_ext extends moodleform {
 
     /**
      * Build form for importing bookings.
@@ -38,7 +39,7 @@ class upload_bookings_form_ext extends \moodleform {
 
         $mform = $this->_form;
 
-        $mform->addElement('header', 'settingsheader', get_string('upload'));
+        $mform->addElement('header', 'settingsheader', get_string('uploadbulkbookings', 'mod_facetoface'));
 
         $url = new moodle_url('/mod/facetoface/booking_example.csv');
         $link = html_writer::link(
@@ -49,11 +50,11 @@ class upload_bookings_form_ext extends \moodleform {
         $mform->addElement(
             'static',
             'examplecsv',
-            get_string('facetoface:examplecsv', 'mod_facetoface'),
+            get_string('examplecsv', 'mod_facetoface'),
             $link
         );
 
-        $maxbytes = get_max_upload_file_size($CFG->maxbytes, 0);
+        $maxbytes = get_max_upload_file_size($CFG->maxbytes);
         $mform->addElement(
             'filemanager',
             'csvfile',
@@ -65,7 +66,6 @@ class upload_bookings_form_ext extends \moodleform {
                 'accepted_types' => 'csv',
                 'maxbytes' => $maxbytes,
                 'return_types' => FILE_INTERNAL | FILE_EXTERNAL,
-                'maxfilename' => $CFG->maxfilename,
             ]
         );
 
