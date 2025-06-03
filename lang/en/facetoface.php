@@ -974,3 +974,4 @@ Fields expected:
 - Discount code (optional)
 - Notification type (optional - valid options are 'email', 'ical', or 'both')";
 $string['examplecsvfilename'] = 'example_bookings.csv';
+$string['uploadbulkattendance'] = 'Upload Bulk Attendance';

@@ -223,13 +223,13 @@ $bulkupload = new admin_externalpage( 'modfacetoface_sitebulkupload',
 $ADMIN->add('modfacetoface', $bulkupload);
 
 // External page for bulk upload attendance.
-$uploadextpage = new admin_externalpage(
+$uploadbulkattendance = new admin_externalpage(
     'modfacetoface_uploadbulkattendance',
-    get_string('uploadbookings', 'mod_facetoface'),
+    get_string('uploadbulkattendance', 'mod_facetoface'),
     new moodle_url('/mod/facetoface/uploadbulkattendance.php'),
     'moodle/site:config'
 );
-$ADMIN->add('modfacetoface', $uploadextpage);
+$ADMIN->add('modfacetoface', $uploadbulkattendance);
 
 // Disables Moodle's default settings page.
 $settings = null;
