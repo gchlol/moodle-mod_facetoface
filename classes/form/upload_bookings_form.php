@@ -51,17 +51,17 @@ class upload_bookings_form extends \moodleform {
 
         $maxbytes = get_max_upload_file_size($CFG->maxbytes, 0);
         $mform->addElement('filemanager', 'csvfile', get_string('facetoface:uploadbookingsfile', 'mod_facetoface'), null, [
-        'subdirs' => 0,
-        'maxfiles' => 1,
-        'accepted_types' => 'csv',
-        'maxbytes' => $maxbytes,
-        'return_types' => FILE_INTERNAL | FILE_EXTERNAL,
+            'subdirs' => 0,
+            'maxfiles' => 1,
+            'accepted_types' => 'csv',
+            'maxbytes' => $maxbytes,
+            'return_types' => FILE_INTERNAL | FILE_EXTERNAL,
         ]);
         $mform->setType('csvfile', PARAM_INT);
         $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
 
         $mform->addElement('static', 'csvuploadhelp', '',
-        nl2br(get_string('facetoface:uploadbookingsfiledesc', 'mod_facetoface')));
+            nl2br(get_string('facetoface:uploadbookingsfiledesc', 'mod_facetoface')));
 
         $mform->addElement('advcheckbox', 'caseinsensitive', get_string('caseinsensitive', 'mod_facetoface'));
         $mform->setDefault('caseinsensitive', true);
