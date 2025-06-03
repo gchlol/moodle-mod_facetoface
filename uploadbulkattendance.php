@@ -15,12 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Upload form for csv file to handle enrolment of bookings in bulk.
  *
  * @package    mod_facetoface
- * @author     Kevin Pham <kevinpham@catalyst-au.net>
- * @copyright  Catalyst IT, 2024
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  2025 Gold Coast Health
+ * @author     Jonas Sajonas
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once('../../config.php');

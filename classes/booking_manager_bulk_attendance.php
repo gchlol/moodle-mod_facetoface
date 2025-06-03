@@ -23,12 +23,11 @@ use lang_string;
 use moodle_exception;
 
 /**
- * Booking manager
  *
  * @package    mod_facetoface
- * @author     Kevin Pham <kevinpham@catalyst-au.net>
- * @copyright  Catalyst IT, 2024
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  2025 Gold Coast Health
+ * @author     Jonas Sajonas
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class booking_manager {
 
