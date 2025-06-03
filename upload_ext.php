@@ -20,6 +20,7 @@
  * @author    Jonas Sajonas
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 
@@ -31,10 +32,10 @@ use mod_facetoface\form\confirm_bookings_form_ext;
 admin_externalpage_setup('modfacetoface_upload_ext');
 
 // Flow-control parameters.
-$validate         = optional_param('validate', 0, PARAM_INT);
-$process          = optional_param('process', 0, PARAM_INT);
-$fileid           = optional_param('fileid', 0, PARAM_INT);
-$caseinsensitive  = optional_param('caseinsensitive', false, PARAM_BOOL);
+$validate = optional_param('validate', 0, PARAM_INT);
+$process = optional_param('process', 0, PARAM_INT);
+$fileid = optional_param('fileid', 0, PARAM_INT);
+$caseinsensitive = optional_param('caseinsensitive', false, PARAM_BOOL);
 
 $PAGE->set_url(new moodle_url('/mod/facetoface/upload_ext.php'));
 $PAGE->set_title(get_string('pickfacetofaceinstance', 'mod_facetoface'));
@@ -43,18 +44,21 @@ $PAGE->set_heading(get_string('pluginname', 'mod_facetoface'));
 // Show upload form, no actions yet.
 if (!$validate && !$process) {
     display_upload_form();
+
     exit;
 }
 
 // User submitted CSV, validate but not finalise.
 if ($validate && !$process) {
     handle_csv_validation($fileid, $caseinsensitive);
+
     exit;
 }
 
 // Process final booking.
 if ($process && $fileid) {
     handle_csv_processing($fileid, $caseinsensitive);
+
     exit;
 }
 
@@ -72,7 +76,9 @@ function display_upload_form(): void {
     $mform = new upload_bookings_form_ext(null, ['validate' => 1]);
 
     echo $OUTPUT->header();
+
     $mform->display();
+
     echo $OUTPUT->footer();
 }
 
@@ -92,9 +98,9 @@ function handle_csv_validation(int &$fileid, bool $caseinsensitive): void {
     // If no data or missing CSV, show error and re-display form.
     if (!$data || empty($data->csvfile)) {
         echo $OUTPUT->header();
-        echo $OUTPUT->notification(get_string('error:choosecsv', 'mod_facetoface'), 'error');
-        $mform->display();
+        throw new moodle_exception('error:cannotloadfile', 'mod_facetoface');
         echo $OUTPUT->footer();
+
         return;
     }
 
@@ -113,6 +119,7 @@ function handle_csv_validation(int &$fileid, bool $caseinsensitive): void {
         display_errors_table($errors);
         echo html_writer::link(new moodle_url('/mod/facetoface/upload_ext.php'), get_string('back'));
         echo $OUTPUT->footer();
+
         return;
     }
 
@@ -127,9 +134,9 @@ function handle_csv_validation(int &$fileid, bool $caseinsensitive): void {
 
     // Show confirm form.
     $confirmform = new confirm_bookings_form_ext(null, [
-        'fileid'          => $fileid,
+        'fileid' => $fileid,
         'caseinsensitive' => $caseinsensitive,
-        'process'         => 1
+        'process' => 1
     ]);
     $confirmform->display();
 
@@ -147,6 +154,7 @@ function handle_csv_processing(int $fileid, bool $caseinsensitive): void {
 
     $confirmform = new confirm_bookings_form_ext();
     if ($confirmform->is_cancelled()) {
+
         redirect(new moodle_url('/mod/facetoface/upload_ext.php'));
     }
 
@@ -164,6 +172,7 @@ function handle_csv_processing(int $fileid, bool $caseinsensitive): void {
     $errors = $manager->validate();
     if (!empty($errors)) {
         $errmsg = get_string('error:bulkuploadfileerrorsfound', 'mod_facetoface', count($errors));
+
         redirect(new moodle_url('/mod/facetoface/upload_ext.php'), $errmsg, null, notification::NOTIFY_ERROR);
     }
 
@@ -192,7 +201,7 @@ function display_errors_table(array $errors): void {
 
     $table = new html_table();
     $table->attributes['class'] = 'generaltable mb-3';
-    $table->head = [get_string('uucsvline', 'tool_uploaduser'), get_string('status')];
+    $table->head = [get_string('csvline', 'tool_uploaduser'), get_string('status')];
 
     foreach ($errors as $error) {
         $rownum = $error[0];
@@ -212,5 +221,6 @@ function display_records_preview(array $records): void {
     foreach ($records as $r) {
         $table->data[] = array_values((array)$r);
     }
+
     echo html_writer::table($table);
 }

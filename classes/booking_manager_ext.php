@@ -71,6 +71,7 @@ class booking_manager_ext {
      */
     public function load_from_file(int $fileitemid) {
         global $USER;
+
         $this->usefile = true;
 
         $fs = new file_storage();
@@ -103,20 +104,20 @@ class booking_manager_ext {
      */
     public static function get_headers(): array {
         return [
-            'course',
-            'facetofacename',
-            'username',
-            'session',
-            'status',
-            'discountcode',
-            'notificationtype',
+            'Course Shortname ',
+            'Face-to-Face Activity Name',
+            'Username',
+            'Session',
+            'Status',
+            'Discount Code',
+            'Notification Type',
         ];
     }
 
     /**
      * Get iterator for the records.
      *
-     * @return \Generator
+     * @return Generator
      * @throws moodle_exception For invalid CSV structure.
      */
     private function get_iterator(): Generator {
@@ -143,6 +144,7 @@ class booking_manager_ext {
                 if ($numfields !== $numheaders) {
                     throw new moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface');
                 }
+
                 $record = array_combine($headers, $data);
 
                 foreach ($record as $key => $value) {
@@ -175,25 +177,25 @@ class booking_manager_ext {
             $rowerrors = [];
 
             // Normalize empty fields.
-            $entry->status           = $entry->status ?? '';
+            $entry->status = $entry->status ?? '';
             $entry->notificationtype = $entry->notificationtype ?? '';
-            $entry->discountcode     = $entry->discountcode ?? '';
+            $entry->discountcode = $entry->discountcode ?? '';
 
             // Course & Face-to-face checks.
             $coursef2f = $this->check_course_and_f2f($entry, $row);
             $rowerrors = array_merge($rowerrors, $coursef2f['errors']);
-            $course    = $coursef2f['course'];
-            $f2f       = $coursef2f['f2f'];
+            $course = $coursef2f['course'];
+            $f2f = $coursef2f['f2f'];
 
             // Session checks.
             $sessionset = $this->check_session($entry, $row, $f2f);
-            $rowerrors  = array_merge($rowerrors, $sessionset['errors']);
-            $session    = $sessionset['session'];
+            $rowerrors = array_merge($rowerrors, $sessionset['errors']);
+            $session = $sessionset['session'];
 
             // User checks.
             $usercheck = $this->check_user($entry, $row);
             $rowerrors = array_merge($rowerrors, $usercheck['errors']);
-            $userid    = $usercheck['userid'];
+            $userid = $usercheck['userid'];
 
             // Confirm user is enrolled in course.
             if (

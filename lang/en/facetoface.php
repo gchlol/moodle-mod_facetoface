@@ -241,7 +241,6 @@ Fields expected:
 - Username (required)
 - Session number (required)
 - Status (optional - valid options are cancelled,  booked, waitlisted, no_show, partially_attended, and fully_attended)
-- Status (optional - valid options are cancelled,  booked, waitlisted, no_show, partially_attended, and fully_attended)
 - Discount code (optional)
 - Notification type (optional - valid options are 'email', 'ical', or 'both')
 ";
@@ -965,6 +964,12 @@ $string['csvuploadhelp:time'] = 'HH:MM';
 $string['csvuploadhelp:num'] = 'Number';
 $string['csvuploadhelp:mins'] = 'Minutes';
 $string['csvuploadhelp:text'] = 'Text';
-$string['eventcsvprocessedbulksessiondesc'] =
-    'The user with id \'{$a->userid}\' has processed an uploaded CSV file for bulk session bookings '
-    . 'in the Face-to-Face instance with the course module id \'{$a->contextinstanceid}\'.';
+$string['facetoface:uploadbookingsextfiledesc'] = "
+Fields expected:
+- Username (required)
+- Session number (required)
+- Status (optional - valid options are cancelled,  booked, waitlisted, no_show, partially_attended, and fully_attended)
+- Discount code (optional)
+- Notification type (optional - valid options are 'email', 'ical', or 'both')";
+$string['facetoface:uploadbookingsextfile'] = 'Upload Booking Extension File';
+$string['examplecsvfilename'] = 'example_bookings.csv';

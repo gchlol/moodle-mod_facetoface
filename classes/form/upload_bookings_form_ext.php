@@ -14,13 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * @package   mod_facetoface
- * @copyright 2025, Gold Coast Health
- * @author    Jonas Sajonas
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_facetoface\form;
 
 use moodle_url;
@@ -29,7 +22,12 @@ use html_writer;
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/repository/lib.php');
 
-
+/**
+ * @package   mod_facetoface
+ * @copyright 2025, Gold Coast Health
+ * @author    Jonas Sajonas
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class upload_bookings_form_ext extends \moodleform {
 
     /**
@@ -43,22 +41,34 @@ class upload_bookings_form_ext extends \moodleform {
         $mform->addElement('header', 'settingsheader', get_string('upload'));
 
         $url = new moodle_url('/mod/facetoface/booking_example.csv');
-        $link = html_writer::link( $url,
+        $link = html_writer::link(
+            $url,
             get_string('examplecsvfilename', 'mod_facetoface')
         );
-        $mform->addElement('static', 'examplecsv',
+
+        $mform->addElement(
+            'static',
+            'examplecsv',
             get_string('facetoface:examplecsv', 'mod_facetoface'),
             $link
         );
 
         $maxbytes = get_max_upload_file_size($CFG->maxbytes, 0);
-        $mform->addElement('filemanager', 'csvfile', get_string('facetoface:uploadbookingsfile', 'mod_facetoface'), null, [
-        'subdirs' => 0,
-        'maxfiles' => 1,
-        'accepted_types' => 'csv',
-        'maxbytes' => $maxbytes,
-        'return_types' => FILE_INTERNAL | FILE_EXTERNAL,
-        ]);
+        $mform->addElement(
+            'filemanager',
+            'csvfile',
+            get_string('facetoface:uploadbookingsfile', 'mod_facetoface'),
+            null,
+            [
+                'subdirs' => 0,
+                'maxfiles' => 1,
+                'accepted_types' => 'csv',
+                'maxbytes' => $maxbytes,
+                'return_types' => FILE_INTERNAL | FILE_EXTERNAL,
+                'maxfilename' => $CFG->maxfilename,
+            ]
+        );
+
         $mform->setType('csvfile', PARAM_INT);
         $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
 
