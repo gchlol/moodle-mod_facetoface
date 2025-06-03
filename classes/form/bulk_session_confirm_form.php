@@ -26,23 +26,28 @@ require_once($CFG->libdir.'/formslib.php');
  * Confirmation form for bulk session uploads in Face-to-Face module.
  * Allows users to proceed with session processing.
  *
- * @package   mod_facetoface
- * @copyright 2025, Gold Coast Health
- * @author      Jonas Sajonas
- * @license      http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_facetoface
+ * @copyright  2025 Gold Coast Health
+ * @author     Jonas Sajonas
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class site_bulk_session_confirm_form extends moodleform {
+class bulk_session_confirm_form extends moodleform {
 
     /**
-     * Builds confirmation form for bulk session processing site level.
+     * Builds confirmation form for bulk session processing.
      *
      * @return void
      */
     public function definition(): void {
         $mform = $this->_form;
 
-        // Retrieve file ID from customdata, which references CSV file in draft.
+        // Retrieve the new parameter f2fid from custom data.
+        $f2fid = $this->_customdata['f2fid'] ?? 0;
         $fileid = $this->_customdata['fileid'] ?? 0;
+
+        // Add hidden fields using the new name.
+        $mform->addElement('hidden', 'f2fid', $f2fid);
+        $mform->setType('f2fid', PARAM_INT);
 
         $mform->addElement('hidden', 'fileid', $fileid);
         $mform->setType('fileid', PARAM_INT);

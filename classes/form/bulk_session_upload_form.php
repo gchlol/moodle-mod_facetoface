@@ -24,63 +24,58 @@ use html_table;
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/repository/lib.php');
-require_once($CFG->libdir.'/formslib.php');
 
 /**
  * Form for uploading bulk session CSV files in Face-to-Face module.
  * Provides file selection, validation, and preview before processing.
  *
- * @package   mod_facetoface
- * @copyright 2025, Gold Coast Health
- * @author      Jonas Sajonas
- * @license      http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_facetoface
+ * @copyright  2025 Gold Coast Health
+ * @author     Jonas Sajonas
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class site_bulk_session_upload_form extends moodleform {
-
+class bulk_session_upload_form extends moodleform {
     /**
      * Build form for importing Face-to-Face session data.
      *
      * @return void
      */
-    public function definition() {
+    public function definition(): void {
         global $CFG;
 
         $mform = $this->_form;
 
-        // Retrieve a validate flag from customdata, defaulting to 0 if not provided.
-        $validateflag = $this->_customdata['validate'] ?? 0;
-
-        // Pass validation flag through the form.
-        $mform->addElement('hidden', 'validate', $validateflag);
-        $mform->setType('validate', PARAM_INT);
+        $f2fid = $this->_customdata['f2fid'] ?? 0;
+        $mform->addElement('hidden', 'f2fid', $f2fid);
+        $mform->setType('f2fid', PARAM_INT);
 
         $mform->addElement(
             'header',
-            'sitebulkuploadheader',
-            get_string('sitebulkuploadheader', 'mod_facetoface')
+            'settingsheader',
+            get_string('uploadbulksessions', 'mod_facetoface')
         );
 
-        // Example CSV file.
-        $url = new moodle_url('/mod/facetoface/example_bulksessions.csv');
-        $link = html_writer::link($url, get_string('examplebulksessionscsv', 'mod_facetoface'));
+        // Example CSV link.
+        $url = new moodle_url('/mod/facetoface/example_sessions.csv');
+        $link = html_writer::link($url, get_string('examplesessionscsv', 'mod_facetoface'));
         $mform->addElement(
             'static',
-            'examplecsv',
-            get_string('examplecsv', 'mod_facetoface'),
+            'example_sessions_csv',
+            get_string('facetoface:examplecsv', 'mod_facetoface'),
             $link
         );
 
-        // File manager set for CSV upload.
+        // File manager for CSV upload.
         $maxbytes = get_max_upload_file_size($CFG->maxbytes);
         $mform->addElement('filemanager', 'csvfile',
             get_string('uploadsessionfile', 'mod_facetoface'),
             null,
             [
-                'subdirs' => 0,
-                'maxfiles' => 1,
+                'subdirs'       => 0,
+                'maxfiles'      => 1,
                 'accepted_types' => 'csv',
-                'maxbytes' => $maxbytes,
-                'return_types' => FILE_INTERNAL | FILE_EXTERNAL,
+                'maxbytes'      => $maxbytes,
+                'return_types'  => FILE_INTERNAL | FILE_EXTERNAL,
             ]
         );
 
@@ -96,8 +91,12 @@ class site_bulk_session_upload_form extends moodleform {
         // Generate the table HTML via the helper function.
         $tablehtml = $this->generate_csv_help_table();
 
-        // Add a static element to display CSV field descriptions.
+        // Add the table as a static element.
         $mform->addElement('static', 'csvuploadhelp', '', $tablehtml);
+
+        // Hidden field to validate/process after upload.
+        $mform->addElement('hidden', 'validate', 1);
+        $mform->setType('validate', PARAM_INT);
 
         $this->add_action_buttons(
             true,
@@ -120,16 +119,6 @@ class site_bulk_session_upload_form extends moodleform {
         ];
 
         $rows = [
-            [
-                'field' => 'csvuploadhelp:courseshortname',
-                'requirement' => 'csvuploadhelp:required',
-                'format' => 'csvuploadhelp:text',
-            ],
-            [
-                'field' => 'csvuploadhelp:activityname',
-                'requirement' => 'csvuploadhelp:required',
-                'format' => 'csvuploadhelp:text',
-            ],
             [
                 'field' => 'csvuploadhelp:fieldsessiondatetime',
                 'requirement' => 'csvuploadhelp:required',
