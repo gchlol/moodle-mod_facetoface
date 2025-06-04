@@ -24,6 +24,7 @@ use html_table;
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/repository/lib.php');
+require_once($CFG->libdir.'/formslib.php');
 
 /**
  * Form for uploading bulk attendance CSV files in Face-to-Face settings.
@@ -48,7 +49,7 @@ class upload_bookings_bulk_attendance_form extends moodleform {
 
         $mform->addElement('header', 'settingsheader', get_string('uploadbulkbookings', 'mod_facetoface'));
 
-        $url = new moodle_url('/mod/facetoface/booking_example.csv');
+        $url = new moodle_url('/mod/facetoface/example_bookings.csv');
         $link = html_writer::link(
             $url,
             get_string('examplecsvfilename', 'mod_facetoface')
@@ -94,8 +95,10 @@ class upload_bookings_bulk_attendance_form extends moodleform {
             $mform->setDefault('validate', $customdata['validate']);
         }
 
-        // Submit button.
-        $mform->addElement('submit', 'submit', get_string('uploadandpreviewbulkbookings', 'mod_facetoface'));
+        $this->add_action_buttons(
+            true,
+            get_string('uploadandpreviewbulkbookings', 'mod_facetoface')
+        );
     }
 
     /**
@@ -108,55 +111,55 @@ class upload_bookings_bulk_attendance_form extends moodleform {
 
         // Table headers.
         $table->head = [
-            get_string('csvhelp:field', 'facetoface'),
-            get_string('csvhelp:requirement', 'facetoface'),
-            get_string('csvhelp:format', 'facetoface'),
+            get_string('csvuploadhelp:field', 'facetoface'),
+            get_string('csvuploadhelp:requirement', 'facetoface'),
+            get_string('csvuploadhelp:format', 'facetoface'),
         ];
 
         // Rows for each required column.
         $rows = [
             [
-                'field'       => 'courseshortname',
-                'requirement' => 'required',
-                'format'      => 'text',
+                'field'       => 'csvuploadhelp:courseshortname',
+                'requirement' => 'csvuploadhelp:required',
+                'format'      => 'csvuploadhelp:text',
             ],
             [
-                'field'       => 'activityname',
-                'requirement' => 'required',
-                'format'      => 'text',
+                'field'       => 'csvuploadhelp:activityname',
+                'requirement' => 'csvuploadhelp:required',
+                'format'      => 'csvuploadhelp:text',
             ],
             [
-                'field'       => 'username',
-                'requirement' => 'required',
-                'format'      => 'text',
+                'field'       => 'csvuploadhelp:username',
+                'requirement' => 'csvuploadhelp:required',
+                'format'      => 'csvuploadhelp:text',
             ],
             [
-                'field'       => 'session',
-                'requirement' => 'required',
-                'format'      => 'text',
+                'field'       => 'csvuploadhelp:session',
+                'requirement' => 'csvuploadhelp:required',
+                'format'      => 'csvuploadhelp:num',
             ],
             [
-                'field'       => 'status',
-                'requirement' => 'required',
-                'format'      => 'oneof_email_ical_both',
+                'field'       => 'csvuploadhelp:status',
+                'requirement' => 'csvuploadhelp:optional',
+                'format'      => 'csvuploadhelp:statustype',
             ],
             [
-                'field'       => 'discountcode',
-                'requirement' => 'optional',
-                'format'      => 'text',
+                'field'       => 'csvuploadhelp:discountcode',
+                'requirement' => 'csvuploadhelp:optional',
+                'format'      => 'csvuploadhelp:text',
             ],
             [
-                'field'       => 'notificationtype',
-                'requirement' => 'optional',
-                'format'      => 'oneof_email_ical_both',
+                'field'       => 'csvuploadhelp:notificationtype',
+                'requirement' => 'csvuploadhelp:optional',
+                'format'      => 'csvuploadhelp:oneofnotif',
             ],
         ];
 
         foreach ($rows as $row) {
             $table->data[] = [
-                get_string('csvhelp:' . $row['field'], 'facetoface'),
-                get_string('csvhelp:' . $row['requirement'], 'facetoface'),
-                get_string('csvhelp:' . $row['format'], 'facetoface'),
+                get_string($row['field'], 'facetoface'),
+                get_string($row['requirement'], 'facetoface'),
+                get_string($row['format'], 'facetoface'),
             ];
         }
 

@@ -36,7 +36,7 @@ use mod_facetoface\event\csv_processed_sitebulksession;
 // Set up the external admin page (in Site administration > Plugins > Face-to-face).
 admin_externalpage_setup('modfacetoface_sitebulkupload');
 
-$fileid   = optional_param('fileid', 0, PARAM_INT);
+$fileid = optional_param('fileid', 0, PARAM_INT);
 $validate = optional_param('validate', 0, PARAM_INT);
 $process  = optional_param('process', 0, PARAM_INT);
 
@@ -137,7 +137,7 @@ if ($validate) {
 
     $records = $manager->get_records();
     if (empty($records)) {
-        echo $OUTPUT->notification(get_string('norecordsfound', 'facetoface'), 'info');
+        echo $OUTPUT->notification(get_string('norecordsfound', 'mod_facetoface'), notification::NOTIFY_INFO);
     }
 
     // If validation errors exist, display them and stop.
@@ -190,7 +190,8 @@ if (
         if ($success) {
 
             $params = [
-                'context' => context_system::instance(),
+                'context'  => context_system::instance(),
+                'objectid' => 0,
             ];
 
             $event = csv_processed_sitebulksession::create($params);

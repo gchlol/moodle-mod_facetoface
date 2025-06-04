@@ -442,12 +442,13 @@ class booking_manager_bulk_attendance {
             $notifytype    = trim($entry->{'Notification Type'} ?? '');
 
             // 1) Lookup course by shortname.
-            $course = $DB->get_record('course', ['shortname' => $courseshort], MUST_EXIST);
+            $course = $DB->get_record('course', ['shortname' => $courseshort], '*', MUST_EXIST);
 
             // 2) Lookup Face-to-Face module by name + course.
             $facetoface = $DB->get_record(
                 'facetoface',
                 ['name' => $activityname, 'course' => $course->id],
+                '*',
                 MUST_EXIST
             );
 
@@ -558,5 +559,14 @@ class booking_manager_bulk_attendance {
      */
     public function set_case_insensitive(bool $value): void {
         $this->caseinsensitive = $value;
+    }
+
+    /**
+     * Return all CSV rows as an array of stdClass.
+     *
+     * @return array
+     */
+    public function get_records(): array {
+        return iterator_to_array($this->get_iterator());
     }
 }

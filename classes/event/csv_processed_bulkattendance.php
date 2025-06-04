@@ -20,14 +20,14 @@ use coding_exception;
 use core\event\base;
 
 /**
- * The mod_facetoface CSV bulk session processed event.
+ * The mod_facetoface CSV bulk bookings processed event.
  *
  * @package     mod_facetoface
  * @copyright   2025 Gold Coast Health
- * @author        Jonas Sajonas
- * @license        https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author      Jonas Sajonas
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class csv_processed_sitebulksession extends base {
+class csv_processed_bulkattendance extends base {
 
     /**
      * Ini method.
@@ -37,7 +37,7 @@ class csv_processed_sitebulksession extends base {
     protected function init(): void {
         $this->data['crud'] = 'r';
         $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
-        $this->data['objecttable'] = '';
+        $this->data['objecttable'] = 'facetoface';
     }
 
     /**
@@ -46,7 +46,7 @@ class csv_processed_sitebulksession extends base {
      * @return string
      */
     public static function get_name(): string {
-        return get_string('eventcsvprocessedsitebulksession', 'mod_facetoface');
+        return get_string('eventcsvprocessedbulkattendance', 'mod_facetoface');
     }
 
     /**
@@ -56,7 +56,7 @@ class csv_processed_sitebulksession extends base {
      */
     public function get_description(): string {
         return get_string(
-            'eventcsvprocessedsitebulksessiondesc',
+            'eventcsvprocessedbulkattendancedesc',
             'mod_facetoface',
             (object)['userid' => $this->userid]
         );
@@ -69,7 +69,7 @@ class csv_processed_sitebulksession extends base {
      * @return moodle_url
      */
     public function get_url(): moodle_url {
-        return new moodle_url('/mod/facetoface/sitebulkupload.php');
+        return new moodle_url('/mod/facetoface/uploadbulkattendance.php');
     }
 
     /**
@@ -80,8 +80,10 @@ class csv_processed_sitebulksession extends base {
      */
     protected function validate_data(): void {
         parent::validate_data();
+
+        // Ensure we always have an objectid (even if 0).
         if (!isset($this->data['objectid'])) {
-            throw new coding_exception('The \'objectid\' must be set for csv_processed_sitebulksession event.');
+            throw new coding_exception('The \'objectid\' must be set for csv_processed_bulkattendance event.');
         }
     }
 }

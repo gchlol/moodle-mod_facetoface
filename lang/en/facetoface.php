@@ -934,7 +934,7 @@ $string['csvuploadhelp:requirement'] = 'Requirement';
 $string['csvuploadhelp:format'] = 'Format';
 $string['eventcsvprocessedbulksession'] = 'Bulk session CSV processed';
 $string['eventscsvprocessedsitebulksession'] = 'Site Admin Bulk session CSV processed';
-$string['eventcsvprocessedsitebulksessiondesc'] =
+$string['eventscsvprocessedsitebulksessiondesc'] =
     'The user with id \'{$a}\' has processed a CSV file to create/update Face-to-Face sessions site-wide.';
 $string['eventcsvprocessedbulksessiondesc'] =
     'The user with id \'{$a->userid}\' has processed an uploaded CSV file for bulk session bookings '
@@ -979,8 +979,13 @@ $string['error:activitydoesnotexist'] = 'Face-to-Face activity not found: {$a}';
 $string['csvuploadhelp:username'] = 'Username';
 $string['csvuploadhelp:session'] = 'Session';
 $string['csvuploadhelp:status'] = 'Status';
+$string['csvuploadhelp:statustype'] = 'One of: cancelled, booked, waitlisted, no_show, partially_attended, and fully_attended';
 $string['csvuploadhelp:discountcode'] = 'Discount Code';
 $string['csvuploadhelp:notificationtype'] = 'Notification Type';
-$string['csvuploadhelp:oneof_email_ical_both'] = 'One of: email, ical, both';
+$string['csvuploadhelp:oneofnotif'] = 'One of: email, ical, both';
 $string['uploadandpreviewbulkbookings'] = 'Upload & Preview Bulk Bookings';
 $string['uploadbulkbookingsfile'] = 'Bulk Bookings File';
+$string['bulkattendanceprocessed'] = 'Bulk bookings have been successfully processed.';
+$string['eventcsvprocessedbulkattendance'] = 'Site Admin Bulk bookings CSV processed ';
+$string['eventcsvprocessedbulkattendancedesc'] = '{$a} processed a bulk attendance CSV file.';
+
