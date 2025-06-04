@@ -16,63 +16,150 @@
 
 namespace mod_facetoface\form;
 
+use moodleform;
 use moodle_url;
 use html_writer;
+use html_table;
 
 defined('MOODLE_INTERNAL') || die();
+
 require_once($CFG->dirroot . '/repository/lib.php');
 
 /**
+ * Form for uploading bulk attendance CSV files in Face-to-Face settings.
+ * Provides file selection, validation, and preview before processing.
  *
  * @package    mod_facetoface
  * @copyright  2025 Gold Coast Health
  * @author     Jonas Sajonas
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class upload_bookings_form extends \moodleform {
+class upload_bookings_bulk_attendance_form extends moodleform {
 
     /**
-     * Build form for importing bookings.
+     * Build form for importing bulk attendance CSV files.
      *
-     * {@inheritDoc}
-     * @see \moodleform::definition()
+     * @return void
      */
-    public function definition() {
+    public function definition(): void {
         global $CFG;
 
         $mform = $this->_form;
 
-        $mform->addElement('header', 'settingsheader', get_string('upload'));
+        $mform->addElement('header', 'settingsheader', get_string('uploadbulkbookings', 'mod_facetoface'));
 
-        $url = new moodle_url('/mod/facetoface/example.csv');
-        $link = html_writer::link($url, 'example.csv');
-        $mform->addElement('static', 'examplecsv', get_string('facetoface:examplecsv', 'mod_facetoface'), $link);
+        $url = new moodle_url('/mod/facetoface/booking_example.csv');
+        $link = html_writer::link(
+            $url,
+            get_string('examplecsvfilename', 'mod_facetoface')
+        );
 
-        $maxbytes = get_max_upload_file_size($CFG->maxbytes, 0);
-        $mform->addElement('filemanager', 'csvfile', get_string('facetoface:uploadbookingsfile', 'mod_facetoface'), null, [
-            'subdirs' => 0,
-            'maxfiles' => 1,
-            'accepted_types' => 'csv',
-            'maxbytes' => $maxbytes,
-            'return_types' => FILE_INTERNAL | FILE_EXTERNAL,
-        ]);
+        $mform->addElement(
+            'static',
+            'examplecsv',
+            get_string('examplecsv', 'mod_facetoface'),
+            $link
+        );
+
+        $maxbytes = get_max_upload_file_size($CFG->maxbytes);
+        $mform->addElement(
+            'filemanager',
+            'csvfile',
+            get_string('uploadbulkbookingsfile', 'mod_facetoface'),
+            null, [
+                'subdirs' => 0,
+                'maxfiles' => 1,
+                'accepted_types' => 'csv',
+                'maxbytes' => $maxbytes,
+                'return_types' => FILE_INTERNAL | FILE_EXTERNAL,
+            ]
+        );
+
         $mform->setType('csvfile', PARAM_INT);
         $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
 
-        $mform->addElement('static', 'csvuploadhelp', '',
-            nl2br(get_string('facetoface:uploadbookingsfiledesc', 'mod_facetoface')));
+        // Help table showing required CSV headers.
+        $tablehtml = $this->generate_csv_help_table();
+        $mform->addElement('static', 'csvuploadhelp', '', $tablehtml);
 
         $mform->addElement('advcheckbox', 'caseinsensitive', get_string('caseinsensitive', 'mod_facetoface'));
         $mform->setDefault('caseinsensitive', true);
 
-        // The facetoface module ID.
-        $mform->addElement('hidden', 'f');
-        $mform->setType('f', PARAM_INT);
-
-        // Whether or not the form should process what has been uploaded.
+        // Hidden fields that control processing.
         $mform->addElement('hidden', 'validate');
         $mform->setType('validate', PARAM_INT);
 
-        $mform->addElement('submit', 'submit', get_string('facetoface:uploadandpreview', 'mod_facetoface'));
+        $customdata = $this->_customdata ?? [];
+        if (!empty($customdata['validate'])) {
+            $mform->setDefault('validate', $customdata['validate']);
+        }
+
+        // Submit button.
+        $mform->addElement('submit', 'submit', get_string('uploadandpreviewbulkbookings', 'mod_facetoface'));
+    }
+
+    /**
+     * Builds and returns an HTML table describing the required CSV fields for bulk attendance.
+     *
+     * @return string HTML for the help table.
+     */
+    private function generate_csv_help_table(): string {
+        $table = new html_table();
+
+        // Table headers.
+        $table->head = [
+            get_string('csvhelp:field', 'facetoface'),
+            get_string('csvhelp:requirement', 'facetoface'),
+            get_string('csvhelp:format', 'facetoface'),
+        ];
+
+        // Rows for each required column.
+        $rows = [
+            [
+                'field'       => 'courseshortname',
+                'requirement' => 'required',
+                'format'      => 'text',
+            ],
+            [
+                'field'       => 'activityname',
+                'requirement' => 'required',
+                'format'      => 'text',
+            ],
+            [
+                'field'       => 'username',
+                'requirement' => 'required',
+                'format'      => 'text',
+            ],
+            [
+                'field'       => 'session',
+                'requirement' => 'required',
+                'format'      => 'text',
+            ],
+            [
+                'field'       => 'status',
+                'requirement' => 'required',
+                'format'      => 'oneof_email_ical_both',
+            ],
+            [
+                'field'       => 'discountcode',
+                'requirement' => 'optional',
+                'format'      => 'text',
+            ],
+            [
+                'field'       => 'notificationtype',
+                'requirement' => 'optional',
+                'format'      => 'oneof_email_ical_both',
+            ],
+        ];
+
+        foreach ($rows as $row) {
+            $table->data[] = [
+                get_string('csvhelp:' . $row['field'], 'facetoface'),
+                get_string('csvhelp:' . $row['requirement'], 'facetoface'),
+                get_string('csvhelp:' . $row['format'], 'facetoface'),
+            ];
+        }
+
+        return html_writer::table($table);
     }
 }

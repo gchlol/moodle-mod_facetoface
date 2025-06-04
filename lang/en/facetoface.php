@@ -974,5 +974,13 @@ Fields expected:
 - Discount code (optional)
 - Notification type (optional - valid options are 'email', 'ical', or 'both')";
 $string['examplecsvfilename'] = 'example_bookings.csv';
-$string['uploadbulkattendance'] = 'Upload Bulk Attendance';
+$string['uploadbulkattendance'] = 'Upload bulk bookings';
 $string['error:activitydoesnotexist'] = 'Face-to-Face activity not found: {$a}';
+$string['csvuploadhelp:username'] = 'Username';
+$string['csvuploadhelp:session'] = 'Session';
+$string['csvuploadhelp:status'] = 'Status';
+$string['csvuploadhelp:discountcode'] = 'Discount Code';
+$string['csvuploadhelp:notificationtype'] = 'Notification Type';
+$string['csvuploadhelp:oneof_email_ical_both'] = 'One of: email, ical, both';
+$string['uploadandpreviewbulkbookings'] = 'Upload & Preview Bulk Bookings';
+$string['uploadbulkbookingsfile'] = 'Bulk Bookings File';
