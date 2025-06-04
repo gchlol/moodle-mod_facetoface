@@ -346,7 +346,7 @@ class bulk_session_manager {
 
             $session->datetimeknown = 1;
             if (
-                !empty($record['Session Date/Time Known']) &&
+                isset($record['Session Date/Time Known']) &&
                 $record['Session Date/Time Known'] === 'no'
             ) {
                 $session->datetimeknown = 0;
@@ -379,7 +379,7 @@ class bulk_session_manager {
 
             $session->allowcancel = 1;
             if (
-                !empty($record['Allow Cancellations']) &&
+                isset($record['Allow Cancellations']) &&
                 $record['Allow Cancellations'] === 'no'
             ) {
                 $session->allowcancel = 0;
@@ -387,7 +387,7 @@ class bulk_session_manager {
 
             $session->capacity = 10;
             if (
-                !empty($record['Capacity']) &&
+                isset($record['Capacity']) &&
                 is_numeric($record['Capacity'])
             ) {
                 $session->capacity = (int)$record['Capacity'];
@@ -395,7 +395,7 @@ class bulk_session_manager {
 
             $session->overbook = 1;
             if (
-                !empty($record['Allow Overbookings']) &&
+                isset($record['Allow Overbookings']) &&
                 $record['Allow Overbookings'] === 'no'
             ) {
                 $session->overbook = 0;
@@ -403,23 +403,23 @@ class bulk_session_manager {
 
             $session->duration = 0;
             if (
-                !empty($record['Duration']) &&
+                isset($record['Duration']) &&
                 is_numeric($record['Duration'])
             ) {
                 $session->duration = (int)$record['Duration'];
             }
 
-            $session->normalcost = null;
+            $session->normalcost = 0;
             if (
-                !empty($record['Normal Cost']) &&
+                isset($record['Normal Cost']) &&
                 is_numeric($record['Normal Cost'])
             ) {
                 $session->normalcost = $record['Normal Cost'];
             }
 
-            $session->discountcost = null;
+            $session->discountcost = 0;
             if (
-                !empty($record['Discount Cost']) &&
+                isset($record['Discount Cost']) &&
                 is_numeric($record['Discount Cost'])
             ) {
                 $session->discountcost = $record['Discount Cost'];
@@ -427,7 +427,7 @@ class bulk_session_manager {
 
             $session->details = '';
             if (
-                !empty($record['Details']) &&
+                isset($record['Details']) &&
                 is_string($record['Details'])
             ) {
                 $session->details = $record['Details'];
