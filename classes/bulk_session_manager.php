@@ -377,12 +377,12 @@ class bulk_session_manager {
                 continue;
             }
 
-            $session->allowcancel = 1;
+            $session->allowcancellations = 1;
             if (
                 isset($record['Allow Cancellations']) &&
                 $record['Allow Cancellations'] === 'no'
             ) {
-                $session->allowcancel = 0;
+                $session->allowcancellations = 0;
             }
 
             $session->capacity = 10;
@@ -393,12 +393,12 @@ class bulk_session_manager {
                 $session->capacity = (int)$record['Capacity'];
             }
 
-            $session->overbook = 1;
+            $session->allowoverbook = 1;
             if (
                 isset($record['Allow Overbookings']) &&
                 $record['Allow Overbookings'] === 'no'
             ) {
-                $session->overbook = 0;
+                $session->allowoverbook = 0;
             }
 
             $session->duration = 0;
