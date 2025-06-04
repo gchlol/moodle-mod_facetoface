@@ -229,6 +229,7 @@ $uploadbulkattendance = new admin_externalpage(
     new moodle_url('/mod/facetoface/uploadbulkattendance.php'),
     'moodle/site:config'
 );
+
 $ADMIN->add('modfacetoface', $uploadbulkattendance);
 
 // Disables Moodle's default settings page.

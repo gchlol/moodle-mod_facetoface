@@ -75,7 +75,14 @@ class booking_manager_ext {
         $this->usefile = true;
 
         $fs = new file_storage();
-        $files = $fs->get_area_files(context_user::instance($USER->id)->id, 'user', 'draft', $fileitemid, 'itemid', false);
+        $files = $fs->get_area_files(
+            context_user::instance($USER->id)->id,
+            'user',
+            'draft',
+            $fileitemid,
+            'itemid',
+            false
+        );
 
         if (count($files) != 1) {
             throw new moodle_exception('error:cannotloadfile', 'mod_facetoface');
@@ -123,6 +130,7 @@ class booking_manager_ext {
     private function get_iterator(): Generator {
         if (!$this->usefile) {
             foreach ($this->records as $record) {
+
                 yield $record;
             }
 
