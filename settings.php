@@ -207,8 +207,7 @@ if ($ADMIN->fulltree) {
     $html .= html_writer::link($url, get_string('addnewnoticelink', 'facetoface'));
     $html .= html_writer::end_tag('p');
 
-    $settings->add(new admin_setting_heading('facetoface/sitenotices_header',
-    get_string('sitenoticesheading', 'facetoface'), $html));
+    $settings->add(new admin_setting_heading('facetoface/sitenotices_header', get_string('sitenoticesheading', 'facetoface'), $html));
 
 }
 
