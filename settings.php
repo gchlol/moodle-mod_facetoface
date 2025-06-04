@@ -198,8 +198,7 @@ if ($ADMIN->fulltree) {
     $html .= html_writer::link($url, get_string('addnewfieldlink', 'facetoface'));
     $html .= html_writer::end_tag('p');
 
-    $settings->add(new admin_setting_heading('facetoface/customfields_header',
-    get_string('customfieldsheading', 'facetoface'), $html));
+    $settings->add(new admin_setting_heading('facetoface/customfields_header', get_string('customfieldsheading', 'facetoface'), $html));
 
     // List of existing site notices.
     $html  = facetoface_list_of_sitenotices();
@@ -213,7 +212,7 @@ if ($ADMIN->fulltree) {
 
 }
 
-// External page for bulk upload sessions.
+// External page for bulk upload under Face to Face category.
 $bulkupload = new admin_externalpage( 'modfacetoface_sitebulkupload',
     get_string('f2fbulksessions', 'mod_facetoface'),
     new moodle_url('/mod/facetoface/sitebulkupload.php'),

@@ -190,7 +190,7 @@ if (
         if ($success) {
 
             $params = [
-                'context'  => context_system::instance(),
+                'context' => context_system::instance(),
                 'objectid' => 0,
             ];
 
