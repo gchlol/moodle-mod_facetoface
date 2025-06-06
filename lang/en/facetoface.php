@@ -934,7 +934,7 @@ $string['csvuploadhelp:requirement'] = 'Requirement';
 $string['csvuploadhelp:format'] = 'Format';
 $string['eventcsvprocessedbulksession'] = 'Bulk session CSV processed';
 $string['eventscsvprocessedsitebulksession'] = 'Site Admin Bulk session CSV processed';
-$string['eventcsvprocessedsitebulksessiondesc'] =
+$string['eventscsvprocessedsitebulksessiondesc'] =
     'The user with id \'{$a}\' has processed a CSV file to create/update Face-to-Face sessions site-wide.';
 $string['eventcsvprocessedbulksessiondesc'] =
     'The user with id \'{$a->userid}\' has processed an uploaded CSV file for bulk session bookings '
@@ -964,6 +964,28 @@ $string['csvuploadhelp:time'] = 'HH:MM';
 $string['csvuploadhelp:num'] = 'Number';
 $string['csvuploadhelp:mins'] = 'Minutes';
 $string['csvuploadhelp:text'] = 'Text';
-$string['eventcsvprocessedbulksessiondesc'] =
-    'The user with id \'{$a->userid}\' has processed an uploaded CSV file for bulk session bookings '
-    . 'in the Face-to-Face instance with the course module id \'{$a->contextinstanceid}\'.';
+// Bulk Upload Bookings.
+$string['uploadbulkbookings'] = 'Upload Bulk Bookings';
+$string['facetoface:uploadbookingsextfiledesc'] = "
+Fields expected:
+- Username (required)
+- Session number (required)
+- Status (optional - valid options are cancelled,  booked, waitlisted, no_show, partially_attended, and fully_attended)
+- Discount code (optional)
+- Notification type (optional - valid options are 'email', 'ical', or 'both')";
+$string['examplecsvfilename'] = 'example_bookings.csv';
+$string['uploadbulkattendance'] = 'Upload bulk bookings';
+$string['error:activitydoesnotexist'] = 'Face-to-Face activity not found: {$a}';
+$string['csvuploadhelp:username'] = 'Username';
+$string['csvuploadhelp:session'] = 'Session';
+$string['csvuploadhelp:status'] = 'Status';
+$string['csvuploadhelp:statustype'] = 'One of: cancelled, booked, waitlisted, no_show, partially_attended, and fully_attended';
+$string['csvuploadhelp:discountcode'] = 'Discount Code';
+$string['csvuploadhelp:notificationtype'] = 'Notification Type';
+$string['csvuploadhelp:oneofnotif'] = 'One of: email, ical, both';
+$string['uploadandpreviewbulkbookings'] = 'Upload & Preview Bulk Bookings';
+$string['uploadbulkbookingsfile'] = 'Bulk Bookings File';
+$string['bulkattendanceprocessed'] = 'Bulk bookings have been successfully processed.';
+$string['eventcsvprocessedbulkattendance'] = 'Site Admin Bulk bookings CSV processed ';
+$string['eventcsvprocessedbulkattendancedesc'] = '{$a} processed a bulk attendance CSV file.';
+
