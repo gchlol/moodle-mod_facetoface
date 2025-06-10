@@ -20,25 +20,21 @@ use moodle_exception;
 use Generator;
 use DateTime;
 use context_user;
-use stdClass;
 use moodle_url;
 use stored_file;
+use stdClass;
 
 /**
- * Manages bulk session creation for Face-to-Face module.
+ * Manages bulk session creation for Face-to-Face module sitewide.
  * Handles CSV parsing, validation, and session creation.
  * Supports file uploads.
  *
- * @package    mod_facetoface
- * @copyright  2025 Gold Coast Health
- * @author     Jonas Sajonas
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
-
+ * @package   mod_facetoface
+ * @copyright 2025, Gold Coast Health
+ * @author      Jonas Sajonas
+ * @license      http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class bulk_session_manager {
-    /** @var int Facetoface instance ID */
-    private int $facetofaceid;
-
+class site_bulk_manager {
     /** @var array Parsed CSV records */
     private array $records = [];
 
@@ -53,11 +49,8 @@ class bulk_session_manager {
 
     /**
      * Constructor.
-     *
-     * @param int $facetofaceid ID of the Face-to-Face activity.
      */
-    public function __construct(int $facetofaceid) {
-        $this->facetofaceid = $facetofaceid;
+    public function __construct() {
     }
 
     /**
@@ -85,6 +78,7 @@ class bulk_session_manager {
         return true;
     }
 
+
     /**
      * Returns the column headers expected for CSV input.
      *
@@ -92,6 +86,8 @@ class bulk_session_manager {
      */
     public static function get_headers(): array {
         return [
+            'Course Shortname',
+            'Face-to-Face Activity Name',
             'Session Date/Time Known',
             'Start Date',
             'Start Time',
@@ -125,7 +121,6 @@ class bulk_session_manager {
         $maxlinelength = 1000;
         $delimiter = ',';
 
-        // Read the first row as the header.
         $headerline = fgetcsv($handle, $maxlinelength, $delimiter);
 
         if (empty($headerline)) {
@@ -143,13 +138,11 @@ class bulk_session_manager {
                 continue;
             }
 
-            // Handle error case.
             fclose($handle);
             throw new moodle_exception(
                 'error:missingrequiredcolumn',
                 'mod_facetoface',
-                new moodle_url('/mod/facetoface/uploadbulksessions.php',
-                ['f2fid' => $this->facetofaceid]),
+                new moodle_url('/mod/facetoface/sitebulkupload.php'),
                 $required
             );
         }
@@ -189,12 +182,65 @@ class bulk_session_manager {
                 $record[$key] = trim($value);
             }
 
+            $shortname = $record['Course Shortname'] ?? '';
+            $f2fname   = $record['Face-to-Face Activity Name'] ?? '';
+
+            if (empty($shortname)) {
+                $this->errors[] = [
+                    $index,
+                    get_string('error:missingcourseshortname', 'facetoface')
+                ];
+
+                continue;
+            }
+
+            if (empty($f2fname)) {
+                $this->errors[] = [
+                    $index,
+                    get_string('error:missingf2fname', 'facetoface')
+                ];
+
+                continue;
+            }
+
+            $matched = $this->match_records($shortname, $f2fname);
+            $course = $matched['course'];
+            $f2frecord = $matched['facetoface'];
+
+            if (!$course) {
+                $this->errors[] = [
+                    $index,
+                    get_string('error:coursenotfound', 'facetoface', $shortname)
+                ];
+
+                continue;
+            }
+
+            if (!$f2frecord) {
+                $this->errors[] = [
+                    $index,
+                    get_string(
+                        'error:f2fnotfound',
+                        'facetoface',
+                        (object)[
+                            'shortname' => $shortname,
+                            'f2fname'   => $f2fname
+                        ]
+                    )
+                ];
+
+                continue;
+            }
+
             // Start Date + Time.
             if (
                 empty($record['Start Date']) ||
                 empty($record['Start Time'])
             ) {
-                $this->errors[] = [$index, get_string('error:missingstarttime', 'facetoface')];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:missingstarttime', 'facetoface')
+                ];
 
                 continue;
             }
@@ -222,7 +268,10 @@ class bulk_session_manager {
                 empty($record['Finish Date']) ||
                 empty($record['Finish Time'])
             ) {
-                $this->errors[] = [$index, get_string('error:missingfinishtime', 'facetoface')];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:missingfinishtime', 'facetoface')
+                ];
 
                 continue;
             }
@@ -253,7 +302,10 @@ class bulk_session_manager {
                 $finishtime &&
                 $starttime >= $finishtime
             ) {
-                $this->errors[] = [$index, get_string('error:starttimeafterfinish', 'facetoface')];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:starttimeafterfinish', 'facetoface')
+                ];
 
                 continue;
             }
@@ -264,7 +316,10 @@ class bulk_session_manager {
                 !is_numeric($record['Capacity']) ||
                 (int)$record['Capacity'] <= 0
             ) {
-                $this->errors[] = [$index, get_string('error:invalidcapacity', 'facetoface')];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:invalidcapacity', 'facetoface')
+                ];
 
                 continue;
             }
@@ -275,7 +330,10 @@ class bulk_session_manager {
                 !is_numeric($record['Duration']) ||
                 (int)$record['Duration'] <= 0
             ) {
-                $this->errors[] = [$index, get_string('error:invalidduration', 'facetoface')];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:invalidduration', 'facetoface')
+                ];
 
                 continue;
             }
@@ -285,7 +343,10 @@ class bulk_session_manager {
                 !empty($record['Normal Cost']) &&
                 !is_numeric($record['Normal Cost'])
             ) {
-                $this->errors[] = [$index, get_string('error:invalidnormalcost', 'facetoface')];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:invalidnormalcost', 'facetoface')
+                ];
 
                 continue;
             }
@@ -295,7 +356,10 @@ class bulk_session_manager {
                 !empty($record['Discount Cost']) &&
                 !is_numeric($record['Discount Cost'])
             ) {
-                $this->errors[] = [$index, get_string('error:invaliddiscountcost', 'facetoface')];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:invaliddiscountcost', 'facetoface')
+                ];
 
                 continue;
             }
@@ -303,7 +367,10 @@ class bulk_session_manager {
             // Allow Cancellations (required, "yes" or "no").
             $allowcancel = strtolower($record['Allow Cancellations'] ?? '');
             if (!in_array($allowcancel, ['yes', 'no'], true)) {
-                $this->errors[] = [$index, get_string('error:invalidallowcancel', 'facetoface')];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:invalidallowcancel', 'facetoface')
+                ];
 
                 continue;
             }
@@ -311,22 +378,22 @@ class bulk_session_manager {
             // Allow Overbookings (required, "yes" or "no").
             $allowover = strtolower($record['Allow Overbookings'] ?? '');
             if (!in_array($allowover, ['yes', 'no'], true)) {
-                $this->errors[] = [$index, get_string('error:invalidallowoverbook', 'facetoface')];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:invalidallowoverbook', 'facetoface')
+                ];
 
                 continue;
             }
         }
-
         return $this->errors;
     }
 
-
     /**
-     * Processes valid records to create new Face-to-Face sessions.
-     * Inserts the session and its schedule into the database.
-     * If any errors occur, they are stored in $this->errors.
+     * Process valid records to create sessions.
+     * Assumes validate() has already been called to check correctness.
      *
-     * @return bool True if all sessions were created successfully, false otherwise.
+     * @return bool true on success, false if any errors occurred
      */
     public function process(): bool {
         global $DB;
@@ -340,7 +407,36 @@ class bulk_session_manager {
 
         foreach ($this->records as $index => $record) {
             $session = new stdClass();
-            $session->facetoface = $this->facetofaceid;
+
+            $shortname = trim($record['Course Shortname']);
+            $f2fname = trim($record['Face-to-Face Activity Name']);
+            $matched = $this->match_records($shortname, $f2fname);
+            $course = $matched['course'];
+            $f2frecord = $matched['facetoface'];
+
+            if (!$course) {
+                $this->errors[] = [
+                    $index,
+                    get_string('error:coursenotfound', 'facetoface', $shortname)];
+
+                continue;
+            }
+
+            if (!$f2frecord) {
+                $this->errors[] = [
+                    $index,
+                    get_string(
+                        'error:f2fnotfound',
+                        'facetoface',
+                        (object)['shortname' => $shortname,
+                        'f2fname'   => $f2fname]
+                        )
+                    ];
+
+                continue;
+            }
+
+            $session->facetoface = $f2frecord->id;
 
             $session->datetimeknown = 1;
             if (
@@ -371,7 +467,10 @@ class bulk_session_manager {
                 (empty($session->starttime) ||
                 empty($session->finishtime))
             ) {
-                $this->errors[] = get_string('error:invaliddatetimedata', 'facetoface');
+                $this->errors[] = [
+                    $index,
+                    get_string('error:invaliddatetimedata', 'facetoface')
+                ];
 
                 continue;
             }
@@ -437,35 +536,44 @@ class bulk_session_manager {
 
             $sessionid = $DB->insert_record('facetoface_sessions', $session);
             if (!$sessionid) {
-                $this->errors[] = [$index, get_string('error:failedtocreatesession', 'facetoface')];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:failedtocreatesession', 'facetoface')
+                ];
 
                 continue;
             }
 
-            // Insert date record.
+            // Insert session dates.
             $sessionsdate = new stdClass();
-            $sessionsdate->sessionid  = $sessionid;
-            $sessionsdate->timestart  = $session->starttime;
+            $sessionsdate->sessionid = $sessionid;
+            $sessionsdate->timestart = $session->starttime;
             $sessionsdate->timefinish = $session->finishtime;
             $sessionsdateid = $DB->insert_record('facetoface_sessions_dates', $sessionsdate);
 
             if (!$sessionsdateid) {
-                $this->errors[] = [$index, get_string('error:failedtocreatedates', 'facetoface', $sessionid)];
+                $this->errors[] = [
+                    $index,
+                    get_string('error:failedtocreatedates', 'facetoface', $sessionid)
+                ];
             }
 
-            // Save any custom fields via the same approach as single-session.
             foreach ($record as $column => $value) {
                 // If the column does not start with "Customfield_", skip it.
                 if (strpos($column, 'Customfield_') !== 0) {
 
                     continue;
+
                 }
 
                 $shortname = strtolower(substr($column, strlen('Customfield_')));
 
                 // If we don’t have a matching custom field for $shortname, skip it.
                 if (!isset($customfieldsbyshortname[$shortname])) {
-                    $this->errors[] = [$index, get_string('error:unknowncustomfieldshort', 'facetoface', $shortname)];
+                    $this->errors[] = [
+                        $index,
+                        get_string('error:unknowncustomfieldshort', 'facetoface', $shortname)
+                    ];
 
                     continue;
                 }
@@ -473,7 +581,10 @@ class bulk_session_manager {
                 // Otherwise, save the custom field.
                 $field = $customfieldsbyshortname[$shortname];
                 if (!facetoface_save_customfield_value($field->id, $value, $sessionid, 'session')) {
-                    $this->errors[] = [$index, get_string('error:couldnotsavecustomfieldshort', 'facetoface', $shortname)];
+                    $this->errors[] = [
+                        $index,
+                        get_string('error:couldnotsavecustomfieldshort', 'facetoface', $shortname)
+                    ];
                 }
             }
         }
@@ -483,12 +594,11 @@ class bulk_session_manager {
 
 
     /**
-     * Retrieves any validation or processing errors encountered.
+     * Get validation or processing errors.
      *
-     * @return array A list of error entries.
+     * @return array array of error messages
      */
     public function get_errors():array {
-
         return $this->errors;
     }
 
@@ -496,13 +606,65 @@ class bulk_session_manager {
      * Retrieves the CSV records after they've been loaded.
      * If a file is used, it will parse and return the data.
      *
-     * @return array List of CSV records.
+     * @return array
      */
-    public function get_records(): array {
+    public function get_records():array {
         if ($this->usefile) {
             $this->records = iterator_to_array($this->get_iterator());
         }
 
         return $this->records;
+    }
+
+    /**
+     * Finds a course and face-to-face activity by shortname and activity name.
+     *
+     * @param string $courseshortname The shortname of the course.
+     * @param string $activityname The name of the Face-to-Face activity.
+     * @return array An array with keys 'course' and 'facetoface' (or nulls if not found).
+     */
+    private function match_records(string $courseshortname, string $activityname): array {
+        global $DB;
+
+        $shortnamecondition = $DB->sql_equal(
+            'shortname',
+            ':shortname',
+            false
+        );
+
+        $course = $DB->get_record_select(
+            'course',
+            $shortnamecondition,
+            ['shortname' => $courseshortname]
+        );
+
+        if (!$course) {
+            return [
+                'course' => null,
+                'facetoface' => null];
+        }
+
+        $namecondition = $DB->sql_equal(
+            'name',
+            ':f2fname',
+            false
+        );
+
+        $where = $namecondition . ' AND course = :courseid';
+        $params = [
+            'f2fname' => $activityname,
+            'courseid' => $course->id
+        ];
+
+        $facetoface = $DB->get_record_select(
+            'facetoface',
+            $where,
+            $params
+        );
+
+        return [
+            'course' => $course,
+            'facetoface' => $facetoface
+        ];
     }
 }
