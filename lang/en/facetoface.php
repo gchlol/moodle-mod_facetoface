@@ -895,7 +895,7 @@ $string['attendancecolumn:6'] = 'Paypoint';
 $string['facetoface:sitebulksessions'] = 'Upload sessions';
 $string['f2fbulksessions'] = 'Upload sessions';
 $string['facetoface:settings'] = 'Settings';
-$string['sitebulkuploadheader'] = 'Upload Bulk Sessions';
+$string['sitebulkuploadheader'] = 'Upload Sessions for Any Courses';
 $string['examplecsv']            = 'Example CSV file';
 $string['examplebulksessionscsv'] = 'example_bulksessions.csv';
 $string['error:coursenotfound'] = 'Could not find course with shortname: {$a}';
@@ -923,11 +923,11 @@ $string['error:invaliddatetimedata'] = 'Invalid Date Time data.';
 $string['error:failedtocreatesession'] = 'Failed to create session';
 $string['error:failedtocreatedates'] = 'Failed to create dates for session #{$a}';
 $string['error:couldnotsavecustomfieldshort'] = 'Could not save custom field with short name "{$a}"';
-$string['facetoface:uploadbulksessions'] = 'Upload Sessions in Bulk';
+$string['facetoface:uploadbulksessions'] = 'Bulk Upload Sessions';
 $string['uploadbulksessions'] = 'Upload sessions';
 $string['uploadandpreviewbulk'] = 'Upload and preview sessions';
 $string['examplesessionscsv'] = 'example_sessions.csv';
-$string['uploadsessionfile'] = 'Upload Bulk Session CSV File';
+$string['uploadsessionfile'] = 'Bulk Upload Session CSV File';
 $string['confirmbulkpreview'] = 'Bulk Upload Preview';
 $string['csvuploadhelp:field'] = 'Field';
 $string['csvuploadhelp:requirement'] = 'Requirement';
@@ -965,7 +965,7 @@ $string['csvuploadhelp:num'] = 'Number';
 $string['csvuploadhelp:mins'] = 'Minutes';
 $string['csvuploadhelp:text'] = 'Text';
 // Bulk Upload Bookings.
-$string['uploadbulkbookings'] = 'Upload Bookings';
+$string['uploadbulkbookings'] = 'Upload Bookings for Any Courses';
 $string['facetoface:uploadbookingsextfiledesc'] = "
 Fields expected:
 - Username (required)
@@ -974,7 +974,7 @@ Fields expected:
 - Discount code (optional)
 - Notification type (optional - valid options are 'email', 'ical', or 'both')";
 $string['examplecsvfilename'] = 'example_bookings.csv';
-$string['uploadbulkattendance'] = 'Upload bulk bookings';
+$string['uploadbulkattendance'] = 'Upload bookings';
 $string['error:activitydoesnotexist'] = 'Face-to-Face activity not found: {$a}';
 $string['csvuploadhelp:username'] = 'Username';
 $string['csvuploadhelp:session'] = 'Session';
@@ -983,7 +983,7 @@ $string['csvuploadhelp:statustype'] = 'For now, only use "booked"';
 $string['csvuploadhelp:discountcode'] = 'Discount Code';
 $string['csvuploadhelp:notificationtype'] = 'Notification Type';
 $string['csvuploadhelp:oneofnotif'] = 'One of: email, ical, both';
-$string['uploadandpreviewbulkbookings'] = 'Upload & Preview Bulk Bookings';
+$string['uploadandpreviewbulkbookings'] = 'Upload and preview bookings';
 $string['uploadbulkbookingsfile'] = 'Bulk Bookings File';
 $string['bulkattendanceprocessed'] = 'Bulk bookings have been successfully processed.';
 $string['eventcsvprocessedbulkattendance'] = 'Site Admin Bulk bookings CSV processed ';
