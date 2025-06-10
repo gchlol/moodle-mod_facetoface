@@ -965,7 +965,7 @@ $string['csvuploadhelp:num'] = 'Number';
 $string['csvuploadhelp:mins'] = 'Minutes';
 $string['csvuploadhelp:text'] = 'Text';
 // Bulk Upload Bookings.
-$string['uploadbulkbookings'] = 'Upload Bulk Bookings';
+$string['uploadbulkbookings'] = 'Upload Bookings';
 $string['facetoface:uploadbookingsextfiledesc'] = "
 Fields expected:
 - Username (required)
@@ -979,7 +979,7 @@ $string['error:activitydoesnotexist'] = 'Face-to-Face activity not found: {$a}';
 $string['csvuploadhelp:username'] = 'Username';
 $string['csvuploadhelp:session'] = 'Session';
 $string['csvuploadhelp:status'] = 'Status';
-$string['csvuploadhelp:statustype'] = 'For now only use "booked"';
+$string['csvuploadhelp:statustype'] = 'For now, only use "booked"';
 $string['csvuploadhelp:discountcode'] = 'Discount Code';
 $string['csvuploadhelp:notificationtype'] = 'Notification Type';
 $string['csvuploadhelp:oneofnotif'] = 'One of: email, ical, both';
