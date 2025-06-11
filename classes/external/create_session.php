@@ -40,9 +40,9 @@ class create_session extends external_api {
     public static function execute_parameters() {
         return new external_function_parameters([
             'facetofaceid' => new external_value(PARAM_INT, 'Facetoface activity instance ID'),
+            'details' => new external_value(PARAM_TEXT, 'Session details/description'),
             'capacity' => new external_value(PARAM_INT, 'Number of students who can enrol in the session'),
             'allowoverbook' => new external_value(PARAM_BOOL, 'Flag to turn on waitlisting for the session'),
-            'details' => new external_value(PARAM_TEXT, 'Session details/description'),
             'datetimeknown' => new external_value(PARAM_INT, '0 means the date and time is unknown, 1 means that both are known.'),
             'duration' => new external_value(PARAM_INT, 'Total duration (in minutes) of the session.'),
             'normalcost' => new external_value(PARAM_INT, 'The normal cost of the session'),
@@ -75,14 +75,14 @@ class create_session extends external_api {
      * @param int $normalcost
      * @param int $discountcost
      * @param int $allowcancellations
-     * @param int $sessiondates
-     * @param int $customfields
+     * @param array $sessiondates
+     * @param array $customfields
      * @return array
      */
-    public static function execute($facetofaceid, $capacity, $allowoverbook, $details, $datetimeknown, $duration,
-                                   $normalcost, $discountcost, $allowcancellations, $sessiondates, $customfields) {
+    public static function execute(int $facetofaceid, string $details, int $capacity = 0, bool $allowoverbook = false,
+                                   int $datetimeknown = 0, int $duration = 0, int $normalcost = 0, int $discountcost = 0,
+                                   bool $allowcancellations = false, array $sessiondates = [], array $customfields = []) {
         global $DB;
-
         $params = self::validate_parameters(self::execute_parameters(), [
             'facetofaceid' => $facetofaceid,
             'capacity' => $capacity,

@@ -63,9 +63,9 @@ class create_session_test extends \externallib_advanced_testcase {
         // Prepare parameters for session creation.
         $params = [
             'facetofaceid' => $facetoface->id,
+            'details' => 'Test session details',
             'capacity' => 10,
             'allowoverbook' => 1,
-            'details' => 'Test session details',
             'datetimeknown' => 1,
             'duration' => 60,
             'normalcost' => 100,
@@ -83,9 +83,9 @@ class create_session_test extends \externallib_advanced_testcase {
         // Call the web service function.
         $result = create_session::execute(
             $params['facetofaceid'],
+            $params['details'],
             $params['capacity'],
             $params['allowoverbook'],
-            $params['details'],
             $params['datetimeknown'],
             $params['duration'],
             $params['normalcost'],
