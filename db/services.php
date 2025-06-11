@@ -15,24 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Copyright (C) 2007-2011 Catalyst IT (http://www.catalyst.net.nz)
- * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
- * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
+ * External functions and service declaration for Face-to-Face
+ *
+ * Documentation: {@link https://moodledev.io/docs/apis/subsystems/external/description}
  *
  * @package    mod_facetoface
+ * @copyright  2025 Catalyst IT
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
- * @author     Stacey Walker <stacey@catalyst-eu.net>
- * @author     Alastair Munro <alastair.munro@totaralms.com>
- * @author     Aaron Barnes <aaron.barnes@totaralms.com>
- * @author     Francois Marier <francois@catalyst.net.nz>
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2025052300;
-$plugin->release   = 2025052300;
-$plugin->requires  = 2023100900;  // Requires 4.3.
-$plugin->component = 'mod_facetoface';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->supported = [403, 405];
+$functions = [
+    'mod_facetoface_create_session' => [
+        'classname'   => 'mod_facetoface\external\create_session',
+        'description' => 'Creates new facetoface sessions.',
+        'type'        => 'write',
+        'ajax'        => false,
+    ],
+];
