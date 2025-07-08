@@ -1,0 +1,40 @@
+<?php
+// classes/event/csv_processed_bulksession_sitelevel.php
+namespace mod_facetoface\event;
+use moodle_url;
+use coding_exception;
+
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Event triggered when bulk sessions CSV is processed at site level.
+ * @package   mod_facetoface
+ */
+class csv_processed_bulksession_sitelevel extends csv_processed_bulksession_parent {
+    protected function init(): void {
+        parent::init();
+        $this->data['objecttable'] = '';  // No specific DB table linked.
+        $this->contextlevel = CONTEXT_SYSTEM;
+    }
+
+    public static function get_name(): string {
+        return get_string('eventcsvprocessedsitebulksession', 'mod_facetoface');
+    }
+
+    public function get_description(): string {
+        return get_string('eventcsvprocessedsitebulksessiondesc', 'mod_facetoface', (object)[
+            'userid' => $this->userid
+        ]);
+    }
+
+    public function get_url(): moodle_url {
+        return new moodle_url('/mod/facetoface/sitebulkupload.php');
+    }
+
+    protected function validate_data(): void {
+        parent::validate_data();
+        if (!isset($this->data['objectid'])) {
+            throw new coding_exception('The \'objectid\' must be set for csv_processed_sitebulksession event.');
+        }
+    }
+}
