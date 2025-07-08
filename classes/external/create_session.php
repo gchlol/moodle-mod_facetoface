@@ -162,7 +162,7 @@ class create_session extends external_api {
             foreach ($params['customfields'] as $field) {
                 foreach ($customfields as $dbfield) {
                     if ($dbfield->shortname === $field['shortname']) {
-                        facetoface_save_customfield_value($dbfield->id, $field['value'], $sessionid, 'session');
+                        facetoface_save_customfield_value($dbfield->id, $field['value'], $session->id, 'session');
                     }
                 }
             }

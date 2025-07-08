@@ -52,6 +52,17 @@ class create_session_test extends \externallib_advanced_testcase {
         $course = $this->getDataGenerator()->create_course();
         $facetoface = $this->getDataGenerator()->create_module('facetoface', ['course' => $course->id]);
 
+        // Create a custom field.
+        $cf = new \stdClass();
+        $cf->name = 'Custom field1';
+        $cf->shortname = 'fieldymcfield';
+        $cf->type = CUSTOMFIELD_TYPE_TEXT;
+        $cf->defaultvalue = '';
+        $cf->required = 0;
+        $cf->isfilter = 1;
+        $cf->showinsummary = 1;
+        $customfieldid = $DB->insert_record('facetoface_session_field', $cf);
+
         // Assign the teacher role to the test user so they have edit capability.
         $managerroleid = $DB->get_field('role', 'id', array('shortname' => 'manager'));
         $user = $this->getDataGenerator()->create_user();
@@ -77,7 +88,12 @@ class create_session_test extends \externallib_advanced_testcase {
                     'timeend' => time() + 7200,
                 ],
             ],
-            'customfields' => [],
+            'customfields' => [
+                [
+                    'shortname' => 'fieldymcfield',
+                    'value' => 'Boaty McBoatface',
+                ],
+            ],
         ];
 
         // Call the web service function.
@@ -116,5 +132,13 @@ class create_session_test extends \externallib_advanced_testcase {
         $date = reset($dates);
         $this->assertEquals($params['sessiondates'][0]['timestart'], $date->timestart);
         $this->assertEquals($params['sessiondates'][0]['timeend'], $date->timefinish);
+
+        // Check that the custom field was saved.
+        $customfield = $DB->get_record('facetoface_session_data', [
+            'sessionid' => $sessionid,
+            'fieldid' => $customfieldid,
+        ]);
+        $this->assertNotEmpty($customfield);
+        $this->assertEquals('Boaty McBoatface', $customfield->data);
     }
 }
