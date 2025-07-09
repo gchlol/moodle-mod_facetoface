@@ -48,13 +48,17 @@ $sitelevel          = false;
 $uploadFormClassName = bulk_session_upload_form_activitylevel::class;
 $uploadFormOptions   = ['f2fid' => $f2fid];
 $uploadFormDefaults  = ['f2fid' => $f2fid, 'validate' => 1];
+
 $confirmFormClassName = bulk_session_confirm_form_activitylevel::class;
 $confirmFormOptions   = ['f2fid' => $f2fid, 'fileid' => 0];  // fileid will be set on validate.
+$confirmFormOptions2   = ['f2fid' => $f2fid];  // fileid will be set on validate.
+
 $bulkManager         = new bulk_session_manager_activitylevel($f2fid);
 // URLs for redirects and error handling.
 $cancelurl    = new moodle_url('/mod/facetoface/view.php', ['id' => $cm->id]);
 $successurl   = new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $f2fid]);
 $errorbackurl = new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $f2fid]);
+$cancelurl2   = new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => $f2fid]);
 
 // Include shared logic.
 require_once($CFG->dirroot . '/mod/facetoface/uploadbulksessions_parent.php');

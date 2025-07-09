@@ -15,9 +15,10 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 
+use core\output\notification;
 use mod_facetoface\form\bulk_session_upload_form_sitelevel;
 use mod_facetoface\form\bulk_session_confirm_form_sitelevel;
-use mod_facetoface\_bulk_session_manager_admin;
+use mod_facetoface\bulk_session_manager_sitelevel;
 
 admin_externalpage_setup('modfacetoface_sitebulkupload');
 // Require site configuration capability.
@@ -33,13 +34,17 @@ $sitelevel           = true;
 $uploadFormClassName = bulk_session_upload_form_sitelevel::class;
 $uploadFormOptions   = [];  // no custom data needed for site form
 $uploadFormDefaults  = ['validate' => 1];
+
 $confirmFormClassName = bulk_session_confirm_form_sitelevel::class;
-$confirmFormOptions   = ['fileid' => 0, 'process' => 1];
-$bulkManager          = new _bulk_session_manager_admin();
+$confirmFormOptions   = ['fileid' => 0, 'process' => 1];  // fileid will be set on validate.
+$confirmFormOptions2   = ['fileid' => 0];  // fileid will be set on validate.
+
+$bulkManager          = new bulk_session_manager_sitelevel();
 // URLs for redirects and error handling.
-$cancelurl    = new moodle_url('/admin/search.php', ['']) . '#linkmodules';
+$cancelurl    = new moodle_url('/admin/search.php') . '#linkmodules';
 $successurl   = new moodle_url('/mod/facetoface/uploadbulksessions_sitelevel.php');
 $errorbackurl = new moodle_url('/mod/facetoface/uploadbulksessions_sitelevel.php');
+$cancelurl2   = new moodle_url('/mod/facetoface/sitebulkupload.php');
 
 // Include shared logic.
 require_once($CFG->dirroot . '/mod/facetoface/uploadbulksessions_parent.php');

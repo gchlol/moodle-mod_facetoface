@@ -21,7 +21,7 @@ defined('MOODLE_INTERNAL') || die();
  * Bulk session manager for site-wide context (admin-level bulk upload).
  * @package   mod_facetoface
  */
-class _bulk_session_manager_admin extends bulk_session_manager_parent {
+class bulk_session_manager_sitelevel extends bulk_session_manager_parent {
     public function __construct() {
         parent::__construct(0);
     }
