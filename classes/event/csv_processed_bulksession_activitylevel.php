@@ -16,19 +16,27 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * Event triggered when bulk sessions CSV is processed at activity level.
+ *
  * @package   mod_facetoface
  */
 class csv_processed_bulksession_activitylevel extends csv_processed_bulksession_parent {
+
+    /**
+     * Init method.
+     *
+     * @return void
+     */
     protected function init(): void {
         parent::init();
         $this->data['objecttable'] = 'facetoface';
-        $this->contextlevel = CONTEXT_MODULE;
     }
 
-    public static function get_name(): string {
-        return get_string('eventcsvprocessedbulksession', 'mod_facetoface');
-    }
-
+    /**
+     * Returns description of what happened.
+     *
+     * @return string
+     * @throws coding_exception
+     */
     public function get_description(): string {
         return get_string('eventcsvprocessedbulksessiondesc', 'mod_facetoface', [
             'userid'            => $this->userid,
@@ -36,10 +44,32 @@ class csv_processed_bulksession_activitylevel extends csv_processed_bulksession_
         ]);
     }
 
+    /**
+     * Return localised event name.
+     *
+     * @return string
+     * @throws coding_exception
+     */
+    public static function get_name(): string {
+        return get_string('eventcsvprocessedbulksession', 'mod_facetoface');
+    }
+
+    /**
+     * Get URL related to the action
+     *
+     * @return moodle_url
+     * @throws \moodle_exception
+     */
     public function get_url(): moodle_url {
         return new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => $this->objectid]);
     }
 
+    /**
+     * Custom validation.
+     *
+     * @throws coding_exception
+     * @return void
+     */
     protected function validate_data(): void {
         parent::validate_data();
         if ($this->contextlevel != CONTEXT_MODULE) {

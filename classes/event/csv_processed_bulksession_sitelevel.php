@@ -16,29 +16,53 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * Event triggered when bulk sessions CSV is processed at site level.
+ *
  * @package   mod_facetoface
  */
 class csv_processed_bulksession_sitelevel extends csv_processed_bulksession_parent {
     protected function init(): void {
         parent::init();
         $this->data['objecttable'] = '';  // No specific DB table linked.
-        $this->contextlevel = CONTEXT_SYSTEM;
     }
 
+    /**
+     * Returns name of the event.
+     *
+     * @return string
+     * @throws coding_exception
+     */
     public static function get_name(): string {
         return get_string('eventcsvprocessedsitebulksession', 'mod_facetoface');
     }
 
+    /**
+     * Returns description of what happened.
+     *
+     * @returns string
+     */
     public function get_description(): string {
-        return get_string('eventcsvprocessedsitebulksessiondesc', 'mod_facetoface', (object)[
-            'userid' => $this->userid
-        ]);
+        return get_string(
+            'eventcsvprocessedsitebulksessiondesc',
+            'mod_facetoface',
+            (object)['userid' => $this->userid]
+        );
     }
 
+    /**
+     * Get URL related to the action
+     *
+     * @return moodle_url
+     */
     public function get_url(): moodle_url {
         return new moodle_url('/mod/facetoface/sitebulkupload.php');
     }
 
+    /**
+     * Custom validation
+     *
+     * @throws coding_exception
+     * @return void
+     */
     protected function validate_data(): void {
         parent::validate_data();
         if (!isset($this->data['objectid'])) {
