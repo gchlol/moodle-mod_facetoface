@@ -1,7 +1,7 @@
 <?php
 /**
- * Handles bulk session uploads for the Face-to-Face module.
- * Manages CSV validation, preview, and session creation.
+ * Form for uploading bulk session CSV files in Face-to-Face module.
+ * Provides file selection, validation, and preview before processing.
  *
  * @package    mod_facetoface
  * @copyright  2025 Gold Coast Health
