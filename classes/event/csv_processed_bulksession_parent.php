@@ -1,5 +1,14 @@
 <?php
-// classes/event/csv_processed_bulksession_parent.php
+/**
+ * Handles bulk session uploads for the Face-to-Face module.
+ * Manages CSV validation, preview, and session creation.
+ *
+ * @package    mod_facetoface
+ * @copyright  2025 Gold Coast Health
+ * @author     Jonas Sajonas
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace mod_facetoface\event;
 use core\event\base;
 use coding_exception;

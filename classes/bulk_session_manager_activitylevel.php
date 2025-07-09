@@ -1,5 +1,14 @@
 <?php
-// classes/bulk_session_manager_activitylevel.php
+/**
+ * Handles bulk session uploads for the Face-to-Face module.
+ * Manages CSV validation, preview, and session creation.
+ *
+ * @package    mod_facetoface
+ * @copyright  2025 Gold Coast Health
+ * @author     Jonas Sajonas
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace mod_facetoface;
 
 use moodle_url;

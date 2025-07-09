@@ -1,5 +1,16 @@
 <?php
-// uploadbulksessions_activitylevel.php (child script for activity context)
+/**
+ * Handles bulk session uploads for the Face-to-Face module.
+ * Manages CSV validation, preview, and session creation.
+ *
+ * Child script for activity context.
+ *
+ * @package    mod_facetoface
+ * @copyright  2025 Gold Coast Health
+ * @author     Jonas Sajonas
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 require_once('../../config.php');
 require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 

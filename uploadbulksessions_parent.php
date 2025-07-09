@@ -1,5 +1,14 @@
 <?php
-// uploadbulksessions_parent.php (new parent script)
+/**
+ * Handles bulk session uploads for the Face-to-Face module.
+ * Manages CSV validation, preview, and session creation.
+ *
+ * @package    mod_facetoface
+ * @copyright  2025 Gold Coast Health
+ * @author     Jonas Sajonas
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 defined('MOODLE_INTERNAL') || die();
 
 // Shared function to display bulk-upload errors and stop execution.
