@@ -1,9 +1,22 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * Handles bulk session uploads for the Face-to-Face module.
  * Manages CSV validation, preview, and session creation.
- *
- * Child script for activity context.
  *
  * @package    mod_facetoface
  * @copyright  2025 Gold Coast Health
@@ -14,51 +27,212 @@
 require_once('../../config.php');
 require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 
+use core\output\notification;
 use mod_facetoface\form\bulk_session_upload_form_activitylevel;
 use mod_facetoface\form\bulk_session_confirm_form_activitylevel;
 use mod_facetoface\bulk_session_manager_activitylevel;
+use mod_facetoface\event\csv_processed_bulksession_activitylevel;
 
-// Required parameters.
 $f2fid = required_param('f2fid', PARAM_INT);
-// Validate Face-to-Face instance and set up course context.
+$PAGE->set_url(new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $f2fid]));
+$heading = get_string('validatebulksessions', 'facetoface');
+
+$fileid   = optional_param('fileid', 0, PARAM_INT);
+$validate = optional_param('validate', 0, PARAM_INT);
+$process  = optional_param('process', 0, PARAM_INT);
+
 if (!$facetoface = $DB->get_record('facetoface', ['id' => $f2fid])) {
     throw new moodle_exception('error:incorrectfacetofaceid', 'facetoface');
 }
+
 if (!$course = $DB->get_record('course', ['id' => $facetoface->course])) {
     throw new moodle_exception('error:coursemisconfigured', 'facetoface');
 }
+
 if (!$cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course->id)) {
     throw new moodle_exception('error:incorrectcoursemoduleid', 'facetoface');
 }
+
 require_course_login($course, true, $cm);
-$context       = context_course::instance($course->id);
+
+$context = context_course::instance($course->id);
 $modulecontext = context_module::instance($cm->id);
-// Capabilities: editing sessions and bulk session upload.
 require_capability('mod/facetoface:editsessions', $context);
 require_capability('mod/facetoface:uploadbulksessions', $context);
 
-// Page setup for activity context.
-$PAGE->set_url(new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $f2fid]));
 $PAGE->set_pagelayout('standard');
-$PAGE->set_title(get_string('validatebulksessions', 'facetoface'));
-$PAGE->set_heading(get_string('validatebulksessions', 'facetoface'));
+$PAGE->set_title($heading);
+$PAGE->set_heading($heading);
 
-// Prepare variables for parent script.
-$sitelevel          = false;
-$uploadFormClassName = bulk_session_upload_form_activitylevel::class;
-$uploadFormOptions   = ['f2fid' => $f2fid];
-$uploadFormDefaults  = ['f2fid' => $f2fid, 'validate' => 1];
+// Instantiate the upload form once.
+$uploadform = new bulk_session_upload_form_activitylevel(null, ['f2fid' => $f2fid]);
 
-$confirmFormClassName = bulk_session_confirm_form_activitylevel::class;
-$confirmFormOptions   = ['f2fid' => $f2fid, 'fileid' => 0];  // fileid will be set on validate.
-$confirmFormOptions2   = ['f2fid' => $f2fid];  // fileid will be set on validate.
+/**
+ * Displays bulk-upload errors and ends execution.
+ *
+ * @param array $errors An array of errors to display.
+ * @return void
+ */
+function handle_bulk_upload_errors($errors): void {
+    global $OUTPUT;
 
-$bulkManager         = new bulk_session_manager_activitylevel($f2fid);
-// URLs for redirects and error handling.
-$cancelurl    = new moodle_url('/mod/facetoface/view.php', ['id' => $cm->id]);
-$successurl   = new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $f2fid]);
-$errorbackurl = new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $f2fid]);
-$cancelurl2   = new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $f2fid]);
+    echo $OUTPUT->header();
+    echo $OUTPUT->notification(
+        get_string('error:uploadsessionserrorsfound', 'mod_facetoface', count($errors)),
+        notification::NOTIFY_ERROR
+    );
 
-// Include shared logic.
-require_once($CFG->dirroot . '/mod/facetoface/uploadbulksessions_parent.php');
+    $table = new html_table();
+    $table->attributes['class'] = 'f2fbookingsuploadlist m-auto generaltable mb-2';
+    $table->head = [
+        get_string('csvline', 'mod_facetoface'),
+        get_string('status', 'mod_facetoface'),
+    ];
+
+    foreach ($errors as $error) {
+        if (
+            !is_array($error) ||
+            count($error) < 2
+        ) {
+            $table->data[] = ["-", is_string($error) ? $error : json_encode($error)];
+
+            continue;
+        }
+
+        $line = $error[0] + 2;
+        $messages = array_slice($error, 1);
+
+        foreach ($messages as $message) {
+            $table->data[] = [$line, $message];
+        }
+    }
+
+    echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
+
+    $backurl = new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => optional_param('f2fid', 0, PARAM_INT)]);
+    echo html_writer::start_div('mt-4 text-center');
+    echo html_writer::link($backurl, get_string('back'), ['class' => 'btn btn-secondary']);
+    echo html_writer::end_div();
+
+    echo $OUTPUT->footer();
+
+    exit;
+}
+
+if ($validate) {
+    $uploaddata = $uploadform->get_data();
+
+    if ($uploadform->is_cancelled()) {
+        redirect(new moodle_url('/mod/facetoface/view.php', ['id' => $cm->id]));
+
+        exit;
+    }
+
+    $fileid = $uploaddata->csvfile ?: 0;
+
+    // Create the confirm form.
+    $confirmform = new bulk_session_confirm_form_activitylevel(
+        null, [
+            'f2fid' => $f2fid,
+            'fileid' => $fileid
+        ]
+    );
+
+    $manager = new bulk_session_manager_activitylevel($f2fid);
+    $manager->load_from_file($fileid);
+    $errors = $manager->validate();
+
+    // If there are errors, handle them and exit.
+    if (!empty($errors)) {
+        handle_bulk_upload_errors($errors);
+    }
+
+    // If no errors, display the CSV preview.
+    echo $OUTPUT->header();
+    echo $OUTPUT->heading(get_string('confirmbulkpreview', 'facetoface'), 3);
+
+    $records = $manager->get_records();
+    if (empty($records)) {
+        echo $OUTPUT->notification(get_string('norecordsfound', 'facetoface'), 'info');
+    }
+
+    if (!empty($records)) {
+        $table = new html_table();
+        $table->attributes['class'] = 'f2fconfirmuploadlist m-auto generaltable mb-2';
+
+        $firstrecord = reset($records);
+        $headers = array_keys($firstrecord);
+
+        $table->head = $headers;
+
+        foreach ($records as $record) {
+            $rowdata = [];
+            foreach ($headers as $h) {
+                $rowdata[] = $record[$h] ?? '';
+            }
+            $table->data[] = $rowdata;
+        }
+
+        echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
+    }
+
+    $confirmform->display();
+
+    echo $OUTPUT->footer();
+
+    exit;
+}
+
+if (
+    $process &&
+    $fileid &&
+    $f2fid
+) {
+    $manager = new bulk_session_manager_activitylevel($f2fid);
+    $manager->load_from_file($fileid);
+    $confirmform = new bulk_session_confirm_form_activitylevel(null, ['f2fid' => $f2fid, 'fileid' => $fileid]);
+
+    if ($confirmform->is_cancelled()) {
+        redirect(new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $f2fid]));
+
+        exit;
+    }
+
+    $errors = $manager->validate();
+
+    if (empty($errors)) {
+        $success = $manager->process();
+
+        if ($success) {
+            $params = [
+                'context'  => $modulecontext,
+                'objectid' => $f2fid,
+            ];
+
+            $event = csv_processed_bulksession_activitylevel::create($params);
+            $event->add_record_snapshot('facetoface', $facetoface);
+            $event->trigger();
+
+            redirect(
+                new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $f2fid]),
+                get_string('bulksessionsprocessed', 'mod_facetoface'),
+                null,
+                notification::NOTIFY_SUCCESS
+            );
+        } else {
+            handle_bulk_upload_errors($manager->get_errors());
+        }
+    }
+
+    handle_bulk_upload_errors($errors);
+
+}
+
+// Default display: show the upload form.
+$uploadform->set_data(['f2fid' => $f2fid, 'validate' => 1]);
+
+echo $OUTPUT->header();
+
+$uploadform->display();
+
+echo $OUTPUT->footer();

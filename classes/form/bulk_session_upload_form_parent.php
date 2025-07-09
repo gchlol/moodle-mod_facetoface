@@ -119,7 +119,7 @@ abstract class bulk_session_upload_form_parent extends moodleform {
         return html_writer::table($table);
     }
 
-    protected static function get_csv_field_definitions(): array {
+    protected function get_csv_field_definitions(): array {
         return [
             ['field' => 'csvuploadhelp:fieldsessiondatetime', 'requirement' => 'csvuploadhelp:required',  'format' => 'csvuploadhelp:yesorno'],
             ['field' => 'csvuploadhelp:startdate',            'requirement' => 'csvuploadhelp:required',  'format' => 'csvuploadhelp:date'],
