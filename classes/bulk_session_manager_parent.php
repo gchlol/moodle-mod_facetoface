@@ -29,12 +29,16 @@ defined('MOODLE_INTERNAL') || die();
 abstract class bulk_session_manager_parent {
     /** @var int Facetoface instance ID (for activity context, 0 for site context) */
     protected int $facetofaceid = 0;
+
     /** @var array Parsed CSV records */
     protected array $records = [];
+
     /** @var array Accumulated validation or processing errors */
     protected array $errors = [];
+
     /** @var bool Whether CSV data is loaded from a file */
     protected bool $usefile = false;
+
     /** @var stored_file|null Reference to the uploaded CSV file */
     protected ?stored_file $file = null;
 
@@ -48,74 +52,115 @@ abstract class bulk_session_manager_parent {
 
     /**
      * Loads CSV data from a draft file area.
+     * Throws an exception if the file cannot be loaded or doesn't exist.
+     *
      * @param int $fileid The draft file ID.
      * @return bool True on success.
-     * @throws moodle_exception If the file cannot be loaded or found.
+     * @throws moodle_exception If the file cannot be loaded.
      */
     public function load_from_file(int $fileid): bool {
         global $USER;
+
         $this->usefile = true;
+
         $fs = get_file_storage();
-        $userctx = context_user::instance($USER->id);
-        $files = $fs->get_area_files($userctx->id, 'user', 'draft', $fileid, 'id', false);
+        $usercontext = context_user::instance($USER->id);
+        $files = $fs->get_area_files($usercontext->id, 'user', 'draft', $fileid, 'id', false);
+
         if (count($files) !== 1) {
             throw new moodle_exception('error:cannotloadfile', 'mod_facetoface');
         }
-        $this->file = reset($files);
+        $this->file = current($files);
+
         return true;
     }
 
     /**
-     * Returns the required CSV column headers for bulk session uploads (to be overridden by children).
-     * @return array List of expected column header strings.
+     * Returns the column headers expected for CSV input.
+     *
+     * @return array An indexed array of column headers.
      */
     public static function get_headers(): array {
         // Base headers for session scheduling (activity context by default).
         return [
-            'Session Date/Time Known', 'Start Date', 'Start Time', 'Finish Date', 'Finish Time',
-            'Allow Cancellations', 'Capacity', 'Allow Overbookings', 'Duration',
-            'Normal Cost', 'Discount Cost', 'Details'
+            'Session Date/Time Known',
+            'Start Date',
+            'Start Time',
+            'Finish Date',
+            'Finish Time',
+            'Allow Cancellations',
+            'Capacity',
+            'Allow Overbookings',
+            'Duration',
+            'Normal Cost',
+            'Discount Cost',
+            'Details'
             // (Custom fields are handled dynamically and not listed here)
         ];
     }
 
     /**
-     * Internal generator to iterate through CSV rows.
-     * @return Generator Each yielded element is an associative array representing one CSV row.
+     * Provides a record iterator for CSV rows, either from file.
+     *
+     * @return Generator Yields each CSV record as an associative array.
      * @throws moodle_exception If CSV header is missing or required columns are missing.
      */
     private function get_iterator(): Generator {
         if (!$this->usefile) {
             // If records were set programmatically (not via file), yield them directly.
-            foreach ($this->records as $rec) {
-                yield $rec;
+            foreach ($this->records as $record) {
+                yield $record;
             }
+
             return;
         }
+
         $handle = $this->file->get_content_file_handle();
+        $maxlinelength = 1000;
         $delimiter = ',';
-        $header = fgetcsv($handle, 1000, $delimiter);
-        if (empty($header)) {
+
+        // Read the first row as the header.
+        $headerline = fgetcsv($handle, $maxlinelength, $delimiter);
+
+        if (empty($headerline)) {
             fclose($handle);
-            throw new moodle_exception('error:noheaderrow', 'mod_facetoface');
+            throw new moodle_exception(
+                'error:noheaderrow',
+                'mod_facetoface'
+            );
         }
+
         // Verify required headers are present.
-        $required = static::get_headers();
-        foreach ($required as $col) {
-            if (!in_array($col, $header, true)) {
-                fclose($handle);
-                // Redirect URL depends on context (implemented in child via get_base_url).
-                throw new moodle_exception('error:missingrequiredcolumn', 'mod_facetoface', $this->get_base_url(), $col);
+        $requiredheaders = self::get_headers();
+        foreach ($requiredheaders as $required) {
+            if (in_array($required, $headerline, true)) {
+
+                continue;
             }
+
+            // Handle error case.
+            fclose($handle);
+            throw new moodle_exception(
+                'error:missingrequiredcolumn',
+                'mod_facetoface',
+                new moodle_url('/mod/facetoface/uploadbulksessions.php',
+                    ['f2fid' => $this->facetofaceid]),
+                $required
+            );
         }
+
         try {
             $rownum = 2;
-            while (($data = fgetcsv($handle, 1000, $delimiter)) !== false) {
-                if (count($data) !== count($header)) {
-                    // Column count mismatch on a row.
-                    throw new moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'facetoface', '', $rownum);
+            while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
+                if (count($data) !== count($headerline)) {
+                    throw new moodle_exception(
+                        'error:bookingsuploadfileheaderfieldmismatch',
+                        'facetoface',
+                        '',
+                        $rownum
+                    );
                 }
-                yield array_combine($header, $data);
+                yield array_combine($headerline, $data);
                 $rownum++;
             }
         } finally {
@@ -298,6 +343,30 @@ abstract class bulk_session_manager_parent {
                 $this->errors[] = [$index, get_string('error:couldnotsavecustomfieldshort', 'facetoface', $shortname)];
             }
         }
+    }
+
+    /**
+     * Retrieves any validation or processing errors encountered.
+     *
+     * @return array A list of error entries.
+     */
+    public function get_errors(): array {
+        return $this->errors;
+    }
+
+    /**
+     * Retrieves the CSV records after they've been loaded.
+     * If a file is used, it will parse and return the data.
+     *
+     * @return array List of CSV records.
+     * @throws moodle_exception
+     */
+    public function get_records(): array {
+        if ($this->usefile) {
+            $this->records = iterator_to_array($this->get_iterator());
+        }
+
+        return $this->records;
     }
 
     // Abstract methods that child classes must implement:
