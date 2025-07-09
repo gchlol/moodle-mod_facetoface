@@ -20,19 +20,34 @@ require_once($CFG->libdir.'/formslib.php');
  * @package   mod_facetoface
  */
 abstract class bulk_session_confirm_form_parent extends moodleform {
+
+    /**
+     * Builds confirmation form for bulk session processing.
+     *
+     * @return void
+     * @throws \coding_exception
+     */
     public function definition(): void {
         $mform = $this->_form;
-        // Include f2f ID if provided (activity context).
-        if (!empty($this->_customdata['f2fid'])) {
-            $mform->addElement('hidden', 'f2fid', $this->_customdata['f2fid']);
-            $mform->setType('f2fid', PARAM_INT);
-        }
-        // Always include file ID and process flag.
-        $mform->addElement('hidden', 'fileid', $this->_customdata['fileid'] ?? 0);
+
+        // Retrieve the new parameter f2fid from custom data.
+        $f2fid = $this->_customdata['f2fid'] ?? 0;
+        $fileid = $this->_customdata['fileid'] ?? 0;
+
+        // Add hidden fields using the new name.
+        $mform->addElement('hidden', 'f2fid', $f2fid);
+        $mform->setType('f2fid', PARAM_INT);
+
+        $mform->addElement('hidden', 'fileid', $fileid);
         $mform->setType('fileid', PARAM_INT);
+
         $mform->addElement('hidden', 'process', 1);
         $mform->setType('process', PARAM_INT);
-        // Add confirmation submit and cancel buttons.
-        $this->add_action_buttons(true, get_string('facetoface:confirmandprocess', 'mod_facetoface'));
+
+        // Add button group (confirm + cancel).
+        $this->add_action_buttons(
+            true,
+            get_string('facetoface:confirmandprocess', 'mod_facetoface')
+        );
     }
 }
