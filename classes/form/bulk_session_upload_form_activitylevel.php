@@ -17,9 +17,18 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * CSV upload form for Face-to-Face activity (course-level).
+ *
  * @package   mod_facetoface
  */
 class bulk_session_upload_form_activitylevel extends bulk_session_upload_form_parent {
+    protected string $formelementkey = 'f2fid';
+    protected string $headername = 'settingsheader';
+    public function __construct() {
+        parent::__construct();
+
+        $this->headerstring = get_string('uploadbulksessions', 'mod_facetoface');
+    }
+
     protected function get_form_header(): string {
         return get_string('uploadbulksessions', 'mod_facetoface');
     }
@@ -31,22 +40,6 @@ class bulk_session_upload_form_activitylevel extends bulk_session_upload_form_pa
     }
 
     protected function get_csv_field_definitions(): array {
-        return [
-            ['field' => 'csvuploadhelp:fieldsessiondatetime', 'requirement' => 'csvuploadhelp:required',  'format' => 'csvuploadhelp:yesorno'],
-            ['field' => 'csvuploadhelp:startdate',            'requirement' => 'csvuploadhelp:required',  'format' => 'csvuploadhelp:date'],
-            ['field' => 'csvuploadhelp:starttime',            'requirement' => 'csvuploadhelp:required',  'format' => 'csvuploadhelp:time'],
-            ['field' => 'csvuploadhelp:finishdate',           'requirement' => 'csvuploadhelp:required',  'format' => 'csvuploadhelp:date'],
-            ['field' => 'csvuploadhelp:finishtime',           'requirement' => 'csvuploadhelp:required',  'format' => 'csvuploadhelp:time'],
-            ['field' => 'csvuploadhelp:allowcancellations',   'requirement' => 'csvuploadhelp:optional',  'format' => 'csvuploadhelp:yesorno'],
-            ['field' => 'csvuploadhelp:capacity',             'requirement' => 'csvuploadhelp:required',  'format' => 'csvuploadhelp:num'],
-            ['field' => 'csvuploadhelp:allowoverbookings',    'requirement' => 'csvuploadhelp:optional',  'format' => 'csvuploadhelp:yesorno'],
-            ['field' => 'csvuploadhelp:duration',             'requirement' => 'csvuploadhelp:required',  'format' => 'csvuploadhelp:mins'],
-            ['field' => 'csvuploadhelp:cost',                 'requirement' => 'csvuploadhelp:optional',  'format' => 'csvuploadhelp:num'],
-            ['field' => 'csvuploadhelp:discount',             'requirement' => 'csvuploadhelp:optional',  'format' => 'csvuploadhelp:num'],
-            ['field' => 'csvuploadhelp:details',              'requirement' => 'csvuploadhelp:optional',  'format' => 'csvuploadhelp:text'],
-            ['field' => 'csvuploadhelp:customfieldfacility',  'requirement' => 'csvuploadhelp:optional',  'format' => 'csvuploadhelp:text'],
-            ['field' => 'csvuploadhelp:customfieldlocation',  'requirement' => 'csvuploadhelp:optional',  'format' => 'csvuploadhelp:text'],
-            ['field' => 'csvuploadhelp:customfieldroom',      'requirement' => 'csvuploadhelp:optional',  'format' => 'csvuploadhelp:text']
-        ];
+        return parent::get_csv_field_definitions();
     }
 }

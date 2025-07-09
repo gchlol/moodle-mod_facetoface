@@ -17,9 +17,18 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * CSV upload form for Face-to-Face site-wide (admin context).
+ *
  * @package   mod_facetoface
  */
 class bulk_session_upload_form_sitelevel extends bulk_session_upload_form_parent {
+    protected string $formelementkey = 'f2fid';
+    protected string $headername = 'sitebulkuploadheader';
+    public function __construct() {
+        parent::__construct();
+
+        $this->headerstring = get_string('sitebulkuploadheader', 'mod_facetoface');
+    }
+
     protected function get_form_header(): string {
         return get_string('sitebulkuploadheader', 'mod_facetoface'); // "Upload Sessions for Any Courses"
     }
@@ -35,8 +44,7 @@ class bulk_session_upload_form_sitelevel extends bulk_session_upload_form_parent
             ['field' => 'csvuploadhelp:courseshortname',    'requirement' => 'csvuploadhelp:required',  'format' => 'csvuploadhelp:text'],
             ['field' => 'csvuploadhelp:activityname',       'requirement' => 'csvuploadhelp:required',  'format' => 'csvuploadhelp:text']
         ];
-        // Append the standard session fields defined in the activity form.
-        $fields = array_merge($fields, (new bulk_session_upload_form_activitylevel())->get_csv_field_definitions());
-        return $fields;
+
+        return array_merge($fields, parent::get_csv_field_definitions());
     }
 }
