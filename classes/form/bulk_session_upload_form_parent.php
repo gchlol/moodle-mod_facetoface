@@ -29,11 +29,17 @@ abstract class bulk_session_upload_form_parent extends moodleform {
      */
     public function definition(): void {
         $mform = $this->_form;
-        // Context-specific header title.
+
+        $f2fid = $this->_customdata['f2fid'] ?? 0;
+        $mform->addElement('hidden', 'f2fid', $f2fid);
+        $mform->setType('f2fid', PARAM_INT);
+
         $mform->addElement('header', 'bulksessionsheader', $this->get_form_header());
+
         // Example CSV file link (context-specific).
         $example = $this->get_example_csv();
         $mform->addElement('static', 'examplecsv', get_string('examplecsv', 'mod_facetoface'), $example);
+
         // File manager for CSV upload.
         $maxbytes = get_max_upload_file_size($GLOBALS['CFG']->maxbytes);
         $mform->addElement('filemanager', 'csvfile',
@@ -45,11 +51,15 @@ abstract class bulk_session_upload_form_parent extends moodleform {
                 'return_types'   => FILE_INTERNAL | FILE_EXTERNAL
             ]
         );
+
         $mform->setType('csvfile', PARAM_INT);
         $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
+
         // Help table describing CSV fields.
         $tablehtml = $this->generate_csv_help_table();
+
         $mform->addElement('static', 'csvuploadhelp', '', $tablehtml);
+
         // Hidden field to trigger validation on submission.
         $validateFlag = $this->_customdata['validate'] ?? 1;
         $mform->addElement('hidden', 'validate', $validateFlag);
