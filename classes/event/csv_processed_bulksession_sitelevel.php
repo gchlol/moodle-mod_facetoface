@@ -54,7 +54,7 @@ class csv_processed_bulksession_sitelevel extends csv_processed_bulksession_pare
      * @return moodle_url
      */
     public function get_url(): moodle_url {
-        return new moodle_url('/mod/facetoface/sitebulkupload.php');
+        return new moodle_url('/mod/facetoface/uploadbulksessions_sitelevel.php');
     }
 
     /**
@@ -66,7 +66,7 @@ class csv_processed_bulksession_sitelevel extends csv_processed_bulksession_pare
     protected function validate_data(): void {
         parent::validate_data();
         if (!isset($this->data['objectid'])) {
-            throw new coding_exception('The \'objectid\' must be set for csv_processed_sitebulksession event.');
+            throw new coding_exception('The \'objectid\' must be set for csv_processed_bulksession event.');
         }
     }
 }

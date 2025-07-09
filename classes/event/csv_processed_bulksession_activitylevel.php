@@ -61,7 +61,7 @@ class csv_processed_bulksession_activitylevel extends csv_processed_bulksession_
      * @throws \moodle_exception
      */
     public function get_url(): moodle_url {
-        return new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => $this->objectid]);
+        return new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $this->objectid]);
     }
 
     /**

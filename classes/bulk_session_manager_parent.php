@@ -139,7 +139,8 @@ abstract class bulk_session_manager_parent {
             throw new moodle_exception(
                 'error:missingrequiredcolumn',
                 'mod_facetoface',
-                new moodle_url('/mod/facetoface/uploadbulksessions.php',
+                //new moodle_url('/mod/facetoface/uploadbulksessions.php',
+                new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php',
                     ['f2fid' => $this->facetofaceid]),
                 $required
             );

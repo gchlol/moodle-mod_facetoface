@@ -20,6 +20,7 @@ use mod_facetoface\event\csv_processed_bulksession_sitelevel;
  *
  * @param array $errors An array of errors to display.
  * @return void
+ * @throws coding_exception
  */
 function display_bulk_upload_errors(array $errors, moodle_url $backurl, bool $sitecontext = false): void {
     global $OUTPUT;
@@ -185,7 +186,7 @@ if (
                 $event->trigger();
 
                 redirect(
-                    new moodle_url('/mod/facetoface/sitebulkupload.php'),
+                    new moodle_url('/mod/facetoface/uploadbulksessions_sitelevel.php'),
                     get_string('bulksessionsprocessed', 'mod_facetoface'),
                     null,
                     notification::NOTIFY_SUCCESS
@@ -202,7 +203,7 @@ if (
                 $event->trigger();
 
                 redirect(
-                    new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => $f2fid]),
+                    new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $f2fid]),
                     get_string('bulksessionsprocessed', 'mod_facetoface'),
                     null,
                     notification::NOTIFY_SUCCESS
@@ -210,7 +211,7 @@ if (
             }
             $event->trigger();
             // Redirect with success notification.
-            redirect($successurl, get_string('bulksessionsprocessed', 'mod_facetoface'), null, \core\output\notification::NOTIFY_SUCCESS);
+            redirect($successurl, get_string('bulksessionsprocessed', 'mod_facetoface'), null, notification::NOTIFY_SUCCESS);
         } else {
             // If processing failed, display accumulated errors.
             display_bulk_upload_errors($manager->get_errors(), $errorbackurl, $sitelevel);

@@ -58,7 +58,7 @@ $bulkManager         = new bulk_session_manager_activitylevel($f2fid);
 $cancelurl    = new moodle_url('/mod/facetoface/view.php', ['id' => $cm->id]);
 $successurl   = new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $f2fid]);
 $errorbackurl = new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $f2fid]);
-$cancelurl2   = new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => $f2fid]);
+$cancelurl2   = new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $f2fid]);
 
 // Include shared logic.
 require_once($CFG->dirroot . '/mod/facetoface/uploadbulksessions_parent.php');

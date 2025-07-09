@@ -44,7 +44,7 @@ $bulkManager          = new bulk_session_manager_sitelevel();
 $cancelurl    = new moodle_url('/admin/search.php') . '#linkmodules';
 $successurl   = new moodle_url('/mod/facetoface/uploadbulksessions_sitelevel.php');
 $errorbackurl = new moodle_url('/mod/facetoface/uploadbulksessions_sitelevel.php');
-$cancelurl2   = new moodle_url('/mod/facetoface/sitebulkupload.php');
+$cancelurl2   = new moodle_url('/mod/facetoface/uploadbulksessions_sitelevel.php');
 
 // Include shared logic.
 require_once($CFG->dirroot . '/mod/facetoface/uploadbulksessions_parent.php');
