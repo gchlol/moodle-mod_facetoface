@@ -102,11 +102,11 @@ function handle_bulk_session_validation(
 
         // If no errors, display the CSV preview.
         echo $OUTPUT->header();
-        echo $OUTPUT->heading(get_string('confirmbulkpreview', 'facetoface'), 3);
+        echo $OUTPUT->heading(get_string('confirmbulkpreview', 'mod_facetoface'), 3);
 
         $records = $manager->get_records();
         if (empty($records)) {
-            echo $OUTPUT->notification(get_string('norecordsfound', 'facetoface'), 'info');
+            echo $OUTPUT->notification(get_string('norecordsfound', 'mod_facetoface'), notification::NOTIFY_INFO);
         }
 
         if (!empty($records)) {

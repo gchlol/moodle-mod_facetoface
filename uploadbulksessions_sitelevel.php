@@ -46,9 +46,6 @@ $PAGE->set_url('/mod/facetoface/uploadbulksessions_sitelevel.php');
 $PAGE->set_title(get_string('facetoface:sitebulksessions', 'mod_facetoface'));
 $PAGE->set_heading(get_string('pluginname', 'mod_facetoface'));
 
-// Instantiate the upload form once.
-$uploadform = new bulk_session_upload_form_sitelevel();
-
 /**
  * Utility function to display bulk-upload errors and then stop execution.
  *
@@ -75,69 +72,23 @@ function display_bulk_upload_errors_site($errors): void {
     exit;
 }
 
-if ($validate) {
-    $data  = $uploadform->get_data();
-
-    if ($uploadform->is_cancelled()) {
-        redirect(new moodle_url('/admin/search.php') . '#linkmodules');
-
-        exit;
-    }
-
-    $fileid = $data->csvfile ?: 0;
-
-    $confirmform = new bulk_session_confirm_form_sitelevel(
-        null, [
-            'fileid' => $fileid,
-            'process' => 1
-        ]
-    );
-
-    $manager = new bulk_session_manager_sitelevel();
-    $manager->load_from_file($fileid);
-    $errors = $manager->validate();
-
-    // If there are errors, handle them and exit.
-    if (!empty($errors)) {
-        display_bulk_upload_errors_site($errors);
-    }
-
-    // If no errors, display the CSV preview.
-    echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string('confirmbulkpreview', 'mod_facetoface'), 3);
-
-    $records = $manager->get_records();
-    if (empty($records)) {
-        echo $OUTPUT->notification(get_string('norecordsfound', 'mod_facetoface'), notification::NOTIFY_INFO);
-    }
-
-    // If validation errors exist, display them and stop.
-    if (!empty($records)) {
-        $table = new html_table();
-        $table->attributes['class'] = 'f2fconfirmuploadlist m-auto generaltable mb-2';
-
-        $firstrecord = reset($records);
-        $headers = array_keys($firstrecord);
-
-        $table->head = $headers;
-
-        foreach ($records as $record) {
-            $rowdata = [];
-            foreach ($headers as $h) {
-                $rowdata[] = $record[$h] ?? '';
-            }
-            $table->data[] = $rowdata;
-        }
-
-        echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
-    }
-
-    $confirmform->display();
-
-    echo $OUTPUT->footer();
-
-    exit;
-}
+// Validate sessions
+$cancelurl = new moodle_url('/admin/search.php') . '#linkmodules';
+$uploadform = new bulk_session_upload_form_sitelevel();
+$make_confirm_form = fn(int $fileid) => new bulk_session_confirm_form_sitelevel(
+    null, [
+        'fileid' => $fileid,
+        'process' => 1
+    ]
+);
+$manager = new bulk_session_manager_sitelevel();
+handle_bulk_session_validation(
+    $validate,
+    $cancelurl,
+    $uploadform,
+    $make_confirm_form,
+    $manager
+);
 
 if (
     $process &&

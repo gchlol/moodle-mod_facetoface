@@ -48,9 +48,6 @@ $PAGE->set_pagelayout('standard');
 $PAGE->set_title($heading);
 $PAGE->set_heading($heading);
 
-// Instantiate the upload form once.
-$uploadform = new bulk_session_upload_form_activitylevel(null, ['f2fid' => $f2fid]);
-
 /**
  * Displays bulk-upload errors and ends execution.
  *
