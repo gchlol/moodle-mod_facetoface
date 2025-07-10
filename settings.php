@@ -81,6 +81,19 @@ $setting = new admin_setting_configduration(
 $setting->set_enabled_flag_options(admin_setting_flag::ENABLED, false);
 $settings->add($setting);
 
+$fields = $DB->get_records('facetoface_session_field', [], 'name', 'id, name');
+$options = array(0 => get_string('none', 'facetoface'));
+foreach ($fields as $field) {
+    $options[$field->id] = $field->name;
+}
+$settings->add(new admin_setting_configselect(
+    'facetoface/displaycustomfield',
+    get_string('setting:visiblefield_caption', 'facetoface'),
+    get_string('setting:visiblefield', 'facetoface'),
+    0,
+    $options
+));
+
 $settings->add(new admin_setting_heading(
     'facetoface/manageremail_header',
     get_string('manageremailheading', 'facetoface'),
