@@ -2,7 +2,9 @@
 
 use core\output\notification;
 use mod_facetoface\bulk_session_manager_activitylevel;
+use mod_facetoface\bulk_session_manager_parent;
 use mod_facetoface\form\bulk_session_confirm_form_activitylevel;
+use mod_facetoface\form\bulk_session_confirm_form_parent;
 use mod_facetoface\form\bulk_session_upload_form_activitylevel;
 use mod_facetoface\form\bulk_session_upload_form_parent;
 
@@ -70,32 +72,26 @@ function handle_bulk_upload_errors(array $errors): html_table {
 
 function handle_bulk_session_validation(
     bool $validate,
-    int $f2fid,
-
+    string $cancelurl,
+    bulk_session_upload_form_parent $uploadform,
+    Closure $makeconfirmform,
+    bulk_session_manager_parent $manager,
 ): void {
     global $OUTPUT;
-    $uploadform = new bulk_session_upload_form_activitylevel(null, ['f2fid' => $f2fid]);
 
     if ($validate) {
         $uploaddata = $uploadform->get_data();
 
         if ($uploadform->is_cancelled()) {
-            redirect(new moodle_url('/mod/facetoface/view.php', ['id' => $cm->id]));
+            redirect($cancelurl);
 
             exit;
         }
 
         $fileid = $uploaddata->csvfile ?: 0;
 
-        // Create the confirm form.
-        $confirmform = new bulk_session_confirm_form_activitylevel(
-            null, [
-                'f2fid' => $f2fid,
-                'fileid' => $fileid
-            ]
-        );
+        $confirmform = $makeconfirmform($fileid);
 
-        $manager = new bulk_session_manager_activitylevel($f2fid);
         $manager->load_from_file($fileid);
         $errors = $manager->validate();
 

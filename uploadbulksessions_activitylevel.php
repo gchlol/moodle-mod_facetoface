@@ -74,73 +74,24 @@ function handle_bulk_upload_errors_activity(array $errors): void {
     exit;
 }
 
+// Validate sessions
+$cancelurl = new moodle_url('/mod/facetoface/view.php', ['id' => $cm->id]);
+$uploadform = new bulk_session_upload_form_activitylevel(null, ['f2fid' => $f2fid]);
+$make_confirm_form = fn(int $fileid) => new bulk_session_confirm_form_activitylevel(
+    null,
+    [
+        'f2fid'  => $f2fid,
+        'fileid' => $fileid,
+    ]
+);
+$manager = new bulk_session_manager_activitylevel($f2fid);
 handle_bulk_session_validation(
     $validate,
-    $f2fid,
+    $cancelurl,
+    $uploadform,
+    $make_confirm_form,
+    $manager
 );
-//if ($validate) {
-//    $uploaddata = $uploadform->get_data();
-//
-//    if ($uploadform->is_cancelled()) {
-//        redirect(new moodle_url('/mod/facetoface/view.php', ['id' => $cm->id]));
-//
-//        exit;
-//    }
-//
-//    $fileid = $uploaddata->csvfile ?: 0;
-//
-//    // Create the confirm form.
-//    $confirmform = new bulk_session_confirm_form_activitylevel(
-//        null, [
-//            'f2fid' => $f2fid,
-//            'fileid' => $fileid
-//        ]
-//    );
-//
-//    $manager = new bulk_session_manager_activitylevel($f2fid);
-//    $manager->load_from_file($fileid);
-//    $errors = $manager->validate();
-//
-//    // If there are errors, handle them and exit.
-//    if (!empty($errors)) {
-//        handle_bulk_upload_errors_activity($errors);
-//    }
-//
-//    // If no errors, display the CSV preview.
-//    echo $OUTPUT->header();
-//    echo $OUTPUT->heading(get_string('confirmbulkpreview', 'facetoface'), 3);
-//
-//    $records = $manager->get_records();
-//    if (empty($records)) {
-//        echo $OUTPUT->notification(get_string('norecordsfound', 'facetoface'), 'info');
-//    }
-//
-//    if (!empty($records)) {
-//        $table = new html_table();
-//        $table->attributes['class'] = 'f2fconfirmuploadlist m-auto generaltable mb-2';
-//
-//        $firstrecord = reset($records);
-//        $headers = array_keys($firstrecord);
-//
-//        $table->head = $headers;
-//
-//        foreach ($records as $record) {
-//            $rowdata = [];
-//            foreach ($headers as $h) {
-//                $rowdata[] = $record[$h] ?? '';
-//            }
-//            $table->data[] = $rowdata;
-//        }
-//
-//        echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
-//    }
-//
-//    $confirmform->display();
-//
-//    echo $OUTPUT->footer();
-//
-//    exit;
-//}
 
 if (
     $process &&
