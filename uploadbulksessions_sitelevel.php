@@ -26,6 +26,7 @@
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/mod/facetoface/lib.php');
+require_once($CFG->dirroot . '/mod/facetoface/uploadbulksessions_common.php');
 
 use core\output\notification;
 use mod_facetoface\form\bulk_session_upload_form_sitelevel;
@@ -36,9 +37,7 @@ use mod_facetoface\event\csv_processed_bulksession_sitelevel;
 // Set up the external admin page (in Site administration > Plugins > Face-to-face).
 admin_externalpage_setup('modfacetoface_sitebulkupload');
 
-$fileid = optional_param('fileid', 0, PARAM_INT);
-$validate = optional_param('validate', 0, PARAM_INT);
-$process  = optional_param('process', 0, PARAM_INT);
+[$fileid, $validate, $process] = get_optional_params();
 
 // Require site configuration capability.
 require_capability('moodle/site:config', context_system::instance());
@@ -55,40 +54,12 @@ $uploadform = new bulk_session_upload_form_sitelevel();
  *
  * @param array $errors A list of errors (each error can be a simple string
  * @return void
+ * @throws coding_exception
  */
-function display_bulk_upload_errors($errors): void {
+function display_bulk_upload_errors_site($errors): void {
     global $OUTPUT;
 
-    echo $OUTPUT->header();
-    echo $OUTPUT->notification(
-        get_string('error:uploadsessionserrorsfound', 'mod_facetoface', count($errors)),
-        notification::NOTIFY_ERROR
-    );
-
-    $table = new html_table();
-    $table->attributes['class'] = 'f2fbookingsuploadlist m-auto generaltable mb-2';
-    $table->head = [
-        get_string('csvline', 'mod_facetoface'),
-        get_string('status', 'mod_facetoface'),
-    ];
-
-    foreach ($errors as $error) {
-        if (
-            !is_array($error) ||
-            count($error) < 2
-        ) {
-            $table->data[] = ["-", is_string($error) ? $error : json_encode($error)];
-
-            continue;
-        }
-
-        $line = $error[0] + 2;
-        $messages = array_slice($error, 1);
-
-        foreach ($messages as $message) {
-            $table->data[] = [$line, $message];
-        }
-    }
+    $table = handle_bulk_upload_errors($errors);
 
     echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
 
@@ -128,7 +99,7 @@ if ($validate) {
 
     // If there are errors, handle them and exit.
     if (!empty($errors)) {
-        display_bulk_upload_errors($errors);
+        display_bulk_upload_errors_site($errors);
     }
 
     // If no errors, display the CSV preview.
@@ -204,11 +175,11 @@ if (
                 notification::NOTIFY_SUCCESS
             );
         } else {
-            display_bulk_upload_errors($manager->get_errors());
+            display_bulk_upload_errors_site($manager->get_errors());
         }
     }
 
-    display_bulk_upload_errors($errors);
+    display_bulk_upload_errors_site($errors);
 }
 
 $uploadform->set_data(['validate' => 1]);
