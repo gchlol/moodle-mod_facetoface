@@ -31,226 +31,41 @@ class bulk_session_manager_sitelevel extends bulk_session_manager_parent {
     }
 
     /**
-     * Validates the loaded CSV records for required fields, types, etc.
+     * Rules to validate the loaded CSV records for required fields, types, etc.
      *
      * @return array A list of validation errors.
      */
-    public function validate(): array {
-        // If using file, load records from iterator.
-        if ($this->usefile) {
-            $this->records = iterator_to_array($this->get_iterator());
+    protected function validate_record(array $record, int $index): void {
+        // Check required course and activity identifiers.
+        $shortname = $record['Course Shortname'] ?? '';
+        $activity  = $record['Face-to-Face Activity Name'] ?? '';
+
+        if (empty($shortname)) {
+            $this->errors[] = [$index, get_string('error:missingcourseshortname', 'facetoface')];
+            return;
         }
 
-        foreach ($this->records as $index => $record) {
-            foreach ($record as $key => $value) {
-                $record[$key] = trim($value);
-            }
-
-            $shortname = $record['Course Shortname'] ?? '';
-            $f2fname   = $record['Face-to-Face Activity Name'] ?? '';
-
-            if (empty($shortname)) {
-                $this->errors[] = [
-                    $index,
-                    get_string('error:missingcourseshortname', 'facetoface')
-                ];
-
-                continue;
-            }
-
-            if (empty($f2fname)) {
-                $this->errors[] = [
-                    $index,
-                    get_string('error:missingf2fname', 'facetoface')
-                ];
-
-                continue;
-            }
-
-            $matched = $this->match_records($shortname, $f2fname);
-            $course = $matched['course'];
-            $f2frecord = $matched['facetoface'];
-
-            if (!$course) {
-                $this->errors[] = [
-                    $index,
-                    get_string('error:coursenotfound', 'facetoface', $shortname)
-                ];
-
-                continue;
-            }
-
-            if (!$f2frecord) {
-                $this->errors[] = [
-                    $index,
-                    get_string(
-                        'error:f2fnotfound',
-                        'facetoface',
-                        (object)[
-                            'shortname' => $shortname,
-                            'f2fname'   => $f2fname
-                        ]
-                    )
-                ];
-
-                continue;
-            }
-
-            // Start Date + Time.
-            if (
-                empty($record['Start Date']) ||
-                empty($record['Start Time'])
-            ) {
-                $this->errors[] = [
-                    $index,
-                    get_string('error:missingstarttime', 'facetoface')
-                ];
-
-                continue;
-            }
-
-            $startdt = DateTime::createFromFormat('d/m/Y H:i', $record['Start Date'] . ' ' . $record['Start Time']);
-            if (!$startdt) {
-                $params = (object)[
-                    'date' => $record['Start Date'],
-                    'time' => $record['Start Time'],
-                ];
-
-                $this->errors[] = [
-                    $index,
-                    get_string('error:invalidstarttime', 'facetoface', $params),
-                ];
-
-                continue;
-            }
-
-            // If valid, store the combined date/time back into $record.
-            $record['Start Date and Time'] = $startdt->format('Y-m-d H:i');
-
-            // Finish Date + Time.
-            if (
-                empty($record['Finish Date']) ||
-                empty($record['Finish Time'])
-            ) {
-                $this->errors[] = [
-                    $index,
-                    get_string('error:missingfinishtime', 'facetoface')
-                ];
-
-                continue;
-            }
-
-            $finishdt = DateTime::createFromFormat('d/m/Y H:i', $record['Finish Date'].' '.$record['Finish Time']);
-            if (!$finishdt) {
-                $params = (object)[
-                    'date' => $record['Finish Date'],
-                    'time' => $record['Finish Time'],
-                ];
-
-                $this->errors[] = [
-                    $index,
-                    get_string('error:invalidfinishtime', 'facetoface', $params),
-                ];
-
-                continue;
-            }
-
-            $record['Finish Date and Time'] = $finishdt->format('Y-m-d H:i');
-
-            // Ensure Start < Finish.
-            $starttime = strtotime($record['Start Date and Time']);
-            $finishtime = strtotime($record['Finish Date and Time']);
-
-            if (
-                $starttime &&
-                $finishtime &&
-                $starttime >= $finishtime
-            ) {
-                $this->errors[] = [
-                    $index,
-                    get_string('error:starttimeafterfinish', 'facetoface')
-                ];
-
-                continue;
-            }
-
-            // Capacity (required).
-            if (
-                !isset($record['Capacity']) ||
-                !is_numeric($record['Capacity']) ||
-                (int)$record['Capacity'] <= 0
-            ) {
-                $this->errors[] = [
-                    $index,
-                    get_string('error:invalidcapacity', 'facetoface')
-                ];
-
-                continue;
-            }
-
-            // Duration (required).
-            if (
-                !isset($record['Duration']) ||
-                !is_numeric($record['Duration']) ||
-                (int)$record['Duration'] <= 0
-            ) {
-                $this->errors[] = [
-                    $index,
-                    get_string('error:invalidduration', 'facetoface')
-                ];
-
-                continue;
-            }
-
-            // Normal Cost (optional).
-            if (
-                !empty($record['Normal Cost']) &&
-                !is_numeric($record['Normal Cost'])
-            ) {
-                $this->errors[] = [
-                    $index,
-                    get_string('error:invalidnormalcost', 'facetoface')
-                ];
-
-                continue;
-            }
-
-            // Discount Cost (optional).
-            if (
-                !empty($record['Discount Cost']) &&
-                !is_numeric($record['Discount Cost'])
-            ) {
-                $this->errors[] = [
-                    $index,
-                    get_string('error:invaliddiscountcost', 'facetoface')
-                ];
-
-                continue;
-            }
-
-            // Allow Cancellations (required, "yes" or "no").
-            $allowcancel = strtolower($record['Allow Cancellations'] ?? '');
-            if (!in_array($allowcancel, ['yes', 'no'], true)) {
-                $this->errors[] = [
-                    $index,
-                    get_string('error:invalidallowcancel', 'facetoface')
-                ];
-
-                continue;
-            }
-
-            // Allow Overbookings (required, "yes" or "no").
-            $allowover = strtolower($record['Allow Overbookings'] ?? '');
-            if (!in_array($allowover, ['yes', 'no'], true)) {
-                $this->errors[] = [
-                    $index,
-                    get_string('error:invalidallowoverbook', 'facetoface')
-                ];
-
-                continue;
-            }
+        if (empty($activity)) {
+            $this->errors[] = [$index, get_string('error:missingf2fname', 'facetoface')];
+            return;
         }
-        return $this->errors;
+        // Verify that the specified course and activity exist.
+        $match = $this->match_records($shortname, $activity);
+        if (!$match['course']) {
+            $this->errors[] = [$index, get_string('error:coursenotfound', 'facetoface', $shortname)];
+
+            return;
+        }
+
+        if (!$match['facetoface']) {
+            $params = (object)['shortname' => $shortname, 'f2fname' => $activity];
+            $this->errors[] = [$index, get_string('error:f2fnotfound', 'facetoface', $params)];
+
+            return;
+        }
+
+        // Perform common field validation after ensuring course/activity are valid.
+        $this->validate_common_fields($record, $index);
     }
 
     /**

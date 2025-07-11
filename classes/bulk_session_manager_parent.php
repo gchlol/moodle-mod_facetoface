@@ -12,6 +12,7 @@
 
 namespace mod_facetoface;
 
+use DateTime;
 use moodle_exception;
 use Generator;
 use context_user;
@@ -165,8 +166,6 @@ abstract class bulk_session_manager_parent {
         }
     }
 
-
-
     /**
      * Retrieves any validation or processing errors encountered.
      *
@@ -192,12 +191,108 @@ abstract class bulk_session_manager_parent {
     }
 
     /**
-     * Validates the loaded CSV records for required fields, types, etc.
-     *
-     * @return array A list of validation errors.
+     * Validates all loaded CSV records for correctness.
+     * @return array List of errors (empty if validation passed).
+     * @throws moodle_exception
      */
-    protected function validate(): array {
-        return []; // FIXME
+    public function validate(): array {
+        // If reading from file, parse the CSV contents.
+        if ($this->usefile) {
+            $this->records = iterator_to_array($this->get_iterator());
+        }
+        // Validate each record.
+        foreach ($this->records as $index => $record) {
+            // Trim all field values.
+            foreach ($record as $key => $value) {
+                $record[$key] = trim($value);
+            }
+            // Delegate to context-specific validation (implemented in child classes).
+            $this->validate_record($record, $index);
+        }
+        return $this->errors;
+    }
+
+    /**
+     * Performs common validation checks on a single CSV record (dates, times, numeric fields).
+     * Child classes call this after their context-specific checks.
+     *
+     * @param array $record The CSV record (already trimmed).
+     * @param int $index Record index (for error line reference).
+     *
+     * @throws \coding_exception
+     */
+    protected function validate_common_fields(array $record, int $index): void {
+        // Start Date and Start Time must be provided.
+        if (empty($record['Start Date']) || empty($record['Start Time'])) {
+            $this->errors[] = [$index, get_string('error:missingstarttime', 'facetoface')];
+            return;
+        }
+
+        $startdt = DateTime::createFromFormat('d/m/Y H:i', $record['Start Date'] . ' ' . $record['Start Time']);
+        if (!$startdt) {
+            $params = (object)['date' => $record['Start Date'], 'time' => $record['Start Time']];
+            $this->errors[] = [$index, get_string('error:invalidstarttime', 'facetoface', $params)];
+            return;
+        }
+
+        // Finish Date and Time must be provided.
+        if (empty($record['Finish Date']) || empty($record['Finish Time'])) {
+            $this->errors[] = [$index, get_string('error:missingfinishtime', 'facetoface')];
+            return;
+        }
+
+        $finishdt = DateTime::createFromFormat('d/m/Y H:i', $record['Finish Date'] . ' ' . $record['Finish Time']);
+        if (!$finishdt) {
+            $params = (object)['date' => $record['Finish Date'], 'time' => $record['Finish Time']];
+            $this->errors[] = [$index, get_string('error:invalidfinishtime', 'facetoface', $params)];
+            return;
+        }
+
+        // Ensure Start is before Finish.
+        $starttime  = strtotime($startdt->format('Y-m-d H:i'));
+        $finishtime = strtotime($finishdt->format('Y-m-d H:i'));
+        if ($starttime && $finishtime && $starttime >= $finishtime) {
+            $this->errors[] = [$index, get_string('error:starttimeafterfinish', 'facetoface')];
+            return;
+        }
+
+        // Capacity must be a positive integer.
+        if (!isset($record['Capacity']) || !is_numeric($record['Capacity']) || (int)$record['Capacity'] <= 0) {
+            $this->errors[] = [$index, get_string('error:invalidcapacity', 'facetoface')];
+            return;
+        }
+
+        // Duration must be a positive integer.
+        if (!isset($record['Duration']) || !is_numeric($record['Duration']) || (int)$record['Duration'] <= 0) {
+            $this->errors[] = [$index, get_string('error:invalidduration', 'facetoface')];
+            return;
+        }
+
+        // Normal Cost, if provided, must be numeric.
+        if (!empty($record['Normal Cost']) && !is_numeric($record['Normal Cost'])) {
+            $this->errors[] = [$index, get_string('error:invalidnormalcost', 'facetoface')];
+            return;
+        }
+
+        // Discount Cost, if provided, must be numeric.
+        if (!empty($record['Discount Cost']) && !is_numeric($record['Discount Cost'])) {
+            $this->errors[] = [$index, get_string('error:invaliddiscountcost', 'facetoface')];
+            return;
+        }
+
+        // Allow Cancellations must be "yes" or "no".
+        $allowcancel = strtolower($record['Allow Cancellations'] ?? '');
+        if (!in_array($allowcancel, ['yes', 'no'], true)) {
+            $this->errors[] = [$index, get_string('error:invalidallowcancel', 'facetoface')];
+            return;
+        }
+
+        // Allow Overbookings must be "yes" or "no".
+        $allowover = strtolower($record['Allow Overbookings'] ?? '');
+        if (!in_array($allowover, ['yes', 'no'], true)) {
+            $this->errors[] = [$index, get_string('error:invalidallowoverbook', 'facetoface')];
+            return;
+        }
     }
 
     /**
@@ -210,4 +305,11 @@ abstract class bulk_session_manager_parent {
     protected function process(): bool {
         return false; // FIXME
     }
+
+    /**
+     * Context-specific validation for a single record. Should call validate_common_fields() after special checks.
+     * @param array $record The CSV record (trimmed).
+     * @param int $index Record index.
+     */
+    abstract protected function validate_record(array $record, int $index): void;
 }

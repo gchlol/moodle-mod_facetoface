@@ -89,6 +89,7 @@ function handle_bulk_upload_errors(array $errors): html_table {
  * @param bulk_session_upload_form_parent $uploadform The upload form instance
  * @param Closure $makeconfirmform Callback that creates confirmation form instance
  * @param bulk_session_manager_parent $manager The session manager instance
+ * @param Closure $bulkuploaderrorhandler Callback function to handle errors during bulk upload.
  *
  * @return void <!> IMPORTANT: The caller script shall explicitly `exit` after running this function.
  */
@@ -97,6 +98,7 @@ function handle_bulk_session_validation(
     bulk_session_upload_form_parent $uploadform,
     Closure $makeconfirmform,
     bulk_session_manager_parent $manager,
+    Closure $bulkuploaderrorhandler
 ): bool {
     global $OUTPUT;
 
@@ -118,7 +120,7 @@ function handle_bulk_session_validation(
 
     // If there are errors, handle them and exit.
     if (!empty($errors)) {
-        handle_bulk_upload_errors_activity($errors);
+        $bulkuploaderrorhandler($errors);
     }
 
     // If no errors, display the CSV preview.

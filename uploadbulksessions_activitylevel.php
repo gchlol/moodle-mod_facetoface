@@ -76,6 +76,7 @@ $uploadform = new bulk_session_upload_form_activitylevel(
     null,
     ['f2fid' => $f2fid]  // moodleform parameters. DON'T DELETE ME!
 );
+$bulkuploaderrorhandler = fn($errors) => handle_bulk_upload_errors_activity($errors);
 
 // Validate sessions.
 if ($validate) {
@@ -91,7 +92,8 @@ if ($validate) {
         $cancelurl=new moodle_url('/mod/facetoface/view.php', ['id' => $cm->id]),
         $uploadform,
         $makeconfirmform,
-        $manager
+        $manager,
+        $bulkuploaderrorhandler
     );
 
     exit;
@@ -113,8 +115,6 @@ if (
         'objectid' => $f2fid,
     ];
     $event = csv_processed_bulksession_activitylevel::create($params);
-
-    $bulkuploaderrorhandler = fn($errors) => handle_bulk_upload_errors_activity($errors);
 
     process_bulk_session_confirmation(
         $fileid,

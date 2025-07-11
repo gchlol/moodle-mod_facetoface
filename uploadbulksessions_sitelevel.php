@@ -60,6 +60,7 @@ function display_bulk_upload_errors_site($errors): void {
 // Shared variables
 $manager = new bulk_session_manager_sitelevel();
 $uploadform = new bulk_session_upload_form_sitelevel();
+$bulkuploaderrorhandler = fn($errors) => display_bulk_upload_errors_site($errors);
 
 // Validate sessions.
 if ($validate) {
@@ -74,7 +75,8 @@ if ($validate) {
         $cancelurl=new moodle_url('/admin/search.php') . '#linkmodules',
         $uploadform,
         $makeconfirmform,
-        $manager
+        $manager,
+        $bulkuploaderrorhandler
     );
 
     exit;
@@ -96,8 +98,6 @@ if (
     ];
 
     $event = csv_processed_bulksession_sitelevel::create($params);
-
-    $bulkuploaderrorhandler = fn($errors) => display_bulk_upload_errors_site($errors);
 
     process_bulk_session_confirmation(
         $fileid,
