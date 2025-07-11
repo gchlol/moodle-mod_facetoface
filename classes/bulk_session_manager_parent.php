@@ -200,12 +200,14 @@ abstract class bulk_session_manager_parent {
         if ($this->usefile) {
             $this->records = iterator_to_array($this->get_iterator());
         }
+
         // Validate each record.
         foreach ($this->records as $index => $record) {
             // Trim all field values.
             foreach ($record as $key => $value) {
                 $record[$key] = trim($value);
             }
+
             // Delegate to context-specific validation (implemented in child classes).
             $this->validate_record($record, $index);
         }
@@ -238,6 +240,7 @@ abstract class bulk_session_manager_parent {
         // Finish Date and Time must be provided.
         if (empty($record['Finish Date']) || empty($record['Finish Time'])) {
             $this->errors[] = [$index, get_string('error:missingfinishtime', 'facetoface')];
+
             return;
         }
 
@@ -245,6 +248,7 @@ abstract class bulk_session_manager_parent {
         if (!$finishdt) {
             $params = (object)['date' => $record['Finish Date'], 'time' => $record['Finish Time']];
             $this->errors[] = [$index, get_string('error:invalidfinishtime', 'facetoface', $params)];
+
             return;
         }
 
@@ -253,30 +257,35 @@ abstract class bulk_session_manager_parent {
         $finishtime = strtotime($finishdt->format('Y-m-d H:i'));
         if ($starttime && $finishtime && $starttime >= $finishtime) {
             $this->errors[] = [$index, get_string('error:starttimeafterfinish', 'facetoface')];
+
             return;
         }
 
         // Capacity must be a positive integer.
         if (!isset($record['Capacity']) || !is_numeric($record['Capacity']) || (int)$record['Capacity'] <= 0) {
             $this->errors[] = [$index, get_string('error:invalidcapacity', 'facetoface')];
+
             return;
         }
 
         // Duration must be a positive integer.
         if (!isset($record['Duration']) || !is_numeric($record['Duration']) || (int)$record['Duration'] <= 0) {
             $this->errors[] = [$index, get_string('error:invalidduration', 'facetoface')];
+
             return;
         }
 
         // Normal Cost, if provided, must be numeric.
         if (!empty($record['Normal Cost']) && !is_numeric($record['Normal Cost'])) {
             $this->errors[] = [$index, get_string('error:invalidnormalcost', 'facetoface')];
+
             return;
         }
 
         // Discount Cost, if provided, must be numeric.
         if (!empty($record['Discount Cost']) && !is_numeric($record['Discount Cost'])) {
             $this->errors[] = [$index, get_string('error:invaliddiscountcost', 'facetoface')];
+
             return;
         }
 
@@ -284,6 +293,7 @@ abstract class bulk_session_manager_parent {
         $allowcancel = strtolower($record['Allow Cancellations'] ?? '');
         if (!in_array($allowcancel, ['yes', 'no'], true)) {
             $this->errors[] = [$index, get_string('error:invalidallowcancel', 'facetoface')];
+
             return;
         }
 
@@ -291,6 +301,7 @@ abstract class bulk_session_manager_parent {
         $allowover = strtolower($record['Allow Overbookings'] ?? '');
         if (!in_array($allowover, ['yes', 'no'], true)) {
             $this->errors[] = [$index, get_string('error:invalidallowoverbook', 'facetoface')];
+
             return;
         }
     }

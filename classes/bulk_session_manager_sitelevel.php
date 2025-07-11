@@ -42,11 +42,13 @@ class bulk_session_manager_sitelevel extends bulk_session_manager_parent {
 
         if (empty($shortname)) {
             $this->errors[] = [$index, get_string('error:missingcourseshortname', 'facetoface')];
+
             return;
         }
 
         if (empty($activity)) {
             $this->errors[] = [$index, get_string('error:missingf2fname', 'facetoface')];
+
             return;
         }
         // Verify that the specified course and activity exist.
