@@ -593,7 +593,7 @@ function facetoface_update_attendees($session) {
     $course = $DB->get_record('course', ['id' => $facetoface->course]);
 
     // Update user status'.
-    $users = facetoface_get_attendees($session->id);
+    $users = facetoface_get_attendees_by_signup($session->id);
 
     if ($users) {
         // No/deleted session dates.
@@ -4679,7 +4679,7 @@ class facetoface_mycandidate_selector extends user_selector_base {
         $sql = "
               FROM  {user} u
                 $joinsstring
-              WHERE $where and 
+              WHERE $where and
                     u.suspended = 0 AND
                     u.id NOT IN
                     (
@@ -4900,4 +4900,76 @@ function facetoface_mark_complete($facetoface, $cmid, $userid, $timecompleted) {
     aggregate_completions($completion->id);
 
     return $result;
+}
+
+/**
+ * Get list of users attending a given session ordered by signup time.
+ *
+ * @param int $sessionid Session ID.
+ * @return stdClass[] List of user records with signup details.
+ */
+function facetoface_get_attendees_by_signup(int $sessionid): array {
+    global $DB;
+
+    $usernamefields = facetoface_get_all_user_name_fields(true, 'user');
+
+    $sql = "
+        SELECT  user.id,
+                $usernamefields,
+                user.email,
+                signups.id AS submissionid,
+                sessions.discountcost,
+                signups.discountcode,
+                signups.notificationtype,
+                facetoface.id AS facetofaceid,
+                facetoface.course,
+                signups_status.grade,
+                signups_status.statuscode,
+                latest_status.timecreated
+
+        FROM    {facetoface} facetoface
+                JOIN {facetoface_sessions} sessions ON
+                    sessions.facetoface = facetoface.id
+                JOIN {facetoface_signups} signups ON
+                    signups.sessionid = sessions.id
+                JOIN {facetoface_signups_status} signups_status ON
+                    signups_status.signupid = signups.id
+
+                LEFT JOIN (
+                    SELECT  signup_status.signupid,
+                            MAX(signup_status.timecreated) AS timecreated
+
+                    FROM    {facetoface_signups_status} signup_status
+                            JOIN {facetoface_signups} signup ON
+                                signup.id = signup_status.signupid AND
+                                signup.sessionid = :sessionid_sub
+
+                    WHERE   signup_status.statuscode IN (:status_booked, :status_waitlisted)
+
+                    GROUP BY
+                            signup_status.signupid
+                ) latest_status ON
+                    latest_status.signupid = signups.id
+
+                    JOIN {user} user ON
+                    user.id = signups.userid
+
+        WHERE   sessions.id = :sessionid_main AND
+                signups_status.superceded <> 1 AND
+                signups_status.statuscode >= :status_approved
+
+        ORDER BY
+                latest_status.timecreated ASC,
+                signups_status.timecreated ASC
+    ";
+
+    $params = [
+        'sessionid_sub' => $sessionid,
+        'status_booked' => MDL_F2F_STATUS_BOOKED,
+        'status_waitlisted' => MDL_F2F_STATUS_WAITLISTED,
+        'sessionid_main' => $sessionid,
+        'status_approved' => MDL_F2F_STATUS_APPROVED,
+    ];
+
+    return $DB->get_records_sql($sql, $params);
 }
