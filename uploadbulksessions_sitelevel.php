@@ -1,19 +1,4 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
-//
-// Moodle is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
 /**
  * Handles bulk session uploads for the Face-to-Face module site level.
  * Manages CSV validation, preview, and session creation.
@@ -28,7 +13,6 @@ require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 require_once($CFG->dirroot . '/mod/facetoface/uploadbulksessions_common.php');
 
-use core\output\notification;
 use mod_facetoface\form\bulk_session_upload_form_sitelevel;
 use mod_facetoface\form\bulk_session_confirm_form_sitelevel;
 use mod_facetoface\bulk_session_manager_sitelevel;
@@ -50,6 +34,7 @@ $PAGE->set_heading(get_string('pluginname', 'mod_facetoface'));
  * Utility function to display bulk-upload errors and then stop execution.
  *
  * @param array $errors A list of errors (each error can be a simple string
+ *
  * @return void
  * @throws coding_exception
  */
@@ -72,65 +57,58 @@ function display_bulk_upload_errors_site($errors): void {
     exit;
 }
 
-// Validate sessions
-$cancelurl = new moodle_url('/admin/search.php') . '#linkmodules';
-$uploadform = new bulk_session_upload_form_sitelevel();
-$make_confirm_form = fn(int $fileid) => new bulk_session_confirm_form_sitelevel(
-    null, [
-        'fileid' => $fileid,
-        'process' => 1
-    ]
-);
-$manager = new bulk_session_manager_sitelevel();
-handle_bulk_session_validation(
-    $validate,
-    $cancelurl,
-    $uploadform,
-    $make_confirm_form,
-    $manager
-);
+// Validate sessions.
+if ($validate) {
+    $uploadform = new bulk_session_upload_form_sitelevel();
+    $makeconfirmform = fn(int $fileid) => new bulk_session_confirm_form_sitelevel(
+        null, [
+            'fileid' => $fileid,
+            'process' => 1
+        ]
+    );
+    $manager = new bulk_session_manager_sitelevel();
 
+    handle_bulk_session_validation(
+        $cancelurl=new moodle_url('/admin/search.php') . '#linkmodules',
+        $uploadform,
+        $makeconfirmform,
+        $manager
+    );
+
+    exit;
+}
+
+// Confirmation.
 if (
     $process &&
     $fileid
 ) {
-    $manager = new bulk_session_manager_sitelevel();
-    $manager->load_from_file($fileid);
+    $successurl = new moodle_url('/mod/facetoface/uploadbulksessions_sitelevel.php');
+    $cancelurl = $successurl;
+
     $confirmform = new bulk_session_confirm_form_sitelevel(null, ['fileid' => $fileid]);
 
-    if ($confirmform->is_cancelled()) {
-        redirect(new moodle_url('/mod/facetoface/uploadbulksessions_sitelevel.php'));
+    $params = [
+        'context' => context_system::instance(),
+        'objectid' => 0,
+    ];
 
-        exit;
-    }
+    $event = csv_processed_bulksession_sitelevel::create($params);
 
-    $errors = $manager->validate();
+    $bulkuploaderrorhandler = fn($errors) => display_bulk_upload_errors_site($errors);
 
-    if (empty($errors)) {
-        $success = $manager->process();
+    process_bulk_session_confirmation(
+        $fileid,
+        $successurl,
+        $cancelurl,
+        $confirmform,
+        $manager,
+        $event,
+        $bulkuploaderrorhandler,
+        $facetoface
+    );
 
-        if ($success) {
-
-            $params = [
-                'context' => context_system::instance(),
-                'objectid' => 0,
-            ];
-
-            $event = csv_processed_bulksession_sitelevel::create($params);
-            $event->trigger();
-
-            redirect(
-                new moodle_url('/mod/facetoface/uploadbulksessions_sitelevel.php'),
-                get_string('bulksessionsprocessed', 'mod_facetoface'),
-                null,
-                notification::NOTIFY_SUCCESS
-            );
-        } else {
-            display_bulk_upload_errors_site($manager->get_errors());
-        }
-    }
-
-    display_bulk_upload_errors_site($errors);
+    exit; // redundant to be explicit.
 }
 
 $uploadform->set_data(['validate' => 1]);

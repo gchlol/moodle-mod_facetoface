@@ -13,7 +13,6 @@ require_once('../../config.php');
 require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 require_once($CFG->dirroot . '/mod/facetoface/uploadbulksessions_common.php');
 
-use core\output\notification;
 use mod_facetoface\form\bulk_session_upload_form_activitylevel;
 use mod_facetoface\form\bulk_session_confirm_form_activitylevel;
 use mod_facetoface\bulk_session_manager_activitylevel;
@@ -52,7 +51,7 @@ $PAGE->set_heading($heading);
  * Displays bulk-upload errors and ends execution.
  *
  * @param array $errors An array of errors to display.
- * @return void
+ * @return void <!> This function `exit`s after calling.
  */
 function handle_bulk_upload_errors_activity(array $errors): void {
     global $OUTPUT;
@@ -71,68 +70,62 @@ function handle_bulk_upload_errors_activity(array $errors): void {
     exit;
 }
 
-// Validate sessions
-$cancelurl = new moodle_url('/mod/facetoface/view.php', ['id' => $cm->id]);
-$uploadform = new bulk_session_upload_form_activitylevel(null, ['f2fid' => $f2fid]);
-$make_confirm_form = fn(int $fileid) => new bulk_session_confirm_form_activitylevel(
-    null,
-    [
-        'f2fid'  => $f2fid,
-        'fileid' => $fileid,
-    ]
-);
-$manager = new bulk_session_manager_activitylevel($f2fid);
-handle_bulk_session_validation(
-    $validate,
-    $cancelurl,
-    $uploadform,
-    $make_confirm_form,
-    $manager
-);
+// Validate sessions.
+if ($validate) {
+    $uploadform = new bulk_session_upload_form_activitylevel(
+        null,
+        ['f2fid' => $f2fid]  // moodleform parameters. DON'T DELETE ME!
+    );
+    $makeconfirmform = fn(int $fileid) => new bulk_session_confirm_form_activitylevel(
+        null,
+        [
+            'f2fid'  => $f2fid,
+            'fileid' => $fileid,
+        ]
+    );
+    $manager = new bulk_session_manager_activitylevel($f2fid);
 
+    handle_bulk_session_validation(
+        $cancelurl=new moodle_url('/mod/facetoface/view.php', ['id' => $cm->id]),
+        $uploadform,
+        $makeconfirmform,
+        $manager
+    );
+
+    exit;
+}
+
+// Confirmation.
 if (
     $process &&
     $fileid &&
     $f2fid
 ) {
-    $manager = new bulk_session_manager_activitylevel($f2fid);
-    $manager->load_from_file($fileid);
+    $successurl = new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $f2fid]);
+    $cancelurl = $successurl;
+
     $confirmform = new bulk_session_confirm_form_activitylevel(null, ['f2fid' => $f2fid, 'fileid' => $fileid]);
 
-    if ($confirmform->is_cancelled()) {
-        redirect(new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $f2fid]));
+    $params = [
+        'context'  => $modulecontext,
+        'objectid' => $f2fid,
+    ];
+    $event = csv_processed_bulksession_activitylevel::create($params);
 
-        exit;
-    }
+    $bulkuploaderrorhandler = fn($errors) => handle_bulk_upload_errors_activity($errors);
 
-    $errors = $manager->validate();
+    process_bulk_session_confirmation(
+        $fileid,
+        $successurl,
+        $cancelurl,
+        $confirmform,
+        $manager,
+        $event,
+        $bulkuploaderrorhandler,
+        $facetoface
+    );
 
-    if (empty($errors)) {
-        $success = $manager->process();
-
-        if ($success) {
-            $params = [
-                'context'  => $modulecontext,
-                'objectid' => $f2fid,
-            ];
-
-            $event = csv_processed_bulksession_activitylevel::create($params);
-            $event->add_record_snapshot('facetoface', $facetoface);
-            $event->trigger();
-
-            redirect(
-                new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $f2fid]),
-                get_string('bulksessionsprocessed', 'mod_facetoface'),
-                null,
-                notification::NOTIFY_SUCCESS
-            );
-        } else {
-            handle_bulk_upload_errors_activity($manager->get_errors());
-        }
-    }
-
-    handle_bulk_upload_errors_activity($errors);
-
+    exit; // redundant to be explicit.
 }
 
 // Default display: show the upload form.
