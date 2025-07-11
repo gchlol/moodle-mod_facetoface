@@ -13,7 +13,6 @@
 namespace mod_facetoface;
 
 use DateTime;
-use moodle_url;
 use stdClass;
 
 defined('MOODLE_INTERNAL') || die();

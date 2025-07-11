@@ -44,7 +44,7 @@ abstract class bulk_session_manager_parent {
     /**
      * Constructor.
      *
-     * @param int $facetofaceid Face-to-Face activity ID (0 if not applicable).
+     * @param int $facetofaceid Face-to-Face activity ID (0 for site-level bulk upload).
      */
     public function __construct(int $facetofaceid = 0) {
         $this->facetofaceid = $facetofaceid;
@@ -147,7 +147,7 @@ abstract class bulk_session_manager_parent {
         }
 
         try {
-            $rownum = 2;
+            $rownum = 2; // The error message matches the row number in Excel.
             while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
                 if (count($data) !== count($headerline)) {
                     throw new moodle_exception(
@@ -191,19 +191,23 @@ abstract class bulk_session_manager_parent {
         return $this->records;
     }
 
-    // Abstract methods that child classes must implement:
     /**
      * Validates the loaded CSV records for required fields, types, etc.
      *
      * @return array A list of validation errors.
      */
-    abstract protected function validate(): array;
-
+    protected function validate(): array {
+        return []; // FIXME
+    }
 
     /**
-     * Processes all valid records to create new sessions and related data.
+     * Processes valid records to create new Face-to-Face sessions.
+     * Inserts the session and its schedule into the database.
+     * If any errors occur, they are stored in $this->errors.
      *
-     * @return bool True if all sessions were created successfully (or no records), false if any errors occurred.
+     * @return bool True if all sessions were created successfully, false otherwise.
      */
-    abstract protected function process(): bool;
+    protected function process(): bool {
+        return false; // FIXME
+    }
 }
