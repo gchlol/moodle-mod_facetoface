@@ -173,7 +173,7 @@ function handle_bulk_session_validation(
  * @param string $successurl URL to redirect to when confirmation completes
  * @param string $cancelurl URL to redirect to when form is cancelled
  * @param Closure $bulkuploaderrorhandler Callback function to handle errors during bulk upload.
- * @param stdClass $facetoface The Face-to-Face instance record
+ * @param stdClass|null $facetoface If activity-level, the Face-to-Face instance record. If site-level, null.
  *
  * @return void <!> IMPORTANT: The caller script will `exit` after running this function.
  * @throws moodle_exception When redirect occurs
@@ -186,7 +186,7 @@ function process_bulk_session_confirmation(
     bulk_session_manager_parent $manager,
     base $event,
     Closure $bulkuploaderrorhandler,
-    stdClass $facetoface
+    ?stdClass $facetoface
 ): void {
     $manager->load_from_file($fileid);
 

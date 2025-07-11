@@ -107,7 +107,7 @@ if (
         $manager,
         $event,
         $bulkuploaderrorhandler,
-        $facetoface
+        $facetoface=null // Site-level
     );
 
     exit; // redundant to be explicit.
