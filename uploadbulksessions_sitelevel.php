@@ -57,16 +57,18 @@ function display_bulk_upload_errors_site($errors): void {
     exit;
 }
 
+// Shared variables
+$manager = new bulk_session_manager_sitelevel();
+$uploadform = new bulk_session_upload_form_sitelevel();
+
 // Validate sessions.
 if ($validate) {
-    $uploadform = new bulk_session_upload_form_sitelevel();
     $makeconfirmform = fn(int $fileid) => new bulk_session_confirm_form_sitelevel(
         null, [
             'fileid' => $fileid,
             'process' => 1
         ]
     );
-    $manager = new bulk_session_manager_sitelevel();
 
     handle_bulk_session_validation(
         $cancelurl=new moodle_url('/admin/search.php') . '#linkmodules',

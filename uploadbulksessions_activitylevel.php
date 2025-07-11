@@ -70,12 +70,15 @@ function handle_bulk_upload_errors_activity(array $errors): void {
     exit;
 }
 
+// Shared variables
+$manager = new bulk_session_manager_activitylevel($f2fid);
+$uploadform = new bulk_session_upload_form_activitylevel(
+    null,
+    ['f2fid' => $f2fid]  // moodleform parameters. DON'T DELETE ME!
+);
+
 // Validate sessions.
 if ($validate) {
-    $uploadform = new bulk_session_upload_form_activitylevel(
-        null,
-        ['f2fid' => $f2fid]  // moodleform parameters. DON'T DELETE ME!
-    );
     $makeconfirmform = fn(int $fileid) => new bulk_session_confirm_form_activitylevel(
         null,
         [
@@ -83,7 +86,6 @@ if ($validate) {
             'fileid' => $fileid,
         ]
     );
-    $manager = new bulk_session_manager_activitylevel($f2fid);
 
     handle_bulk_session_validation(
         $cancelurl=new moodle_url('/mod/facetoface/view.php', ['id' => $cm->id]),
