@@ -17,6 +17,7 @@ use moodle_exception;
 use Generator;
 use context_user;
 use moodle_url;
+use stdClass;
 use stored_file;
 
 defined('MOODLE_INTERNAL') || die();
@@ -190,8 +191,10 @@ abstract class bulk_session_manager_parent {
         return $this->records;
     }
 
+    // Validate CSV
     /**
      * Validates all loaded CSV records for correctness.
+     *
      * @return array List of errors (empty if validation passed).
      * @throws moodle_exception
      */
@@ -306,21 +309,216 @@ abstract class bulk_session_manager_parent {
         }
     }
 
+    // Parse CSV and Write to SQL
     /**
      * Processes valid records to create new Face-to-Face sessions.
+     * Assumes validate() has already been called to check correctness.
+     *
      * Inserts the session and its schedule into the database.
      * If any errors occur, they are stored in $this->errors.
      *
      * @return bool True if all sessions were created successfully, false otherwise.
      */
-    protected function process(): bool {
-        return false; // FIXME
+    public function process(): bool {
+        $allcustomfields = facetoface_get_session_customfields();
+        $customfieldsbyshortname = [];
+
+        foreach ($allcustomfields as $field) {
+            $customfieldsbyshortname[strtolower($field->shortname)] = $field;
+        }
+
+        foreach ($this->records as $index => $record) {
+            // Context-specific handling done in child override before calling common processing.
+            $this->process_record($record, $index, $customfieldsbyshortname);
+        }
+
+        return empty($this->errors);
     }
 
     /**
+     * Common logic for session creation for a single record.
+     * Used in both activity-level and site-level bulk upload.
+     * Assumes context-specific preconditions (like facetofaceid) are handled in the child classes.
+     *
+     * @param array $record The CSV record data.
+     * @param int $index The record index for error reference.
+     * @param array $customfieldsbyshortname Map of custom field shortnames to field objects.
+     *
+     * @return void
+     */
+    protected function process_session_record(
+        stdClass $session,
+        array $record,
+        int $index,
+        array $customfieldsbyshortname
+    ): void {
+        global $DB;
+
+        $session->datetimeknown = 1;
+        if (
+            isset($record['Session Date/Time Known']) &&
+            $record['Session Date/Time Known'] === 'no'
+        ) {
+            $session->datetimeknown = 0;
+        }
+
+        $session->starttime = null;
+        if (
+            !empty($record['Start Date']) &&
+            !empty($record['Start Time'])
+        ) {
+            $session->starttime = strtotime(str_replace('/', '-', $record['Start Date'].' '.$record['Start Time']));
+        }
+
+        $session->finishtime = null;
+        if (
+            !empty($record['Finish Date']) &&
+            !empty($record['Finish Time'])
+        ) {
+            $session->finishtime = strtotime(str_replace('/', '-', $record['Finish Date'].' '.$record['Finish Time']));
+        }
+
+        if (
+            $session->datetimeknown &&
+            (empty($session->starttime) ||
+                empty($session->finishtime))
+        ) {
+            $this->errors[] = [
+                $index,
+                get_string('error:invaliddatetimedata', 'facetoface')
+            ];
+
+            return;
+        }
+
+        $session->allowcancellations = 1;
+        if (
+            isset($record['Allow Cancellations']) &&
+            $record['Allow Cancellations'] === 'no'
+        ) {
+            $session->allowcancellations = 0;
+        }
+
+        $session->capacity = 10;
+        if (
+            isset($record['Capacity']) &&
+            is_numeric($record['Capacity'])
+        ) {
+            $session->capacity = (int)$record['Capacity'];
+        }
+
+        $session->allowoverbook = 1;
+        if (
+            isset($record['Allow Overbookings']) &&
+            $record['Allow Overbookings'] === 'no'
+        ) {
+            $session->allowoverbook = 0;
+        }
+
+        $session->duration = 0;
+        if (
+            isset($record['Duration']) &&
+            is_numeric($record['Duration'])
+        ) {
+            $session->duration = (int)$record['Duration'];
+        }
+
+        $session->normalcost = 0;
+        if (
+            isset($record['Normal Cost']) &&
+            is_numeric($record['Normal Cost'])
+        ) {
+            $session->normalcost = $record['Normal Cost'];
+        }
+
+        $session->discountcost = 0;
+        if (
+            isset($record['Discount Cost']) &&
+            is_numeric($record['Discount Cost'])
+        ) {
+            $session->discountcost = $record['Discount Cost'];
+        }
+
+        $session->details = '';
+        if (
+            isset($record['Details']) &&
+            is_string($record['Details'])
+        ) {
+            $session->details = $record['Details'];
+        }
+
+        $session->timecreated = time();
+        $session->timemodified = time();
+
+        $sessionid = $DB->insert_record('facetoface_sessions', $session);
+        if (!$sessionid) {
+            $this->errors[] = [
+                $index,
+                get_string('error:failedtocreatesession', 'facetoface')
+            ];
+
+            return;
+        }
+
+        // Insert session dates.
+        $sessionsdate = new stdClass();
+        $sessionsdate->sessionid = $sessionid;
+        $sessionsdate->timestart = $session->starttime;
+        $sessionsdate->timefinish = $session->finishtime;
+        $sessionsdateid = $DB->insert_record('facetoface_sessions_dates', $sessionsdate);
+
+        if (!$sessionsdateid) {
+            $this->errors[] = [
+                $index,
+                get_string('error:failedtocreatedates', 'facetoface', $sessionid)
+            ];
+        }
+
+        foreach ($record as $column => $value) {
+            // If the column does not start with "Customfield_", skip it.
+            if (strpos($column, 'Customfield_') !== 0) {
+
+                continue;
+
+            }
+
+            $shortname = strtolower(substr($column, strlen('Customfield_')));
+
+            // If we don’t have a matching custom field for $shortname, skip it.
+            if (!isset($customfieldsbyshortname[$shortname])) {
+                $this->errors[] = [
+                    $index,
+                    get_string('error:unknowncustomfieldshort', 'facetoface', $shortname)
+                ];
+
+                continue;
+            }
+
+            // Otherwise, save the custom field.
+            $field = $customfieldsbyshortname[$shortname];
+            if (!facetoface_save_customfield_value($field->id, $value, $sessionid, 'session')) {
+                $this->errors[] = [
+                    $index,
+                    get_string('error:couldnotsavecustomfieldshort', 'facetoface', $shortname)
+                ];
+            }
+        }
+    }
+
+    // Override in child classes
+    /**
      * Context-specific validation for a single record. Should call validate_common_fields() after special checks.
+     *
      * @param array $record The CSV record (trimmed).
      * @param int $index Record index.
      */
     abstract protected function validate_record(array $record, int $index): void;
+
+    /**
+     * Context-specific processing for a single record. Should prepare session object and call process_session_record().
+     * @param array $record The CSV record.
+     * @param int $index Record index.
+     * @param array $customfields Map of custom fields.
+     */
+    abstract protected function process_record(array $record, int $index, array $customfieldsbyshortname): void;
 }
