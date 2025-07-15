@@ -262,6 +262,7 @@ $string['format'] = 'Format';
 $string['full'] = 'Date is fully occupied';
 $string['goback'] = 'Go back';
 $string['guestsno'] = 'Sorry, guests are not allowed to sign up for sessions.';
+$string['hidden'] = 'Hidden';
 $string['icalendarheading'] = 'iCalendar Attachments';
 $string['import'] = 'Import';
 $string['info'] = 'Info';
