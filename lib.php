@@ -4420,6 +4420,30 @@ function facetoface_can_view_field(int $visibility, bool $editsessions): bool {
     }
 }
 
+/**
+ * Enrol a user into a course on signup.
+ *
+ * @param object $context context object (record from context table)
+ * @param integer $courseid id of the course
+ * @param integer $userid id of the user
+ * @return bool true if the given user is enrolled, false otherwise
+ */
+function facetoface_enrol_user($context, $courseid, $userid): bool {
+    global $DB;
+
+    if (!is_enrolled($context, $userid)) {
+        $defaultroleid = null;
+        // Get default role ID for manual enrollment.
+        $conditions = ['courseid' => $courseid, 'enrol' => 'manual'];
+        $defaultroleid = $DB->get_field('enrol', 'roleid', $conditions, IGNORE_MISSING);
+        if (!enrol_try_internal_enrol($courseid, $userid, $defaultroleid)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 /*
  * facetoface assignment candidates
  */
