@@ -3,13 +3,14 @@
 }
 .f2fsession {
     width: 100%;
+    display: flex;
     border-bottom: 1px solid #ccc;
+    justify-content: space-between;
 }
 .f2fsession:last-child {
     border-bottom: none;
 }
 .f2fsessiontime {
-    width: 80%;
     display: inline-block;
     vertical-align: top;
     padding-top: 5px;
@@ -17,11 +18,31 @@
 .f2finprogress .f2fsessiontime {
     width: 100%;
 }
-.f2foptions {
-    width: 20%;
-    display: inline-block;
-    min-width: 60px;
+
+.f2fcustomfieldcolumn {
+    width: 100%;
+    display: flex;
+    justify-content: center;
 }
+
+.f2fcustomfieldcolumn > div {
+    width: 100%;
+    padding-left: 2rem;
+}
+
+.f2foptions {
+    display: flex;
+    min-width: 60px;
+    max-width: 50%;
+    justify-content: end;
+    width: 100%;
+}
+
+.f2foptions:has(> :last-child:nth-child(2)) {
+    justify-content: space-between;
+}
+
+
 .f2fsessionlinks,
 .f2fsessionnotice {
     font-size: 11px;
@@ -29,6 +50,9 @@
     line-height: 14px;
     display: block;
     padding: 3px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 }
 .f2factivityname {
     line-height: 1.5;

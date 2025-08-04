@@ -2816,13 +2816,22 @@ function facetoface_cm_info_view(cm_info $coursemodule) {
                     ]);
                 }
 
-                $output .= html_writer::start_tag('div', ['class' => 'f2fsessiongroup'])
-                    . html_writer::tag('span', $status, ['class' => 'f2fsessionnotice'])
-                    . html_writer::start_tag('div', ['class' => 'f2fsession f2fsignedup'])
-                    . html_writer::tag('div', $sessiondates, ['class' => 'f2fsessiontime'])
-                    . html_writer::tag('div', $span . $moreinfolink . $attendeeslink . $cancellink, ['class' => 'f2foptions'])
-                    . html_writer::end_tag('div')
-                    . html_writer::end_tag('div');
+                $output .= html_writer::start_tag('div', ['class' => 'f2fsessiongroup']);
+                $output .= html_writer::tag('span', $status, ['class' => 'f2fsessionnotice']);
+                $output .= html_writer::start_tag('div', ['class' => 'f2fsession f2fsignedup']);
+                $output .= html_writer::tag('div', $sessiondates, ['class' => 'f2fsessiontime']);
+                $output .= html_writer::start_tag('div', ['class' => 'f2foptions']);
+                if ($visiblefieldcolumn = facetoface_get_visiblefield_data($session)) {
+                    $output .= html_writer::start_tag('div', ['class' => 'f2fcustomfieldcolumn']);
+                    $fieldnamehtml = html_writer::tag('span', $visiblefieldcolumn->name.':', ['class' => 'f2fsessionnotice']);
+                    $fieldvaluehtml = html_writer::tag('span', $visiblefieldcolumn->value);
+                    $output .= html_writer::tag('div', $fieldnamehtml . $fieldvaluehtml);
+                    $output .= html_writer::end_tag('div');
+                }
+                $output .= html_writer::tag('div', $span . $moreinfolink . $attendeeslink . $cancellink);
+                $output .= html_writer::end_tag('div');
+                $output .= html_writer::end_tag('div');
+                $output .= html_writer::end_tag('div');
             }
         }
         // Add "view all sessions" row to table.
@@ -2901,6 +2910,11 @@ function facetoface_cm_info_view(cm_info $coursemodule) {
                     $futuresessions[] = $sessionobject;
                 }
 
+                // Check if custom fields exist, and add to sessionobject if setting is enabled.
+                if ($visiblefieldcolumn = facetoface_get_visiblefield_data($session)) {
+                    $sessionobject->customfield = $visiblefieldcolumn;
+                }
+
                 $j++;
                 if ($j > $facetoface->display) {
                     break;
@@ -2912,9 +2926,20 @@ function facetoface_cm_info_view(cm_info $coursemodule) {
                 $output .= html_writer::tag('span', get_string('sessioninprogress', 'facetoface'), ['class' => 'f2fsessionnotice']);
 
                 foreach ($sessionsinprogress as $session) {
-                    $output .= html_writer::start_tag('div', ['class' => 'f2fsession f2finprogress'])
-                        . html_writer::tag('span', $session->date.$session->multidate, ['class' => 'f2fsessiontime'])
-                        . html_writer::end_tag('div');
+                    $output .= html_writer::start_tag('div', ['class' => 'f2fsession f2finprogress']);
+                    $output .= html_writer::tag('span', $session->date.$session->multidate, ['class' => 'f2fsessiontime']);
+
+                    // Check if we are showing custom field
+                    if ($visiblefieldcolumn) {
+                        $output .= html_writer::start_tag('div', ['class' => 'f2foptions']);
+                        $output .= html_writer::start_tag('div', ['class' => 'f2fcustomfieldcolumn']);
+                        $fieldnamehtml = html_writer::tag('span', $session->customfield->name.':', ['class' => 'f2fsessionnotice']);
+                        $fieldvaluehtml = html_writer::tag('span', $session->customfield->value);
+                        $output .= html_writer::tag('div', $fieldnamehtml . $fieldvaluehtml);
+                        $output .= html_writer::end_tag('div');
+                        $output .= html_writer::end_tag('div');
+                    }
+                    $output .= html_writer::end_tag('div');
                 }
                 $output .= html_writer::end_tag('div');
             }
@@ -2945,9 +2970,20 @@ function facetoface_cm_info_view(cm_info $coursemodule) {
                     $output .= html_writer::start_tag('div', ['class' => 'f2fsession f2ffuture'])
                             . html_writer::tag('div', $session->date.$session->multidate, ['class' => 'f2fsessiontime']);
 
-                    if ($facetoface->multiplesignupmethod == MOD_FACETOFACE_SIGNUP_MULTIPLE_PER_SESSION) {
-                        $output .= html_writer::tag('div', $session->options . $session->moreinfolink, ['class' => 'f2foptions']);
+                    $output .= html_writer::start_tag('div', ['class' => 'f2foptions']);
+
+                    // Check if we are showing custom field.
+                    if ($visiblefieldcolumn) {
+                        $output .= html_writer::start_tag('div', ['class' => 'f2fcustomfieldcolumn']);
+                        $fieldnamehtml = html_writer::tag('span', $session->customfield->name.':', ['class' => 'f2fsessionnotice']);
+                        $fieldvaluehtml = html_writer::tag('span', $session->customfield->value);
+                        $output .= html_writer::tag('div', $fieldnamehtml . $fieldvaluehtml);
+                        $output .= html_writer::end_tag('div');
                     }
+                    if ($facetoface->multiplesignupmethod == MOD_FACETOFACE_SIGNUP_MULTIPLE_PER_SESSION) {
+                        $output .= html_writer::tag('div', $session->options . $session->moreinfolink, ['class' => '']);
+                    }
+                    $output .= html_writer::end_tag('div');
 
                     $output .= html_writer::end_tag('div');
                 }
@@ -2978,6 +3014,41 @@ function facetoface_cm_info_view(cm_info $coursemodule) {
     }
 
     $coursemodule->set_content($output);
+}
+
+
+/**
+ * Gets the visible custom field title and value for a face-to-face session
+ *
+ * @param object $session A session object containing session details
+ * @return object|null Object containing the field 'name' and 'value', or null setting disabled
+ */
+function facetoface_get_visiblefield_data($session) {
+    global $DB;
+    $visiblefieldcolumn = get_config('facetoface', 'displaycustomfield');
+
+    if (!$visiblefieldcolumn) {
+        return null;
+    }
+
+    // Get field title.
+    $fieldname = $DB->get_field('facetoface_session_field', 'name', [
+        'id' => $visiblefieldcolumn,
+    ]);
+    // Get field value for the session.
+    $fieldvalue = $DB->get_field('facetoface_session_data', 'data', [
+        'fieldid' => $visiblefieldcolumn,
+        'sessionid' => $session->id
+    ]);
+
+    if ($fieldname == null || $fieldvalue == null) {
+        return null;
+    }
+
+    return (object)[
+        'name' => $fieldname,
+        'value' => $fieldvalue,
+    ];
 }
 
 /**
