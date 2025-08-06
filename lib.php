@@ -1633,7 +1633,7 @@ function facetoface_write_activity_attendance(&$worksheet, $startingrow, $faceto
 
     // Fast version of "facetoface_get_sessions($facetofaceid, $location)".
     $sql = "SELECT d.id as dateid, s.id, s.datetimeknown, s.capacity,
-                   s.duration, d.timestart, d.timefinish
+                   s.duration, d.timestart, d.timefinish, s.visible
               FROM {facetoface_sessions} s
               JOIN {facetoface_sessions_dates} d ON s.id = d.sessionid
               WHERE
@@ -1650,7 +1650,9 @@ function facetoface_write_activity_attendance(&$worksheet, $startingrow, $faceto
 
         $sessiontrainers = facetoface_get_trainers($session->id);
 
-        if ($session->datetimeknown) {
+        if (!$session->visible) {
+            $status = get_string('hidden', 'facetoface');
+        } else if ($session->datetimeknown) {
             if ($session->timestart < $timenow) {
                 $status = get_string('sessionover', 'facetoface');
             } else {
@@ -2742,6 +2744,8 @@ function facetoface_cm_info_view(cm_info $coursemodule) {
     }
     // Can view attendees.
     $viewattendees = has_capability('mod/facetoface:viewattendees', $contextmodule);
+    // Can edit sessions.
+    $editsessions = has_capability('mod/facetoface:editsessions', $contextmodule);
     // Can see "view all sessions" link even if activity is hidden/currently unavailable.
     $iseditor = has_any_capability([
         'mod/facetoface:viewattendees', 'mod/facetoface:editsessions',
@@ -2851,6 +2855,10 @@ function facetoface_cm_info_view(cm_info $coursemodule) {
             $futuresessions = [];
 
             foreach ($sessions as $session) {
+                if ($session->visible == '0' && !$editsessions) {
+                    continue;
+                }
+
                 if (!facetoface_session_has_capacity($session, $contextmodule, MDL_F2F_STATUS_WAITLISTED)
                     && !$session->allowoverbook) {
                     continue;

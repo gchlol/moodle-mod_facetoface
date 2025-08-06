@@ -138,7 +138,9 @@ class mod_facetoface_renderer extends plugin_renderer_base {
 
             // Status.
             $status  = get_string('bookingopen', 'facetoface');
-            if ($session->datetimeknown
+            if (!$session->visible) {
+                $status = get_string('hidden', 'facetoface');
+            } else if ($session->datetimeknown
                 && facetoface_has_session_started($session, $timenow)
                 && facetoface_is_session_in_progress($session, $timenow)) {
                 $status = get_string('sessioninprogress', 'facetoface');
@@ -213,7 +215,7 @@ class mod_facetoface_renderer extends plugin_renderer_base {
             $row = new html_table_row($sessionrow);
 
             // Set the CSS class for the row.
-            if ($sessionstarted) {
+            if ($sessionstarted || !$session->visible) {
                 $row->attributes = ['class' => 'dimmed_text'];
             } else if ($isbookedsession) {
                 $row->attributes = ['class' => 'highlight'];

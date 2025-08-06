@@ -891,5 +891,20 @@ function xmldb_facetoface_upgrade($oldversion=0) {
         upgrade_mod_savepoint(true, 2025072400, 'facetoface');
     }
 
+    if ($oldversion < 2025080600) {
+
+        // Define field visible to be added to facetoface_sessions
+        $table = new xmldb_table('facetoface_sessions');
+        $field = new xmldb_field('visible', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'allowcancellations');
+
+        // Conditionally launch add field visible
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Face-to-face savepoint reached
+        upgrade_mod_savepoint(true, 2025080600, 'facetoface');
+    }
+
     return $result;
 }
