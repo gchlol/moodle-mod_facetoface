@@ -884,7 +884,7 @@ function xmldb_facetoface_upgrade($oldversion=0) {
                 $record->visibleto = empty($record->showinsummary) ? MDL_F2F_FIELD_NOTVISIBLE : MDL_F2F_FIELD_VISIBLETOALL;
                 $DB->update_record('facetoface_session_field', $record);
             }
-            $recordset->close;
+            $recordset->close();
         }
 
         // Face-to-face savepoint reached
