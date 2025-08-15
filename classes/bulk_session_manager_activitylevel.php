@@ -38,15 +38,6 @@ defined('MOODLE_INTERNAL') || die();
  */
 class bulk_session_manager_activitylevel extends bulk_session_manager_parent {
     /**
-     * Constructor requires a Face-to-Face instance ID.
-     *
-     * @param int $facetofaceid Face-to-Face activity ID.
-     */
-    public function __construct(int $facetofaceid) {
-        parent::__construct($facetofaceid);
-    }
-
-    /**
      * Validates a record within the activity context by checking common fields.
      *
      * @param array $record The record data to validate.

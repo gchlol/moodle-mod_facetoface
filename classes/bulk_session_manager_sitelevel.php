@@ -38,13 +38,6 @@ defined('MOODLE_INTERNAL') || die();
  */
 class bulk_session_manager_sitelevel extends bulk_session_manager_parent {
     /**
-     * Constructor.
-     */
-    public function __construct() {
-        parent::__construct(0);
-    }
-
-    /**
      * Rules to validate the loaded CSV records for required fields, types, etc.
      *
      * @return array A list of validation errors.
