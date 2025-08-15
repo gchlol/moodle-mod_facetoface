@@ -151,6 +151,9 @@ $string['error:sessionalreadystarted'] = 'Unable to use session {$a}, as it whic
 $string['error:userisnotenrolledintocourse'] = 'User {$a} is not enrolled into this course.';
 $string['error:bookingsuploadfileerrorsfound'] = '{$a} errors were found in the uploaded file. Bookings cannot be processed until they are resolved.';
 $string['error:bookingsuploadfileheaderfieldmismatch'] = 'Mismatched number of fields in the uploaded file on row {$a}.';
+$string['error:noheaderrow'] = 'No header row found in the uploaded file.';
+$string['error:missingrequiredcolumn'] = 'Missing required column: {$a}';
+$string['error:invalidallowcancel'] = 'You must specify either "yes" or "no" for Allow Cancellations.';
 $string['error:sessionoverbooked'] = 'Session ID {$a->session} overbooked by {$a->amount} person(s).';
 $string['error:sessiondoesnotexist'] = 'Session ID {$a} does not exist';
 $string['error:userdoesnotexist'] = 'User {$a} does not exist';
@@ -887,3 +890,102 @@ $string['attendancecolumn:3'] = 'Org Unit';
 $string['attendancecolumn:4'] = 'Position';
 $string['attendancecolumn:5'] = 'Stream';
 $string['attendancecolumn:6'] = 'Paypoint';
+
+// Site wide bulk upload.
+$string['facetoface:sitebulksessions'] = 'Upload sessions';
+$string['f2fbulksessions'] = 'Upload sessions';
+$string['facetoface:settings'] = 'Settings';
+$string['sitebulkuploadheader'] = 'Upload Sessions for Any Courses';
+$string['examplecsv']            = 'Example CSV file';
+$string['examplebulksessionscsv'] = 'example_bulksessions.csv';
+$string['error:coursenotfound'] = 'Could not find course with shortname: {$a}';
+$string['error:f2fnotfound'] = 'Could not find Face-to-Face in course "{$a->shortname}" with name "{$a->f2fname}".';
+$string['error:bookingsuploadfileheaderfieldmismatch'] = 'The uploaded CSV does not match the expected columns.';
+$string['error:missingcourseshortname'] = 'No course shortname provided.';
+$string['error:missingf2fname'] = 'No Face-to-Face activity name provided.';
+// Bulk Upload Sessions.
+$string['validatebulksessions'] = 'Validate Bulk Sessions Upload';
+$string['error:uploadsessionserrorsfound'] = '{$a} errors were found in the uploaded file. Sessions cannot be processed until they are resolved.';
+$string['csvline'] = 'CSV line';
+$string['norecordsfound'] = 'No records found';
+$string['bulksessionsprocessed'] = 'Bulk sessions have been successfully processed.';
+$string['error:missingstarttime'] = 'Start date and time is required.';
+$string['error:invalidstarttime'] = 'Start date/time is invalid: {$a->date} {$a->time}';
+$string['error:missingfinishtime'] = 'Finish date and time is required.';
+$string['error:invalidfinishtime'] = 'Finish date/time is invalid: {$a->date} {$a->time}';
+$string['error:starttimeafterfinish'] = 'Start time must be before the finish time.';
+$string['error:invalidcapacity'] = 'Capacity must be a positive number.';
+$string['error:invalidduration'] = 'Duration must be a positive number.';
+$string['error:invalidnormalcost'] = 'Normal cost must be a valid number.';
+$string['error:invaliddiscountcost'] = 'Discount cost must be a valid number.';
+$string['error:invalidallowoverbook'] = 'Allow overbookings must be "yes" or "no".';
+$string['error:invaliddatetimedata'] = 'Invalid Date Time data.';
+$string['error:failedtocreatesession'] = 'Failed to create session';
+$string['error:failedtocreatedates'] = 'Failed to create dates for session #{$a}';
+$string['error:couldnotsavecustomfieldshort'] = 'Could not save custom field with short name "{$a}"';
+$string['facetoface:uploadbulksessions'] = 'Bulk Upload Sessions';
+$string['uploadbulksessions'] = 'Upload sessions';
+$string['uploadandpreviewbulk'] = 'Upload and preview sessions';
+$string['examplesessionscsv'] = 'example_sessions.csv';
+$string['uploadsessionfile'] = 'Bulk Upload Session CSV File';
+$string['confirmbulkpreview'] = 'Bulk Upload Preview';
+$string['csvuploadhelp:field'] = 'Field';
+$string['csvuploadhelp:requirement'] = 'Requirement';
+$string['csvuploadhelp:format'] = 'Format';
+$string['eventcsvprocessedbulksession'] = 'Bulk session CSV processed';
+$string['eventscsvprocessedsitebulksession'] = 'Site Admin Bulk session CSV processed';
+$string['eventscsvprocessedsitebulksessiondesc'] =
+    'The user with id \'{$a}\' has processed a CSV file to create/update Face-to-Face sessions site-wide.';
+$string['eventcsvprocessedbulksessiondesc'] =
+    'The user with id \'{$a->userid}\' has processed an uploaded CSV file for bulk session bookings '
+    . 'in the Face-to-Face instance with the course module id \'{$a->contextinstanceid}\'.';
+$string['csvuploadhelp:courseshortname'] = 'Course Shortname';
+$string['csvuploadhelp:activityname'] = 'Face-to-Face Activity Name';
+$string['csvuploadhelp:fieldsessiondatetime'] = 'Session Date/Time Known';
+$string['csvuploadhelp:startdate'] = 'Start Date';
+$string['csvuploadhelp:starttime'] = 'Start Time';
+$string['csvuploadhelp:finishdate'] = 'Finish Date';
+$string['csvuploadhelp:finishtime'] = 'Finish Time';
+$string['csvuploadhelp:allowcancellations'] = 'Allow Cancellations';
+$string['csvuploadhelp:capacity'] = 'Capacity';
+$string['csvuploadhelp:allowoverbookings'] = 'Allow Overbookings';
+$string['csvuploadhelp:duration'] = 'Duration';
+$string['csvuploadhelp:cost'] = 'Normal Cost';
+$string['csvuploadhelp:discount'] = 'Discount Cost';
+$string['csvuploadhelp:details'] = 'Details';
+$string['csvuploadhelp:customfieldfacility'] = 'Customfield_Facility';
+$string['csvuploadhelp:customfieldlocation'] = 'Customfield_Location';
+$string['csvuploadhelp:customfieldroom'] = 'Customfield_Room';
+$string['csvuploadhelp:yesorno'] = 'Yes or No';
+$string['csvuploadhelp:required'] = 'Required';
+$string['csvuploadhelp:optional'] = 'Optional';
+$string['csvuploadhelp:date'] = 'DD/MM/YYYY';
+$string['csvuploadhelp:time'] = 'HH:MM';
+$string['csvuploadhelp:num'] = 'Number';
+$string['csvuploadhelp:mins'] = 'Minutes';
+$string['csvuploadhelp:text'] = 'Text';
+// Bulk Upload Bookings.
+$string['uploadbulkbookings'] = 'Upload Bookings for Any Courses';
+$string['facetoface:uploadbookingsextfiledesc'] = "
+Fields expected:
+- Username (required)
+- Session number (required)
+- Status (optional - valid options are cancelled,  booked, waitlisted, no_show, partially_attended, and fully_attended)
+- Discount code (optional)
+- Notification type (optional - valid options are 'email', 'ical', or 'both')";
+$string['examplecsvfilename'] = 'example_bookings.csv';
+$string['uploadbulkattendance'] = 'Upload bookings';
+$string['error:activitydoesnotexist'] = 'Face-to-Face activity not found: {$a}';
+$string['csvuploadhelp:username'] = 'Username';
+$string['csvuploadhelp:session'] = 'Session';
+$string['csvuploadhelp:status'] = 'Status';
+$string['csvuploadhelp:statustype'] = 'For now, only use "booked"';
+$string['csvuploadhelp:discountcode'] = 'Discount Code';
+$string['csvuploadhelp:notificationtype'] = 'Notification Type';
+$string['csvuploadhelp:oneofnotif'] = 'One of: email, ical, both';
+$string['uploadandpreviewbulkbookings'] = 'Upload and preview bookings';
+$string['uploadbulkbookingsfile'] = 'Bulk Bookings File';
+$string['bulkattendanceprocessed'] = 'Bulk bookings have been successfully processed.';
+$string['eventcsvprocessedbulkattendance'] = 'Site Admin Bulk bookings CSV processed ';
+$string['eventcsvprocessedbulkattendancedesc'] = '{$a} processed a bulk attendance CSV file.';
+
