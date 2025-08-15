@@ -27,7 +27,7 @@
 use core\event\base;
 use core\output\notification;
 use mod_facetoface\bulk_session_manager_parent;
-use mod_facetoface\form\bulk_session_confirm_form_parent;
+use mod_facetoface\form\bulk_session_confirm_form;
 use mod_facetoface\form\bulk_session_upload_form_parent;
 
 /**
@@ -196,7 +196,7 @@ function process_bulk_session_confirmation(
     int $fileid,
     string $successurl,
     string $cancelurl,
-    bulk_session_confirm_form_parent $confirmform,
+    bulk_session_confirm_form $confirmform,
     bulk_session_manager_parent $manager,
     base $event,
     Closure $bulkuploaderrorhandler,

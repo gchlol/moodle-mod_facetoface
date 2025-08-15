@@ -29,7 +29,7 @@ require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 require_once($CFG->dirroot . '/mod/facetoface/uploadbulksessions_common.php');
 
 use mod_facetoface\form\bulk_session_upload_form_sitelevel;
-use mod_facetoface\form\bulk_session_confirm_form_sitelevel;
+use mod_facetoface\form\bulk_session_confirm_form;
 use mod_facetoface\bulk_session_manager_sitelevel;
 use mod_facetoface\event\csv_processed_bulksession_sitelevel;
 
@@ -78,7 +78,7 @@ $bulkuploaderrorhandler = fn($errors) => display_bulk_upload_errors_site($errors
 
 // Validate sessions.
 if ($validate) {
-    $makeconfirmform = fn(int $fileid) => new bulk_session_confirm_form_sitelevel(
+    $makeconfirmform = fn(int $fileid) => new bulk_session_confirm_form(
         null, [
             'fileid' => $fileid,
             'process' => 1
@@ -104,7 +104,7 @@ if (
     $successurl = new moodle_url('/mod/facetoface/uploadbulksessions_sitelevel.php');
     $cancelurl = $successurl;
 
-    $confirmform = new bulk_session_confirm_form_sitelevel(null, ['fileid' => $fileid]);
+    $confirmform = new bulk_session_confirm_form(null, ['fileid' => $fileid]);
 
     $params = [
         'context' => context_system::instance(),

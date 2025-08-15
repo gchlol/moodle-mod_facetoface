@@ -34,7 +34,7 @@ require_once($CFG->libdir.'/formslib.php');
  * Base confirmation form for bulk session processing (common hidden fields for both contexts).
  * @package   mod_facetoface
  */
-abstract class bulk_session_confirm_form_parent extends moodleform {
+abstract class bulk_session_confirm_form extends moodleform {
 
     /**
      * Builds confirmation form for bulk session processing.
