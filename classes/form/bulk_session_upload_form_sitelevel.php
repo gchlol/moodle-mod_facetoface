@@ -45,7 +45,7 @@ class bulk_session_upload_form_sitelevel extends bulk_session_upload_form_parent
     }
 
     protected function get_form_header(): string {
-        return get_string('sitebulkuploadheader', 'mod_facetoface'); // "Upload Sessions for Any Courses"
+        return get_string('sitebulkuploadheader', 'mod_facetoface');
     }
 
     protected function get_example_csv(): string {
