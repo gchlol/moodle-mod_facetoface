@@ -110,7 +110,6 @@ abstract class bulk_session_upload_form_parent extends moodleform {
      * Builds an HTML table describing required CSV fields.
      *
      * @return string HTML for the help table.
-     * @throws \coding_exception
      */
     protected function generate_csv_help_table(): string {
         $table = new html_table();

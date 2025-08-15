@@ -50,7 +50,6 @@ class csv_processed_bulksession_activitylevel extends csv_processed_bulksession_
      * Returns description of what happened.
      *
      * @return string
-     * @throws coding_exception
      */
     public function get_description(): string {
         return get_string('eventcsvprocessedbulksessiondesc', 'mod_facetoface', [
@@ -63,7 +62,6 @@ class csv_processed_bulksession_activitylevel extends csv_processed_bulksession_
      * Return localised event name.
      *
      * @return string
-     * @throws coding_exception
      */
     public static function get_name(): string {
         return get_string('eventcsvprocessedbulksession', 'mod_facetoface');
@@ -73,7 +71,6 @@ class csv_processed_bulksession_activitylevel extends csv_processed_bulksession_
      * Get URL related to the action
      *
      * @return moodle_url
-     * @throws \moodle_exception
      */
     public function get_url(): moodle_url {
         return new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $this->objectid]);
@@ -82,7 +79,6 @@ class csv_processed_bulksession_activitylevel extends csv_processed_bulksession_
     /**
      * Custom validation.
      *
-     * @throws coding_exception
      * @return void
      */
     protected function validate_data(): void {

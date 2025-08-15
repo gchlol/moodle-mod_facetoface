@@ -44,7 +44,6 @@ class csv_processed_bulksession_sitelevel extends csv_processed_bulksession_pare
      * Returns name of the event.
      *
      * @return string
-     * @throws coding_exception
      */
     public static function get_name(): string {
         return get_string('eventcsvprocessedsitebulksession', 'mod_facetoface');
@@ -75,7 +74,6 @@ class csv_processed_bulksession_sitelevel extends csv_processed_bulksession_pare
     /**
      * Custom validation
      *
-     * @throws coding_exception
      * @return void
      */
     protected function validate_data(): void {

@@ -53,7 +53,6 @@ class bulk_session_manager_activitylevel extends bulk_session_manager_parent {
      * @param int $index The index of the record being validated.
      *
      * @return void
-     * @throws \coding_exception
      */
     protected function validate_record(array $record, int $index): void {
         // No extra fields to check in activity context; validate common fields directly.

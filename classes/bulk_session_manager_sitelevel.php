@@ -128,7 +128,6 @@ class bulk_session_manager_sitelevel extends bulk_session_manager_parent {
      * @param string $courseshortname The shortname of the course.
      * @param string $activityname The name of the Face-to-Face activity.
      * @return array An array with keys 'course' and 'facetoface' (or nulls if not found).
-     * @throws \dml_exception
      */
     private function match_records(string $courseshortname, string $activityname): array {
         global $DB;

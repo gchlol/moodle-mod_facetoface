@@ -35,7 +35,6 @@ use mod_facetoface\form\bulk_session_upload_form_parent;
  * Default to 0 if not in the URL.
  *
  * @return array An array containing the optional parameters: file ID, validation flag, and processing flag.
- * @throws coding_exception
  */
 function get_optional_params(): array {
     $fileid   = optional_param('fileid', 0, PARAM_INT);
@@ -50,7 +49,6 @@ function get_optional_params(): array {
  *
  * @param array $errors An array of errors to display.
  * @return html_table
- * @throws coding_exception
  */
 function handle_bulk_upload_errors(array $errors): html_table {
     global $OUTPUT;
@@ -193,7 +191,6 @@ function handle_bulk_session_validation(
  * @param stdClass|null $facetoface If activity-level, the Face-to-Face instance record. If site-level, null.
  *
  * @return void <!> IMPORTANT: The caller script will `exit` after running this function.
- * @throws moodle_exception When redirect occurs
  */
 function process_bulk_session_confirmation(
     int $fileid,

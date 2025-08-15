@@ -73,7 +73,6 @@ abstract class bulk_session_manager_parent {
      *
      * @param int $fileid The draft file ID.
      * @return bool True on success.
-     * @throws moodle_exception If the file cannot be loaded.
      */
     public function load_from_file(int $fileid): bool {
         global $USER;
@@ -118,7 +117,6 @@ abstract class bulk_session_manager_parent {
      * Provides a record iterator for CSV rows, either from file.
      *
      * @return Generator Yields each CSV record as an associative array.
-     * @throws moodle_exception
      */
     protected function get_iterator(): Generator {
         if (!$this->usefile) {
@@ -196,7 +194,6 @@ abstract class bulk_session_manager_parent {
      * If a file is used, it will parse and return the data.
      *
      * @return array List of CSV records.
-     * @throws moodle_exception
      */
     public function get_records(): array {
         if ($this->usefile) {
@@ -211,7 +208,6 @@ abstract class bulk_session_manager_parent {
      * Validates all loaded CSV records for correctness.
      *
      * @return array List of errors (empty if validation passed).
-     * @throws moodle_exception
      */
     public function validate(): array {
         // If reading from file, parse the CSV contents.
@@ -238,8 +234,6 @@ abstract class bulk_session_manager_parent {
      *
      * @param array $record The CSV record (already trimmed).
      * @param int $index Record index (for error line reference).
-     *
-     * @throws \coding_exception
      */
     protected function validate_common_fields(array $record, int $index): void {
         // Start Date and Start Time must be provided.

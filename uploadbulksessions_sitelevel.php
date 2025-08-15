@@ -51,7 +51,6 @@ $PAGE->set_heading(get_string('pluginname', 'mod_facetoface'));
  * @param array $errors A list of errors (each error can be a simple string
  *
  * @return void
- * @throws coding_exception
  */
 function display_bulk_upload_errors_site($errors): void {
     global $OUTPUT;

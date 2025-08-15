@@ -40,7 +40,6 @@ abstract class bulk_session_confirm_form_parent extends moodleform {
      * Builds confirmation form for bulk session processing.
      *
      * @return void
-     * @throws \coding_exception
      */
     public function definition(): void {
         $mform = $this->_form;
