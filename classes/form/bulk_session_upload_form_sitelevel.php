@@ -44,16 +44,30 @@ class bulk_session_upload_form_sitelevel extends bulk_session_upload_form_parent
         $this->headerstring = get_string('sitebulkuploadheader', 'mod_facetoface');
     }
 
+    /**
+     * Get the form page-description label.
+     */
     protected function get_form_header(): string {
         return get_string('sitebulkuploadheader', 'mod_facetoface');
     }
 
+    /**
+     * Get the HTML anchor (<a>) tag for the example CSV file.
+     *
+     * @return string HTML link element for the example CSV (context-specific file).
+     */
     protected function get_example_csv(): string {
         $url = new moodle_url('/mod/facetoface/example_bulksessions.csv');
         // 'examplebulksessionscsv' points to "example_bulksessions.csv".
         return html_writer::link($url, get_string('examplebulksessionscsv', 'mod_facetoface'));
     }
 
+    /**
+     * Retrieves the definitions for the fields required in a CSV upload process.
+     * Each row must contain all three keys.
+     *
+     * @return array The list of field definitions.
+     */
     protected function get_csv_field_definitions(): array {
         $fields = [
             ['field' => 'csvuploadhelp:courseshortname',    'requirement' => 'csvuploadhelp:required',  'format' => 'csvuploadhelp:text'],

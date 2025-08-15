@@ -44,6 +44,21 @@ abstract class bulk_session_upload_form_parent extends moodleform {
     protected string $headerstring;
 
     /**
+     * Get the form page-description label.
+     *
+     * @return string Localised form header string.
+     */
+    abstract protected function get_form_header(): string;
+
+    /**
+     * Get the HTML anchor (<a>) tag for the example CSV file.
+     *
+     * @return string HTML link element for the example CSV (context-specific file).
+     */
+    abstract protected function get_example_csv(): string;
+
+
+    /**
      * Build the form elements common to both contexts.
      */
     public function definition(): void {
@@ -133,6 +148,12 @@ abstract class bulk_session_upload_form_parent extends moodleform {
         return html_writer::table($table);
     }
 
+    /**
+     * Retrieves the definitions for the fields required in a CSV upload process.
+     * Each row must contain all three keys.
+     *
+     * @return array The list of field definitions.
+     */
     protected function get_csv_field_definitions(): array {
         return [
             ['field' => 'csvuploadhelp:fieldsessiondatetime', 'requirement' => 'csvuploadhelp:required',  'format' => 'csvuploadhelp:yesorno'],
@@ -151,11 +172,4 @@ abstract class bulk_session_upload_form_parent extends moodleform {
             ['field' => 'csvuploadhelp:customfieldlocation',  'requirement' => 'csvuploadhelp:optional',  'format' => 'csvuploadhelp:text'],
             ['field' => 'csvuploadhelp:customfieldroom',      'requirement' => 'csvuploadhelp:optional',  'format' => 'csvuploadhelp:text']
         ];
-    }
-
-    // Abstract methods to be provided by child classes:
-    /** @return string Localised form header string. */
-    abstract protected function get_form_header(): string;
-    /** @return string HTML link element for the example CSV (context-specific file). */
-    abstract protected function get_example_csv(): string;
-}
+    }}

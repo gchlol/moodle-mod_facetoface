@@ -44,17 +44,21 @@ class bulk_session_upload_form_activitylevel extends bulk_session_upload_form_pa
         $this->headerstring = get_string('uploadbulksessions', 'mod_facetoface');
     }
 
+    /**
+     * Get the form page-description label.
+     */
     protected function get_form_header(): string {
         return get_string('uploadbulksessions', 'mod_facetoface');
     }
 
+    /**
+     * Get the HTML anchor (<a>) tag for the example CSV file.
+     *
+     * @return string HTML link element for the example CSV (context-specific file).
+     */
     protected function get_example_csv(): string {
         $url = new moodle_url('/mod/facetoface/example_sessions.csv');
         // 'examplesessionscsv' points to "example_sessions.csv".
         return html_writer::link($url, get_string('examplesessionscsv', 'mod_facetoface'));
-    }
-
-    protected function get_csv_field_definitions(): array {
-        return parent::get_csv_field_definitions();
     }
 }
