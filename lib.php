@@ -552,10 +552,6 @@ function facetoface_update_calendar_entries($session, $facetoface=null) {
     if ($facetoface->usercalentry) {
         // Get ALL enrolled/booked users.
         $users = facetoface_get_attendees($session->id);
-        // If session creator is not enrolled in the course, add the session to his/her events user calendar.
-        if (!in_array($USER->id, $users)) {
-            facetoface_add_session_to_calendar($session, $facetoface, 'user', $USER->id, 'session');
-        }
 
         foreach ($users as $user) {
             $eventtype = $user->statuscode == MDL_F2F_STATUS_BOOKED ? 'booking' : 'session';
