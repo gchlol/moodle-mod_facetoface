@@ -41,7 +41,7 @@ class attendee extends base {
      */
     protected function get_default_table_aliases(): array {
         return [
-            'facetoface_signups' => 'fs',
+            'facetoface_signups' => 'fsu',
             'facetoface_signups_status' => 'fss',
             'facetoface_sessions_dates' => 'fd',
         ];
