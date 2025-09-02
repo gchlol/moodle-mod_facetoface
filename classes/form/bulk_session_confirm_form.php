@@ -14,14 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace mod_facetoface\form;
-
-use moodleform;
-
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir.'/formslib.php');
-
 /**
  * Confirmation form for bulk session uploads in Face-to-Face module.
  * Allows users to proceed with session processing.
@@ -31,7 +23,18 @@ require_once($CFG->libdir.'/formslib.php');
  * @author     Jonas Sajonas
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class bulk_session_confirm_form extends moodleform {
+
+namespace mod_facetoface\form;
+use moodleform;
+
+defined('MOODLE_INTERNAL') || die();
+require_once($CFG->libdir.'/formslib.php');
+
+/**
+ * Base confirmation form for bulk session processing (common hidden fields for both contexts).
+ * @package   mod_facetoface
+ */
+abstract class bulk_session_confirm_form extends moodleform {
 
     /**
      * Builds confirmation form for bulk session processing.

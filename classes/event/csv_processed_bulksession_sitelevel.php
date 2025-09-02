@@ -14,11 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace mod_facetoface\event;
-use moodle_url;
-use coding_exception;
-use core\event\base;
-
 /**
  * The mod_facetoface CSV bulk session processed event.
  *
@@ -27,38 +22,44 @@ use core\event\base;
  * @author     Jonas Sajonas
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class csv_processed_bulksession extends base {
+
+namespace mod_facetoface\event;
+use moodle_url;
+use coding_exception;
+
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Event triggered when bulk sessions CSV is processed at site level.
+ *
+ * @package   mod_facetoface
+ */
+class csv_processed_bulksession_sitelevel extends csv_processed_bulksession_parent {
+    protected function init(): void {
+        parent::init();
+        $this->data['objecttable'] = '';  // No specific DB table linked.
+    }
 
     /**
-     * Init method.
+     * Returns name of the event.
      *
-     * @return void
+     * @return string
      */
-    protected function init(): void {
-        $this->data['crud'] = 'r';
-        $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
-        $this->data['objecttable'] = 'facetoface';
+    public static function get_name(): string {
+        return get_string('eventcsvprocessedsitebulksession', 'mod_facetoface');
     }
 
     /**
      * Returns description of what happened.
      *
-     * @return string
+     * @returns string
      */
     public function get_description(): string {
-        return get_string('eventcsvprocessedbulksessiondesc', 'mod_facetoface', [
-            'userid'            => $this->userid,
-            'contextinstanceid' => $this->contextinstanceid
-        ]);
-    }
-
-    /**
-     * Return localised event name.
-     *
-     * @return string
-     */
-    public static function get_name(): string {
-        return get_string('eventcsvprocessedbulksession', 'mod_facetoface');
+        return get_string(
+            'eventcsvprocessedsitebulksessiondesc',
+            'mod_facetoface',
+            (object)['userid' => $this->userid]
+        );
     }
 
     /**
@@ -67,20 +68,18 @@ class csv_processed_bulksession extends base {
      * @return moodle_url
      */
     public function get_url(): moodle_url {
-        return new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => $this->objectid]);
+        return new moodle_url('/mod/facetoface/uploadbulksessions_sitelevel.php');
     }
 
     /**
-     * Custom validation.
+     * Custom validation
      *
-     * @throws coding_exception
      * @return void
      */
     protected function validate_data(): void {
         parent::validate_data();
-
-        if ($this->contextlevel != CONTEXT_MODULE) {
-            throw new coding_exception('Context level must be CONTEXT_MODULE.');
+        if (!isset($this->data['objectid'])) {
+            throw new coding_exception('The \'objectid\' must be set for csv_processed_bulksession event.');
         }
     }
 }

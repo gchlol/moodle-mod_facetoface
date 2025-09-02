@@ -24,56 +24,33 @@
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once('../../config.php');
-require_once($CFG->dirroot . '/mod/facetoface/lib.php');
-
+use core\event\base;
 use core\output\notification;
-use mod_facetoface\form\bulk_session_upload_form;
+use mod_facetoface\bulk_session_manager_parent;
 use mod_facetoface\form\bulk_session_confirm_form;
-use mod_facetoface\bulk_session_manager;
-use mod_facetoface\event\csv_processed_bulksession;
+use mod_facetoface\form\bulk_session_upload_form_parent;
 
-$f2fid = required_param('f2fid', PARAM_INT);
-$PAGE->set_url(new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => $f2fid]));
-$heading = get_string('validatebulksessions', 'facetoface');
+/**
+ * Retrieves optional parameters.
+ * Default to 0 if not in the URL.
+ *
+ * @return array An array containing the optional parameters: file ID, validation flag, and processing flag.
+ */
+function get_optional_params(): array {
+    $fileid   = optional_param('fileid', 0, PARAM_INT);
+    $validate = optional_param('validate', 0, PARAM_INT);
+    $process  = optional_param('process', 0, PARAM_INT);
 
-$fileid   = optional_param('fileid', 0, PARAM_INT);
-$validate = optional_param('validate', 0, PARAM_INT);
-$process  = optional_param('process', 0, PARAM_INT);
-
-if (!$facetoface = $DB->get_record('facetoface', ['id' => $f2fid])) {
-    throw new moodle_exception('error:incorrectfacetofaceid', 'facetoface');
+    return [$fileid, $validate, $process];
 }
-
-if (!$course = $DB->get_record('course', ['id' => $facetoface->course])) {
-    throw new moodle_exception('error:coursemisconfigured', 'facetoface');
-}
-
-if (!$cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course->id)) {
-    throw new moodle_exception('error:incorrectcoursemoduleid', 'facetoface');
-}
-
-require_course_login($course, true, $cm);
-
-$context = context_course::instance($course->id);
-$modulecontext = context_module::instance($cm->id);
-require_capability('mod/facetoface:editsessions', $context);
-require_capability('mod/facetoface:uploadbulksessions', $context);
-
-$PAGE->set_pagelayout('standard');
-$PAGE->set_title($heading);
-$PAGE->set_heading($heading);
-
-// Instantiate the upload form once.
-$uploadform = new bulk_session_upload_form(null, ['f2fid' => $f2fid]);
 
 /**
  * Displays bulk-upload errors and ends execution.
  *
  * @param array $errors An array of errors to display.
- * @return void
+ * @return html_table
  */
-function handle_bulk_upload_errors($errors): void {
+function handle_bulk_upload_errors(array $errors): html_table {
     global $OUTPUT;
 
     echo $OUTPUT->header();
@@ -107,53 +84,65 @@ function handle_bulk_upload_errors($errors): void {
         }
     }
 
-    echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
-
-    $backurl = new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => optional_param('f2fid', 0, PARAM_INT)]);
-    echo html_writer::start_div('mt-4 text-center');
-    echo html_writer::link($backurl, get_string('back'), ['class' => 'btn btn-secondary']);
-    echo html_writer::end_div();
-
-    echo $OUTPUT->footer();
-
-    exit;
+    return $table;
 }
 
-if ($validate) {
+/**
+ * Validates and handles the bulk session upload form submission, displaying preview or errors.
+ *
+ * This function performs the following tasks:
+ * 1. Processes the upload form data
+ * 2. Handles form cancellation
+ * 3. Validates uploaded sessions
+ * 4. Displays error messages if validation fails
+ * 5. Shows a preview table of the CSV data if validation passes
+ *
+ * @param bool $validate Whether to perform validation
+ * @param string $cancelurl URL to redirect to when form is cancelled
+ * @param bulk_session_upload_form_parent $uploadform The upload form instance
+ * @param Closure $makeconfirmform Callback that creates confirmation form instance
+ * @param bulk_session_manager_parent $manager The session manager instance
+ * @param Closure $bulkuploaderrorhandler Callback function to handle errors during bulk upload.
+ *
+ * @return void <!> IMPORTANT: The caller script shall explicitly `exit` after running this function.
+ */
+function handle_bulk_session_validation(
+    string $cancelurl,
+    bulk_session_upload_form_parent $uploadform,
+    Closure $makeconfirmform,
+    bulk_session_manager_parent $manager,
+    Closure $bulkuploaderrorhandler
+): bool {
+    global $OUTPUT;
+
     $uploaddata = $uploadform->get_data();
 
     if ($uploadform->is_cancelled()) {
-        redirect(new moodle_url('/mod/facetoface/view.php', ['id' => $cm->id]));
+        redirect($cancelurl);
 
         exit;
     }
 
+    // Never updated outside of this function due to `exit`
     $fileid = $uploaddata->csvfile ?: 0;
 
-    // Create the confirm form.
-    $confirmform = new bulk_session_confirm_form(
-        null, [
-            'f2fid' => $f2fid,
-            'fileid' => $fileid
-        ]
-    );
+    $confirmform = $makeconfirmform($fileid);
 
-    $manager = new bulk_session_manager($f2fid);
     $manager->load_from_file($fileid);
     $errors = $manager->validate();
 
     // If there are errors, handle them and exit.
     if (!empty($errors)) {
-        handle_bulk_upload_errors($errors);
+        $bulkuploaderrorhandler($errors);
     }
 
     // If no errors, display the CSV preview.
     echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string('confirmbulkpreview', 'facetoface'), 3);
+    echo $OUTPUT->heading(get_string('confirmbulkpreview', 'mod_facetoface'), 3);
 
     $records = $manager->get_records();
     if (empty($records)) {
-        echo $OUTPUT->notification(get_string('norecordsfound', 'facetoface'), 'info');
+        echo $OUTPUT->notification(get_string('norecordsfound', 'mod_facetoface'), notification::NOTIFY_INFO);
     }
 
     if (!empty($records)) {
@@ -180,20 +169,43 @@ if ($validate) {
 
     echo $OUTPUT->footer();
 
-    exit;
+    //exit;
 }
 
-if (
-    $process &&
-    $fileid &&
-    $f2fid
-) {
-    $manager = new bulk_session_manager($f2fid);
+/**
+ * Processes bulk session upload confirmation and handles the validation, processing, and redirect logic.
+ *
+ * This function manages the bulk session upload workflow including:
+ * - Loading session data from file
+ * - Handling form cancellation
+ * - Validating session data
+ * - Processing valid sessions
+ * - Triggering relevant events
+ * - Managing error states and redirects
+ *
+ * @param int $f2fid The Face-to-Face activity ID
+ * @param int $fileid The uploaded file ID
+ * @param string $successurl URL to redirect to when confirmation completes
+ * @param string $cancelurl URL to redirect to when form is cancelled
+ * @param Closure $bulkuploaderrorhandler Callback function to handle errors during bulk upload.
+ * @param stdClass|null $facetoface If activity-level, the Face-to-Face instance record. If site-level, null.
+ *
+ * @return void <!> IMPORTANT: The caller script will `exit` after running this function.
+ */
+function process_bulk_session_confirmation(
+    int $fileid,
+    string $successurl,
+    string $cancelurl,
+    bulk_session_confirm_form $confirmform,
+    bulk_session_manager_parent $manager,
+    base $event,
+    Closure $bulkuploaderrorhandler,
+    ?stdClass $facetoface
+): void {
     $manager->load_from_file($fileid);
-    $confirmform = new bulk_session_confirm_form(null, ['f2fid' => $f2fid, 'fileid' => $fileid]);
 
     if ($confirmform->is_cancelled()) {
-        redirect(new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => $f2fid]));
+        redirect($cancelurl);
 
         exit;
     }
@@ -204,35 +216,19 @@ if (
         $success = $manager->process();
 
         if ($success) {
-            $params = [
-                'context'  => $modulecontext,
-                'objectid' => $f2fid,
-            ];
-
-            $event = csv_processed_bulksession::create($params);
             $event->add_record_snapshot('facetoface', $facetoface);
             $event->trigger();
 
             redirect(
-                new moodle_url('/mod/facetoface/uploadbulksessions.php', ['f2fid' => $f2fid]),
+                $successurl,
                 get_string('bulksessionsprocessed', 'mod_facetoface'),
                 null,
                 notification::NOTIFY_SUCCESS
             );
         } else {
-            handle_bulk_upload_errors($manager->get_errors());
+            $bulkuploaderrorhandler($manager->get_errors());
         }
     }
 
-    handle_bulk_upload_errors($errors);
-
+    $bulkuploaderrorhandler($errors);
 }
-
-// Default display: show the upload form.
-$uploadform->set_data(['f2fid' => $f2fid, 'validate' => 1]);
-
-echo $OUTPUT->header();
-
-$uploadform->display();
-
-echo $OUTPUT->footer();

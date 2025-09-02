@@ -256,7 +256,7 @@ function print_session_list($courseid, $facetoface, $location) {
 
     if ($uploadbulksessions) {
         $uploadbulksessionslink = html_writer::link(
-            new moodle_url('uploadbulksessions.php', ['f2fid' => $facetoface->id]),
+            new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $facetoface->id]),
             get_string('uploadbulksessions', 'facetoface')
         );
         echo html_writer::tag('p', $uploadbulksessionslink);
