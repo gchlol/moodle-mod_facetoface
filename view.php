@@ -160,6 +160,7 @@ function print_session_list($courseid, $facetoface, $location) {
     $editsessions = has_capability('mod/facetoface:editsessions', $context);
     $deletesessions = has_capability('mod/facetoface:deletesessions', $context); // GCHLOL - MF - Delete permission
     $uploadbookings = has_capability('mod/facetoface:uploadbookings', $context);
+    $uploadbulksessions = has_capability('mod/facetoface:uploadbulksessions', $context);
     $multiplesignups = $facetoface->signuptype == MOD_FACETOFACE_SIGNUP_MULTIPLE;
     $bulksignup = $facetoface->multiplesignupmethod == MOD_FACETOFACE_SIGNUP_MULTIPLE_PER_ACTIVITY;
 
@@ -251,6 +252,14 @@ function print_session_list($courseid, $facetoface, $location) {
             get_string('addsession', 'facetoface')
         );
         echo html_writer::tag('p', $addsessionlink);
+    }
+
+    if ($uploadbulksessions) {
+        $uploadbulksessionslink = html_writer::link(
+            new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $facetoface->id]),
+            get_string('uploadbulksessions', 'facetoface')
+        );
+        echo html_writer::tag('p', $uploadbulksessionslink);
     }
 
     if ($uploadbookings) {
