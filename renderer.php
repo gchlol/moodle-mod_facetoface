@@ -39,7 +39,8 @@ class mod_facetoface_renderer extends plugin_renderer_base {
         $viewattendees,
         $editsessions,
         $signuplinks = true,
-        $uploadbookings = false
+        $uploadbookings = false,
+        $deletesessions = false // GCHLOL: MF Added $deletesessions to parameters
     ) {
         $output = '';
 
@@ -168,9 +169,11 @@ class mod_facetoface_renderer extends plugin_renderer_base {
                 $options .= $this->output->action_icon(new moodle_url('sessions.php', ['s' => $session->id, 'c' => 1]),
                         new pix_icon('t/copy', get_string('copy', 'facetoface')), null,
                         ['title' => get_string('copysession', 'facetoface')]) . ' ';
-                $options .= $this->output->action_icon(new moodle_url('sessions.php', ['s' => $session->id, 'd' => 1]),
-                        new pix_icon('t/delete', get_string('delete', 'facetoface')), null,
-                        ['title' => get_string('deletesession', 'facetoface')]) . ' ';
+                if ($deletesessions) {
+                    $options .= $this->output->action_icon(new moodle_url('sessions.php', ['s' => $session->id, 'd' => 1]),
+                            new pix_icon('t/delete', get_string('delete', 'facetoface')), null,
+                            ['title' => get_string('deletesession', 'facetoface')]) . ' ';
+                }
             }
             if ($viewattendees) {
                 $options .= html_writer::link('attendees.php?s='.$session->id.'&backtoallsessions='.$session->facetoface,

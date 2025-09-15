@@ -148,6 +148,7 @@ function print_session_list($courseid, $facetoface, $location) {
     $context = context_course::instance($courseid);
     $viewattendees = has_capability('mod/facetoface:viewattendees', $context);
     $editsessions = has_capability('mod/facetoface:editsessions', $context);
+    $deletesessions = has_capability('mod/facetoface:deletesessions', $context); // GCHLOL - MF - Delete permission
     $uploadbookings = has_capability('mod/facetoface:uploadbookings', $context);
     $multiplesignups = $facetoface->signuptype == MOD_FACETOFACE_SIGNUP_MULTIPLE;
     $bulksignup = $facetoface->multiplesignupmethod == MOD_FACETOFACE_SIGNUP_MULTIPLE_PER_ACTIVITY;
@@ -232,7 +233,8 @@ function print_session_list($courseid, $facetoface, $location) {
             $viewattendees,
             $editsessions,
             !$bulksignup,
-            $uploadbookings
+            $uploadbookings,
+            $deletesessions // GCHLOL - MF - Added $deletesessions
         );
     }
 
@@ -262,7 +264,8 @@ function print_session_list($courseid, $facetoface, $location) {
             $viewattendees,
             $editsessions,
             true,
-            $uploadbookings
+            $uploadbookings,
+            $deletesessions  // GCHLOL - MF - Added $deletesessions
         );
     }
 }
