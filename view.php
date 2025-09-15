@@ -276,7 +276,7 @@ function print_session_list($courseid, $facetoface, $location) {
 function get_locations($facetofaceid) {
     global $CFG, $DB;
 
-    $locationfieldid = $DB->get_field('facetoface_session_field', 'id', ['shortname' => 'location']);
+    $locationfieldid = $DB->get_field('facetoface_session_field', 'id', ['shortname' => 'facility']); // GCHLOL: Change field to facility.
     if (!$locationfieldid) {
         return [];
     }
