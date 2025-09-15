@@ -254,6 +254,7 @@ function print_session_list($courseid, $facetoface, $location) {
 
     // Previous sessions.
     if (!empty($previousarray)) {
+        $previousarray = array_reverse($previousarray);
         echo $OUTPUT->heading(get_string('previoussessions', 'facetoface'));
         echo $f2frenderer->print_session_list_table(
             $customfields,
