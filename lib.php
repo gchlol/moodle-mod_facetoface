@@ -56,7 +56,7 @@ define('MDL_F2F_CANCEL_TEXT', 10);    // Send just a plan email 8+2.
 define('MDL_F2F_CANCEL_ICAL', 9);     // Send just a combined text/ical message 8+1.
 
 // Name of the custom field where the manager's email address is stored.
-define('F2F_MDL_MANAGERSEMAIL_FIELD', 'managersemail');
+define('F2F_MDL_MANAGERSEMAIL_FIELD', 'linemanager'); // GCHLOL: Change custom field name.
 
 // Custom field related constants.
 define('CUSTOMFIELD_DELIMITER', '##SEPARATOR##');
