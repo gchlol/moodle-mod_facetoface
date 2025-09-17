@@ -439,8 +439,9 @@ function facetoface_cleanup_session_data($session) {
     // Only numbers allowed here.
     $session->capacity = preg_replace('/[^\d]/', '', $session->capacity);
     $maxcap = 100000;
-    if ($session->capacity < 1) {
-        $session->capacity = 1;
+    // GCHLOL: Change capacity to 0.
+    if ($session->capacity < 0) {
+        $session->capacity = 0;
     } else if ($session->capacity > $maxcap) {
         $session->capacity = $maxcap;
     }
