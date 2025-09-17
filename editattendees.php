@@ -59,7 +59,27 @@ if (!$cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course
 // Check essential permissions.
 require_course_login($course, true, $cm);
 $context = context_course::instance($course->id);
-require_capability('mod/facetoface:viewattendees', $context);
+
+// GCHLOL: Add line manager check.
+$ismanager = false;
+[
+    'joins' => $joins,
+    'where' => $where,
+    'params' => $params,
+] = \tool_organisation\api::get_myusers_sql($USER->id);
+
+$sql = "SELECT COUNT(u.id)
+        FROM {user} u
+        $joins
+        WHERE u.deleted = 0
+              AND u.suspended = 0
+              AND $where";
+$ismanager = (bool) $DB->count_records_sql($sql, $params);
+
+// GCHLOL: Allow line managers to view the page.
+if (!$ismanager) {
+    require_capability('mod/facetoface:viewattendees', $context);
+}
 
 // Get some language strings.
 $strsearch = get_string('search');
@@ -75,15 +95,21 @@ $potentialuserselector = new facetoface_candidate_selector('addselect', [
     'sessionid' => $session->id,
     'courseid' => $course->id,
     'accesscontext' => $context,
+    'ismanager' => $ismanager, // GCHLOL: Add $ismanager to parameters
 ]);
 $existinguserselector = new facetoface_existing_selector('removeselect', [
     'sessionid' => $session->id,
     'accesscontext' => $context,
+    'ismanager' => $ismanager, // GCHLOL: Add $ismanager to parameters
 ]);
 
 // Process incoming user assignments.
 if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
-    require_capability('mod/facetoface:addattendees', $context);
+    // GCHLOL: Allow line managers to add attendees.
+    if (!$ismanager) {
+        require_capability('mod/facetoface:addattendees', $context);
+    }
+
     $userstoassign = $potentialuserselector->get_selected_users();
     if (!empty($userstoassign)) {
         foreach ($userstoassign as $adduser) {
@@ -135,7 +161,11 @@ if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
 
 // Process removing user assignments from session.
 if (optional_param('remove', false, PARAM_BOOL) && confirm_sesskey()) {
-    require_capability('mod/facetoface:removeattendees', $context);
+    // GCHLOL: Allow line managers to remove attendees.
+    if (!$ismanager) {
+        require_capability('mod/facetoface:removeattendees', $context);
+    }
+
     $userstoremove = $existinguserselector->get_selected_users();
     if (!empty($userstoremove)) {
         foreach ($userstoremove as $removeuser) {

@@ -40,7 +40,8 @@ class mod_facetoface_renderer extends plugin_renderer_base {
         $editsessions,
         $signuplinks = true,
         $uploadbookings = false,
-        $deletesessions = false // GCHLOL: MF Added $deletesessions to parameters
+        $deletesessions = false, // GCHLOL: Added $deletesessions to parameters,
+        $ismanager = false // GCHLOL: Add line manager check to parameters
     ) {
         $output = '';
 
@@ -175,10 +176,13 @@ class mod_facetoface_renderer extends plugin_renderer_base {
                             ['title' => get_string('deletesession', 'facetoface')]) . ' ';
                 }
             }
-            if ($viewattendees) {
+            // GCHLOL: Allow line managers or users who can view attendees see attendees link.
+            if ($ismanager || $viewattendees) {
                 $options .= html_writer::link('attendees.php?s='.$session->id.'&backtoallsessions='.$session->facetoface,
                         get_string('attendees', 'facetoface'),
                         ['title' => get_string('seeattendees', 'facetoface')]) . ' &nbsp; ';
+            }
+            if ($viewattendees) {
                 $options .= $this->output->action_icon(new moodle_url('attendees.php', ['s' => $session->id, 'download' => 'xlsx']),
                         new pix_icon('f/spreadsheet', get_string('downloadexcel')), null,
                         ['title' => get_string('downloadexcel')]) . ' ';

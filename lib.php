@@ -4547,10 +4547,12 @@ function facetoface_enrol_user($context, $courseid, $userid): bool {
 class facetoface_candidate_selector extends user_selector_base {
     protected $sessionid;
     protected $courseid;
+    protected $ismanager = false; // GCHLOL: Added is line manager property.
 
     public function __construct($name, $options) {
         $this->sessionid = $options['sessionid'];
         $this->courseid = $options['courseid'];
+        $this->ismanager = $options['ismanager']; // GCHLOL: Added is line manager property.
         parent::__construct($name, $options);
     }
 
@@ -4560,12 +4562,13 @@ class facetoface_candidate_selector extends user_selector_base {
      * @return array
      */
     public function find_users($search) {
-        global $DB;
+        global $DB, $USER;
 
         // All non-signed up system user.
         list($wherecondition, $params) = $this->search_sql($search, 'u');
 
-        $fields      = 'SELECT ' . $this->required_fields_sql('u');
+        // GCHLOL: Add DISTINCT (specifically for line managers)
+        $fields      = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
         $countfields = 'SELECT COUNT(u.id)';
 
         $limitsql = '';
@@ -4575,10 +4578,26 @@ class facetoface_candidate_selector extends user_selector_base {
                   JOIN {enrol} e ON e.id = ue.enrolid AND e.courseid = :courseid";
         }
 
+        // GCHLOL: Add line manager SQL.
+        $myjoins = '';
+        $mywhere = '';
+        if ($this->ismanager && !has_capability('mod/facetoface:addattendees', $this->accesscontext)) {
+            [
+                'joins' => $myjoins,
+                'where' => $mywhere,
+                'params' => $myparams,
+            ] = \tool_organisation\api::get_myusers_sql($USER->id);
+
+            $params = array_merge($params, $myparams);
+        }
+
         $sql = "
                   FROM {user} u
                     $limitsql
+                    $myjoins
                 WHERE $wherecondition
+                   AND $mywhere
+                   AND u.suspended = 0
                    AND u.id NOT IN
                        (
                        SELECT u2.id
@@ -4628,9 +4647,11 @@ class facetoface_candidate_selector extends user_selector_base {
  */
 class facetoface_existing_selector extends user_selector_base {
     protected $sessionid;
+    protected $ismanager = false; // GCHLOL: Added is line manager property.
 
     public function __construct($name, $options) {
         $this->sessionid = $options['sessionid'];
+        $this->ismanager = $options['ismanager']; // GCHLOL: Added is line manager property.
         parent::__construct($name, $options);
     }
 
@@ -4640,12 +4661,24 @@ class facetoface_existing_selector extends user_selector_base {
      * @return array
      */
     public function find_users($search) {
-        global $DB;
+        global $DB, $USER;
 
         // By default wherecondition retrieves all users except the deleted, not confirmed and guest.
         list($wherecondition, $whereparams) = $this->search_sql($search, 'u');
 
-        $fields  = 'SELECT ' . $this->required_fields_sql('u');
+        // GCHLOL: Add line manager SQL.
+        $myjoins = '';
+        $mywhere = '';
+        $myparams = [];
+        if ($this->ismanager && !has_capability('mod/facetoface:removeattendees', $this->accesscontext)) {
+            [
+                'joins' => $myjoins,
+                'where' => $mywhere,
+                'params' => $myparams,
+            ] = \tool_organisation\api::get_myusers_sql($USER->id);
+        }
+
+        $fields  = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
         $fields .= ', su.id AS submissionid, s.discountcost, su.discountcode, su.notificationtype, f.id AS facetofaceid,
             f.course, ss.grade, ss.statuscode, sign.timecreated';
         $countfields = 'SELECT COUNT(1)';
@@ -4681,8 +4714,10 @@ class facetoface_existing_selector extends user_selector_base {
             JOIN
                 {user} u
              ON u.id = su.userid
+            $myjoins
             WHERE
                 $wherecondition
+                AND $mywhere
             AND s.id = :sessid2
             AND ss.superceded != 1
             AND ss.statuscode >= :statusapproved
@@ -4694,6 +4729,7 @@ class facetoface_existing_selector extends user_selector_base {
             'statuswaitlisted' => MDL_F2F_STATUS_WAITLISTED,
         ];
         $params = array_merge($params, $whereparams);
+        $params = array_merge($params, $myparams);
         $params['sessid2'] = $this->sessionid;
         $params['statusapproved'] = MDL_F2F_STATUS_APPROVED;
         if (!$this->is_validating()) {
