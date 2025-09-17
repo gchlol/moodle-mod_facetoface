@@ -312,6 +312,13 @@ function facetoface_fix_settings($facetoface) {
     if (isset($facetoface->signuptype) && $facetoface->signuptype == MOD_FACETOFACE_SIGNUP_SINGLE) {
         $facetoface->multiplesignupmethod = MOD_FACETOFACE_SIGNUP_MULTIPLE_PER_SESSION;
     }
+
+    // GCHLOL: Add attendance sheet fields.
+    if (empty($facetoface->attendancesheetcolumns)) {
+        $facetoface->attendancesheetcolumns = null;
+    } else {
+        $facetoface->attendancesheetcolumns = implode(',', array_keys($facetoface->attendancesheetcolumns));
+    }
 }
 
 /**
