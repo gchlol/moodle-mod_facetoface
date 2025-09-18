@@ -2010,7 +2010,7 @@ function facetoface_user_signup($session, $facetoface, $course, $discountcode,
     $usersignup->mailedreminder = 0;
     $usersignup->notificationtype = $notificationtype;
 
-    $usersignup->discountcode = trim(strtoupper($discountcode));
+    $usersignup->discountcode = trim(strtoupper($discountcode ?? ''));
     if (empty($usersignup->discountcode)) {
         $usersignup->discountcode = null;
     }
