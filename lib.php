@@ -3746,9 +3746,10 @@ function facetoface_delete_user_calendar_events($session, $eventtype) {
 
     $whereclause = "modulename = '0' AND
                     eventtype = 'facetoface$eventtype' AND
-                    instance = ?";
+                    instance = ? AND
+                    uuid = ?";
 
-    $whereparams = [$session->facetoface];
+    $whereparams = [$session->facetoface, $session->id];
 
     if ('session' == $eventtype) {
         $likestr = "%attendees.php?s={$session->id}%";
