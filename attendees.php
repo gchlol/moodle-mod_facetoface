@@ -98,19 +98,23 @@ if ($requests && !$takeattendance) {
 }
 
 // GCHLOL: Add line manager check.
-[
-    'joins' => $joins,
-    'where' => $where,
-    'params' => $params,
-] = \tool_organisation\api::get_myusers_sql($USER->id);
+$myusers = [];
+if (!$canviewsession) {
+    [
+        'joins' => $joins,
+        'where' => $where,
+        'params' => $params,
+    ] = \tool_organisation\api::get_myusers_sql($USER->id);
 
-$sql = "SELECT COUNT(u.id)
-        FROM {user} u
-        $joins
-        WHERE u.deleted = 0
-              AND u.suspended = 0
-              AND $where";
-$ismanager = (bool) $DB->count_records_sql($sql, $params);
+    $sql = "SELECT DISTINCT u.id
+            FROM {user} u
+            $joins
+            WHERE u.deleted = 0
+                  AND u.suspended = 0
+                  AND $where";
+    $myusers = $DB->get_records_sql($sql, $params);
+}
+$ismanager = !empty($myusers);
 
 // Check the user is allowed to view this page.
 // GCHLOL: Allow line managers to view the page.
@@ -233,6 +237,15 @@ if ($canviewattendees || $cantakeattendance || $ismanager) {
     }
 
     echo $OUTPUT->heading($heading);
+
+    // GCHLOL: Only show the line managers users.
+    if (!$canviewattendees && $ismanager) {
+        foreach ($attendees as $key => $attendee) {
+            if (!isset($myusers[$attendee->id])) {
+                unset($attendees[$key]);
+            }
+        }
+    }
 
     if (empty($attendees)) {
         echo $OUTPUT->notification(get_string('nosignedupusers', 'facetoface'));
@@ -424,10 +437,21 @@ if ($canapproverequests) {
     }
 }
 
+// GCHLOL: Only show the line managers users.
+if (!$canviewcancellations && $ismanager) {
+    foreach ($cancellations as $key => $attendee) {
+        // GCHLOL: Only show the line managers users.
+        if (!isset($myusers[$attendee->id])) {
+            unset($cancellations[$key]);
+        }
+    }
+}
+
 /*
  * Print cancellations (if user able to view)
  */
-if (!$takeattendance && $canviewcancellations && $cancellations) {
+// GCHLOL: Allow line managers to view their users cancellations.
+if (!$takeattendance && ($canviewcancellations || $ismanager) && $cancellations) {
     echo html_writer::empty_tag('br');
     echo $OUTPUT->heading(get_string('cancellations', 'facetoface'));
 
