@@ -4596,6 +4596,7 @@ class facetoface_candidate_selector extends user_selector_base {
                 'params' => $myparams,
             ] = \tool_organisation\api::get_myusers_sql($USER->id);
 
+            $mywhere = 'AND '.$mywhere;
             $params = array_merge($params, $myparams);
         }
 
@@ -4604,7 +4605,7 @@ class facetoface_candidate_selector extends user_selector_base {
                     $limitsql
                     $myjoins
                 WHERE $wherecondition
-                   AND $mywhere
+                   $mywhere
                    AND u.suspended = 0
                    AND u.id NOT IN
                        (
@@ -4684,6 +4685,8 @@ class facetoface_existing_selector extends user_selector_base {
                 'where' => $mywhere,
                 'params' => $myparams,
             ] = \tool_organisation\api::get_myusers_sql($USER->id);
+
+            $mywhere = 'AND '.$mywhere;
         }
 
         $fields  = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
@@ -4725,7 +4728,7 @@ class facetoface_existing_selector extends user_selector_base {
             $myjoins
             WHERE
                 $wherecondition
-                AND $mywhere
+                $mywhere
             AND s.id = :sessid2
             AND ss.superceded != 1
             AND ss.statuscode >= :statusapproved
