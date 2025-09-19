@@ -2417,12 +2417,15 @@ function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
         $from = null;
     }
 
+    // GCHLOL: If an error occurs sending the email.
+    $emailerror = false;
+
     // Send email with iCal attachment.
     if ($notificationtype & MDL_F2F_ICAL) {
         foreach ($icalattachments as $attachment) {
             if (!email_to_user($user, $from, $attachment['subject'], $attachment['body'],
                     '', $attachment['filename'], $attachmentfilename)) {
-                return 'error:cannotsendconfirmationuser';
+                $emailerror = true; // GCHLOL: Ignore error if invalid email.
             }
             unlink($CFG->dataroot . '/' . $attachment['filename']);
         }
@@ -2431,7 +2434,12 @@ function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
     // Send plain text email.
     if ($notificationtype & MDL_F2F_TEXT
         && !email_to_user($user, $from, $postsubject, $posttext)) {
-        return 'error:cannotsendconfirmationuser';
+        $emailerror = true; // GCHLOL: Ignore error if invalid email.
+    }
+
+    // GCHLOL: Show error notifcation, this way avoids multiple error messages.
+    if ($emailerror) {
+        \core\notification::error(get_string('error:cannotsendconfirmationuser', 'facetoface'));
     }
 
     // Manager notification.
@@ -2443,7 +2451,8 @@ function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
 
         // Leave out the ical attachments in the managers notification.
         if (!email_to_user($manager, $from, $postsubject, $managertext)) {
-            return 'error:cannotsendconfirmationmanager';
+            // GCHLOL: Ignore error if invalid email.
+            \core\notification::error(get_string('error:cannotsendconfirmationmanager', 'facetoface'));
         }
     }
 
