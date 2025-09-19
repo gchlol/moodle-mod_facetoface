@@ -886,6 +886,7 @@ $string['facetoface:editsessions'] = 'Add, edit and copy Face-to-face sessions';
  */
 
 $string['division'] = 'Division';
+$string['stream'] = 'Stream';
 $string['error:invalidallowcancel'] = 'You must specify either "yes" or "no" for Allow Cancellations.';
 $string['error:missingrequiredcolumn'] = 'Missing required column: {$a}';
 $string['error:noheaderrow'] = 'No header row found in the uploaded file.';

@@ -1591,6 +1591,8 @@ function facetoface_write_worksheet_header(&$worksheet) {
 
     $worksheet->write_string(0, $pos++, get_string('attendance', 'facetoface'));
     $worksheet->write_string(0, $pos++, get_string('datesignedup', 'facetoface'));
+    $worksheet->write_string(0, $pos++, get_string('stream', 'facetoface'));
+    $worksheet->write_string(0, $pos++, get_string('division', 'facetoface'));
 
     return $pos;
 }
@@ -1689,6 +1691,25 @@ function facetoface_write_activity_attendance(&$worksheet, $startingrow, $faceto
             }
         }
 
+        // GCHLOL: Get assignment and position metadata.
+        $toatable = \tool_organisation\persistent\assignment::TABLE;
+        $tomatable = \tool_organisation\persistent\assignment_metadata::TABLE;
+        $tomptable = \tool_organisation\persistent\position_metadata::TABLE;
+
+        $inwhere = '';
+        $inparams = [];
+        if (!empty($userids)) {
+            [$insql, $inparams] = $DB->get_in_or_equal($userids);
+            $inwhere = "AND toa.userid $insql";
+        }
+
+        $sql = "SELECT toma.id, toma.paydiv1name, tomp.division2name, toa.userid
+                FROM {".$toatable."} toa 
+                LEFT JOIN {".$tomatable."} toma ON toa.id = toma.assignid
+                LEFT JOIN {".$tomptable."} tomp ON toa.positionid = tomp.positionid
+                WHERE toa.active = 1 $inwhere";
+        $assimetadata = $DB->get_records_sql($sql, $inparams);
+
         foreach ($signups as $signup) {
             $userid = $signup->id;
             if ($customuserfields = facetoface_get_user_customfields($userid, $userfields)) {
@@ -1705,6 +1726,28 @@ function facetoface_write_activity_attendance(&$worksheet, $startingrow, $faceto
             } else {
                 $signup->grade = '-';
             }
+
+            // GCHLOL: Add columns.
+            $streams = [];
+            $divisions = [];
+            foreach ($assimetadata as $metadata) {
+                if ($metadata->userid != $signup->id) {
+                    continue;
+                }
+
+                $stream = $metadata->paydiv1name;
+                if (!empty($stream) && !in_array($stream, $streams)) {
+                    $streams[] = $stream;
+                }
+
+                $division = $metadata->division2name;
+                if (!empty($division) && !in_array($division, $divisions)) {
+                    $divisions[] = $division;
+                }
+            }
+
+            $signup->stream = empty($streams) ? '-' : implode(', ', $streams);
+            $signup->division = empty($divisions) ? '-' : implode(', ', $divisions);
 
             $sessionsignups[$signup->sessionid][$signup->id] = $signup;
         }
@@ -1800,6 +1843,10 @@ function facetoface_write_activity_attendance(&$worksheet, $startingrow, $faceto
                 if (!empty($activityname)) {
                     $worksheet->write_string($i, $j++, $activityname);
                 }
+
+                // GCHLOL: Add columns.
+                $worksheet->write_string($i, $j++, $attendee->stream);
+                $worksheet->write_string($i, $j++, $attendee->division);
             }
         } else {
             // No one is sign-up, so let's just print the basic info.
