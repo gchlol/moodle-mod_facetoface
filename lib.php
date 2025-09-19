@@ -3302,6 +3302,7 @@ function facetoface_get_ical_attachment($method, $facetoface, $session, $user) {
 
         // The extra newline at the bottom is so multiple events start on their
         // own lines. The very last one is trimmed outside the loop.
+        // GCHLOL: Change CLASS:PRIVATE to CLASS:PUBLIC.
         $vevents .= <<<EOF
 BEGIN:VEVENT
 UID:{$uid}
@@ -3312,7 +3313,7 @@ SEQUENCE:{$sequence}
 SUMMARY:{$summary}
 LOCATION:{$location}
 DESCRIPTION:{$description}
-CLASS:PRIVATE
+CLASS:PUBLIC
 TRANSP:OPAQUE{$cancelstatus}
 ORGANIZER;CN={$organiseremail}:MAILTO:{$organiseremail}
 ATTENDEE;CUTYPE=INDIVIDUAL;ROLE={$role};PARTSTAT=NEEDS-ACTION;
