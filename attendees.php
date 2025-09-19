@@ -98,7 +98,6 @@ if ($requests && !$takeattendance) {
 }
 
 // GCHLOL: Add line manager check.
-$ismanager = false;
 [
     'joins' => $joins,
     'where' => $where,
@@ -218,7 +217,7 @@ if ($takeattendance && $session->datetimeknown && !facetoface_has_session_starte
 echo $OUTPUT->box_start();
 echo $OUTPUT->heading(format_string($facetoface->name));
 
-if ($canviewsession) {
+if ($canviewsession || $ismanager) {
     echo facetoface_print_session($session, true);
 }
 
