@@ -2065,7 +2065,7 @@ function facetoface_user_signup($session, $facetoface, $course, $discountcode,
     $usersignup->mailedreminder = 0;
     $usersignup->notificationtype = $notificationtype;
 
-    $usersignup->discountcode = trim(strtoupper($discountcode));
+    $usersignup->discountcode = trim(strtoupper($discountcode ?? ''));
     if (empty($usersignup->discountcode)) {
         $usersignup->discountcode = null;
     }
@@ -3811,9 +3811,10 @@ function facetoface_delete_user_calendar_events($session, $eventtype) {
 
     $whereclause = "modulename = '0' AND
                     eventtype = 'facetoface$eventtype' AND
-                    instance = ?";
+                    instance = ? AND
+                    uuid = ?";
 
-    $whereparams = [$session->facetoface];
+    $whereparams = [$session->facetoface, $session->id];
 
     if ('session' == $eventtype) {
         $likestr = "%attendees.php?s={$session->id}%";
