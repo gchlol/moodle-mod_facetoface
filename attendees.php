@@ -236,6 +236,26 @@ if ($canviewattendees || $cantakeattendance || $ismanager) {
         $heading = get_string('attendees', 'facetoface');
     }
 
+    if (!$takeattendance && ($canviewattendees || $cantakeattendance)) {
+        $icon = $OUTPUT->pix_icon('t/print', '');
+        $text = get_string('attendees:print', 'facetoface');
+
+        $printlink = html_writer::link(
+            new moodle_url(
+                '/mod/facetoface/attendance_sheet.php',
+                [ 'session' => $session->id ]
+            ),
+            "$icon $text",
+            [
+                'class' => 'btn btn-outline-primary float-right m-1',
+                'role' => 'button',
+                'target' => '_blank',
+            ]
+        );
+
+        $heading = $printlink.$heading;
+    }
+
     echo $OUTPUT->heading($heading);
 
     // GCHLOL: Only show the line managers users.

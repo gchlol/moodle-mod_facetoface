@@ -30,6 +30,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use mod_facetoface\attendance_sheet;
+
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
 require_once($CFG->dirroot.'/mod/facetoface/lib.php');
 
@@ -268,6 +270,26 @@ class mod_facetoface_mod_form extends moodleform_mod {
         $mform->addHelpButton('cancellationinstrmngr', 'cancellationinstrmngr', 'facetoface');
         $mform->disabledIf('cancellationinstrmngr', 'emailmanagercancellation');
         $mform->setDefault('cancellationinstrmngr', get_string('setting:defaultcancellationinstrmngrdefault', 'facetoface'));
+
+        // Attendance Sheet
+        $mform->addElement('header', 'attendancesheetheader', get_string('attendancesheet:heading', 'facetoface'));
+
+        $mform->addElement('selectyesno', 'attendancesheetshowlogo', get_string('modform:showlogo', 'mod_facetoface'));
+        $mform->setDefault('attendancesheetshowlogo', 1);
+        $mform->addHelpButton('attendancesheetshowlogo', 'modform:showlogo', 'mod_facetoface');
+
+        $columncheckboxes = [];
+        $columnoptions = attendance_sheet::get_columns();
+        foreach ($columnoptions as $value => $label) {
+            $columncheckboxes[] = $mform->createElement('checkbox', $value, $label);
+        }
+        $mform->addGroup(
+            $columncheckboxes,
+            'attendancesheetcolumns',
+            get_string('modform:attendancesheetcolumns', 'facetoface'),
+            html_writer::empty_tag('br')
+        );
+
         $data = (object) ['confirmationmessage' => $confirmationmessagedata];
         $this->set_data($data);
         $features = new stdClass;
@@ -311,6 +333,14 @@ class mod_facetoface_mod_form extends moodleform_mod {
                     'format' => $defaultvalues['confirmationmessageformat'] ?? FORMAT_HTML,
                     'text' => $defaultvalues['confirmationmessage'],
                 ];
+        }
+
+        // GCHLOL: Set default attendance sheet values.
+        if (empty($defaultvalues['attendancesheetcolumns'])) {
+            $defaultvalues['attendancesheetcolumns'] = [];
+        } else {
+            $keys = explode(',', $defaultvalues['attendancesheetcolumns']);
+            $defaultvalues['attendancesheetcolumns'] = array_fill_keys($keys, 1);
         }
     }
 
