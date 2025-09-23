@@ -246,6 +246,17 @@ class session extends base {
                 ->set_type(column::TYPE_TEXT);
         }
 
+        // Column ID.
+        $columns[] = (new column(
+            'id',
+            new lang_string('sessionid', 'mod_facetoface'),
+            $this->get_entity_name()
+        ))
+            ->add_joins($this->get_joins())
+            ->set_type(column::TYPE_INTEGER)
+            ->add_field("{$session}.id")
+            ->set_is_sortable(true);
+
         return $columns;
     }
 
@@ -354,6 +365,16 @@ class session extends base {
                 ->add_joins($this->get_joins())
                 ->add_join($this->get_custom_field_join($field));
         }
+
+        // Filter capacity.
+        $filters[] = (new filter(
+            number::class,
+            'sessionid',
+            new lang_string('sessionid', 'mod_facetoface'),
+            $this->get_entity_name(),
+            "{$session}.id"
+        ))
+            ->add_joins($this->get_joins());
 
         return $filters;
     }
