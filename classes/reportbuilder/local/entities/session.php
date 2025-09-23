@@ -120,15 +120,9 @@ class session extends base {
             $this->get_entity_name()
         ))
             ->add_joins($this->get_joins())
-            ->add_join("LEFT JOIN {modules} m ON m.name = 'facetoface'")
-            ->add_join("
-                LEFT JOIN {course_modules} cm
-                       ON {$session}.facetoface = cm.instance AND cm.course = {$coursealias}.id AND cm.module = m.id
-            ")
             ->set_type(column::TYPE_LONGTEXT)
             ->add_field($detailsfieldsql, 'details')
             ->add_field("{$session}.facetoface", 'facetofaceid')
-            ->add_field('cm.id')
             ->set_is_sortable(false);
 
         // Column capacity.
