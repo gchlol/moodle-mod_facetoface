@@ -120,15 +120,9 @@ class session extends base {
             $this->get_entity_name()
         ))
             ->add_joins($this->get_joins())
-            ->add_join("LEFT JOIN {modules} m ON m.name = 'facetoface'")
-            ->add_join("
-                LEFT JOIN {course_modules} cm
-                       ON {$session}.facetoface = cm.instance AND cm.course = {$coursealias}.id AND cm.module = m.id
-            ")
             ->set_type(column::TYPE_LONGTEXT)
             ->add_field($detailsfieldsql, 'details')
             ->add_field("{$session}.facetoface", 'facetofaceid')
-            ->add_field('cm.id')
             ->set_is_sortable(false);
 
         // Column capacity.
@@ -252,6 +246,17 @@ class session extends base {
                 ->set_type(column::TYPE_TEXT);
         }
 
+        // Column ID.
+        $columns[] = (new column(
+            'id',
+            new lang_string('sessionid', 'mod_facetoface'),
+            $this->get_entity_name()
+        ))
+            ->add_joins($this->get_joins())
+            ->set_type(column::TYPE_INTEGER)
+            ->add_field("{$session}.id")
+            ->set_is_sortable(true);
+
         return $columns;
     }
 
@@ -360,6 +365,16 @@ class session extends base {
                 ->add_joins($this->get_joins())
                 ->add_join($this->get_custom_field_join($field));
         }
+
+        // Filter capacity.
+        $filters[] = (new filter(
+            number::class,
+            'sessionid',
+            new lang_string('sessionid', 'mod_facetoface'),
+            $this->get_entity_name(),
+            "{$session}.id"
+        ))
+            ->add_joins($this->get_joins());
 
         return $filters;
     }

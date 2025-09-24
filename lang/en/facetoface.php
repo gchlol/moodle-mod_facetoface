@@ -394,6 +394,7 @@ $string['sessiondatetime'] = 'Session date/time';
 $string['sessiondatetimeknown'] = 'Session date/time known';
 $string['sessionfinishtime'] = 'Session finish time';
 $string['sessionfinished'] = 'Finished';
+$string['sessionid'] = 'Session ID number';
 $string['sessioninprogress'] = 'Session in progress';
 $string['sessionisfull'] = 'This session is now full. You will need to pick another time or talk to the instructor.';
 $string['sessionover'] = 'session over';
