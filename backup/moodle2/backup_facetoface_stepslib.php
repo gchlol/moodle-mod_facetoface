@@ -43,6 +43,7 @@ class backup_facetoface_activity_structure_step extends backup_activity_structur
             'cancellationsubject', 'cancellationinstrmngr', 'cancellationmessage', 'remindersubject', 'reminderinstrmngr',
             'remindermessage', 'reminderperiod', 'requestsubject', 'requestinstrmngr', 'requestmessage',
             'approvalreqd', 'allowcancellationsdefault', 'signuptype', 'multiplesignupmethod', 'completionattendance',
+            'attendancesheetshowlogo', 'attendancesheetcolumns',
         ]);
 
         $sessions = new backup_nested_element('sessions');
@@ -109,6 +110,9 @@ class backup_facetoface_activity_structure_step extends backup_activity_structur
 
         $sessionsdate->set_source_table('facetoface_sessions_dates', ['sessionid' => backup::VAR_PARENTID]);
 
+        // GCHLOL - PB - change so data is backed up when userinfo is not selected.
+        $sessiondataelement->set_source_table('facetoface_session_data', ['sessionid' => backup::VAR_PARENTID]);
+
         if ($userinfo) {
             $signup->set_source_table('facetoface_signups', ['sessionid' => backup::VAR_PARENTID]);
 
@@ -116,7 +120,7 @@ class backup_facetoface_activity_structure_step extends backup_activity_structur
 
             $sessionrole->set_source_table('facetoface_session_roles', ['sessionid' => backup::VAR_PARENTID]);
 
-            $sessiondataelement->set_source_table('facetoface_session_data', ['sessionid' => backup::VAR_PARENTID]);
+            // $sessiondataelement->set_source_table('facetoface_session_data', ['sessionid' => backup::VAR_PARENTID]);
         }
 
         // Define id annotations.

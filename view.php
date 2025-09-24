@@ -148,6 +148,7 @@ function print_session_list($courseid, $facetoface, $location) {
     $context = context_course::instance($courseid);
     $viewattendees = has_capability('mod/facetoface:viewattendees', $context);
     $editsessions = has_capability('mod/facetoface:editsessions', $context);
+    $deletesessions = has_capability('mod/facetoface:deletesessions', $context); // GCHLOL - MF - Delete permission
     $uploadbookings = has_capability('mod/facetoface:uploadbookings', $context);
     $multiplesignups = $facetoface->signuptype == MOD_FACETOFACE_SIGNUP_MULTIPLE;
     $bulksignup = $facetoface->multiplesignupmethod == MOD_FACETOFACE_SIGNUP_MULTIPLE_PER_ACTIVITY;
@@ -222,6 +223,23 @@ function print_session_list($courseid, $facetoface, $location) {
 
         echo html_writer::tag('p', $signupforstreamlink);
     }
+    // GCHLOL: Add line manager check.
+    $ismanager = false;
+    if (!$viewattendees) {
+        [
+            'joins' => $joins,
+            'where' => $where,
+            'params' => $params,
+        ] = \tool_organisation\api::get_myusers_sql($USER->id);
+
+        $sql = "SELECT COUNT(u.id)
+                FROM {user} u
+                $joins
+                WHERE u.deleted = 0
+                      AND u.suspended = 0
+                      AND $where";
+        $ismanager = (bool) $DB->count_records_sql($sql, $params);
+    }
     if (empty($upcomingarray) && empty($upcomingtbdarray)) {
         print_string('noupcoming', 'facetoface');
     } else {
@@ -232,7 +250,9 @@ function print_session_list($courseid, $facetoface, $location) {
             $viewattendees,
             $editsessions,
             !$bulksignup,
-            $uploadbookings
+            $uploadbookings,
+            $deletesessions, // GCHLOL: Added $deletesessions
+            $ismanager // GCHLOL: Added $ismanager
         );
     }
 
@@ -242,6 +262,15 @@ function print_session_list($courseid, $facetoface, $location) {
             get_string('addsession', 'facetoface')
         );
         echo html_writer::tag('p', $addsessionlink);
+    }
+
+    // GCHLOL: Bulk sessions link.
+    if (has_capability('mod/facetoface:uploadbulksessions', $context)) {
+        $uploadbulksessionslink = html_writer::link(
+            new moodle_url('/mod/facetoface/uploadbulksessions_activitylevel.php', ['f2fid' => $facetoface->id]),
+            get_string('uploadbulksessions', 'facetoface')
+        );
+        echo html_writer::tag('p', $uploadbulksessionslink);
     }
 
     if ($uploadbookings) {
@@ -254,6 +283,7 @@ function print_session_list($courseid, $facetoface, $location) {
 
     // Previous sessions.
     if (!empty($previousarray)) {
+        $previousarray = array_reverse($previousarray);
         echo $OUTPUT->heading(get_string('previoussessions', 'facetoface'));
         echo $f2frenderer->print_session_list_table(
             $customfields,
@@ -261,7 +291,9 @@ function print_session_list($courseid, $facetoface, $location) {
             $viewattendees,
             $editsessions,
             true,
-            $uploadbookings
+            $uploadbookings,
+            $deletesessions,  // GCHLOL: Added $deletesessions,
+            $ismanager // GCHLOL: Added $ismanager
         );
     }
 }
@@ -275,7 +307,7 @@ function print_session_list($courseid, $facetoface, $location) {
 function get_locations($facetofaceid) {
     global $CFG, $DB;
 
-    $locationfieldid = $DB->get_field('facetoface_session_field', 'id', ['shortname' => 'location']);
+    $locationfieldid = $DB->get_field('facetoface_session_field', 'id', ['shortname' => 'facility']); // GCHLOL: Change field to facility.
     if (!$locationfieldid) {
         return [];
     }

@@ -56,7 +56,7 @@ define('MDL_F2F_CANCEL_TEXT', 10);    // Send just a plan email 8+2.
 define('MDL_F2F_CANCEL_ICAL', 9);     // Send just a combined text/ical message 8+1.
 
 // Name of the custom field where the manager's email address is stored.
-define('F2F_MDL_MANAGERSEMAIL_FIELD', 'managersemail');
+define('F2F_MDL_MANAGERSEMAIL_FIELD', 'linemanager'); // GCHLOL: Change custom field name.
 
 // Custom field related constants.
 define('CUSTOMFIELD_DELIMITER', '##SEPARATOR##');
@@ -312,6 +312,13 @@ function facetoface_fix_settings($facetoface) {
     if (isset($facetoface->signuptype) && $facetoface->signuptype == MOD_FACETOFACE_SIGNUP_SINGLE) {
         $facetoface->multiplesignupmethod = MOD_FACETOFACE_SIGNUP_MULTIPLE_PER_SESSION;
     }
+
+    // GCHLOL: Add attendance sheet fields.
+    if (empty($facetoface->attendancesheetcolumns)) {
+        $facetoface->attendancesheetcolumns = null;
+    } else {
+        $facetoface->attendancesheetcolumns = implode(',', array_keys($facetoface->attendancesheetcolumns));
+    }
 }
 
 /**
@@ -432,8 +439,9 @@ function facetoface_cleanup_session_data($session) {
     // Only numbers allowed here.
     $session->capacity = preg_replace('/[^\d]/', '', $session->capacity);
     $maxcap = 100000;
-    if ($session->capacity < 1) {
-        $session->capacity = 1;
+    // GCHLOL: Change capacity to 0.
+    if ($session->capacity < 0) {
+        $session->capacity = 0;
     } else if ($session->capacity > $maxcap) {
         $session->capacity = $maxcap;
     }
@@ -581,7 +589,7 @@ function facetoface_update_attendees($session) {
     $course = $DB->get_record('course', ['id' => $facetoface->course]);
 
     // Update user status'.
-    $users = facetoface_get_attendees($session->id);
+    $users = facetoface_get_attendees_by_signup($session->id); // GCHLOL: Get attendees in signup order.
 
     if ($users) {
         // No/deleted session dates.
@@ -1583,6 +1591,8 @@ function facetoface_write_worksheet_header(&$worksheet) {
 
     $worksheet->write_string(0, $pos++, get_string('attendance', 'facetoface'));
     $worksheet->write_string(0, $pos++, get_string('datesignedup', 'facetoface'));
+    $worksheet->write_string(0, $pos++, get_string('stream', 'facetoface'));
+    $worksheet->write_string(0, $pos++, get_string('division', 'facetoface'));
 
     return $pos;
 }
@@ -1681,6 +1691,25 @@ function facetoface_write_activity_attendance(&$worksheet, $startingrow, $faceto
             }
         }
 
+        // GCHLOL: Get assignment and position metadata.
+        $toatable = \tool_organisation\persistent\assignment::TABLE;
+        $tomatable = \tool_organisation\persistent\assignment_metadata::TABLE;
+        $tomptable = \tool_organisation\persistent\position_metadata::TABLE;
+
+        $inwhere = '';
+        $inparams = [];
+        if (!empty($userids)) {
+            [$insql, $inparams] = $DB->get_in_or_equal($userids);
+            $inwhere = "AND toa.userid $insql";
+        }
+
+        $sql = "SELECT toma.id, toma.paydiv1name, tomp.division2name, toa.userid
+                FROM {".$toatable."} toa 
+                LEFT JOIN {".$tomatable."} toma ON toa.id = toma.assignid
+                LEFT JOIN {".$tomptable."} tomp ON toa.positionid = tomp.positionid
+                WHERE toa.active = 1 $inwhere";
+        $assimetadata = $DB->get_records_sql($sql, $inparams);
+
         foreach ($signups as $signup) {
             $userid = $signup->id;
             if ($customuserfields = facetoface_get_user_customfields($userid, $userfields)) {
@@ -1697,6 +1726,28 @@ function facetoface_write_activity_attendance(&$worksheet, $startingrow, $faceto
             } else {
                 $signup->grade = '-';
             }
+
+            // GCHLOL: Add columns.
+            $streams = [];
+            $divisions = [];
+            foreach ($assimetadata as $metadata) {
+                if ($metadata->userid != $signup->id) {
+                    continue;
+                }
+
+                $stream = $metadata->paydiv1name;
+                if (!empty($stream) && !in_array($stream, $streams)) {
+                    $streams[] = $stream;
+                }
+
+                $division = $metadata->division2name;
+                if (!empty($division) && !in_array($division, $divisions)) {
+                    $divisions[] = $division;
+                }
+            }
+
+            $signup->stream = empty($streams) ? '-' : implode(', ', $streams);
+            $signup->division = empty($divisions) ? '-' : implode(', ', $divisions);
 
             $sessionsignups[$signup->sessionid][$signup->id] = $signup;
         }
@@ -1792,6 +1843,10 @@ function facetoface_write_activity_attendance(&$worksheet, $startingrow, $faceto
                 if (!empty($activityname)) {
                     $worksheet->write_string($i, $j++, $activityname);
                 }
+
+                // GCHLOL: Add columns.
+                $worksheet->write_string($i, $j++, $attendee->stream);
+                $worksheet->write_string($i, $j++, $attendee->division);
             }
         } else {
             // No one is sign-up, so let's just print the basic info.
@@ -2362,12 +2417,15 @@ function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
         $from = null;
     }
 
+    // GCHLOL: If an error occurs sending the email.
+    $emailerror = false;
+
     // Send email with iCal attachment.
     if ($notificationtype & MDL_F2F_ICAL) {
         foreach ($icalattachments as $attachment) {
             if (!email_to_user($user, $from, $attachment['subject'], $attachment['body'],
                     '', $attachment['filename'], $attachmentfilename)) {
-                return 'error:cannotsendconfirmationuser';
+                $emailerror = true; // GCHLOL: Ignore error if invalid email.
             }
             unlink($CFG->dataroot . '/' . $attachment['filename']);
         }
@@ -2376,7 +2434,12 @@ function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
     // Send plain text email.
     if ($notificationtype & MDL_F2F_TEXT
         && !email_to_user($user, $from, $postsubject, $posttext)) {
-        return 'error:cannotsendconfirmationuser';
+        $emailerror = true; // GCHLOL: Ignore error if invalid email.
+    }
+
+    // GCHLOL: Show error notifcation, this way avoids multiple error messages.
+    if ($emailerror) {
+        \core\notification::error(get_string('error:cannotsendconfirmationuser', 'facetoface'));
     }
 
     // Manager notification.
@@ -2388,7 +2451,8 @@ function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
 
         // Leave out the ical attachments in the managers notification.
         if (!email_to_user($manager, $from, $postsubject, $managertext)) {
-            return 'error:cannotsendconfirmationmanager';
+            // GCHLOL: Ignore error if invalid email.
+            \core\notification::error(get_string('error:cannotsendconfirmationmanager', 'facetoface'));
         }
     }
 
@@ -3238,6 +3302,7 @@ function facetoface_get_ical_attachment($method, $facetoface, $session, $user) {
 
         // The extra newline at the bottom is so multiple events start on their
         // own lines. The very last one is trimmed outside the loop.
+        // GCHLOL: Change CLASS:PRIVATE to CLASS:PUBLIC.
         $vevents .= <<<EOF
 BEGIN:VEVENT
 UID:{$uid}
@@ -3248,7 +3313,7 @@ SEQUENCE:{$sequence}
 SUMMARY:{$summary}
 LOCATION:{$location}
 DESCRIPTION:{$description}
-CLASS:PRIVATE
+CLASS:PUBLIC
 TRANSP:OPAQUE{$cancelstatus}
 ORGANIZER;CN={$organiseremail}:MAILTO:{$organiseremail}
 ATTENDEE;CUTYPE=INDIVIDUAL;ROLE={$role};PARTSTAT=NEEDS-ACTION;
@@ -4548,10 +4613,12 @@ function facetoface_enrol_user($context, $courseid, $userid): bool {
 class facetoface_candidate_selector extends user_selector_base {
     protected $sessionid;
     protected $courseid;
+    protected $ismanager = false; // GCHLOL: Added is line manager property.
 
     public function __construct($name, $options) {
         $this->sessionid = $options['sessionid'];
         $this->courseid = $options['courseid'];
+        $this->ismanager = $options['ismanager']; // GCHLOL: Added is line manager property.
         parent::__construct($name, $options);
     }
 
@@ -4561,12 +4628,13 @@ class facetoface_candidate_selector extends user_selector_base {
      * @return array
      */
     public function find_users($search) {
-        global $DB;
+        global $DB, $USER;
 
         // All non-signed up system user.
         list($wherecondition, $params) = $this->search_sql($search, 'u');
 
-        $fields      = 'SELECT ' . $this->required_fields_sql('u');
+        // GCHLOL: Add DISTINCT (specifically for line managers)
+        $fields      = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
         $countfields = 'SELECT COUNT(u.id)';
 
         $limitsql = '';
@@ -4576,10 +4644,27 @@ class facetoface_candidate_selector extends user_selector_base {
                   JOIN {enrol} e ON e.id = ue.enrolid AND e.courseid = :courseid";
         }
 
+        // GCHLOL: Add line manager SQL.
+        $myjoins = '';
+        $mywhere = '';
+        if ($this->ismanager && !has_capability('mod/facetoface:addattendees', $this->accesscontext)) {
+            [
+                'joins' => $myjoins,
+                'where' => $mywhere,
+                'params' => $myparams,
+            ] = \tool_organisation\api::get_myusers_sql($USER->id);
+
+            $mywhere = 'AND '.$mywhere;
+            $params = array_merge($params, $myparams);
+        }
+
         $sql = "
                   FROM {user} u
                     $limitsql
+                    $myjoins
                 WHERE $wherecondition
+                   $mywhere
+                   AND u.suspended = 0
                    AND u.id NOT IN
                        (
                        SELECT u2.id
@@ -4629,9 +4714,11 @@ class facetoface_candidate_selector extends user_selector_base {
  */
 class facetoface_existing_selector extends user_selector_base {
     protected $sessionid;
+    protected $ismanager = false; // GCHLOL: Added is line manager property.
 
     public function __construct($name, $options) {
         $this->sessionid = $options['sessionid'];
+        $this->ismanager = $options['ismanager']; // GCHLOL: Added is line manager property.
         parent::__construct($name, $options);
     }
 
@@ -4641,12 +4728,26 @@ class facetoface_existing_selector extends user_selector_base {
      * @return array
      */
     public function find_users($search) {
-        global $DB;
+        global $DB, $USER;
 
         // By default wherecondition retrieves all users except the deleted, not confirmed and guest.
         list($wherecondition, $whereparams) = $this->search_sql($search, 'u');
 
-        $fields  = 'SELECT ' . $this->required_fields_sql('u');
+        // GCHLOL: Add line manager SQL.
+        $myjoins = '';
+        $mywhere = '';
+        $myparams = [];
+        if ($this->ismanager && !has_capability('mod/facetoface:removeattendees', $this->accesscontext)) {
+            [
+                'joins' => $myjoins,
+                'where' => $mywhere,
+                'params' => $myparams,
+            ] = \tool_organisation\api::get_myusers_sql($USER->id);
+
+            $mywhere = 'AND '.$mywhere;
+        }
+
+        $fields  = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
         $fields .= ', su.id AS submissionid, s.discountcost, su.discountcode, su.notificationtype, f.id AS facetofaceid,
             f.course, ss.grade, ss.statuscode, sign.timecreated';
         $countfields = 'SELECT COUNT(1)';
@@ -4682,8 +4783,10 @@ class facetoface_existing_selector extends user_selector_base {
             JOIN
                 {user} u
              ON u.id = su.userid
+            $myjoins
             WHERE
                 $wherecondition
+                $mywhere
             AND s.id = :sessid2
             AND ss.superceded != 1
             AND ss.statuscode >= :statusapproved
@@ -4695,6 +4798,7 @@ class facetoface_existing_selector extends user_selector_base {
             'statuswaitlisted' => MDL_F2F_STATUS_WAITLISTED,
         ];
         $params = array_merge($params, $whereparams);
+        $params = array_merge($params, $myparams);
         $params['sessid2'] = $this->sessionid;
         $params['statusapproved'] = MDL_F2F_STATUS_APPROVED;
         if (!$this->is_validating()) {
@@ -4719,4 +4823,76 @@ class facetoface_existing_selector extends user_selector_base {
         $options['file'] = 'mod/facetoface/lib.php';
         return $options;
     }
+}
+
+/**
+ * Get list of users attending a given session ordered by signup time.
+ *
+ * @param int $sessionid Session ID.
+ * @return stdClass[] List of user records with signup details.
+ */
+function facetoface_get_attendees_by_signup(int $sessionid): array {
+    global $DB;
+
+    $usernamefields = facetoface_get_all_user_name_fields(true, 'user');
+
+    $sql = "
+        SELECT  user.id,
+                $usernamefields,
+                user.email,
+                signups.id AS submissionid,
+                sessions.discountcost,
+                signups.discountcode,
+                signups.notificationtype,
+                facetoface.id AS facetofaceid,
+                facetoface.course,
+                signups_status.grade,
+                signups_status.statuscode,
+                latest_status.timecreated
+
+        FROM    {facetoface} facetoface
+                JOIN {facetoface_sessions} sessions ON
+                    sessions.facetoface = facetoface.id
+                JOIN {facetoface_signups} signups ON
+                    signups.sessionid = sessions.id
+                JOIN {facetoface_signups_status} signups_status ON
+                    signups_status.signupid = signups.id
+
+                LEFT JOIN (
+                    SELECT  signup_status.signupid,
+                            MAX(signup_status.timecreated) AS timecreated
+
+                    FROM    {facetoface_signups_status} signup_status
+                            JOIN {facetoface_signups} signup ON
+                                signup.id = signup_status.signupid AND
+                                signup.sessionid = :sessionid_sub
+
+                    WHERE   signup_status.statuscode IN (:status_booked, :status_waitlisted)
+
+                    GROUP BY
+                            signup_status.signupid
+                ) latest_status ON
+                    latest_status.signupid = signups.id
+
+                    JOIN {user} user ON
+                    user.id = signups.userid
+
+        WHERE   sessions.id = :sessionid_main AND
+                signups_status.superceded <> 1 AND
+                signups_status.statuscode >= :status_approved
+
+        ORDER BY
+                latest_status.timecreated ASC,
+                signups_status.timecreated ASC
+    ";
+
+    $params = [
+        'sessionid_sub' => $sessionid,
+        'status_booked' => MDL_F2F_STATUS_BOOKED,
+        'status_waitlisted' => MDL_F2F_STATUS_WAITLISTED,
+        'sessionid_main' => $sessionid,
+        'status_approved' => MDL_F2F_STATUS_APPROVED,
+    ];
+
+    return $DB->get_records_sql($sql, $params);
 }

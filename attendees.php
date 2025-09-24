@@ -97,8 +97,28 @@ if ($requests && !$takeattendance) {
     $canapproverequests = true;
 }
 
+// GCHLOL: Add line manager check.
+$myusers = [];
+if (!$canviewsession) {
+    [
+        'joins' => $joins,
+        'where' => $where,
+        'params' => $params,
+    ] = \tool_organisation\api::get_myusers_sql($USER->id);
+
+    $sql = "SELECT DISTINCT u.id
+            FROM {user} u
+            $joins
+            WHERE u.deleted = 0
+                  AND u.suspended = 0
+                  AND $where";
+    $myusers = $DB->get_records_sql($sql, $params);
+}
+$ismanager = !empty($myusers);
+
 // Check the user is allowed to view this page.
-if (!$canviewattendees && !$cantakeattendance && !$canapproverequests && !$canviewcancellations) {
+// GCHLOL: Allow line managers to view the page.
+if (!$canviewattendees && !$cantakeattendance && !$canapproverequests && !$canviewcancellations && !$ismanager) {
     throw new moodle_exception('nopermissions', '', "{$CFG->wwwroot}/mod/facetoface/view.php?id={$cm->id}", get_string('view'));
 }
 
@@ -201,21 +221,51 @@ if ($takeattendance && $session->datetimeknown && !facetoface_has_session_starte
 echo $OUTPUT->box_start();
 echo $OUTPUT->heading(format_string($facetoface->name));
 
-if ($canviewsession) {
+if ($canviewsession || $ismanager) {
     echo facetoface_print_session($session, true);
 }
 
 /*
  * Print attendees (if user able to view)
  */
-if ($canviewattendees || $cantakeattendance) {
+// GCHLOL: Allow line managers to view the attendees.
+if ($canviewattendees || $cantakeattendance || $ismanager) {
     if ($takeattendance) {
         $heading = get_string('takeattendance', 'facetoface');
     } else {
         $heading = get_string('attendees', 'facetoface');
     }
 
+    if (!$takeattendance && ($canviewattendees || $cantakeattendance)) {
+        $icon = $OUTPUT->pix_icon('t/print', '');
+        $text = get_string('attendees:print', 'facetoface');
+
+        $printlink = html_writer::link(
+            new moodle_url(
+                '/mod/facetoface/attendance_sheet.php',
+                [ 'session' => $session->id ]
+            ),
+            "$icon $text",
+            [
+                'class' => 'btn btn-outline-primary float-right m-1',
+                'role' => 'button',
+                'target' => '_blank',
+            ]
+        );
+
+        $heading = $printlink.$heading;
+    }
+
     echo $OUTPUT->heading($heading);
+
+    // GCHLOL: Only show the line managers users.
+    if (!$canviewattendees && $ismanager) {
+        foreach ($attendees as $key => $attendee) {
+            if (!isset($myusers[$attendee->id])) {
+                unset($attendees[$key]);
+            }
+        }
+    }
 
     if (empty($attendees)) {
         echo $OUTPUT->notification(get_string('nosignedupusers', 'facetoface'));
@@ -317,17 +367,23 @@ if ($canviewattendees || $cantakeattendance) {
         }
     }
 
+    // GCHLOL: Allow line managers to view edit attendees link.
     if (!$takeattendance
         && (has_capability('mod/facetoface:addattendees', $context)
-        || has_capability('mod/facetoface:removeattendees', $context))) {
+        || has_capability('mod/facetoface:removeattendees', $context)
+        || $ismanager)) {
         // Add/remove attendees.
         $editattendeeslink = new moodle_url('editattendees.php', ['s' => $session->id, 'backtoallsessions' => $backtoallsessions]);
         echo html_writer::link($editattendeeslink, get_string('addremoveattendees', 'facetoface')) . ' - ';
     }
-    echo html_writer::link("attendees.php?s=$session->id&backtoallsessions=$session->facetoface&download=ods",
-            get_string('downloadods')) . ' - ';
-    echo html_writer::link("attendees.php?s=$session->id&backtoallsessions=$session->facetoface&download=xls",
-            get_string('downloadexcel')) . ' - ';
+
+    // GCHLOL: Line managers cannot download attendance.
+    if ($canviewsession) {
+        echo html_writer::link("attendees.php?s=$session->id&backtoallsessions=$session->facetoface&download=ods",
+                get_string('downloadods')) . ' - ';
+        echo html_writer::link("attendees.php?s=$session->id&backtoallsessions=$session->facetoface&download=xls",
+                get_string('downloadexcel')) . ' - ';
+    }
 }
 
 // Go back.
@@ -401,10 +457,21 @@ if ($canapproverequests) {
     }
 }
 
+// GCHLOL: Only show the line managers users.
+if (!$canviewcancellations && $ismanager) {
+    foreach ($cancellations as $key => $attendee) {
+        // GCHLOL: Only show the line managers users.
+        if (!isset($myusers[$attendee->id])) {
+            unset($cancellations[$key]);
+        }
+    }
+}
+
 /*
  * Print cancellations (if user able to view)
  */
-if (!$takeattendance && $canviewcancellations && $cancellations) {
+// GCHLOL: Allow line managers to view their users cancellations.
+if (!$takeattendance && ($canviewcancellations || $ismanager) && $cancellations) {
     echo html_writer::empty_tag('br');
     echo $OUTPUT->heading(get_string('cancellations', 'facetoface'));
 

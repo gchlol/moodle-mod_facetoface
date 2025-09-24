@@ -196,4 +196,25 @@ $capabilities = [
             'manager' => CAP_ALLOW,
         ],
     ],
+
+    // GCHLOL MF Ability to delete a session.
+    'mod/facetoface:deletesessions' => array(
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => array(
+            'manager' => CAP_ALLOW
+        )
+    ),
+
+    // GCHLOL JS Ability to upload and process bulk sessions via CSV.
+    'mod/facetoface:uploadbulksessions' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => [
+            'teacher' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW,
+            'coursecreator'  => CAP_ALLOW,
+        ],
+    ],
 ];

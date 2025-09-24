@@ -39,7 +39,9 @@ class mod_facetoface_renderer extends plugin_renderer_base {
         $viewattendees,
         $editsessions,
         $signuplinks = true,
-        $uploadbookings = false
+        $uploadbookings = false,
+        $deletesessions = false, // GCHLOL: Added $deletesessions to parameters,
+        $ismanager = false // GCHLOL: Add line manager check to parameters
     ) {
         $output = '';
 
@@ -168,14 +170,19 @@ class mod_facetoface_renderer extends plugin_renderer_base {
                 $options .= $this->output->action_icon(new moodle_url('sessions.php', ['s' => $session->id, 'c' => 1]),
                         new pix_icon('t/copy', get_string('copy', 'facetoface')), null,
                         ['title' => get_string('copysession', 'facetoface')]) . ' ';
-                $options .= $this->output->action_icon(new moodle_url('sessions.php', ['s' => $session->id, 'd' => 1]),
-                        new pix_icon('t/delete', get_string('delete', 'facetoface')), null,
-                        ['title' => get_string('deletesession', 'facetoface')]) . ' ';
+                if ($deletesessions) {
+                    $options .= $this->output->action_icon(new moodle_url('sessions.php', ['s' => $session->id, 'd' => 1]),
+                            new pix_icon('t/delete', get_string('delete', 'facetoface')), null,
+                            ['title' => get_string('deletesession', 'facetoface')]) . ' ';
+                }
             }
-            if ($viewattendees) {
+            // GCHLOL: Allow line managers or users who can view attendees see attendees link.
+            if ($ismanager || $viewattendees) {
                 $options .= html_writer::link('attendees.php?s='.$session->id.'&backtoallsessions='.$session->facetoface,
                         get_string('attendees', 'facetoface'),
                         ['title' => get_string('seeattendees', 'facetoface')]) . ' &nbsp; ';
+            }
+            if ($viewattendees) {
                 $options .= $this->output->action_icon(new moodle_url('attendees.php', ['s' => $session->id, 'download' => 'xlsx']),
                         new pix_icon('f/spreadsheet', get_string('downloadexcel')), null,
                         ['title' => get_string('downloadexcel')]) . ' ';
