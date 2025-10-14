@@ -994,8 +994,7 @@ $string['csvuploadhelp:text'] = 'Text';
 $string['uploadbulkbookings'] = 'Upload Bookings for Any Courses';
 $string['facetoface:uploadbookingsextfiledesc'] = "
 Fields expected:
-- Username (required)
-- Session number (required)
+- Session ID (required)
 - Status (optional - valid options are cancelled,  booked, waitlisted, no_show, partially_attended, and fully_attended)
 - Discount code (optional)
 - Notification type (optional - valid options are 'email', 'ical', or 'both')";

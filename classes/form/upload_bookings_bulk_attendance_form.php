@@ -119,16 +119,6 @@ class upload_bookings_bulk_attendance_form extends moodleform {
         // Rows for each required column.
         $rows = [
             [
-                'field'       => 'csvuploadhelp:courseshortname',
-                'requirement' => 'csvuploadhelp:required',
-                'format'      => 'csvuploadhelp:text',
-            ],
-            [
-                'field'       => 'csvuploadhelp:activityname',
-                'requirement' => 'csvuploadhelp:required',
-                'format'      => 'csvuploadhelp:text',
-            ],
-            [
                 'field'       => 'csvuploadhelp:username',
                 'requirement' => 'csvuploadhelp:required',
                 'format'      => 'csvuploadhelp:text',

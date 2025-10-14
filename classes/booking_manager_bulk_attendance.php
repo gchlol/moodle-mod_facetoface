@@ -108,8 +108,6 @@ class booking_manager_bulk_attendance {
      */
     public static function get_headers(): array {
         return [
-            'Course Shortname',
-            'Face-to-Face Activity Name',
             'Username',
             'Session',
             'Status',
@@ -168,17 +166,15 @@ class booking_manager_bulk_attendance {
      *
      * As there are multiple dependent data points (users, sessions, capacity),
      * we check them in this order for each row:
-     *   1) Course exists (by shortname)
-     *   2) Face-to-Face activity exists in that course
+     *   1) Session exists (by id)
+     *   2) Face-to-Face activity & Course derived from session
      *   3) User exists
-     *   4) Session exists
-     *   5) Session belongs to the found Face-to-Face module
-     *   6) Cancellation-after-start check
-     *   7) Booking-in-progress or over check
-     *   8) Overbooking (capacity) logic
-     *   9) Enrollment check
-     *  10) Notification type check
-     *  11) Status check
+     *   4) Cancellation-after-start check
+     *   5) Booking-in-progress or over check
+     *   6) Overbooking (capacity) logic
+     *   7) Enrollment check
+     *   8) Notification type check
+     *   9) Status check
      *
      * @param int $timenow Current time to use for validation.
      * @return array An array of errors.
@@ -197,38 +193,40 @@ class booking_manager_bulk_attendance {
         foreach ($this->get_iterator() as $index => $entry) {
             $row = $index + 1;
 
-            // Trim whitespace from the new text fields.
-            $courseshort   = trim($entry->{'Course Shortname'});
-            $activityname  = trim($entry->{'Face-to-Face Activity Name'});
+            // Trim whitespace from the CSV fields (Course/Activity removed).
             $username      = trim($entry->Username);
             $sessionref    = trim($entry->Session);
             $status        = trim($entry->Status ?? '');
             $discount      = trim($entry->{'Discount Code'} ?? '');
             $notifytype    = trim($entry->{'Notification Type'} ?? '');
 
-            // 1) Check course exists by shortname.
-            $course = $DB->get_record('course', ['shortname' => $courseshort]);
-            if (!$course) {
+            // 1) Check session exists (CSV provides session id).
+            $session = facetoface_get_session($sessionref);
+            if (!$session) {
                 $errors[] = [
                     $row,
-                    get_string('error:coursemisconfigured', 'facetoface', $courseshort)
+                    get_string('error:sessiondoesnotexist', 'mod_facetoface', $sessionref)
                 ];
 
                 continue;
             }
 
-            // 2) Check Face-to-Face activity exists (by name + course).
-            $facetoface = $DB->get_record(
-                'facetoface',
-                ['name' => $activityname, 'course' => $course->id]
-            );
-
+            // 2) Derive Face-to-Face activity & Course from the session.
+            $facetoface = $DB->get_record('facetoface', ['id' => $session->facetoface]);
             if (!$facetoface) {
                 $errors[] = [
                     $row,
-                    get_string('error:activitydoesnotexist', 'facetoface', $activityname)
+                    get_string('error:activitydoesnotexist', 'facetoface', $session->facetoface)
                 ];
+                continue;
+            }
 
+            $course = $DB->get_record('course', ['id' => $facetoface->course]);
+            if (!$course) {
+                $errors[] = [
+                    $row,
+                    get_string('error:coursemisconfigured', 'facetoface', $facetoface->course)
+                ];
                 continue;
             }
 
@@ -252,35 +250,7 @@ class booking_manager_bulk_attendance {
             }
             $userid = current($userids)->id;
 
-            // 4) Check session exists.
-            $session = facetoface_get_session($sessionref);
-            if (!$session) {
-                $errors[] = [
-                    $row,
-                    get_string('error:sessiondoesnotexist', 'mod_facetoface', $sessionref)
-                ];
-
-                continue;
-            }
-
-            // 5) Ensure session belongs to this Face-to-Face module.
-            if ($session->facetoface != $facetoface->id) {
-                $errors[] = [
-                    $row,
-                    get_string(
-                        'error:tryingtoupdatesessionfromanothermodule',
-                        'mod_facetoface',
-                        (object)[
-                            'session' => $sessionref,
-                            'f2fid'   => $facetoface->id
-                        ]
-                    )
-                ];
-
-                continue;
-            }
-
-            // 6) Don't allow user to cancel a session that has already occurred.
+            // 4) Don't allow user to cancel a session that has already occurred.
             if ($status === 'cancelled' && facetoface_has_session_started($session, $timenow)) {
                 $errors[] = [
                     $row,
@@ -290,7 +260,7 @@ class booking_manager_bulk_attendance {
                 continue;
             }
 
-            // 7) If booking or default ('', 'booked') into a session that’s in progress or over, error.
+            // 5) If booking or default ('', 'booked') into a session that’s in progress or over, error.
             if (
                 $session->datetimeknown &&
                 in_array($status, ['', 'booked'], true) &&
@@ -304,7 +274,7 @@ class booking_manager_bulk_attendance {
                 continue;
             }
 
-            // 8) Capacity logic (only if not cancelled).
+            // 6) Capacity logic (only if not cancelled).
             if ($session->allowoverbook == 0) {
                 if (!isset($sessioncapacitycache[$session->id])) {
                     $remaining = $session->capacity
@@ -320,7 +290,7 @@ class booking_manager_bulk_attendance {
                 }
             }
 
-            // 9) Enrollment check: use per-row course context.
+            // 7) Enrollment check: use per-row course context derived from the session.
             $coursecontext = context_course::instance($course->id);
             if (!is_enrolled($coursecontext, $userid)) {
                 $errors[] = [
@@ -329,7 +299,7 @@ class booking_manager_bulk_attendance {
                 ];
             }
 
-            // 10) Check valid notification type.
+            // 8) Check valid notification type.
             $mapped = $this->transform_notification_type($notifytype);
             if ($mapped === null) {
                 $errors[] = [
@@ -338,7 +308,7 @@ class booking_manager_bulk_attendance {
                 ];
             }
 
-            // 11) Check valid status.
+            // 9) Check valid status.
             $validstatuses = array_merge(
                 facetoface_statuses(),
                 ['', 'cancelled']
@@ -351,7 +321,7 @@ class booking_manager_bulk_attendance {
             }
         }
 
-        // 12) Finally report any over-capacity sessions.
+        // 10) Finally report any over-capacity sessions.
         $overcapacitysessions = array_filter(
             $sessioncapacitycache,
             fn($s) => $s['capacity'] < 0
@@ -432,36 +402,25 @@ class booking_manager_bulk_attendance {
         }
 
         foreach ($this->get_iterator() as $entry) {
-            // Trim and extract each field.
-            $courseshort   = trim($entry->{'Course Shortname'});
-            $activityname  = trim($entry->{'Face-to-Face Activity Name'});
+            // Trim and extract each field (Course/Activity removed; Session is ID).
             $username      = trim($entry->Username);
             $sessionref    = trim($entry->Session);
             $status        = trim($entry->Status);
             $discount      = trim($entry->{'Discount Code'} ?? '');
             $notifytype    = trim($entry->{'Notification Type'} ?? '');
 
-            // 1) Lookup course by shortname.
-            $course = $DB->get_record('course', ['shortname' => $courseshort], '*', MUST_EXIST);
-
-            // 2) Lookup Face-to-Face module by name + course.
-            $facetoface = $DB->get_record(
-                'facetoface',
-                ['name' => $activityname, 'course' => $course->id],
-                '*',
-                MUST_EXIST
-            );
-
-            // 3) Match the user record.
+            // 1) Match the user record.
             $user = current($this->match_users($username, '*'));
 
-            // 4) Fetch the session record.
-            $session = facetoface_get_session($sessionref);
+            // 2) Fetch the session by ID and derive Face-to-Face + Course.
+            $session    = facetoface_get_session($sessionref);
+            $facetoface = $DB->get_record('facetoface', ['id' => $session->facetoface], '*', MUST_EXIST);
+            $course     = $DB->get_record('course', ['id' => $facetoface->course], '*', MUST_EXIST);
 
-            // 5) Map notification type to its internal code.
+            // 3) Map notification type to its internal code.
             $mappednotify = $this->transform_notification_type($notifytype);
 
-            // 6) Handle cancellation.
+            // 4) Handle cancellation.
             if ($status === 'cancelled') {
                 if (!facetoface_user_cancel($session, $user->id, true, $cancelerr)) {
                     throw new Exception($cancelerr);
@@ -480,10 +439,10 @@ class booking_manager_bulk_attendance {
                 continue;
             }
 
-            // 7) Map status string to status code.
+            // 5) Map status string to status code.
             $statuscode = array_search($status, facetoface_statuses()) ?: MDL_F2F_STATUS_BOOKED;
 
-            // 8) Handle signups (booked or waitlisted).
+            // 6) Handle signups (booked or waitlisted).
             if (in_array($statuscode, [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED], true)) {
                 if (
                     $statuscode === MDL_F2F_STATUS_BOOKED &&
@@ -507,7 +466,7 @@ class booking_manager_bulk_attendance {
                 continue;
             }
 
-            // 9) Handle attendance (no-show / partial / full).
+            // 7) Handle attendance (no-show / partial / full).
             if (in_array(
                 $statuscode,
                 [
