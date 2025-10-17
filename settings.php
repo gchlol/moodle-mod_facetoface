@@ -47,12 +47,12 @@ if ($ADMIN->fulltree) {
 
 // Face-to-Face config items.
 $settings->add(new admin_setting_configtext(
-'facetoface/fromaddress',
-get_string('setting:fromaddress_caption', 'facetoface'),
-get_string('setting:fromaddress', 'facetoface'),
-get_string('setting:fromaddressdefault', 'facetoface'),
-PARAM_EMAIL,
-30
+    'facetoface/fromaddress',
+    get_string('setting:fromaddress_caption', 'facetoface'),
+    get_string('setting:fromaddress', 'facetoface'),
+    get_string('setting:fromaddressdefault', 'facetoface'),
+    PARAM_EMAIL,
+    30
 ));
 
 // Load roles.
