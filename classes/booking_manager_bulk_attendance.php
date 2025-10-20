@@ -292,13 +292,16 @@ class booking_manager_bulk_attendance {
                 }
             }
 
-            // 7) Enrollment check: use per-row course context derived from the session.
+            // 7) Enrollment check. Auto-enrol staff who are not yet enrolled in the course.
             $coursecontext = context_course::instance($course->id);
             if (!is_enrolled($coursecontext, $userid)) {
-                $errors[] = [
-                    $row,
-                    get_string('error:userisnotenrolledintocourse', 'mod_facetoface', $username)
-                ];
+                $isenrolled = facetoface_enrol_user($coursecontext, $course->id, $userid);
+                if (!$isenrolled) {
+                    $errors[] = [
+                        $row,
+                        get_string('error:enrolmentfailed', 'mod_facetoface', $username)
+                    ];
+                }
             }
 
             // 8) Check valid notification type.
@@ -453,6 +456,11 @@ class booking_manager_bulk_attendance {
                     // If booked but no datetime known, convert to waitlist.
                     $statuscode = MDL_F2F_STATUS_WAITLISTED;
                 }
+
+                // Edge case: Re-enrol the user if they are unenrolled after validation.
+                // Otherwise, it's idempotent for enrolled users.
+                $coursecontext = context_course::instance($course->id);
+                facetoface_enrol_user($coursecontext, $course->id, $user->id);
 
                 facetoface_user_signup(
                     $session,
