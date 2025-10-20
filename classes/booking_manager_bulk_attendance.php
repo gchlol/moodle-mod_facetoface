@@ -139,11 +139,26 @@ class booking_manager_bulk_attendance {
         $headers = self::get_headers();
         $numheaders = count($headers);
 
-        fgets($handle);
+        // Read the CSV header and detect whether a "Discount Code" column exists (case-insensitive).
+        $fileheaders = fgetcsv($handle, $maxlinelength, $delimiter);
+        $hasdiscount = false;
+        if ($fileheaders !== false) {
+            $norm = array_map(function($h) { return strtolower(trim($h)); }, $fileheaders);
+            $hasdiscount = in_array('discount code', $norm, true);
+        }
+
+        // Where "Discount Code" is expected in our canonical header list.
+        $discountpos = array_search('Discount Code', $headers, true);
 
         try {
             while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
                 $rownumber++;
+
+                // If the uploaded CSV omitted "Discount Code", insert an empty string so counts still match.
+                if ($hasdiscount === false && $discountpos !== false) {
+                    array_splice($data, $discountpos, 0, '');
+                }
+
                 $numfields = count($data);
 
                 if ($numfields !== $numheaders) {
