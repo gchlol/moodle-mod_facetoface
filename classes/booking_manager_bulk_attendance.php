@@ -143,7 +143,12 @@ class booking_manager_bulk_attendance {
         $fileheaders = fgetcsv($handle, $maxlinelength, $delimiter);
         $hasdiscount = false;
         if ($fileheaders !== false) {
-            $norm = array_map(function($h) { return strtolower(trim($h)); }, $fileheaders);
+            $norm = array_map(
+                function($h) {
+                    return strtolower(trim($h));
+                },
+                $fileheaders
+            );
             $hasdiscount = in_array('discount code', $norm, true);
         }
 
