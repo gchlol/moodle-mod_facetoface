@@ -139,7 +139,7 @@ if ($validate) {
 
     // If there are errors, handle them and exit.
     if (!empty($errors)) {
-        display_bulk_upload_errors_site($errors);
+        display_bulk_upload_errors($errors);
     }
 
     // If no errors, display the CSV preview.
