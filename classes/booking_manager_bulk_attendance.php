@@ -218,6 +218,7 @@ class booking_manager_bulk_attendance {
                     $row,
                     get_string('error:activitydoesnotexist', 'facetoface', $session->facetoface)
                 ];
+
                 continue;
             }
 
@@ -227,6 +228,7 @@ class booking_manager_bulk_attendance {
                     $row,
                     get_string('error:coursemisconfigured', 'facetoface', $facetoface->course)
                 ];
+
                 continue;
             }
 
