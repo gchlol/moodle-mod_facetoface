@@ -184,7 +184,7 @@ class booking_manager {
             $entry->discountcode = $entry->discountcode ?? '';
 
             // Validate and get user.
-            $userids = $this->match_users($entry->username, 'id');
+            $userids = $this->match_users_username($entry->username, 'id');
 
             // Multiple matched, ambiguous which is the real one.
             if (count($userids) > 1) {
