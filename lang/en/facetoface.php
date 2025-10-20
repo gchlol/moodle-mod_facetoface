@@ -996,7 +996,6 @@ $string['facetoface:uploadbookingsextfiledesc'] = "
 Fields expected:
 - Session ID (required)
 - Status (optional - valid options are cancelled,  booked, waitlisted, no_show, partially_attended, and fully_attended)
-- Discount code (optional)
 - Notification type (optional - valid options are 'email', 'ical', or 'both')";
 $string['examplecsvfilename'] = 'example_bookings.csv';
 $string['uploadbulkattendance'] = 'Upload bookings';
