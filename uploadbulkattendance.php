@@ -42,6 +42,7 @@ $fileid = optional_param('fileid', 0, PARAM_INT);
 $validate = optional_param('validate', 0, PARAM_INT);
 $process = optional_param('process', 0, PARAM_INT);
 $caseinsensitive = optional_param('caseinsensitive', false,     PARAM_BOOL);
+$skiperrors = optional_param('skiperrors', 0, PARAM_INT);
 
 // 3) Require site configuration capability.
 require_capability('moodle/site:config', context_system::instance());
@@ -65,9 +66,10 @@ $uploadform = new upload_bookings_bulk_attendance_form();
  * Utility function to display bulk-upload errors and then stop execution.
  *
  * @param array $errors  A list of errors; each error can be a string or an array whose first element is the row number.
+ * @param int $fileid File ID.
  * @return void
  */
-function display_bulk_upload_errors($errors): void {
+function display_bulk_upload_errors(array $errors, int $fileid): void {
     global $OUTPUT;
 
     echo $OUTPUT->header();
@@ -104,12 +106,31 @@ function display_bulk_upload_errors($errors): void {
 
     echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
 
+
+    // Action buttons.
+    echo html_writer::start_div('mt-4 text-center');
+
+    // Button 1: Try again / Back.
     echo $OUTPUT->single_button(
         new moodle_url('/mod/facetoface/uploadbulkattendance.php'),
         get_string('back'),
         'get',
-        ['class' => 'mb-4']
+        ['class' => 'mr-2']
     );
+
+    // Button 2: Skip rows with errors -> process only valid rows.
+    echo $OUTPUT->single_button(
+        new moodle_url('/mod/facetoface/uploadbulkattendance.php', [
+            'fileid'     => $fileid,
+            'process'    => 1,
+            'skiperrors' => 1,
+        ]),
+        get_string('skiprowswitherrors', 'mod_facetoface'),
+        'post',
+        ['class' => 'btn btn-primary ml-2']
+    );
+
+    echo html_writer::end_div();
 
     echo $OUTPUT->footer();
 
@@ -139,7 +160,7 @@ if ($validate) {
 
     // If there are errors, handle them and exit.
     if (!empty($errors)) {
-        display_bulk_upload_errors($errors);
+        display_bulk_upload_errors($errors, $fileid);
     }
 
     // If no errors, display the CSV preview.
@@ -213,6 +234,25 @@ if (
                 notification::NOTIFY_SUCCESS
             );
         }
+    } else if (!empty($skiperrors)) {
+        // New behaviour: process only rows that have no validation errors.
+        [$processed, $skipped] = $manager->process_skipping($errors);
+
+        if ($processed > 0) {
+            $event = csv_processed_bulkattendance::create([
+                'context'  => context_system::instance(),
+                'objectid' => 0,
+            ]);
+            $event->trigger();
+        }
+
+        redirect(
+            new moodle_url('/mod/facetoface/uploadbulkattendance.php'),
+            get_string('bulkattendanceprocessedwithskips', 'mod_facetoface',
+                (object)['processed' => $processed, 'skipped' => $skipped]),
+            null,
+            $processed > 0 ? notification::NOTIFY_SUCCESS : notification::NOTIFY_WARNING
+        );
     }
 
     display_bulk_upload_errors_site($errors);

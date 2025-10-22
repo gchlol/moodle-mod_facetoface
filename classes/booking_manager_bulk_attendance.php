@@ -529,7 +529,182 @@ class booking_manager_bulk_attendance {
         return true;
     }
 
+    /**
+     * Process only rows that passed validation.
+     * Enrolment-related errors (Error #7) are treated as ignorable for skipping (they won't exclude a row).
+     *
+     * @param array $errors Validation errors from validate()
+     * @return array [$processedCount, $skippedCount]
+     */
+    public function process_skipping(array $errors): array {
+        global $DB;
 
+        // Build a set of rows to skip from the error list, excluding enrolment-only errors.
+        $skip = $this->extract_rows_to_skip($errors);
+
+        $processed = 0;
+        $skipped = 0;
+
+        foreach ($this->get_iterator() as $index => $entry) {
+            $row = $index + 1;
+
+            // Skip rows that had blocking validation errors.
+            if (isset($skip[$row])) {
+                $skipped++;
+                continue;
+            }
+
+            try {
+                // Extract fields using the exact CSV header keys.
+                $username   = trim($entry->Username ?? '');
+                $sessionref = trim($entry->Session ?? '');
+                $status     = trim($entry->Status ?? '');
+                $discount   = trim($entry->{'Discount Code'} ?? '');
+                $notifytype = trim($entry->{'Notification Type'} ?? '');
+
+                // Look up user and session (should be valid if we weren't asked to skip this row).
+                $user = current($this->match_users($username, '*'));
+                if (!$user) { $skipped++; continue; }
+
+                $session = facetoface_get_session($sessionref);
+                if (!$session) { $skipped++; continue; }
+
+                // Derive activity & course (mirror process()).
+                $facetoface = $DB->get_record('facetoface', ['id' => $session->facetoface], '*', MUST_EXIST);
+                $course     = $DB->get_record('course', ['id' => $facetoface->course], '*', MUST_EXIST);
+
+                // Notification mapping (should be valid if not in skip).
+                $mappednotify = $this->transform_notification_type($notifytype);
+                if ($mappednotify === null) { $skipped++; continue; }
+
+                // Cancellations first.
+                if ($status === 'cancelled') {
+                    if (!facetoface_user_cancel($session, $user->id, true, $cancelerr)) {
+                        $skipped++;
+                        continue;
+                    }
+
+                    $timenow = time();
+                    if (!facetoface_has_session_started($session, $timenow) && !$this->suppressemail) {
+                        // Match signature used in process().
+                        facetoface_send_cancellation_notice($facetoface->id, $session, $user->id);
+                    }
+
+                    $processed++;
+                    continue;
+                }
+
+                // Map status string to status code (same behaviour as process()).
+                $statuscode = array_search($status, facetoface_statuses());
+                if ($statuscode === false) {
+                    $statuscode = MDL_F2F_STATUS_BOOKED;
+                }
+
+                // Handle signups.
+                if (in_array($statuscode, [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED], true)) {
+                    if ($statuscode === MDL_F2F_STATUS_BOOKED && !$session->datetimeknown) {
+                        $statuscode = MDL_F2F_STATUS_WAITLISTED;
+                    }
+
+                    // Be idempotent about enrolment just like process().
+                    $coursecontext = \context_course::instance($course->id);
+                    facetoface_enrol_user($coursecontext, $course->id, $user->id);
+
+                    facetoface_user_signup(
+                        $session,
+                        $facetoface,
+                        $course,
+                        $discount,
+                        $mappednotify,
+                        $statuscode,
+                        $user->id,
+                        !$this->suppressemail
+                    );
+
+                    $processed++;
+                    continue;
+                }
+
+                // Handle attendance updates.
+                if (in_array($statuscode, [
+                    MDL_F2F_STATUS_NO_SHOW,
+                    MDL_F2F_STATUS_PARTIALLY_ATTENDED,
+                    MDL_F2F_STATUS_FULLY_ATTENDED,
+                ], true)) {
+                    $attendees = facetoface_get_attendees($session->id);
+                    $target = null;
+                    foreach ($attendees as $a) {
+                        if ($a->username === $username) { $target = $a; break; }
+                    }
+                    if (!$target) { $skipped++; continue; }
+
+                    $data = (object)[ 's' => $session->id ];
+                    $key = 'submissionid_' . $target->submissionid;
+                    $data->$key = $statuscode;
+
+                    facetoface_take_attendance($data);
+
+                    $processed++;
+                    continue;
+                }
+
+                // Unknown / unsupported status in this context – skip it.
+                $skipped++;
+            } catch (\Throwable $e) {
+                // Any row-level failure counts as "skipped", not fatal to the batch.
+                $skipped++;
+                continue;
+            }
+        }
+
+        return [$processed, $skipped];
+    }
+
+    /**
+     * Convert the error array into a set of row numbers to skip,
+     * while IGNORING enrolment-related errors (Error #7).
+     */
+    private function extract_rows_to_skip(array $errors): array {
+        $skip = [];
+
+        foreach ($errors as $error) {
+            if (!is_array($error) || count($error) < 2) {
+                continue;
+            }
+
+            // First element can be a number, or a string like "3, 7, 12".
+            $first = $error[0];
+
+            // If any of the messages in this error blob are enrolment-related, ignore this error for skip purposes.
+            $messages = array_slice($error, 1);
+            $hasenrolmentissue = false;
+            foreach ($messages as $msg) {
+                if (is_string($msg) && preg_match('/enrol/i', $msg)) { // covers both "enrolment failed" & "not enrolled".
+                    $hasenrolmentissue = true;
+                    break;
+                }
+            }
+            if ($hasenrolmentissue) {
+                continue;
+            }
+
+            $rows = [];
+            if (is_numeric($first)) {
+                $rows[] = (int)$first;
+            } else if (is_string($first)) {
+                preg_match_all('/\d+/', $first, $m);
+                foreach ($m[0] as $n) {
+                    $rows[] = (int)$n;
+                }
+            }
+
+            foreach ($rows as $r) {
+                $skip[$r] = true;
+            }
+        }
+
+        return $skip;
+    }
 
     /**
      * Stops confirmation emails from being sent
