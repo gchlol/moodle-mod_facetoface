@@ -107,18 +107,21 @@ function display_bulk_upload_errors(array $errors, int $fileid): void {
     echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
 
 
-    // Action buttons.
-    echo html_writer::start_div('mt-4 text-center');
+    //// Action buttons.
+    //echo html_writer::start_div('mt-4 text-center');
 
-    // Button 1: Try again / Back.
+    // Action buttons (aligned horizontally).
+    echo html_writer::start_div('d-flex justify-content-around');
+
+    // Button 1: Back.
     echo $OUTPUT->single_button(
         new moodle_url('/mod/facetoface/uploadbulkattendance.php'),
         get_string('back'),
         'get',
-        ['class' => 'mr-2']
+        ['class' => '']
     );
 
-    // Button 2: Skip rows with errors -> process only valid rows.
+    // Button 2: Skip rows with errors.
     echo $OUTPUT->single_button(
         new moodle_url('/mod/facetoface/uploadbulkattendance.php', [
             'fileid'     => $fileid,
@@ -127,7 +130,7 @@ function display_bulk_upload_errors(array $errors, int $fileid): void {
         ]),
         get_string('skiprowswitherrors', 'mod_facetoface'),
         'post',
-        ['class' => 'btn btn-primary ml-2']
+        ['class' => '']
     );
 
     echo html_writer::end_div();
