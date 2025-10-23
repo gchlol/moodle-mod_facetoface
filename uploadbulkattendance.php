@@ -107,9 +107,6 @@ function display_bulk_upload_errors(array $errors, int $fileid): void {
     echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
 
 
-    //// Action buttons.
-    //echo html_writer::start_div('mt-4 text-center');
-
     // Action buttons (aligned horizontally).
     echo html_writer::start_div('d-flex justify-content-around');
 
