@@ -235,7 +235,7 @@ if (
             );
         }
     } else if (!empty($skiperrors)) {
-        // New behaviour: process only rows that have no validation errors.
+        // Process only rows that have no validation errors.
         [$processed, $skipped] = $manager->process_skipping($errors);
 
         if ($processed > 0) {
