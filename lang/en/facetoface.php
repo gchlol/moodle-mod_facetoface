@@ -1012,5 +1012,5 @@ $string['uploadbulkbookingsfile'] = 'Bulk Bookings File';
 $string['bulkattendanceprocessed'] = 'Bulk bookings have been successfully processed.';
 $string['eventcsvprocessedbulkattendance'] = 'Site Admin Bulk bookings CSV processed ';
 $string['eventcsvprocessedbulkattendancedesc'] = '{$a} processed a bulk attendance CSV file.';
-$string['skiprowswitherrors'] = 'Skip rows with errors';
+$string['updatevalidrows'] = 'Upload only rows with no errors';
 $string['bulkattendanceprocessedwithskips'] = 'Processed {$a->processed} row(s). Skipped {$a->skipped} row(s) with errors.';

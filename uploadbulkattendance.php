@@ -125,7 +125,7 @@ function display_bulk_upload_errors(array $errors, int $fileid): void {
             'process'    => 1,
             'skiperrors' => 1,
         ]),
-        get_string('skiprowswitherrors', 'mod_facetoface'),
+        get_string('updatevalidrows', 'mod_facetoface'),
         'post',
         ['class' => '']
     );
