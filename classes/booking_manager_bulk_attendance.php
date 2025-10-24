@@ -539,7 +539,7 @@ class booking_manager_bulk_attendance {
     public function process_skipping(array $errors): array {
         global $DB;
 
-        // Build a set of rows to skip from the error list, excluding enrolment-only errors.
+        // Build a set of rows to skip from the error list.
         $skip = booking_manager_bulk_attendance::extract_rows_to_skip($errors);
 
         $processed = 0;
