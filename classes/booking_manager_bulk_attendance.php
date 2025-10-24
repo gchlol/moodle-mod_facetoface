@@ -419,13 +419,6 @@ class booking_manager_bulk_attendance {
     public function process($errors): bool {
         global $DB;
 
-        //if (!empty($this->validate())) {
-        //    throw new moodle_exception(
-        //        'error:cannotprocessbookingsvalidationerrorsexist',
-        //        'facetoface'
-        //    );
-        //}
-
         // Build a set of rows to skip from the error list.
         $skip = booking_manager_bulk_attendance::extract_rows_to_skip($errors);
 
