@@ -94,7 +94,7 @@ function display_bulk_upload_errors(array $errors, int $fileid): void {
 
             continue;
         }
-        // Add index 1 to match the line number displayed in Excel (header: + 1).
+        // Add 1 to the index to match the line number displayed in Excel (CSV header: + 1).
         $line = $error[0] + 1;
         $messages = array_slice($error, 1);
 
