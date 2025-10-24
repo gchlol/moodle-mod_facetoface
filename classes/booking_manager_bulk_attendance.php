@@ -661,8 +661,12 @@ class booking_manager_bulk_attendance {
     }
 
     /**
-     * Convert the error array into a set of row numbers to skip,
-     * while IGNORING enrolment-related errors (Error #7).
+     * Convert the error array into a set of row numbers to skip.
+     *
+     * @param array<int,string> $errors Validation errors from validate()
+     * @return array<int,bool> Keys are row numbers to skip
+     * @throws moodle_exception Throws moodle_exception if an entry is not an array
+     *                          or the first element
      */
     private function extract_rows_to_skip(array $errors): array {
         $skip = [];
