@@ -686,18 +686,13 @@ class booking_manager_bulk_attendance {
             }
 
             // First element must be an integer.
-            $first = $error[0];
+            $row = $error[0];
 
-            if (!is_numeric($first)) {
+            if (!is_numeric($row)) {
                 throw new moodle_exception('invalidrownumber', 'mod_facetoface', '', $first);
             }
 
-            $rows = [];
-            $rows[] = $first;
-
-            foreach ($rows as $r) {
-                $skip[$r] = true;
-            }
+            $skip[$row] = true;
         }
 
         return $skip;
