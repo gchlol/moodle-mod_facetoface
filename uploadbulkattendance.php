@@ -217,8 +217,11 @@ if (
 
     $errors = $manager->validate();
 
-    if (empty($errors)) {
-        $success = $manager->process();
+    if (
+        empty($errors) ||
+        !empty($skiperrors)
+    ) {
+        $success = $manager->process($errors);
 
         if ($success) {
             $event = csv_processed_bulkattendance::create([
@@ -234,25 +237,6 @@ if (
                 notification::NOTIFY_SUCCESS
             );
         }
-    } else if (!empty($skiperrors)) {
-        // Process only rows that have no validation errors.
-        [$processed, $skipped] = $manager->process_skipping($errors);
-
-        if ($processed > 0) {
-            $event = csv_processed_bulkattendance::create([
-                'context'  => context_system::instance(),
-                'objectid' => 0,
-            ]);
-            $event->trigger();
-        }
-
-        redirect(
-            new moodle_url('/mod/facetoface/uploadbulkattendance.php'),
-            get_string('bulkattendanceprocessedwithskips', 'mod_facetoface',
-                (object)['processed' => $processed, 'skipped' => $skipped]),
-            null,
-            $processed > 0 ? notification::NOTIFY_SUCCESS : notification::NOTIFY_WARNING
-        );
     }
 
     display_bulk_upload_errors_site($errors);
