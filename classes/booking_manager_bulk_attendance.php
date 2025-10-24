@@ -668,15 +668,15 @@ class booking_manager_bulk_attendance {
         $skip = [];
 
         foreach ($errors as $error) {
-            if (!is_array($error) || count($error) < 2) {
-                continue;
+            if (!is_array($error)) {
+                throw new moodle_exception('errormustbeanarray', 'mod_facetoface', '', $error);
             }
 
             // First element must be an integer.
             $row = $error[0];
 
             if (!is_numeric($row)) {
-                throw new moodle_exception('invalidrownumber', 'mod_facetoface', '', $first);
+                throw new moodle_exception('invalidrownumber', 'mod_facetoface', '', $row);
             }
 
             $skip[$row] = true;
