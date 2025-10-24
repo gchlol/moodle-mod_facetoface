@@ -1014,3 +1014,5 @@ $string['eventcsvprocessedbulkattendance'] = 'Site Admin Bulk bookings CSV proce
 $string['eventcsvprocessedbulkattendancedesc'] = '{$a} processed a bulk attendance CSV file.';
 $string['updatevalidrows'] = 'Upload only rows with no errors';
 $string['bulkattendanceprocessedwithskips'] = 'Processed {$a->processed} row(s). Skipped {$a->skipped} row(s) with errors.';
+$string['error:errormustbeanarray'] = 'Error must be an array. Currently, it is \'{$a}\'.';
+$string['error:invalidrownumber'] = 'The first item in an error is the Excel row number (as shown when opening the CSV in Excel) and must be an integer. Currently, it is \'{$a->value}\' (type: {$a->type}).';

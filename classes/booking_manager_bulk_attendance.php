@@ -669,14 +669,19 @@ class booking_manager_bulk_attendance {
 
         foreach ($errors as $error) {
             if (!is_array($error)) {
-                throw new moodle_exception('errormustbeanarray', 'mod_facetoface', '', $error);
+                throw new moodle_exception('error:errormustbeanarray', 'mod_facetoface', '', $error);
             }
 
             // First element must be an integer.
             $row = $error[0];
 
             if (!is_numeric($row)) {
-                throw new moodle_exception('invalidrownumber', 'mod_facetoface', '', $row);
+                throw new moodle_exception(
+                    'error:invalidrownumber',
+                    'mod_facetoface',
+                    '',
+                    (object)['value' => $row, 'type' => gettype($row)]
+                );
             }
 
             $skip[$row] = true;
