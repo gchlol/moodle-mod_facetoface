@@ -114,7 +114,7 @@ function display_bulk_upload_errors(array $errors, int $fileid): void {
         new moodle_url('/mod/facetoface/uploadbulkattendance.php'),
         get_string('back'),
         'get',
-        ['class' => '']
+        ['class' => 'mb-4']
     );
 
     // Button 2: Skip rows with errors.
@@ -126,7 +126,7 @@ function display_bulk_upload_errors(array $errors, int $fileid): void {
         ]),
         get_string('updatevalidrows', 'mod_facetoface'),
         'post',
-        ['class' => '']
+        ['class' => 'mb-4']
     );
 
     echo html_writer::end_div();
