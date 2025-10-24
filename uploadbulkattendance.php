@@ -42,7 +42,6 @@ $fileid = optional_param('fileid', 0, PARAM_INT);
 $validate = optional_param('validate', 0, PARAM_INT);
 $process = optional_param('process', 0, PARAM_INT);
 $caseinsensitive = optional_param('caseinsensitive', false,     PARAM_BOOL);
-$skiperrors = optional_param('skiperrors', 0, PARAM_INT);
 
 // 3) Require site configuration capability.
 require_capability('moodle/site:config', context_system::instance());
@@ -217,10 +216,7 @@ if (
 
     $errors = $manager->validate();
 
-    if (
-        empty($errors) ||
-        !empty($skiperrors)
-    ) {
+    if (empty($errors)) {
         $success = $manager->process($errors);
 
         if ($success) {
