@@ -107,8 +107,6 @@ function display_bulk_upload_errors(array $errors, int $fileid): void {
 
 
     // Action buttons (aligned horizontally).
-    echo html_writer::start_div('d-flex justify-content-around');
-
     // Button 1: Back.
     $htmlbuttons = $OUTPUT->single_button(
         new moodle_url('/mod/facetoface/uploadbulkattendance.php'),
