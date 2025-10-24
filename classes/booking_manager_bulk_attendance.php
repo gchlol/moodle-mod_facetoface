@@ -540,7 +540,7 @@ class booking_manager_bulk_attendance {
         global $DB;
 
         // Build a set of rows to skip from the error list, excluding enrolment-only errors.
-        $skip = $this->extract_rows_to_skip($errors);
+        $skip = booking_manager_bulk_attendance::extract_rows_to_skip($errors);
 
         $processed = 0;
         $skipped = 0;
@@ -668,7 +668,7 @@ class booking_manager_bulk_attendance {
      * @throws moodle_exception Throws moodle_exception if an entry is not an array
      *                          or the first element
      */
-    private function extract_rows_to_skip(array $errors): array {
+    private static function extract_rows_to_skip(array $errors): array {
         $skip = [];
 
         foreach ($errors as $error) {
