@@ -121,8 +121,7 @@ function display_bulk_upload_errors(array $errors, int $fileid): void {
     echo $OUTPUT->single_button(
         new moodle_url('/mod/facetoface/uploadbulkattendance.php', [
             'fileid'     => $fileid,
-            'process'    => 1,
-            'skiperrors' => 1,
+            'process'    => 1
         ]),
         get_string('updatevalidrows', 'mod_facetoface'),
         'post',
