@@ -672,9 +672,6 @@ class booking_manager_bulk_attendance {
                 continue;
             }
 
-            // First element can be a number, or a string like "3, 7, 12".
-            $first = $error[0];
-
             // If any of the messages in this error blob are enrolment-related, ignore this error for skip purposes.
             $messages = array_slice($error, 1);
             $hasenrolmentissue = false;
@@ -688,15 +685,15 @@ class booking_manager_bulk_attendance {
                 continue;
             }
 
-            $rows = [];
-            if (is_numeric($first)) {
-                $rows[] = (int)$first;
-            } else if (is_string($first)) {
-                preg_match_all('/\d+/', $first, $m);
-                foreach ($m[0] as $n) {
-                    $rows[] = (int)$n;
-                }
+            // First element must be an integer.
+            $first = $error[0];
+
+            if (!is_numeric($first)) {
+                throw new moodle_exception('invalidrownumber', 'mod_facetoface', '', $first);
             }
+
+            $rows = [];
+            $rows[] = $first;
 
             foreach ($rows as $r) {
                 $skip[$r] = true;
