@@ -672,19 +672,6 @@ class booking_manager_bulk_attendance {
                 continue;
             }
 
-            // If any of the messages in this error blob are enrolment-related, ignore this error for skip purposes.
-            $messages = array_slice($error, 1);
-            $hasenrolmentissue = false;
-            foreach ($messages as $msg) {
-                if (is_string($msg) && preg_match('/enrol/i', $msg)) { // covers both "enrolment failed" & "not enrolled".
-                    $hasenrolmentissue = true;
-                    break;
-                }
-            }
-            if ($hasenrolmentissue) {
-                continue;
-            }
-
             // First element must be an integer.
             $row = $error[0];
 
