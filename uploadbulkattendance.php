@@ -94,8 +94,8 @@ function display_bulk_upload_errors(array $errors, int $fileid): void {
 
             continue;
         }
-        // Row index (0-based), so add 2 to show the actual line (header + 1).
-        $line = $error[0] + 2;
+        // Add index 1 to match the line number displayed in Excel (header: + 1).
+        $line = $error[0] + 1;
         $messages = array_slice($error, 1);
 
         foreach ($messages as $message) {
