@@ -842,6 +842,9 @@ $string['waitlistedmessage_help'] = 'This message is sent out whenever users sig
 /* Face-to-face events and logging */
 $string['eventaddsession'] = 'Session added';
 $string['eventcsvprocessed'] = 'CSV processed';
+$string['updatevalidrows'] = 'Upload only rows with no errors';
+$string['error:errormustbeanarray'] = 'Error must be an array. Currently, it is \'{$a}\'.';
+$string['error:invalidrownumber'] = 'The first item in an error must be an integer. Currently, it is \'{$a->value}\' (type: {$a->type}).';
 $string['eventaddsessionfailed'] = 'Session add (FAILED)';
 $string['eventapproverequests'] = 'Session approve requests';
 $string['eventattendeesviewed'] = 'Session attendees viewed';

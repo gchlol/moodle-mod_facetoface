@@ -64,7 +64,7 @@ class confirm_bookings_form extends moodleform {
         $backurl = new moodle_url('/mod/facetoface/upload.php', ['f' => $f]);
         $htmlbuttons = $OUTPUT->render((new single_button(
             new moodle_url('/mod/facetoface/upload.php', ['f' => $f, 'fileid' => $fileid, 'process' => 1]),
-            get_string('facetoface:confirmandprocess', 'mod_facetoface'),
+            get_string('updatevalidrows', 'mod_facetoface'),
             'post',
             true
         )));
