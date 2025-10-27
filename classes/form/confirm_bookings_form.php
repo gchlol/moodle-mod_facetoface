@@ -62,9 +62,10 @@ class confirm_bookings_form extends moodleform {
         $mform->setType('caseinsensitive', PARAM_BOOL);
 
         $backurl = new moodle_url('/mod/facetoface/upload.php', ['f' => $f]);
+        $confirmbuttonlabel = $this->_customdata['haserrors'] ? 'updatevalidrows' : 'facetoface:confirmandprocess';
         $htmlbuttons = $OUTPUT->render((new single_button(
             new moodle_url('/mod/facetoface/upload.php', ['f' => $f, 'fileid' => $fileid, 'process' => 1]),
-            get_string('updatevalidrows', 'mod_facetoface'),
+            get_string($confirmbuttonlabel, 'mod_facetoface'),
             'post',
             true
         )));

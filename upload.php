@@ -64,14 +64,15 @@ if ($validate) {
     $data = $mform->get_data();
     $fileid = $data->csvfile ?: 0;
 
-    $mform = new confirm_bookings_form(null, ['f' => $f, 'fileid' => $fileid, 'caseinsensitive' => $caseinsensitive]);
-
     $bm = new booking_manager($f);
     $bm->load_from_file($fileid);
     $bm->set_case_insensitive($caseinsensitive);
 
     // Validate entries.
     $errors = $bm->validate();
+
+    $mform = new confirm_bookings_form(null, ['f' => $f, 'fileid' => $fileid, 'caseinsensitive' => $caseinsensitive,
+        'haserrors' => !empty($errors)]);
 
     // Set form data to allow user to continue and process the uploaded file on their next form submit.
 } else if ($process && $fileid && $f) {
