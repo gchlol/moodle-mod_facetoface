@@ -148,11 +148,11 @@ class booking_manager {
         $hasdiscount = false;
         if ($fileheaders !== false) {
             $norm = array_map(function($h) { return strtolower(trim($h)); }, $fileheaders);
-            $hasdiscount = in_array('discount code', $norm, true);
+            $hasdiscount = in_array('discountcode', $norm, true);
         }
 
         // Where "Discount Code" is expected in our canonical header list.
-        $discountpos = array_search('Discount Code', $headers, true);
+        $discountpos = array_search('discountcode', $headers, true);
 
         try {
             while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
