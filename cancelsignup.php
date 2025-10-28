@@ -32,6 +32,7 @@ require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
 require_once('lib.php');
 
 $s = required_param('s', PARAM_INT); // Facetoface session ID.
+$f = optional_param('f', 0, PARAM_INT); // Facetoface ID.          
 $confirm = optional_param('confirm', false, PARAM_BOOL);
 $backtoallsessions = optional_param('backtoallsessions', 0, PARAM_INT);
 
@@ -61,7 +62,7 @@ if ($backtoallsessions) {
     $returnurl = "$CFG->wwwroot/mod/facetoface/view.php?f=$backtoallsessions";
 }
 
-$mform = new mod_facetoface_cancelsignup_form(null, compact('s', 'backtoallsessions'));
+$mform = new mod_facetoface_cancelsignup_form(null, compact('s', 'f', 'backtoallsessions'));
 if ($mform->is_cancelled()) {
     redirect($returnurl);
 }
@@ -74,49 +75,66 @@ if ($fromform = $mform->get_data()) { // Form submitted.
     $timemessage = 4;
 
     $errorstr = '';
-    if (facetoface_user_cancel($session, false, false, $errorstr, $fromform->cancelreason)) {
-        // Logging and events trigger.
-        $params = [
-            'context'  => $contextmodule,
-            'objectid' => $session->id,
-        ];
-        $event = \mod_facetoface\event\cancel_booking::create($params);
-        $event->add_record_snapshot('facetoface_sessions', $session);
-        $event->add_record_snapshot('facetoface', $facetoface);
-        $event->trigger();
 
-        $message = get_string('bookingcancelled', 'facetoface');
+    // Handle bulk signup cancellation
+    if (!empty($fromform->f)) {
 
-        if ($session->datetimeknown) {
-            $error = facetoface_send_cancellation_notice($facetoface, $session, $USER->id);
-            if (empty($error)) {
-                if ($session->datetimeknown && $facetoface->cancellationinstrmngr) {
-                    $message .= html_writer::empty_tag('br')
-                        . html_writer::empty_tag('br')
-                        . get_string('cancellationsentmgr', 'facetoface');
+        $facetofaceid = $fromform->f;
+        
+        facetoface_user_cancel_bulk($facetofaceid, $USER->id, $fromform->cancelreason);
+
+        redirect(
+            new moodle_url('/mod/facetoface/view.php', ['f' => $facetofaceid]),
+            get_string('cancellationsuccessall', 'facetoface'),
+            $timemessage
+        );
+    } else { 
+        // Handle standard signup cancellation
+
+        if (facetoface_user_cancel($session, false, false, $errorstr, $fromform->cancelreason)) {
+            // Logging and events trigger.
+            $params = [
+                'context'  => $contextmodule,
+                'objectid' => $session->id,
+            ];
+            $event = \mod_facetoface\event\cancel_booking::create($params);
+            $event->add_record_snapshot('facetoface_sessions', $session);
+            $event->add_record_snapshot('facetoface', $facetoface);
+            $event->trigger();
+
+            $message = get_string('bookingcancelled', 'facetoface');
+
+            if ($session->datetimeknown) {
+                $error = facetoface_send_cancellation_notice($facetoface, $session, $USER->id);
+                if (empty($error)) {
+                    if ($session->datetimeknown && $facetoface->cancellationinstrmngr) {
+                        $message .= html_writer::empty_tag('br')
+                            . html_writer::empty_tag('br')
+                            . get_string('cancellationsentmgr', 'facetoface');
+                    } else {
+                        $message .= html_writer::empty_tag('br')
+                            . html_writer::empty_tag('br')
+                            . get_string('cancellationsent', 'facetoface');
+                    }
                 } else {
-                    $message .= html_writer::empty_tag('br')
-                        . html_writer::empty_tag('br')
-                        . get_string('cancellationsent', 'facetoface');
+                    throw new moodle_exception($error, 'facetoface');
                 }
-            } else {
-                throw new moodle_exception($error, 'facetoface');
             }
+
+            redirect($returnurl, $message, $timemessage);
+        } else {
+            // Logging and events trigger.
+            $params = [
+                'context'  => $contextmodule,
+                'objectid' => $session->id,
+            ];
+            $event = \mod_facetoface\event\cancel_booking_failed::create($params);
+            $event->add_record_snapshot('facetoface_sessions', $session);
+            $event->add_record_snapshot('facetoface', $facetoface);
+            $event->trigger();
+
+            redirect($returnurl, $errorstr, $timemessage);
         }
-
-        redirect($returnurl, $message, $timemessage);
-    } else {
-        // Logging and events trigger.
-        $params = [
-            'context'  => $contextmodule,
-            'objectid' => $session->id,
-        ];
-        $event = \mod_facetoface\event\cancel_booking_failed::create($params);
-        $event->add_record_snapshot('facetoface_sessions', $session);
-        $event->add_record_snapshot('facetoface', $facetoface);
-        $event->trigger();
-
-        redirect($returnurl, $errorstr, $timemessage);
     }
 
     redirect($returnurl);

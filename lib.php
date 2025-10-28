@@ -2224,6 +2224,57 @@ function facetoface_update_signup_status($signupid, $statuscode, $createdby, $no
 }
 
 /**
+ * Cancel a user from all sessions who signed up earlier.
+ *
+ * @param integer $facetofaceid ID of the activity
+ * @param integer $userid ID of the user to remove from the session
+ * @param string $cancelreason Optional justification for cancelling the signup
+ */
+function facetoface_user_cancel_bulk($facetofaceid, $userid, $cancelreason='') {
+
+    $now = time();
+
+    $submissions = facetoface_get_user_submissions($facetofaceid, $userid);
+
+    // Get all sessions for this activity.
+    $sessions = facetoface_get_sessions($facetofaceid);
+
+    // Extract all session IDs from the user's submissions.
+    $submissionids = array_map(function($submission) {
+        return $submission->sessionid;
+    }, $submissions);
+
+    // Filter the sessions to keep only those present in the user's submissions.
+    $sessions = array_filter($sessions, function($session) use ($submissionids) {
+        return in_array($session->id, $submissionids);
+    });
+
+    // Filter out invalid sessions in the past — keep only those with a future timestart.
+    $cancellable = array_filter($sessions, function($session) use ($now) {
+        if (empty($session->sessiondates) || !is_array($session->sessiondates)) {
+            return false;
+        }
+
+        // Return true if any sessiondate has a timestart in the future.
+        foreach ($session->sessiondates as $sessiondate) {
+            if (!empty($sessiondate->timestart) && $sessiondate->timestart > $now) {
+                return true;
+            }
+        }
+
+        return false;
+    });
+
+    foreach ($cancellable as $session) {
+        try {
+            facetoface_user_cancel($session, false, false, $errorstr, $cancelreason);
+        } catch (Exception $e) {
+            debugging("Could not cancel signup for session {$session->id}: " . $e->getMessage(), DEBUG_DEVELOPER);
+        }
+    }
+}
+
+/**
  * Cancel a user who signed up earlier
  *
  * @param class $session       Record from the facetoface_sessions table
