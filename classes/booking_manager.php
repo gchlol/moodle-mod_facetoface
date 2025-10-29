@@ -393,13 +393,20 @@ class booking_manager {
      * @return bool
      * @throws moodle_exception
      */
-    public function process() {
-        if (!empty($this->validate())) {
-            throw new moodle_exception('error:cannotprocessbookingsvalidationerrorsexist', 'facetoface');
-        }
+    public function process(array $errors) {
+        // Build a set of rows to skip from the error list.
+        $skip = self::extract_rows_to_skip($errors);
 
-        // Records should be valid at this point.
+        // Records may contain errors; we will skip them.
+        $index = -1;
         foreach ($this->get_iterator() as $entry) {
+            $index++;
+            $row = $index + 1; // 1-based row index for comparison.
+
+            if (isset($skip[$row])) {
+                continue; // Skip rows with validation errors.
+            }
+
             $user = current($this->match_users_username($entry->username, '*'));
             $session = facetoface_get_session($entry->session);
 
@@ -430,8 +437,8 @@ class booking_manager {
                         $session,
                         $this->facetoface,
                         $this->course,
-                        $entry->discountcode,
-                        $this->transform_notification_type($entry->notificationtype),
+                        $entry->discountcode ?? '',
+                        $this->transform_notification_type($entry->notificationtype) ?? -1,
                         $statuscode,
                         $user->id,
                         !$this->suppressemail,
@@ -481,5 +488,37 @@ class booking_manager {
      */
     public function set_case_insensitive(bool $value) {
         $this->caseinsensitive = $value;
+    }
+
+    /**
+     * Convert the error array into a set of row numbers to skip.
+     *
+     * @param array<int, mixed> $errors Validation errors from validate()
+     * @return array<int, bool> Keys are row numbers to skip (1-based)
+     * @throws moodle_exception When the error format is invalid
+     */
+    private static function extract_rows_to_skip(array $errors): array {
+        $skip = [];
+
+        foreach ($errors as $error) {
+            if (!is_array($error)) {
+                throw new moodle_exception('error:errormustbeanarray', 'mod_facetoface', '', $error);
+            }
+
+            // First element must be an integer row number (1-based from validate()).
+            $row = $error[0];
+            if (!is_numeric($row)) {
+                throw new moodle_exception(
+                    'error:invalidrownumber',
+                    'mod_facetoface',
+                    '',
+                    (object)['value' => $row, 'type' => gettype($row)]
+                );
+            }
+
+            $skip[(int)$row] = true;
+        }
+
+        return $skip;
     }
 }
