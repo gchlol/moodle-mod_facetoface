@@ -262,7 +262,14 @@ class booking_manager {
 
             // Check user enrolment into the course.
             if (isset($userid) && !is_enrolled($this->coursecontext, $userid)) {
-                $errors[] = [$row, new lang_string('error:userisnotenrolledintocourse', 'mod_facetoface', $entry->username)];
+                //$errors[] = [$row, new lang_string('error:userisnotenrolledintocourse', 'mod_facetoface', $entry->username)];
+                $isenrolled = facetoface_enrol_user($this->coursecontext, $this->course->id, $userid);
+                if (!$isenrolled) {
+                    $errors[] = [
+                        $row,
+                        get_string('error:enrolmentfailed', 'mod_facetoface', $entry->username)
+                    ];
+                }
             }
 
             // Check to ensure valid notification types are used if set.
@@ -432,6 +439,11 @@ class booking_manager {
                         // If booked, ensures the status is waitlisted instead, if the datetime is unknown.
                         $statuscode = MDL_F2F_STATUS_WAITLISTED;
                     }
+
+                    // Edge case: Re-enrol the user if they are unenrolled after validation.
+                    // Otherwise, it's idempotent for enrolled users.
+                    $coursecontext = context_course::instance($this->course->id);
+                    facetoface_enrol_user($coursecontext, $this->course->id, $user->id);
 
                     facetoface_user_signup(
                         $session,
