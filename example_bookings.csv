@@ -1,5 +1,5 @@
-Course Shortname,Face-to-Face Activity Name,Username,Session,Status,Discount Code,Notification Type
-course01,activity01,username1,1,booked,DISCOUNT01,email
-course02,activity02,username2,2,cancelled,,ical
-course03,activity03,username3,3,booked,DISCOUNT02,both
-course04,activity04,username4,4,,,,
+Username,Session,Status,Notification Type
+username1,1,booked,email
+username2,2,cancelled,ical
+username3,3,booked,both
+username4,4,,

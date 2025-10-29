@@ -33,6 +33,17 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 require_once($CFG->dirroot . '/user/profile/lib.php');
 
+$ADMIN->add('modsettings', new admin_category(
+    'modfacetoface', get_string('pluginname', 'mod_facetoface')
+));
+
+$settings = new admin_settingpage(
+    'modsettingfacetoface', get_string('facetoface:settings', 'facetoface')
+);
+
+$ADMIN->add('modfacetoface', $settings);
+
+// Face-to-Face config items.
 $settings->add(new admin_setting_configtext(
     'facetoface/fromaddress',
     get_string('setting:fromaddress_caption', 'facetoface'),
@@ -224,3 +235,25 @@ $html .= html_writer::link($url, get_string('addnewnoticelink', 'facetoface'));
 $html .= html_writer::end_tag('p');
 
 $settings->add(new admin_setting_heading('facetoface/sitenotices_header', get_string('sitenoticesheading', 'facetoface'), $html));
+
+// External page for bulk upload under Face to Face category.
+$bulkupload = new admin_externalpage( 'modfacetoface_sitebulkupload',
+    get_string('f2fbulksessions', 'mod_facetoface'),
+    new moodle_url('/mod/facetoface/uploadbulksessions_sitelevel.php'),
+    'moodle/site:config'
+);
+
+$ADMIN->add('modfacetoface', $bulkupload);
+
+// External page for bulk upload attendance.
+$uploadbulkattendance = new admin_externalpage(
+    'modfacetoface_uploadbulkattendance',
+    get_string('uploadbulkattendance', 'mod_facetoface'),
+    new moodle_url('/mod/facetoface/uploadbulkattendance.php'),
+    'moodle/site:config'
+);
+
+$ADMIN->add('modfacetoface', $uploadbulkattendance);
+
+// Disables Moodle's default settings page.
+$settings = null;

@@ -65,9 +65,10 @@ $uploadform = new upload_bookings_bulk_attendance_form();
  * Utility function to display bulk-upload errors and then stop execution.
  *
  * @param array $errors  A list of errors; each error can be a string or an array whose first element is the row number.
+ * @param int $fileid File ID.
  * @return void
  */
-function display_bulk_upload_errors($errors): void {
+function display_bulk_upload_errors(array $errors, int $fileid): void {
     global $OUTPUT;
 
     echo $OUTPUT->header();
@@ -93,8 +94,8 @@ function display_bulk_upload_errors($errors): void {
 
             continue;
         }
-        // Row index (0-based), so add 2 to show the actual line (header + 1).
-        $line = $error[0] + 2;
+        // Add 1 to the index to match the line number displayed in Excel (CSV header: + 1).
+        $line = $error[0] + 1;
         $messages = array_slice($error, 1);
 
         foreach ($messages as $message) {
@@ -104,12 +105,27 @@ function display_bulk_upload_errors($errors): void {
 
     echo html_writer::tag('div', html_writer::table($table), ['class' => 'flexible-wrap mb-4']);
 
-    echo $OUTPUT->single_button(
+
+    // Action buttons (aligned horizontally).
+    // Button 1: Back.
+    $htmlbuttons = $OUTPUT->single_button(
         new moodle_url('/mod/facetoface/uploadbulkattendance.php'),
         get_string('back'),
-        'get',
-        ['class' => 'mb-4']
+        'get'
     );
+
+    // Button 2: Skip rows with errors.
+    $htmlbuttons .= $OUTPUT->single_button(
+        new moodle_url('/mod/facetoface/uploadbulkattendance.php', [
+            'fileid'     => $fileid,
+            'process'    => 1
+        ]),
+        get_string('updatevalidrows', 'mod_facetoface'),
+        'post',
+        ['class' => 'ml-3']
+    );
+
+    echo html_writer::tag('div', $htmlbuttons, ['class' => 'd-flex gap-2']);
 
     echo $OUTPUT->footer();
 
@@ -139,7 +155,7 @@ if ($validate) {
 
     // If there are errors, handle them and exit.
     if (!empty($errors)) {
-        display_bulk_upload_errors_site($errors);
+        display_bulk_upload_errors($errors, $fileid);
     }
 
     // If no errors, display the CSV preview.
@@ -197,7 +213,7 @@ if (
     $errors = $manager->validate();
 
     if (empty($errors)) {
-        $success = $manager->process();
+        $success = $manager->process($errors);
 
         if ($success) {
             $event = csv_processed_bulkattendance::create([
