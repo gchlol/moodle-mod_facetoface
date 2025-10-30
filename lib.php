@@ -2819,18 +2819,25 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
             $completion->update_state($cm, COMPLETION_UNKNOWN, $record->userid, false);
 
             if ($record->datetimeknown && get_config('facetoface', 'sessioncompletiondate')) {
-                // Get existing completion data, modify state, save, and update completion.
-                $data = $completion->get_data($cm, false, $record->userid);
-                $data->timemodified = $record->timefinish;
-                $completion->internal_set_data($cm, $data);
-                $completion->update_state($cm, COMPLETION_UNKNOWN, $record->userid, false);
+                $cminfo = cm_info::create($cm);
+                $custom = new \mod_facetoface\completion\custom_completion($cminfo, $record->userid);
 
-                // Update the course completion criteria entry.
-                $criteras = $completion->get_criteria(4); // 4 = completion_criteria_activity
-                foreach ($criteras as $criteria) {
-                    if ($criteria->module == 'facetoface' && $criteria->moduleinstance == $cm->id) {
-                        $criteriacompletion = $completion->get_user_completion($record->userid, $criteria);
-                        $criteriacompletion->mark_complete($record->timefinish);
+                if (
+                    $custom->get_state('completionattendance') === COMPLETION_COMPLETE
+                ) {
+                    // Get existing completion data, modify state, save, and update completion.
+                    $data = $completion->get_data($cm, false, $record->userid);
+                    $data->timemodified = $record->timefinish;
+                    $completion->internal_set_data($cm, $data);
+                    $completion->update_state($cm, COMPLETION_UNKNOWN, $record->userid, false);
+
+                    // Update the course completion criteria entry.
+                    $criteras = $completion->get_criteria(4); // 4 = completion_criteria_activity
+                    foreach ($criteras as $criteria) {
+                        if ($criteria->module == 'facetoface' && $criteria->moduleinstance == $cm->id) {
+                            $criteriacompletion = $completion->get_user_completion($record->userid, $criteria);
+                            $criteriacompletion->mark_complete($record->timefinish);
+                        }
                     }
                 }
             }
