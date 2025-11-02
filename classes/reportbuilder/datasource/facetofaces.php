@@ -84,6 +84,7 @@ class facetofaces extends datasource {
         $attendeestatusentityjoin = "
             LEFT JOIN {facetoface_signups_status} {$attendeestatus}
             ON {$attendeestatus}.signupid = {$attendee}.id
+            AND {$attendeestatus}.superceded = 0
         ";
         $attendeeentity->add_joins([$facetofacejoin, $sessionjoin, $attendeeentityjoin, $attendeestatusentityjoin]);
         $this->add_entity($attendeeentity);
