@@ -2822,9 +2822,7 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
                 $cminfo = cm_info::create($cm);
                 $custom = new \mod_facetoface\completion\custom_completion($cminfo, $record->userid);
 
-                if (
-                    $custom->get_state('completionattendance') === COMPLETION_COMPLETE
-                ) {
+                if ($custom->get_state('completionattendance') === COMPLETION_COMPLETE) {
                     // Get existing completion data, modify state, save, and update completion.
                     $data = $completion->get_data($cm, false, $record->userid);
                     $data->timemodified = $record->timefinish;
