@@ -936,5 +936,27 @@ function xmldb_facetoface_upgrade($oldversion=0) {
         upgrade_mod_savepoint(true, 2025080600, 'facetoface');
     }
 
+    if ($oldversion < 2025103000) {
+
+        // Changing the default of field visibleto on table facetoface_session_field to 2.
+        $table = new xmldb_table('facetoface_session_field');
+        $field = new xmldb_field(
+            'visibleto',
+            XMLDB_TYPE_INTEGER,
+            '1',
+            null,
+            XMLDB_NOTNULL,
+            null,
+            MDL_F2F_FIELD_VISIBLETOALL,
+            'showinsummary'
+        );
+
+        // Launch change of default for field visibleto.
+        $dbman->change_field_default($table, $field);
+
+        // Facetoface savepoint reached.
+        upgrade_mod_savepoint(true, 2025103000, 'facetoface');
+    }
+
     return $result;
 }
