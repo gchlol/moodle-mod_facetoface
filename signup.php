@@ -154,7 +154,7 @@ if ($fromform = $mform->get_data()) { // Form submitted.
                 $fromform->notificationtype,
                 $statuscode,
                 false,
-                false
+                true
             )) {
                 // Logging and events trigger.
                 $params = [
