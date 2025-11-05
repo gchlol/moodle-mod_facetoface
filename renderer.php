@@ -194,11 +194,6 @@ class mod_facetoface_renderer extends plugin_renderer_base {
                             get_string('cancelbooking', 'facetoface'),
                             ['title' => get_string('cancelbooking', 'facetoface')]
                         );
-                        $options .= ' ' . html_writer::link(
-                            'cancelsignup.php?s=' . $session->id . '&f=' . $session->facetoface,
-                            get_string('cancelallbookings', 'facetoface'),
-                            ['title' => get_string('cancelallbookings', 'facetoface')]
-                        );
                     } else {
                         $cancelrestriction = get_config('facetoface', 'cancelrestriction');
                         $options .= html_writer::link(

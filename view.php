@@ -210,6 +210,18 @@ function print_session_list($courseid, $facetoface, $location) {
         }
     }
 
+    // Upcoming sessions - cancel all button
+    if (!empty($bookedsessionmap)) { // Only display if the user has booked sessions
+        $cancelallurl = new moodle_url('/mod/facetoface/cancelsignup.php', ['f' => $facetoface->id]);
+        echo html_writer::div(
+            html_writer::link(
+                $cancelallurl,
+                get_string('cancelallbookings', 'facetoface'),
+                ['class' => 'btn btn-secondary my-2', 'title' => get_string('cancelallbookings', 'facetoface')]
+            )
+        );
+    }
+
     // Upcoming sessions.
     echo $OUTPUT->heading(get_string('upcomingsessions', 'facetoface'));
 

@@ -31,25 +31,42 @@
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
 require_once('lib.php');
 
-$s = required_param('s', PARAM_INT); // Facetoface session ID.
-$f = optional_param('f', 0, PARAM_INT); // Facetoface ID.          
+$f = optional_param('f', 0, PARAM_INT); // Facetoface ID.
+$s = optional_param('s', 0, PARAM_INT); // Facetoface session ID.
 $confirm = optional_param('confirm', false, PARAM_BOOL);
 $backtoallsessions = optional_param('backtoallsessions', 0, PARAM_INT);
 
-if (!$session = facetoface_get_session($s)) {
-    throw new moodle_exception('error:incorrectcoursemodulesession', 'facetoface');
+// Ensure at least one of $f or $s is provided.
+if (!$f && !$s) {
+    throw new moodle_exception('error:mustspecifysessionfacetoface', 'facetoface');
 }
-if (!$session->allowcancellations) {
-    throw new moodle_exception('error:cancellationsnotallowed', 'facetoface');
-}
-if (!$facetoface = $DB->get_record('facetoface', ['id' => $session->facetoface])) {
-    throw new moodle_exception('error:incorrectfacetofaceid', 'facetoface');
-}
-if (!$course = $DB->get_record('course', ['id' => $facetoface->course])) {
-    throw new moodle_exception('error:coursemisconfigured', 'facetoface');
-}
-if (!$cm = get_coursemodule_from_instance("facetoface", $facetoface->id, $course->id)) {
-    throw new moodle_exception('error:incorrectcoursemoduleid', 'facetoface');
+
+if ($f > 0) { // Facetoface ID data.
+    if (!$facetoface = $DB->get_record('facetoface', ['id' => $f])) {
+        throw new moodle_exception('error:incorrectfacetofaceid', 'facetoface');
+    }
+    if (!$course = $DB->get_record('course', ['id' => $facetoface->course])) {
+        throw new moodle_exception('error:coursemisconfigured', 'facetoface');
+    }
+    if (!$cm = get_coursemodule_from_instance("facetoface", $facetoface->id, $course->id)) {
+        throw new moodle_exception('error:incorrectcoursemoduleid', 'facetoface');
+    }
+} else if ($s > 0) { // Facetoface session ID data.
+    if (!$session = facetoface_get_session($s)) {
+        throw new moodle_exception('error:incorrectcoursemodulesession', 'facetoface');
+    }
+    if (!$session->allowcancellations) {
+        throw new moodle_exception('error:cancellationsnotallowed', 'facetoface');
+    }
+    if (!$facetoface = $DB->get_record('facetoface', ['id' => $session->facetoface])) {
+        throw new moodle_exception('error:incorrectfacetofaceid', 'facetoface');
+    }
+    if (!$course = $DB->get_record('course', ['id' => $facetoface->course])) {
+        throw new moodle_exception('error:coursemisconfigured', 'facetoface');
+    }
+    if (!$cm = get_coursemodule_from_instance("facetoface", $facetoface->id, $course->id)) {
+        throw new moodle_exception('error:incorrectcoursemoduleid', 'facetoface');
+    }
 }
 
 require_course_login($course);
@@ -88,7 +105,7 @@ if ($fromform = $mform->get_data()) { // Form submitted.
             get_string('cancellationsuccessall', 'facetoface'),
             $timemessage
         );
-    } else { 
+    } else if (!empty($fromform->s)) {
         // Handle standard signup cancellation
 
         if (facetoface_user_cancel($session, false, false, $errorstr, $fromform->cancelreason)) {
@@ -162,12 +179,15 @@ if (!$signedup) {
     throw new moodle_exception('notsignedup', 'facetoface', $returnurl);
 }
 
-if (!facetoface_cancellation_allowed($session)) {
-    $restriction = get_config('facetoface', 'cancelrestriction');
-    throw new moodle_exception('error:cancellationtooclose', 'facetoface', '', format_time($restriction));
+if (isset($session)) {
+    if (!facetoface_cancellation_allowed($session)) {
+        $restriction = get_config('facetoface', 'cancelrestriction');
+        throw new moodle_exception('error:cancellationtooclose', 'facetoface', '', format_time($restriction));
+    }
+
+    facetoface_print_session($session, $viewattendees);
 }
 
-facetoface_print_session($session, $viewattendees);
 $mform->display();
 
 echo $OUTPUT->box_end();

@@ -212,6 +212,7 @@ $string['error:incorrectnotificationtype'] = 'Incorrect notification type suppli
 $string['error:invaliduserid'] = 'Invalid user ID';
 $string['error:manageremailaddressmissing'] = 'You are currently not assigned to a manager in the system. Please contact the site administrator.';
 $string['error:mustspecifycoursemodulefacetoface'] = 'Must specify a course module or a Face-to-Face ID';
+$string['error:mustspecifysessionfacetoface'] = 'Must specify a session or a Face-to-Face ID';
 $string['error:nomanageremail'] = 'You didn\'t provide an email address for your manager';
 $string['error:nomanagersemailset'] = 'No manager email is set';
 $string['error:nopermissiontosignup'] = 'You don\'t have permission to signup to this Face-to-Face session.';
