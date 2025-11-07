@@ -221,16 +221,6 @@ class booking_manager {
                     $errors[] = [$row, new lang_string('error:sessionalreadystarted', 'mod_facetoface', $entry->session)];
                 }
 
-                if ($session->datetimeknown
-                    && in_array($entry->status, ['', 'booked'])
-                    && facetoface_has_session_started($session, $timenow)) {
-                    $inprogressstr = get_string('cannotsignupsessioninprogress', 'facetoface');
-                    $overstr = get_string('cannotsignupsessionover', 'facetoface');
-
-                    $errorstring = facetoface_is_session_in_progress($session, $timenow) ? $inprogressstr : $overstr;
-                    $errors[] = [$row, $errorstring];
-                }
-
                 // Set the session capacity if it hasn't been set yet.
                 if ($session->allowoverbook == 0 && !isset($sessioncapacitycache[$session->id])) {
                     // Total minus current capacity.

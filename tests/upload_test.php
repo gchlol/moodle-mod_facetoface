@@ -881,4 +881,77 @@ class upload_test extends \advanced_testcase {
         $this->assertContains($session2->id, $sessionids);
         $this->assertContains($session3->id, $sessionids);
     }
+
+    /**
+     * Provides to upload_attendance_for_all_session_times
+     * @return array
+     */
+    public static function upload_attendance_times_provider(): array {
+        $now = time();
+
+        return [
+            'past' => [
+                'timestart' => $now - DAYSECS * 3,
+                'timeend' => $now - DAYSECS * 2,
+            ],
+            'current' => [
+                'timestart' => $now - DAYSECS * 3,
+                'timeend' => $now + DAYSECS * 3,
+            ],
+            'future' => [
+                'timestart' => $now + DAYSECS * 2,
+                'timeend' => $now + DAYSECS * 3,
+            ],
+        ];
+    }
+
+    /**
+     * Tests that uploading attendance can be done for all session times: past, present, future.
+     * 
+     * @param int $timestart test time start for session
+     * @param int $timeend test time end for session
+     * @dataProvider upload_attendance_times_provider
+     */
+    public function test_upload_attendance_for_all_session_statuses(int $timestart, int $timeend) {
+        /** @var \mod_facetoface_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
+
+        $course = $this->getDataGenerator()->create_course();
+        $facetoface = $generator->create_instance(['course' => $course->id]);
+        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+
+        $record = [
+            'facetoface' => $facetoface->id,
+            'capacity' => '3',
+            'allowoverbook' => '0',
+            'details' => 'xyz',
+            'duration' => '1.5',
+            'normalcost' => '111',
+            'discountcost' => '11',
+            'allowcancellations' => '0',
+            'sessiondates' => [
+                ['timestart' => $timestart, 'timefinish' => $timeend],
+            ],
+        ];
+        $session1 = $generator->create_session($record);
+
+        $bm = new booking_manager($facetoface->id);
+
+        $records = [
+            // Test user can be added to session 1.
+            (object) [
+                'email' => $student->email,
+                'session' => $session1->id,
+                'status' => '',
+                'notificationtype' => '',
+                'discountcode' => '',
+            ],
+        ];
+
+        $bm->load_from_array($records);
+        $errors = $bm->validate();
+
+        $this->assertEmpty($errors);
+        $this->assertTrue($bm->process());
+    }
 }
