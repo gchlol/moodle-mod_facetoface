@@ -22,7 +22,6 @@
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
  * @package    mod_facetoface
- * @subpackage facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @author     Stacey Walker <stacey@catalyst-eu.net>
  * @author     Alastair Munro <alastair.munro@totaralms.com>
@@ -4682,7 +4681,6 @@ function facetoface_enrol_user($context, $courseid, $userid): bool {
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
  * @package    mod_facetoface
- * @subpackage facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -4787,7 +4785,6 @@ class facetoface_candidate_selector extends user_selector_base {
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
  * @package    mod_facetoface
- * @subpackage facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */

@@ -26,7 +26,6 @@ require_once($CFG->dirroot . '/lib/formslib.php');
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
  * @package    mod_facetoface
- * @subpackage facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @author     Stacey Walker <stacey@catalyst-eu.net>
  * @author     Alastair Munro <alastair.munro@totaralms.com>

@@ -19,6 +19,10 @@ namespace mod_facetoface\event;
 /**
  * The mod_facetoface delete session failed event class.
  *
+ * Copyright (C) 2007-2011 Catalyst IT (http://www.catalyst.net.nz)
+ * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
+ * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
+ *
  * @package    mod_facetoface
  * @since      Moodle 2.7
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
