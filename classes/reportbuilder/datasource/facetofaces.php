@@ -35,7 +35,6 @@ use core_reportbuilder\local\entities\user;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class facetofaces extends datasource {
-
     /**
      * Initialise report
      *

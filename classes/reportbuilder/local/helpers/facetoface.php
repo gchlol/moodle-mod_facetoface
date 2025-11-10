@@ -18,6 +18,8 @@ declare(strict_types=1);
 
 namespace mod_facetoface\reportbuilder\local\helpers;
 
+defined('MOODLE_INTERNAL') || die();
+
 require_once("$CFG->dirroot/mod/facetoface/lib.php");
 
 /**
@@ -28,7 +30,6 @@ require_once("$CFG->dirroot/mod/facetoface/lib.php");
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class facetoface {
-
     /**
      * Returns a query to retrieve not cancelled session bookings.
      *

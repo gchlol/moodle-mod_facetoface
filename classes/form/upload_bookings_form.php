@@ -31,7 +31,6 @@ require_once($CFG->dirroot . '/repository/lib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class upload_bookings_form extends \moodleform {
-
     /**
      * Build form for importing bookings.
      *
@@ -60,8 +59,12 @@ class upload_bookings_form extends \moodleform {
         $mform->setType('csvfile', PARAM_INT);
         $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
 
-        $mform->addElement('static', 'csvuploadhelp', '',
-            nl2br(get_string('facetoface:uploadbookingsfiledesc', 'mod_facetoface')));
+        $mform->addElement(
+            'static',
+            'csvuploadhelp',
+            '',
+            nl2br(get_string('facetoface:uploadbookingsfiledesc', 'mod_facetoface'))
+        );
 
         $mform->addElement('advcheckbox', 'caseinsensitive', get_string('caseinsensitive', 'mod_facetoface'));
         $mform->setDefault('caseinsensitive', true);

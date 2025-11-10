@@ -19,20 +19,19 @@
  * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
- * @package    mod
- * @subpackage facetoface
+ * @package    mod_facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @author     Stacey Walker <stacey@catalyst-eu.net>
  * @author     Alastair Munro <alastair.munro@totaralms.com>
  * @author     Aaron Barnes <aaron.barnes@totaralms.com>
  * @author     Francois Marier <francois@catalyst.net.nz>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
  * Event observer for mod_forum.
  */
 class mod_facetoface_observer {
-
     /**
      * Triggered via user_enrolment_deleted event.
      *
@@ -52,9 +51,11 @@ class mod_facetoface_observer {
 
             // Start deletions.
             $transaction = $DB->start_delegated_transaction();
-            $DB->delete_records_select('facetoface_signups_status',
+            $DB->delete_records_select(
+                'facetoface_signups_status',
                 'signupid IN (SELECT id FROM {facetoface_signups} WHERE userid = :userid AND sessionid ' . $f2fselect . ')',
-                $params);
+                $params
+            );
             $DB->delete_records_select('facetoface_signups', 'userid = :userid AND sessionid ' . $f2fselect, $params);
             $DB->delete_records_select('facetoface_session_roles', 'userid = :userid AND sessionid ' . $f2fselect, $params);
             $transaction->allow_commit();

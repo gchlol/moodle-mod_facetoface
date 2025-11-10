@@ -19,13 +19,13 @@
  * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
- * @package    mod
- * @subpackage facetoface
+ * @package    mod_facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @author     Stacey Walker <stacey@catalyst-eu.net>
  * @author     Alastair Munro <alastair.munro@totaralms.com>
  * @author     Aaron Barnes <aaron.barnes@totaralms.com>
  * @author     Francois Marier <francois@catalyst.net.nz>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
@@ -374,9 +374,11 @@ if ($d) {
     $viewattendees = has_capability('mod/facetoface:viewattendees', $context);
     facetoface_print_session($session, $viewattendees);
     $optionsyes = ['sesskey' => sesskey(), 's' => $session->id, 'd' => 1, 'confirm' => 1];
-    echo $OUTPUT->confirm(get_string('deletesessionconfirm', 'facetoface', format_string($facetoface->name)),
+    echo $OUTPUT->confirm(
+        get_string('deletesessionconfirm', 'facetoface', format_string($facetoface->name)),
         new moodle_url('sessions.php', $optionsyes),
-        new moodle_url($returnurl));
+        new moodle_url($returnurl)
+    );
 } else {
     $mform->display();
 }

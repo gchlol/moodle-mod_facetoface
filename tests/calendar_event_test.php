@@ -16,8 +16,10 @@
 
 namespace mod_facetoface;
 
+defined('MOODLE_INTERNAL') || die();
+
 global $CFG;
-require_once($CFG->dirroot.'/mod/facetoface/lib.php'); 
+require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 
 /**
  * Test calendar event related functions.
@@ -27,21 +29,21 @@ require_once($CFG->dirroot.'/mod/facetoface/lib.php');
  * @copyright  Catalyst IT, 2025
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class calendar_event_test extends \advanced_testcase {
-
+final class calendar_event_test extends \advanced_testcase {
     /**
      * This method runs before every test.
      */
     public function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest();
     }
 
     /**
      * Data provider for calendar settings.
-    *
-    * @return array
-    */
-    public function calendar_settings_provider() {
+     *
+     * @return array
+     */
+    public static function calendar_settings_provider(): array {
         return [
             'No calendar events, no user events' => [F2F_CAL_NONE, 0],
             'No calendar events, with user events' => [F2F_CAL_NONE, 1],
@@ -59,7 +61,7 @@ class calendar_event_test extends \advanced_testcase {
      *
      * @dataProvider calendar_settings_provider
      */
-    public function test_calendar_events_on_instance_session_update($showoncalendar, $usercalentry) {
+    public function test_calendar_events_on_instance_session_update($showoncalendar, $usercalentry): void {
         global $DB;
 
         /** @var \mod_facetoface_generator $generator */
@@ -74,7 +76,7 @@ class calendar_event_test extends \advanced_testcase {
         $users = [
             $this->getDataGenerator()->create_and_enrol($course, 'student'),
             $this->getDataGenerator()->create_and_enrol($course, 'student'),
-            $this->getDataGenerator()->create_and_enrol($course, 'student')
+            $this->getDataGenerator()->create_and_enrol($course, 'student'),
         ];
 
         $now = time();
@@ -101,7 +103,8 @@ class calendar_event_test extends \advanced_testcase {
                     '',
                     MDL_F2F_TEXT,
                     MDL_F2F_STATUS_BOOKED,
-                    $user->id);
+                    $user->id
+                );
             }
         }
 
@@ -109,7 +112,7 @@ class calendar_event_test extends \advanced_testcase {
         $expectedsessionevents = 0;
         if ($sessiononcalendar) {
             $expectedsessionevents = count($sessions);
-        } 
+        }
 
         $expectedbookingevents = 0;
         if ($usercalentry) {

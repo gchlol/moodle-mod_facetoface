@@ -19,13 +19,13 @@
  * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
- * @package    mod
- * @subpackage facetoface
+ * @package    mod_facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @author     Stacey Walker <stacey@catalyst-eu.net>
  * @author     Alastair Munro <alastair.munro@totaralms.com>
  * @author     Aaron Barnes <aaron.barnes@totaralms.com>
  * @author     Francois Marier <francois@catalyst.net.nz>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
@@ -78,9 +78,11 @@ if (!empty($d)) {
         echo $OUTPUT->header();
         echo $OUTPUT->heading($title);
         $optionsyes = ['id' => $id, 'sesskey' => $USER->sesskey, 'd' => 1, 'confirm' => 1];
-        echo $OUTPUT->confirm(get_string('fielddeleteconfirm', 'facetoface', format_string($field->name)),
+        echo $OUTPUT->confirm(
+            get_string('fielddeleteconfirm', 'facetoface', format_string($field->name)),
             new moodle_url("customfield.php", $optionsyes),
-            new moodle_url($returnurl));
+            new moodle_url($returnurl)
+        );
         echo $OUTPUT->footer();
         exit;
     } else {
