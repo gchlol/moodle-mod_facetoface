@@ -25,19 +25,19 @@ namespace mod_facetoface;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers \mod_facetoface\helper
  */
-class helper_test extends \advanced_testcase {
-
+final class helper_test extends \advanced_testcase {
     /**
      * This method runs before every test.
      */
     public function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest();
     }
 
     /**
      * Test manager approval not required if approvals are disabled for plugin.
      */
-    public function test_is_approval_required_when_disabled_for_plugin() {
+    public function test_is_approval_required_when_disabled_for_plugin(): void {
         set_config('enableapprovals', '0', 'facetoface');
         $course = $this->getDataGenerator()->create_course();
         $activity = $this->getDataGenerator()->get_plugin_generator('mod_facetoface')->create_instance([
@@ -50,7 +50,7 @@ class helper_test extends \advanced_testcase {
     /**
      * Test manager approval not required if approvals are disabled for activity.
      */
-    public function test_is_approval_required_when_disabled_for_activity() {
+    public function test_is_approval_required_when_disabled_for_activity(): void {
         set_config('enableapprovals', '1', 'facetoface');
         $course = $this->getDataGenerator()->create_course();
         $activity = $this->getDataGenerator()->get_plugin_generator('mod_facetoface')->create_instance([
@@ -63,7 +63,7 @@ class helper_test extends \advanced_testcase {
     /**
      * Test manager approval is required if approvals are enabled for plugin and activity.
      */
-    public function test_is_approval_required_when_enabled() {
+    public function test_is_approval_required_when_enabled(): void {
         set_config('enableapprovals', '1', 'facetoface');
         $course = $this->getDataGenerator()->create_course();
         $activity = $this->getDataGenerator()->get_plugin_generator('mod_facetoface')->create_instance([

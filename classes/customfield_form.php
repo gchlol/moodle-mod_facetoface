@@ -14,27 +14,31 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/lib/formslib.php');
+require_once($CFG->dirroot . '/mod/facetoface/lib.php');
+
 /**
+ * Custom field form
+ *
  * Copyright (C) 2007-2011 Catalyst IT (http://www.catalyst.net.nz)
  * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
- * @package    mod
+ * @package    mod_facetoface
  * @subpackage facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @author     Stacey Walker <stacey@catalyst-eu.net>
  * @author     Alastair Munro <alastair.munro@totaralms.com>
  * @author     Aaron Barnes <aaron.barnes@totaralms.com>
  * @author     Francois Marier <francois@catalyst.net.nz>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->dirroot . '/lib/formslib.php');
-require_once($CFG->dirroot . '/mod/facetoface/lib.php');
-
 class mod_facetoface_customfield_form extends moodleform {
-
+    /**
+     * Define form
+     */
     public function definition() {
         $mform =& $this->_form;
 
@@ -78,17 +82,30 @@ class mod_facetoface_customfield_form extends moodleform {
         $visibilityoptions = [
                 MDL_F2F_FIELD_VISIBLETOALL => get_string('customfield_visibletoall', 'facetoface'),
                 MDL_F2F_FIELD_VISIBLETOTEACHERS => get_string('customfield_visibletoteachers', 'facetoface'),
-                MDL_F2F_FIELD_NOTVISIBLE => get_string('customfield_notvisible', 'facetoface')
+                MDL_F2F_FIELD_NOTVISIBLE => get_string('customfield_notvisible', 'facetoface'),
         ];
-        $mform->addElement('select', 'visibleto',
-                get_string('customfield_visibility', 'facetoface'),
-                $visibilityoptions);
+        $mform->addElement(
+            'select',
+            'visibleto',
+            get_string('customfield_visibility', 'facetoface'),
+            $visibilityoptions
+        );
         $mform->addHelpButton(
-                'visibleto', 'customfield_visibility', 'facetoface');
+            'visibleto',
+            'customfield_visibility',
+            'facetoface'
+        );
 
         $this->add_action_buttons();
     }
 
+    /**
+     * Validate form
+     *
+     * @param array $data
+     * @param array $files
+     * @return array Error messages
+     */
     public function validation($data, $files) {
         global $DB;
 

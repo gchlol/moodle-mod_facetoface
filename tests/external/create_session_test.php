@@ -32,11 +32,12 @@ use context_system;
  * @copyright  Catalyst IT
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class create_session_test extends \externallib_advanced_testcase {
+final class create_session_test extends \externallib_advanced_testcase {
     /**
      * Setup.
      */
     protected function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest(true);
     }
 
@@ -45,7 +46,7 @@ class create_session_test extends \externallib_advanced_testcase {
      *
      * @return void
      */
-    public function test_execute_creates_session() {
+    public function test_execute_creates_session(): void {
         global $DB;
 
         // Create a course and a facetoface activity.
@@ -64,7 +65,7 @@ class create_session_test extends \externallib_advanced_testcase {
         $customfieldid = $DB->insert_record('facetoface_session_field', $cf);
 
         // Assign the teacher role to the test user so they have edit capability.
-        $managerroleid = $DB->get_field('role', 'id', array('shortname' => 'manager'));
+        $managerroleid = $DB->get_field('role', 'id', ['shortname' => 'manager']);
         $user = $this->getDataGenerator()->create_user();
         $context = \context_system::instance();
         role_assign($managerroleid, $user->id, $context->id);

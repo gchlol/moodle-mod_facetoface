@@ -41,7 +41,6 @@ use stdClass;
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class session extends base {
-
     /** @var custom_fields */
     protected $customfields;
 
@@ -195,7 +194,7 @@ class session extends base {
             ->add_field($bookingsquery, 'seatsbooked')
             ->add_field("{$session}.capacity", 'capacity')
             ->set_is_sortable(true)
-            ->add_callback(static function(string $value, stdClass $row): string {
+            ->add_callback(static function (string $value, stdClass $row): string {
                 return $row->seatsbooked . ' / ' . $row->capacity;
             });
 
@@ -342,7 +341,6 @@ class session extends base {
             ->add_joins($this->get_joins())
             ->set_field_sql("CASE WHEN ({$bookingsquery} >= {$session}.capacity) THEN 1 ELSE 0 END");
 
-
         // Filter session visibility.
         $filters[] = (new filter(
             boolean_select::class,
@@ -404,7 +402,7 @@ class session extends base {
     protected function get_custom_fields(): array {
         global $DB;
         if (!isset($this->customfields)) {
-            $this->customfields = array_map(function($record) {
+            $this->customfields = array_map(function ($record) {
                 return (object) [
                     'id' => $record->id,
                     'shortname' => $record->shortname,

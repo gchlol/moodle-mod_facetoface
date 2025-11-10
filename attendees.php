@@ -19,13 +19,14 @@
  * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
- * @package    mod
+ * @package    mod_facetoface
  * @subpackage facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @author     Stacey Walker <stacey@catalyst-eu.net>
  * @author     Alastair Munro <alastair.munro@totaralms.com>
  * @author     Aaron Barnes <aaron.barnes@totaralms.com>
  * @author     Francois Marier <francois@catalyst.net.nz>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
@@ -162,7 +163,7 @@ if ($form = data_submitted()) {
             $event->add_record_snapshot('facetoface', $facetoface);
             $event->trigger();
         }
-        redirect($return.'&takeattendance=1');
+        redirect($return . '&takeattendance=1');
     }
 }
 
@@ -239,7 +240,7 @@ if ($canviewattendees || $cantakeattendance) {
                     continue;
                 }
 
-                $statusoptions[$key] = get_string('status_'.$value, 'facetoface');
+                $statusoptions[$key] = get_string('status_' . $value, 'facetoface');
             }
         }
 
@@ -274,9 +275,9 @@ if ($canviewattendees || $cantakeattendance) {
 
             if ($takeattendance) {
                 // Show current status.
-                $data[] = get_string('status_'.facetoface_get_status($attendee->statuscode), 'facetoface');
+                $data[] = get_string('status_' . facetoface_get_status($attendee->statuscode), 'facetoface');
 
-                $optionid = 'submissionid_'.$attendee->submissionid;
+                $optionid = 'submissionid_' . $attendee->submissionid;
                 $status = $attendee->statuscode;
                 $select = html_writer::select($statusoptions, $optionid, $status);
                 $data[] = $select;
@@ -287,8 +288,11 @@ if ($canviewattendees || $cantakeattendance) {
                         $data[] = $attendee->discountcode;
                     }
                 }
-                $data[] = str_replace(' ', '&nbsp;',
-                    get_string('status_'.facetoface_get_status($attendee->statuscode), 'facetoface'));
+                $data[] = str_replace(
+                    ' ',
+                    '&nbsp;',
+                    get_string('status_' . facetoface_get_status($attendee->statuscode), 'facetoface')
+                );
             }
             $table->data[] = $data;
         }
@@ -317,17 +321,23 @@ if ($canviewattendees || $cantakeattendance) {
         }
     }
 
-    if (!$takeattendance
+    if (
+        !$takeattendance
         && (has_capability('mod/facetoface:addattendees', $context)
-        || has_capability('mod/facetoface:removeattendees', $context))) {
+        || has_capability('mod/facetoface:removeattendees', $context))
+    ) {
         // Add/remove attendees.
         $editattendeeslink = new moodle_url('editattendees.php', ['s' => $session->id, 'backtoallsessions' => $backtoallsessions]);
         echo html_writer::link($editattendeeslink, get_string('addremoveattendees', 'facetoface')) . ' - ';
     }
-    echo html_writer::link("attendees.php?s=$session->id&backtoallsessions=$session->facetoface&download=ods",
-            get_string('downloadods')) . ' - ';
-    echo html_writer::link("attendees.php?s=$session->id&backtoallsessions=$session->facetoface&download=xls",
-            get_string('downloadexcel')) . ' - ';
+    echo html_writer::link(
+        "attendees.php?s=$session->id&backtoallsessions=$session->facetoface&download=ods",
+        get_string('downloadods')
+    ) . ' - ';
+    echo html_writer::link(
+        "attendees.php?s=$session->id&backtoallsessions=$session->facetoface&download=xls",
+        get_string('downloadexcel')
+    ) . ' - ';
 }
 
 // Go back.
@@ -376,16 +386,16 @@ if ($canapproverequests) {
             $data[] = html_writer::link($attendeelink, format_string(fullname($attendee)));
             $data[] = userdate($attendee->timerequested, get_string('strftimedatetime'));
             $data[] = html_writer::empty_tag('input', [
-                'type' => 'radio', 'name' => 'requests['.$attendee->id.']',
+                'type' => 'radio', 'name' => 'requests[' . $attendee->id . ']',
                 'value' => '0', 'checked' => 'checked',
             ]);
             $data[] = html_writer::empty_tag('input', [
-                'type' => 'radio', 'name' => 'requests['.$attendee->id.']',
+                'type' => 'radio', 'name' => 'requests[' . $attendee->id . ']',
                 'value' => '1',
             ]);
             $disabled = ($canbookuser) ? [] : ['disabled' => 'disabled'];
             $data[] = html_writer::empty_tag('input', array_merge([
-                'type' => 'radio', 'name' => 'requests['.$attendee->id.']',
+                'type' => 'radio', 'name' => 'requests[' . $attendee->id . ']',
                 'value' => '2',
             ], $disabled));
             $table->data[] = $data;

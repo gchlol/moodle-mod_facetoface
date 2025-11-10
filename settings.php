@@ -19,13 +19,14 @@
  * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
- * @package    mod
+ * @package    mod_facetoface
  * @subpackage facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @author     Stacey Walker <stacey@catalyst-eu.net>
  * @author     Alastair Munro <alastair.munro@totaralms.com>
  * @author     Aaron Barnes <aaron.barnes@totaralms.com>
  * @author     Francois Marier <francois@catalyst.net.nz>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -82,7 +83,7 @@ $setting->set_enabled_flag_options(admin_setting_flag::ENABLED, false);
 $settings->add($setting);
 
 $fields = $DB->get_records('facetoface_session_field', [], 'name', 'id, name');
-$options = array(0 => get_string('none', 'facetoface'));
+$options = [0 => get_string('none', 'facetoface')];
 foreach ($fields as $field) {
     $options[$field->id] = $field->name;
 }
@@ -196,7 +197,7 @@ $choices = [
 $profilefields = profile_get_custom_fields();
 foreach ($profilefields as $field) {
     $choices['profile_field_' . $field->shortname] = format_string($field->name)
-        . ' (' . get_string('customfield', 'customfield'). ')';
+        . ' (' . get_string('customfield', 'customfield') . ')';
 }
 
 $settings->add(new admin_setting_configmultiselect(

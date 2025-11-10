@@ -26,13 +26,13 @@ use mod_facetoface\completion\custom_completion;
  * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers \mod_facetoface\completion\custom_completion
  */
-class custom_completion_test extends \advanced_testcase {
-
+final class custom_completion_test extends \advanced_testcase {
     public function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest();
     }
 
-    public function test_completionattendance_disabled() {
+    public function test_completionattendance_disabled(): void {
         global $CFG;
         require_once("$CFG->dirroot/mod/facetoface/lib.php");
 
@@ -87,7 +87,7 @@ class custom_completion_test extends \advanced_testcase {
      * @param int $fullstate
      * @return void
      */
-    public function test_completionattendance($completionattendance, $partiastate, $fullstate) {
+    public function test_completionattendance($completionattendance, $partiastate, $fullstate): void {
         global $CFG, $DB;
         require_once("$CFG->dirroot/mod/facetoface/lib.php");
 

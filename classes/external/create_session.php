@@ -52,13 +52,17 @@ class create_session extends external_api {
                 new external_single_structure([
                     'timestart' => new external_value(PARAM_INT, 'Unix timestamp for the start of the session'),
                     'timeend' => new external_value(PARAM_INT, 'Unix timestamp for the end of the session'),
-                ]), 'Session dates', VALUE_OPTIONAL
+                ]),
+                'Session dates',
+                VALUE_OPTIONAL
             ),
             'customfields' => new external_multiple_structure(
                 new external_single_structure([
                     'shortname' => new external_value(PARAM_ALPHANUMEXT, 'Custom field shortname'),
                     'value' => new external_value(PARAM_TEXT, 'Custom field value'),
-                ]), 'Custom field values', VALUE_OPTIONAL
+                ]),
+                'Custom field values',
+                VALUE_OPTIONAL
             ),
         ]);
     }
@@ -79,9 +83,19 @@ class create_session extends external_api {
      * @param array $customfields
      * @return array
      */
-    public static function execute(int $facetofaceid, string $details, int $capacity = 0, bool $allowoverbook = false,
-                                   int $datetimeknown = 0, int $duration = 0, int $normalcost = 0, int $discountcost = 0,
-                                   bool $allowcancellations = false, array $sessiondates = [], array $customfields = []) {
+    public static function execute(
+        int $facetofaceid,
+        string $details,
+        int $capacity = 0,
+        bool $allowoverbook = false,
+        int $datetimeknown = 0,
+        int $duration = 0,
+        int $normalcost = 0,
+        int $discountcost = 0,
+        bool $allowcancellations = false,
+        array $sessiondates = [],
+        array $customfields = []
+    ) {
         global $DB;
         $params = self::validate_parameters(self::execute_parameters(), [
             'facetofaceid' => $facetofaceid,

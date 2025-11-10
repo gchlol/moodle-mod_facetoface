@@ -15,24 +15,25 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Structure step to restore one facetoface activity
+ *
  * Copyright (C) 2007-2011 Catalyst IT (http://www.catalyst.net.nz)
  * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
- * @package    mod
+ * @package    mod_facetoface
  * @subpackage facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @author     Stacey Walker <stacey@catalyst-eu.net>
  * @author     Alastair Munro <alastair.munro@totaralms.com>
  * @author     Aaron Barnes <aaron.barnes@totaralms.com>
  * @author     Francois Marier <francois@catalyst.net.nz>
- */
-
-/**
- * Structure step to restore one facetoface activity
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class restore_facetoface_activity_structure_step extends restore_activity_structure_step {
-
+    /**
+     * Defines structure.
+     */
     protected function define_structure() {
         $paths = [];
         $userinfo = $this->get_setting_value('userinfo');
@@ -70,6 +71,12 @@ class restore_facetoface_activity_structure_step extends restore_activity_struct
         return $this->prepare_activity_structure($paths);
     }
 
+    /**
+     * Process facetoface
+     *
+     * @param array $data
+     * @return void
+     */
     protected function process_facetoface($data) {
         global $DB;
 
@@ -82,6 +89,12 @@ class restore_facetoface_activity_structure_step extends restore_activity_struct
         $this->apply_activity_instance($newitemid);
     }
 
+    /**
+     * Process facetoface session
+     *
+     * @param array $data
+     * @return void
+     */
     protected function process_facetoface_session($data) {
         global $DB;
 
@@ -98,6 +111,12 @@ class restore_facetoface_activity_structure_step extends restore_activity_struct
         $this->set_mapping('facetoface_session', $oldid, $newitemid, true); // Childs and files by itemname.
     }
 
+    /**
+     * Process facetoface signup
+     *
+     * @param array $data
+     * @return void
+     */
     protected function process_facetoface_signup($data) {
         global $DB;
 
@@ -112,6 +131,12 @@ class restore_facetoface_activity_structure_step extends restore_activity_struct
         $this->set_mapping('facetoface_signup', $oldid, $newitemid, true); // Childs and files by itemname.
     }
 
+    /**
+     * Process facetoface signup status
+     *
+     * @param array $data
+     * @return void
+     */
     protected function process_facetoface_signups_status($data) {
         global $DB;
 
@@ -126,6 +151,12 @@ class restore_facetoface_activity_structure_step extends restore_activity_struct
         $newitemid = $DB->insert_record('facetoface_signups_status', $data);
     }
 
+    /**
+     * Process facetoface roles
+     *
+     * @param array $data
+     * @return void
+     */
     protected function process_facetoface_session_roles($data) {
         global $DB;
 
@@ -140,6 +171,12 @@ class restore_facetoface_activity_structure_step extends restore_activity_struct
         $newitemid = $DB->insert_record('facetoface_session_roles', $data);
     }
 
+    /**
+     * Process session data
+     *
+     * @param array $data
+     * @return void
+     */
     protected function process_facetoface_session_data($data) {
         global $DB;
 
@@ -154,6 +191,12 @@ class restore_facetoface_activity_structure_step extends restore_activity_struct
         $this->set_mapping('facetoface_session_data', $oldid, $newitemid, true); // Childs and files by itemname.
     }
 
+    /**
+     * Process session field
+     *
+     * @param array $data
+     * @return void
+     */
     protected function process_facetoface_session_field($data) {
         global $DB;
 
@@ -164,6 +207,12 @@ class restore_facetoface_activity_structure_step extends restore_activity_struct
         $newitemid = $DB->insert_record('facetoface_session_field', $data);
     }
 
+    /**
+     * Process session dates
+     *
+     * @param array $data
+     * @return void
+     */
     protected function process_facetoface_sessions_dates($data) {
         global $DB;
 
@@ -179,6 +228,9 @@ class restore_facetoface_activity_structure_step extends restore_activity_struct
         $newitemid = $DB->insert_record('facetoface_sessions_dates', $data);
     }
 
+    /**
+     * After execute hook
+     */
     protected function after_execute() {
         // Face-to-face doesn't have any related files.
         // Add facetoface related files, no need to match by itemname (just internally handled context).

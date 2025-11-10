@@ -40,15 +40,14 @@ use core_privacy\local\request\writer;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class provider implements
-    // This plugin stores personal data.
-    \core_privacy\local\metadata\provider,
-
     // This plugin deals with user lists.
     \core_privacy\local\request\core_userlist_provider,
 
+    // This plugin stores personal data.
+    \core_privacy\local\metadata\provider,
+
     // This plugin is a core_user_data_provider.
     \core_privacy\local\request\plugin\provider {
-
     /**
      * Return the fields which contain personal data.
      *
@@ -141,7 +140,7 @@ class provider implements
         }
 
         $userid = $contextlist->get_user()->id;
-        list($insql, $inparams) = $DB->get_in_or_equal($contexts, SQL_PARAMS_NAMED);
+        [$insql, $inparams] = $DB->get_in_or_equal($contexts, SQL_PARAMS_NAMED);
 
         // Get Facetofacesessions.
         $sql = "SELECT ss.id,
@@ -251,14 +250,16 @@ class provider implements
                                 WHERE f.id = :fid)";
 
             $transaction = $DB->start_delegated_transaction();
-            $DB->delete_records_select('facetoface_signups_status',
-                'signupid IN (SELECT id FROM {facetoface_signups} WHERE sessionid ' . $f2fselect . ')', $params);
+            $DB->delete_records_select(
+                'facetoface_signups_status',
+                'signupid IN (SELECT id FROM {facetoface_signups} WHERE sessionid ' . $f2fselect . ')',
+                $params
+            );
             $DB->delete_records_select('facetoface_signups', 'sessionid ' . $f2fselect, $params);
             $DB->delete_records_select('facetoface_session_roles', 'sessionid ' . $f2fselect, $params);
 
             $transaction->allow_commit();
         }
-
     }
 
     /**
@@ -286,9 +287,11 @@ class provider implements
                                 WHERE f.id = :fid)";
 
                 $transaction = $DB->start_delegated_transaction();
-                $DB->delete_records_select('facetoface_signups_status',
+                $DB->delete_records_select(
+                    'facetoface_signups_status',
                     'signupid IN (SELECT id FROM {facetoface_signups} WHERE userid = :userid AND sessionid ' . $f2fselect . ')',
-                    $params);
+                    $params
+                );
                 $DB->delete_records_select('facetoface_signups', 'userid = :userid AND sessionid ' . $f2fselect, $params);
                 $DB->delete_records_select('facetoface_session_roles', 'userid = :userid AND sessionid ' . $f2fselect, $params);
 
@@ -339,7 +342,7 @@ class provider implements
 
         $cm = get_coursemodule_from_id('facetoface', $context->instanceid);
         $userids = $userlist->get_userids();
-        list ($insql, $inparams) = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+         [$insql, $inparams] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
 
         // Get session id from module id.
         $sessionid = $DB->get_records_select(

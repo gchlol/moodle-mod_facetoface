@@ -34,7 +34,6 @@ use stdClass;
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class facetoface extends base {
-
     /**
      * Database tables that this entity uses and their default aliases
      *
@@ -101,7 +100,7 @@ class facetoface extends base {
             ->set_type(column::TYPE_TEXT)
             ->add_field("{$facetoface}.name")
             ->set_is_sortable(true)
-            ->add_callback(static function(string $value, stdClass $row): string {
+            ->add_callback(static function (string $value, stdClass $row): string {
                 return format_string($value);
             });
 
@@ -120,7 +119,7 @@ class facetoface extends base {
             ->add_field($descriptionfieldsql, 'intro')
             ->add_fields("{$facetoface}.introformat, {$facetoface}.id")
             ->set_is_sortable(false)
-            ->add_callback(static function(?string $intro, stdClass $facetoface): string {
+            ->add_callback(static function (?string $intro, stdClass $facetoface): string {
                 global $CFG;
                 require_once("{$CFG->libdir}/filelib.php");
 
@@ -131,8 +130,14 @@ class facetoface extends base {
                 [$course, $cm] = get_course_and_cm_from_instance($facetoface->id, 'facetoface');
                 $context = context_module::instance($cm->id);
 
-                $description = file_rewrite_pluginfile_urls($intro, 'pluginfile.php', $context->id, 'mod_facetoface',
-                    'intro', null);
+                $description = file_rewrite_pluginfile_urls(
+                    $intro,
+                    'pluginfile.php',
+                    $context->id,
+                    'mod_facetoface',
+                    'intro',
+                    null
+                );
 
                 return format_text($description, $facetoface->introformat, ['context' => $context]);
             });

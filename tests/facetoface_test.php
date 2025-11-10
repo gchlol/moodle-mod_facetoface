@@ -33,14 +33,13 @@ namespace mod_facetoface;
  * @author    Ghaly Marc-Alexandre <marc-alexandreghaly@catalyst-ca.net>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class facetoface_test extends \advanced_testcase {
-
+final class facetoface_test extends \advanced_testcase {
     /**
      * Test to check facetoface is added properly.
      *
      * @covers \facetoface_add_instance
      */
-    public function test_add_facetofaceactivity() {
+    public function test_add_facetofaceactivity(): void {
         global $DB, $CFG;
 
         require_once($CFG->dirroot  . '/course/modlib.php');

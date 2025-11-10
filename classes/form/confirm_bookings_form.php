@@ -27,13 +27,12 @@ require_once($CFG->libdir . '/formslib.php');
 /**
  * Processing confirm form
  *
- * @package     local_facetoface
+ * @package     mod_facetoface
  * @author     Kevin Pham <kevinpham@catalyst-au.net>
  * @copyright  Catalyst IT, 2024
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class confirm_bookings_form extends moodleform {
-
     /**
      * Form definition
      */

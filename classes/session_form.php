@@ -14,27 +14,31 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->libdir . '/formslib.php');
+require_once($CFG->dirroot . '/mod/facetoface/lib.php');
+
 /**
+ * Session form
+ *
  * Copyright (C) 2007-2011 Catalyst IT (http://www.catalyst.net.nz)
  * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
- * @package    mod
+ * @package    mod_facetoface
  * @subpackage facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @author     Stacey Walker <stacey@catalyst-eu.net>
  * @author     Alastair Munro <alastair.munro@totaralms.com>
  * @author     Aaron Barnes <aaron.barnes@totaralms.com>
  * @author     Francois Marier <francois@catalyst.net.nz>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/formslib.php');
-require_once($CFG->dirroot . '/mod/facetoface/lib.php');
-
 class mod_facetoface_session_form extends moodleform {
-
+    /**
+     * Define form
+     */
     public function definition() {
         global $CFG, $DB;
 
@@ -85,8 +89,12 @@ class mod_facetoface_session_form extends moodleform {
 
         $formarray  = [];
         $formarray[] = $mform->createElement('selectyesno', 'datetimeknown', get_string('sessiondatetimeknown', 'facetoface'));
-        $formarray[] = $mform->createElement('static', 'datetimeknownhint', '',
-            html_writer::tag('span', get_string('datetimeknownhinttext', 'facetoface'), ['class' => 'hint-text']));
+        $formarray[] = $mform->createElement(
+            'static',
+            'datetimeknownhint',
+            '',
+            html_writer::tag('span', get_string('datetimeknownhinttext', 'facetoface'), ['class' => 'hint-text'])
+        );
         $mform->addGroup($formarray, 'datetimeknown_group', get_string('sessiondatetimeknown', 'facetoface'), [' '], false);
         $mform->addGroupRule('datetimeknown_group', null, 'required', null, 'client');
         $mform->setDefault('datetimeknown', false);
@@ -110,8 +118,16 @@ class mod_facetoface_session_form extends moodleform {
         $mform->setType('timestart', PARAM_INT);
         $mform->setType('timefinish', PARAM_INT);
 
-        $this->repeat_elements($repeatarray, $repeatcount, $repeatoptions, 'date_repeats', 'date_add_fields',
-                               1, get_string('dateadd', 'facetoface'), true);
+        $this->repeat_elements(
+            $repeatarray,
+            $repeatcount,
+            $repeatoptions,
+            'date_repeats',
+            'date_add_fields',
+            1,
+            get_string('dateadd', 'facetoface'),
+            true
+        );
 
         if (has_capability('mod/facetoface:configurecancellation', $context)) {
             $mform->addElement('advcheckbox', 'allowcancellations', get_string('allowcancellations', 'facetoface'));
@@ -135,8 +151,11 @@ class mod_facetoface_session_form extends moodleform {
         if (!get_config('facetoface', 'hidecost')) {
             $formarray  = [];
             $formarray[] = $mform->createElement('text', 'normalcost', get_string('normalcost', 'facetoface'), 'size="5"');
-            $formarray[] = $mform->createElement('static', 'normalcosthint', '', html_writer::tag('span',
-                get_string('normalcosthinttext', 'facetoface'), ['class' => 'hint-text']));
+            $formarray[] = $mform->createElement('static', 'normalcosthint', '', html_writer::tag(
+                'span',
+                get_string('normalcosthinttext', 'facetoface'),
+                ['class' => 'hint-text']
+            ));
             $mform->addGroup($formarray, 'normalcost_group', get_string('normalcost', 'facetoface'), [' '], false);
             $mform->setType('normalcost', PARAM_TEXT);
             $mform->addHelpButton('normalcost_group', 'normalcost', 'facetoface');
@@ -144,8 +163,11 @@ class mod_facetoface_session_form extends moodleform {
             if (!get_config('facetoface', 'hidediscount')) {
                 $formarray  = [];
                 $formarray[] = $mform->createElement('text', 'discountcost', get_string('discountcost', 'facetoface'), 'size="5"');
-                $formarray[] = $mform->createElement('static', 'discountcosthint', '', html_writer::tag('span',
-                    get_string('discountcosthinttext', 'facetoface'), ['class' => 'hint-text']));
+                $formarray[] = $mform->createElement('static', 'discountcosthint', '', html_writer::tag(
+                    'span',
+                    get_string('discountcosthinttext', 'facetoface'),
+                    ['class' => 'hint-text']
+                ));
                 $mform->addGroup($formarray, 'discountcost_group', get_string('discountcost', 'facetoface'), [' '], false);
                 $mform->setType('discountcost', PARAM_TEXT);
                 $mform->addHelpButton('discountcost_group', 'discountcost', 'facetoface');
@@ -212,13 +234,24 @@ class mod_facetoface_session_form extends moodleform {
                             $roledisplay = '';
                         }
 
-                        $mform->addElement('advcheckbox', 'trainerrole[' . $role . '][' . $cid . ']', $roledisplay, $choice,
-                            null, ['', $cid]);
+                        $mform->addElement(
+                            'advcheckbox',
+                            'trainerrole[' . $role . '][' . $cid . ']',
+                            $roledisplay,
+                            $choice,
+                            null,
+                            ['', $cid]
+                        );
                         $mform->setType('trainerrole[' . $role . '][' . $cid . ']', PARAM_INT);
                     }
                 } else {
-                    $mform->addElement('select', 'trainerrole[' . $role . ']', $rolename, $choices,
-                        ['multiple' => 'multiple']);
+                    $mform->addElement(
+                        'select',
+                        'trainerrole[' . $role . ']',
+                        $rolename,
+                        $choices,
+                        ['multiple' => 'multiple']
+                    );
                     $mform->setType('trainerrole[' . $role . ']', PARAM_SEQUENCE);
                 }
 
@@ -240,6 +273,13 @@ class mod_facetoface_session_form extends moodleform {
         $this->add_action_buttons();
     }
 
+    /**
+     * Validate form
+     *
+     * @param array $data
+     * @param array $files
+     * @return array Error messages
+     */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
         $dateids = $data['sessiondateid'];

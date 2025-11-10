@@ -1,4 +1,18 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -31,10 +45,11 @@ require_once("{$CFG->dirroot}/reportbuilder/tests/helpers.php");
  *
  * @covers     \mod_facetoface\reportbuilder\datasource\facetoface
  * @package    mod_facetoface
+ * @author     Djarran Cotleanu <djarrancotleanu@catalyst-au.net>
+ * @copyright  Catalyst IT, 2025
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class facetoface_test extends core_reportbuilder_testcase {
-
     /** @var core_reportbuilder_generator */
     protected $rbgenerator;
     /** @var mod_facetoface_generator */
@@ -62,8 +77,10 @@ final class facetoface_test extends core_reportbuilder_testcase {
         $student = self::getDataGenerator()->create_and_enrol($course);
 
         // Add facetoface to course.
-        $facetoface = self::getDataGenerator()->create_module('facetoface',
-            ['course' => $course->id, 'name' => 'My facetoface']);
+        $facetoface = self::getDataGenerator()->create_module(
+            'facetoface',
+            ['course' => $course->id, 'name' => 'My facetoface']
+        );
 
         // Add session.
         $now = time();
@@ -127,8 +144,10 @@ final class facetoface_test extends core_reportbuilder_testcase {
         $student = self::getDataGenerator()->create_and_enrol($course);
 
         // Add facetoface to course.
-        $facetoface = self::getDataGenerator()->create_module('facetoface',
-            ['course' => $course->id, 'name' => 'My facetoface']);
+        $facetoface = self::getDataGenerator()->create_module(
+            'facetoface',
+            ['course' => $course->id, 'name' => 'My facetoface']
+        );
 
         // Add session.
         $now = time();
@@ -213,8 +232,10 @@ final class facetoface_test extends core_reportbuilder_testcase {
         $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
 
         // Add facetoface to course.
-        $facetoface = self::getDataGenerator()->create_module('facetoface',
-            ['course' => $course->id, 'name' => 'My facetoface']);
+        $facetoface = self::getDataGenerator()->create_module(
+            'facetoface',
+            ['course' => $course->id, 'name' => 'My facetoface']
+        );
 
         // Add session.
         $now = time();

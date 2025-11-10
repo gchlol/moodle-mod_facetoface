@@ -36,7 +36,6 @@ use mod_facetoface\reportbuilder\local\formatters\facetoface as facetoface_forma
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class session_date extends base {
-
     /**
      * Database tables that this entity uses and their default aliases
      *

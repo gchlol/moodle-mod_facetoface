@@ -19,13 +19,14 @@
  * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
- * @package    mod
+ * @package    mod_facetoface
  * @subpackage facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @author     Stacey Walker <stacey@catalyst-eu.net>
  * @author     Alastair Munro <alastair.munro@totaralms.com>
  * @author     Aaron Barnes <aaron.barnes@totaralms.com>
  * @author     Francois Marier <francois@catalyst.net.nz>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
@@ -71,9 +72,11 @@ if (!empty($d)) {
         $info->name = format_string($notice->name);
         $info->text = format_text($notice->text, FORMAT_HTML);
         $optionsyes = ['id' => $id, 'sesskey' => $USER->sesskey, 'd' => 1, 'confirm' => 1];
-        echo $OUTPUT->confirm(get_string('noticedeleteconfirm', 'facetoface', $info),
+        echo $OUTPUT->confirm(
+            get_string('noticedeleteconfirm', 'facetoface', $info),
             new moodle_url("sitenotice.php", $optionsyes),
-            new moodle_url($returnurl));
+            new moodle_url($returnurl)
+        );
         echo $OUTPUT->footer();
         exit;
     } else {

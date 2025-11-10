@@ -14,27 +14,31 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/course/moodleform_mod.php');
+require_once($CFG->dirroot . '/mod/facetoface/lib.php');
+
 /**
+ * mod_form
+ *
  * Copyright (C) 2007-2011 Catalyst IT (http://www.catalyst.net.nz)
  * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
- * @package    mod
+ * @package    mod_facetoface
  * @subpackage facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @author     Stacey Walker <stacey@catalyst-eu.net>
  * @author     Alastair Munro <alastair.munro@totaralms.com>
  * @author     Aaron Barnes <aaron.barnes@totaralms.com>
  * @author     Francois Marier <francois@catalyst.net.nz>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->dirroot.'/course/moodleform_mod.php');
-require_once($CFG->dirroot.'/mod/facetoface/lib.php');
-
 class mod_facetoface_mod_form extends moodleform_mod {
-
+    /**
+     * Form definition.
+     */
     public function definition() {
         global $CFG;
 
@@ -270,7 +274,7 @@ class mod_facetoface_mod_form extends moodleform_mod {
         $mform->setDefault('cancellationinstrmngr', get_string('setting:defaultcancellationinstrmngrdefault', 'facetoface'));
         $data = (object) ['confirmationmessage' => $confirmationmessagedata];
         $this->set_data($data);
-        $features = new stdClass;
+        $features = new stdClass();
         $features->groups = false;
         $features->groupings = false;
         $features->groupmembersonly = false;
@@ -282,6 +286,14 @@ class mod_facetoface_mod_form extends moodleform_mod {
         $this->add_action_buttons();
     }
 
+    /**
+     * Allows module to modify data returned by get_moduleinfo_data() or prepare_new_moduleinfo_data() before calling set_data()
+     * This method is also called in the bulk activity completion form.
+     *
+     * Only available on moodleform_mod.
+     *
+     * @param array $defaultvalues passed by reference
+     */
     public function data_preprocessing(&$defaultvalues) {
         global $CFG;
 
@@ -304,9 +316,11 @@ class mod_facetoface_mod_form extends moodleform_mod {
             $defaultvalues['emailmanagercancellation'] = 1;
         }
 
-        if ($this->current->instance
+        if (
+            $this->current->instance
             && isset($defaultvalues['confirmationmessage'])
-            && !is_array($defaultvalues['confirmationmessage'])) {
+            && !is_array($defaultvalues['confirmationmessage'])
+        ) {
                 $defaultvalues['confirmationmessage'] = [
                     'format' => $defaultvalues['confirmationmessageformat'] ?? FORMAT_HTML,
                     'text' => $defaultvalues['confirmationmessage'],
@@ -346,8 +360,12 @@ class mod_facetoface_mod_form extends moodleform_mod {
             MDL_F2F_STATUS_PARTIALLY_ATTENDED => get_string('completiondetail:attendance_partial', 'facetoface'),
             MDL_F2F_STATUS_FULLY_ATTENDED => get_string('completiondetail:attendance_full', 'facetoface'),
         ];
-        $mform->addElement('select', 'completionattendance' . $suffix,
-            get_string('completiondetail:attendance', 'facetoface'), $options);
+        $mform->addElement(
+            'select',
+            'completionattendance' . $suffix,
+            get_string('completiondetail:attendance', 'facetoface'),
+            $options
+        );
         $mform->setDefault('completionattendance' . $suffix, MDL_F2F_STATUS_FULLY_ATTENDED);
 
         return ['completionattendance' . $suffix];

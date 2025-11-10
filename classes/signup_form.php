@@ -14,26 +14,30 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot . '/lib/formslib.php');
+
 /**
+ * Signup form
+ *
  * Copyright (C) 2007-2011 Catalyst IT (http://www.catalyst.net.nz)
  * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
- * @package    mod
+ * @package    mod_facetoface
  * @subpackage facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @author     Stacey Walker <stacey@catalyst-eu.net>
  * @author     Alastair Munro <alastair.munro@totaralms.com>
  * @author     Aaron Barnes <aaron.barnes@totaralms.com>
  * @author     Francois Marier <francois@catalyst.net.nz>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->dirroot . '/lib/formslib.php');
-
 class mod_facetoface_signup_form extends moodleform {
-
+    /**
+     * Define form.
+     */
     public function definition() {
         $mform =& $this->_form;
         $manageremail = $this->_customdata['manageremail'];
@@ -77,6 +81,13 @@ class mod_facetoface_signup_form extends moodleform {
         $this->add_action_buttons(true, get_string('signup', 'facetoface'));
     }
 
+    /**
+     * Validate form
+     *
+     * @param array $data
+     * @param array $files
+     * @return array Error messages
+     */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
 

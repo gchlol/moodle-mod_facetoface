@@ -33,14 +33,15 @@ require_once($CFG->dirroot . '/completion/criteria/completion_criteria_activity.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers \mod_facetoface\session
  */
-class session_test extends \advanced_testcase {
-
+final class session_test extends \advanced_testcase {
+    /** @var int $starttime */
     private $starttime;
 
     /**
      * This method runs before every test.
      */
     public function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest();
         $this->starttime = strtotime('01-01-2030 0900');
     }
@@ -48,7 +49,7 @@ class session_test extends \advanced_testcase {
     /**
      * Test getting session date.
      */
-    public function test_get_readable_session_date_with_single_date() {
+    public function test_get_readable_session_date_with_single_date(): void {
         $date = (object) [
             'timestart' => $this->starttime,
             'timefinish' => $this->starttime + 8 * HOURSECS,
@@ -60,7 +61,7 @@ class session_test extends \advanced_testcase {
     /**
      * Test getting session dates.
      */
-    public function test_get_readable_session_date_with_multiple_date() {
+    public function test_get_readable_session_date_with_multiple_date(): void {
         $date = (object) [
             'timestart' => $this->starttime,
             'timefinish' => $this->starttime + 80 * HOURSECS,
@@ -72,7 +73,7 @@ class session_test extends \advanced_testcase {
     /**
      * Test getting session time.
      */
-    public function test_get_readable_session_time() {
+    public function test_get_readable_session_time(): void {
         $date = (object) [
             'timestart' => $this->starttime,
             'timefinish' => $this->starttime + 80 * HOURSECS,
@@ -84,7 +85,7 @@ class session_test extends \advanced_testcase {
     /**
      * Test getting full session date and time.
      */
-    public function test_get_readable_session_datetime_with_single_date() {
+    public function test_get_readable_session_datetime_with_single_date(): void {
         $date = (object) [
             'timestart' => $this->starttime,
             'timefinish' => $this->starttime + 8 * HOURSECS,
@@ -96,7 +97,7 @@ class session_test extends \advanced_testcase {
     /**
      * Test getting full session dates and times.
      */
-    public function test_get_readable_session_time_with_multiple_date() {
+    public function test_get_readable_session_time_with_multiple_date(): void {
         $date = (object) [
             'timestart' => $this->starttime,
             'timefinish' => $this->starttime + 80 * HOURSECS,
@@ -108,7 +109,7 @@ class session_test extends \advanced_testcase {
     /**
      * Test getting full session dates and times with user's timezone.
      */
-    public function test_get_readable_session_time_with_users_timezone() {
+    public function test_get_readable_session_time_with_users_timezone(): void {
         set_config('displaysessiontimezones', 1, 'facetoface');
         $date = (object) [
             'timestart' => $this->starttime,
@@ -240,8 +241,14 @@ It has plain text stuff in it<br />";
      * @param string $expectedmessage a string that the output of all emails should contain
      * @dataProvider email_notification_provider
      */
-    public function test_email_notification(int $notifytype, string $confirmmessage, string $details, int $expectedemailcount,
-        int $expectedicalamount, string $expectedmessage) {
+    public function test_email_notification(
+        int $notifytype,
+        string $confirmmessage,
+        string $details,
+        int $expectedemailcount,
+        int $expectedicalamount,
+        string $expectedmessage
+    ) {
 
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
@@ -280,19 +287,19 @@ It has plain text stuff in it<br />";
         $this->assertCount($expectedemailcount, $messages);
 
         // Ensure number of ical attachment emails is same as expected.
-        $icalemails = array_filter($messages, function($message) {
+        $icalemails = array_filter($messages, function ($message) {
             return str_contains($message->body, 'Content-Disposition: attachment; filename=invite.ics');
         });
         $this->assertCount($expectedicalamount, $icalemails);
 
         // Do a very crude form of email multi-mime message parsing.
         // to extract the plaintext and html segments of the email.
-        $messagessections = array_map(function($message) {
+        $messagessections = array_map(function ($message) {
             // Split on '--' which is the start of the separator in the email html multi-mime message.
             $sections = explode('--', $message->body);
 
             // Extract the html section.
-            $htmlsection = current(array_filter($sections, function($section) {
+            $htmlsection = current(array_filter($sections, function ($section) {
                 return str_contains($section, 'text/html');
             }));
             $htmllines = explode("\n", $htmlsection);
@@ -301,7 +308,7 @@ It has plain text stuff in it<br />";
             $html = quoted_printable_decode($html);
 
             // Do the same for the plaintext.
-            $plaintextsection = current(array_filter($sections, function($section) {
+            $plaintextsection = current(array_filter($sections, function ($section) {
                 return str_contains($section, 'text/plain');
             }));
             $plaintextlines = explode("\n", $plaintextsection);
@@ -407,12 +414,12 @@ It has plain text stuff in it<br />";
             'normalcost' => 111,
             'discountcost' => 11,
             // We need to set session date unique to each provider as a unix timestamp.
-            'sessiondates' => array_map(function($date) use ($now) {
+            'sessiondates' => array_map(function ($date) use ($now) {
                 return [
                     'timestart' => $now + $date['timestart'],
                     'timefinish' => $now + $date['timefinish'],
                 ];
-            }, $sessiondates)
+            }, $sessiondates),
         ];
         $session = $generator->create_session($sessiondata);
 
@@ -686,8 +693,8 @@ It has plain text stuff in it<br />";
         $criteriadata = (object)[
             'id' => $course->id,
             'criteria_activity' => [
-                $cm->id => 1
-            ]
+                $cm->id => 1,
+            ],
         ];
         $criterion = new \completion_criteria_activity();
         $criterion->update_config($criteriadata);

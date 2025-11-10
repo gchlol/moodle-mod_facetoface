@@ -28,12 +28,12 @@ use lang_string;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers \mod_facetoface\booking_manager
  */
-class upload_test extends \advanced_testcase {
-
+final class upload_test extends \advanced_testcase {
     /**
      * This method runs before every test.
      */
     public function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest();
     }
 
@@ -41,7 +41,7 @@ class upload_test extends \advanced_testcase {
      * Test permissions to ensure a user can only for sessions they have editing rights to.
      * - those who see the edit button and actions on the view page.
      */
-    public function test_session_validation() {
+    public function test_session_validation(): void {
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
 
@@ -127,7 +127,7 @@ class upload_test extends \advanced_testcase {
     /**
      * Test user validation to ensure that details and fields are valid and can be booked into a session.
      */
-    public function test_user_validation() {
+    public function test_user_validation(): void {
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
 
@@ -186,8 +186,15 @@ class upload_test extends \advanced_testcase {
             ],
         ]);
 
-        facetoface_user_signup($session, $facetoface, $course, '',
-            MDL_F2F_TEXT, MDL_F2F_STATUS_BOOKED, $student3->id);
+        facetoface_user_signup(
+            $session,
+            $facetoface,
+            $course,
+            '',
+            MDL_F2F_TEXT,
+            MDL_F2F_STATUS_BOOKED,
+            $student3->id
+        );
 
         $bm = new booking_manager($facetoface->id);
 
@@ -369,7 +376,7 @@ class upload_test extends \advanced_testcase {
     /**
      * Tests uploading booking fails if it matches multiple users when ignoring case.
      */
-    public function test_processing_booking_case_insensitive_match_multiple() {
+    public function test_processing_booking_case_insensitive_match_multiple(): void {
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
 
@@ -425,7 +432,7 @@ class upload_test extends \advanced_testcase {
     /**
      * Tests uploading a booking where the emails should match regardless of case.
      */
-    public function test_processing_booking_case_insensitive() {
+    public function test_processing_booking_case_insensitive(): void {
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
 
@@ -482,7 +489,7 @@ class upload_test extends \advanced_testcase {
     /**
      * Test upload processing to ensure the happy path is working as expected, and users can be booked into a session.
      */
-    public function test_processing_booking() {
+    public function test_processing_booking(): void {
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
 
@@ -542,7 +549,7 @@ class upload_test extends \advanced_testcase {
      * errors, and we should confirm they are booked and are removed
      * afterwards.
      */
-    public function test_processing_cancellation() {
+    public function test_processing_cancellation(): void {
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
 
@@ -615,7 +622,7 @@ class upload_test extends \advanced_testcase {
      *
      * Book someone in, then once the session is over, update their attendance. This should work.
      */
-    public function test_updates_for_previous_sessions() {
+    public function test_updates_for_previous_sessions(): void {
         global $DB;
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
@@ -758,7 +765,7 @@ class upload_test extends \advanced_testcase {
      * @param bool $shouldsuppress
      * @dataProvider email_suppression_provider
      */
-    public function test_email_suppression(string $status, bool $shouldsuppress) {
+    public function test_email_suppression(string $status, bool $shouldsuppress): void {
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
 
@@ -816,7 +823,7 @@ class upload_test extends \advanced_testcase {
     /**
      * Test upload processing multiple sessions with signup type set to multiple.
      */
-    public function test_processing_signup_multiple() {
+    public function test_processing_signup_multiple(): void {
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
 
@@ -844,8 +851,15 @@ class upload_test extends \advanced_testcase {
         $session3 = $generator->create_session($record);
 
         // Signup student to session3 to test already signed up validating.
-        facetoface_user_signup($session3, $facetoface, $course, '',
-            MDL_F2F_TEXT, MDL_F2F_STATUS_BOOKED, $student->id);
+        facetoface_user_signup(
+            $session3,
+            $facetoface,
+            $course,
+            '',
+            MDL_F2F_TEXT,
+            MDL_F2F_STATUS_BOOKED,
+            $student->id
+        );
 
         $bm = new booking_manager($facetoface->id);
 
@@ -907,12 +921,12 @@ class upload_test extends \advanced_testcase {
 
     /**
      * Tests that uploading attendance can be done for all session times: past, present, future.
-     * 
+     *
      * @param int $timestart test time start for session
      * @param int $timeend test time end for session
      * @dataProvider upload_attendance_times_provider
      */
-    public function test_upload_attendance_for_all_session_statuses(int $timestart, int $timeend) {
+    public function test_upload_attendance_for_all_session_statuses(int $timestart, int $timeend): void {
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
 
