@@ -129,10 +129,15 @@ class booking_manager {
     }
     
     public static function get_allowed_session_statuses(): array {
-        return array_merge(facetoface_statuses(), [
-            'cancelled', // Alternative to 'user_cancelled'.
+        return [
+            'waitlisted',
+            'booked',
+            'partially_attended',
+            'fully_attended',
+            'no_show',
+            'cancelled',
             '', // Defaults to booked.
-        ]);
+        ];
     }
 
     /**
@@ -169,7 +174,7 @@ class booking_manager {
                     // Check that all the required headers are there.
                     $missingrequired = array_filter(self::get_required_headers(), fn($requiredheader) => !in_array($requiredheader, $data));
                     if (!empty($missingrequired)) {
-                        throw new moodle_exception('error:bookingsuploadmissingrequiredheader', 'mod_facetoface', '', implode(',', $missingrequired));
+                        throw new moodle_exception('error:bookingsuploadfilemissingrequiredheader', 'mod_facetoface', '', implode(',', $missingrequired));
                     }
 
                     // Check for possible duplicate headers (even if they valid headers).
@@ -191,6 +196,11 @@ class booking_manager {
                 }
                 $record = array_combine($fileheaders, $data);
                 yield (object) $record;
+            }
+
+            // Nothing was processed, the file is empty.
+            if (empty($fileheaders)) {
+                throw new moodle_exception('error:bookingsuploadfileempty', 'mod_facetoface');
             }
         } finally {
             fclose($handle);
@@ -410,6 +420,8 @@ class booking_manager {
      * @throws moodle_exception
      */
     public function process() {
+        global $DB;
+
         if (!empty($this->validate())) {
             throw new moodle_exception('error:cannotprocessbookingsvalidationerrorsexist', 'facetoface');
         }
@@ -435,9 +447,15 @@ class booking_manager {
                 // Map status to status code.
                 $statuscode = array_search($entry->status, facetoface_statuses()) ?: MDL_F2F_STATUS_BOOKED;
 
+                $signupstatuses = [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED];
+                $attendancestatuses = [MDL_F2F_STATUS_NO_SHOW, MDL_F2F_STATUS_PARTIALLY_ATTENDED, MDL_F2F_STATUS_FULLY_ATTENDED];
+
+                $issignup = in_array($statuscode, $signupstatuses);
+                $isattendance = in_array($statuscode, $attendancestatuses);
+
                 // Handle signups.
-                if (in_array($statuscode, [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED])) {
-                    if ($statuscode === MDL_F2F_STATUS_BOOKED && !$session->datetimeknown) {
+                if ($issignup) {
+                    if (($statuscode === MDL_F2F_STATUS_BOOKED) && !$session->datetimeknown) {
                         // If booked, ensures the status is waitlisted instead, if the datetime is unknown.
                         $statuscode = MDL_F2F_STATUS_WAITLISTED;
                     }
@@ -446,25 +464,41 @@ class booking_manager {
                         $session,
                         $this->facetoface,
                         $this->course,
-                        $entry->discountcode,
-                        $this->transform_notification_type($entry->notificationtype),
+                        $entry->discountcode ?? '',
+                        $this->transform_notification_type($entry->notificationtype ?? ''),
                         $statuscode,
                         $user->id,
                         !$this->suppressemail,
                     );
-
-                    continue;
                 }
 
                 // Handle attendance.
-                if (
-                    in_array($statuscode, [
-                    MDL_F2F_STATUS_NO_SHOW,
-                    MDL_F2F_STATUS_PARTIALLY_ATTENDED,
-                    MDL_F2F_STATUS_FULLY_ATTENDED,
-                    ])
-                ) {
+                if ($isattendance) {
+                    // If booking into attendance but the user hasn't been signed up yet (e.g. directly marking as attended),
+                    // then sign the user up.
+                    $alreadysignedup = $DB->record_exists('facetoface_signups', ['sessionid' => $session->id, 'userid' => $user->id]);
+                    if (!$alreadysignedup) {
+                        // We use booked/waitlisted for making the signup,
+                        // and then the actual status from the CSV when taking attendance.
+                        $signupstatus = $session->datetimeknown ? MDL_F2F_STATUS_BOOKED : MDL_F2F_STATUS_WAITLISTED;
+                        facetoface_user_signup(
+                            $session,
+                            $this->facetoface,
+                            $this->course,
+                            $entry->discountcode ?? '',
+                            $this->transform_notification_type($entry->notificationtype ?? ''),
+                            $signupstatus,
+                            $user->id,
+                            !$this->suppressemail,
+                            // // Sign them up for 1 second before, otherwise
+                            // // it breaks attendance taking.
+                            // // This is 100% a hack.
+                            // time() - 5
+                        );
+                    }
+
                     $attendees = facetoface_get_attendees($session->id);
+
                     // Get matching attendee.
                     foreach ($attendees as $attendee) {
                         if ($attendee->email === $entry->email) {
@@ -477,8 +511,6 @@ class booking_manager {
                         'submissionid_' . $attendee->submissionid => $statuscode,
                     ];
                     facetoface_take_attendance($data);
-
-                    continue;
                 }
             }
         }

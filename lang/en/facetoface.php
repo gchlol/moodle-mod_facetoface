@@ -153,6 +153,7 @@ $string['error:bookingsuploadfileerrorsfound'] = '{$a} errors were found in the 
 $string['error:bookingsuploadinvalidheaders'] = 'Invalid headers found in upload file: {$a}';
 $string['error:bookingsuploadfileduplicateheaders'] = 'Uploaded file had duplicate headers';
 $string['error:bookingsuploadfilemissingrequiredheader'] = 'Uploaded file is missing required header(s): {$a}';
+$string['error:bookingsuploadfileempty'] = 'Uploaded bookings file was empty';
 $string['error:bookingsuploadfileheaderfieldmismatch'] = 'Mismatched number of fields in the uploaded file on row {$a}.';
 $string['error:cancelbooking'] = 'There was a problem cancelling your booking';
 $string['error:cancellationsnotallowed'] = 'You are not allowed to cancel this sign-up.';
@@ -248,9 +249,13 @@ $string['facetoface:uploadbookingsfiledesc'] = '
 Fields expected:
 - Email address (required)
 - Session number (required)
-- Status (optional - one of {$a}). If not given, the default is \'booked\'.
+- Status (optional - one of: {$a}). If not given, the default is \'booked\'.
 - Discount code (optional)
 - Notification type (optional - valid options are \'email\', \'ical\', or \'both\')
+
+Note:
+- If you directly assign an attendance status (i.e. a status other than \'booked\' or \'waitlisted\') but the user has not already been signed up, they will automatically be signed up using the details provided on that row (e.g. calendar, discountcode).
+- Attendance cannot be taken for future sessions. Attendance statuses given for future sessions will fall back to \'booked\'.
 ';
 $string['facetoface:uploadreadytoprocess'] = 'Uploaded file has been validated and ready to be processed.';
 $string['facetoface:validatebookings'] = 'Validate bookings';
