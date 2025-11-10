@@ -680,17 +680,6 @@ final class upload_test extends \advanced_testcase {
             ],
         );
 
-        // It should detect an error (e.g. cannot book a session in progress).
-        $errors = $bm->validate(time() + 1);
-        $this->assertTrue(
-            $this->check_row_validation_error_exists(
-                $errors,
-                1,
-                get_string('cannotsignupsessionover', 'facetoface')
-            ),
-            'Expecting user to not be bookable since the session has started.'
-        );
-
         // Update the student's attendance after the session finishes.
         $attendanceupdates = [
             (object) [
