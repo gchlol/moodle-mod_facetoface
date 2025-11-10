@@ -113,14 +113,26 @@ class booking_manager {
      * Get the headers for the records.
      * @return array
      */
-    public static function get_headers(): array {
+    public static function get_required_headers(): array {
         return [
             'email',
             'session',
+        ];
+    }
+
+    public static function get_optional_headers(): array {
+        return [
             'status',
             'discountcode',
             'notificationtype',
         ];
+    }
+    
+    public static function get_allowed_session_statuses(): array {
+        return array_merge(facetoface_statuses(), [
+            'cancelled', // Alternative to 'user_cancelled'.
+            '', // Defaults to booked.
+        ]);
     }
 
     /**
@@ -138,18 +150,46 @@ class booking_manager {
         $handle = $this->file->get_content_file_handle();
         $maxlinelength = 1000;
         $delimiter = ',';
-        $rownumber = 1; // First row is headers.
-        $headers = self::get_headers();
-        $numheaders = count($headers);
-        fgets($handle); // Move pointer past first line (headers).
+        $rownumber = 0;
         try {
+            $fileheaders = [];
             while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
                 $rownumber++;
-                $numfields = count($data);
-                if ($numfields !== $numheaders) {
-                    throw new moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface');
+
+                // First row, handle headers.
+                if ($rownumber === 1) {
+
+                    // Check for headers that shouldn't be there.
+                    $validheaders = array_merge(self::get_required_headers(), self::get_optional_headers());
+                    $invalidheaders = array_filter($data, fn($fileheader) => !in_array($fileheader, $validheaders));
+                    if (!empty($invalidheaders)) {
+                        throw new moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface', '', implode(',', $invalidheaders));
+                    }
+
+                    // Check that all the required headers are there.
+                    $missingrequired = array_filter(self::get_required_headers(), fn($requiredheader) => !in_array($requiredheader, $data));
+                    if (!empty($missingrequired)) {
+                        throw new moodle_exception('error:bookingsuploadmissingrequiredheader', 'mod_facetoface', '', implode(',', $missingrequired));
+                    }
+
+                    // Check for possible duplicate headers (even if they valid headers).
+                    $hasduplicates = count($data) != count(array_unique($data));
+                    if ($hasduplicates) {
+                        throw new moodle_exception('error:bookingsuploadfileduplicateheaders', 'mod_facetoface');
+                    }
+
+                    // Headers ok, store.
+                    $fileheaders = $data;
+
+                    // Don't yield the headers.
+                    continue;
                 }
-                $record = array_combine($headers, $data);
+
+                // Row items count does not match the headers.
+                if (count($data) !== count($fileheaders)) {
+                    throw new moodle_exception('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface', '', $rownumber);
+                }
+                $record = array_combine($fileheaders, $data);
                 yield (object) $record;
             }
         } finally {
@@ -272,15 +312,7 @@ class booking_manager {
             }
 
             // Check to ensure a valid status is set.
-            if (
-                isset($entry->status) && !in_array(
-                    $entry->status,
-                    array_merge(facetoface_statuses(), [
-                    '', // Defaults to booked.
-                    'cancelled', // Alternative to 'user_cancelled'.
-                    ])
-                )
-            ) {
+            if (isset($entry->status) && !in_array($entry->status, self::get_allowed_session_statuses())) {
                 $errors[] = [
                     $row,
                     new lang_string('error:invalidstatusspecified', 'mod_facetoface', $entry->status),

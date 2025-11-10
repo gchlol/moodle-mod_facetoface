@@ -18,6 +18,7 @@ namespace mod_facetoface\form;
 
 use moodle_url;
 use html_writer;
+use mod_facetoface\booking_manager;
 
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/repository/lib.php');
@@ -58,12 +59,15 @@ class upload_bookings_form extends \moodleform {
         ]);
         $mform->setType('csvfile', PARAM_INT);
         $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
-
+        
+        // Allowed statuses minus the '' one, as we have additional help text to explain '' status specifically.
+        $allowedstatuses = array_filter(booking_manager::get_allowed_session_statuses(), fn($status) => !empty($status));
+        $help = nl2br(get_string('facetoface:uploadbookingsfiledesc', 'mod_facetoface', implode(', ', $allowedstatuses)));
         $mform->addElement(
             'static',
             'csvuploadhelp',
             '',
-            nl2br(get_string('facetoface:uploadbookingsfiledesc', 'mod_facetoface'))
+            $help,
         );
 
         $mform->addElement('advcheckbox', 'caseinsensitive', get_string('caseinsensitive', 'mod_facetoface'));
