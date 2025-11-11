@@ -255,7 +255,7 @@ Fields expected:
 
 Note:
 - If you directly assign an attendance status (i.e. a status other than \'booked\' or \'waitlisted\') but the user has not already been signed up, they will automatically be signed up using the details provided on that row (e.g. calendar, discountcode).
-- Attendance cannot be taken for future sessions. Attendance statuses given for future sessions will fall back to \'booked\'.
+- Attendance can only be taken for current or past sessions. Even if you specify a attendance status here, it will be ignored (however, the above note still applies).
 ';
 $string['facetoface:uploadreadytoprocess'] = 'Uploaded file has been validated and ready to be processed.';
 $string['facetoface:validatebookings'] = 'Validate bookings';
