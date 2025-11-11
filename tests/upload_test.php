@@ -960,15 +960,19 @@ final class upload_test extends \advanced_testcase {
         $this->assertTrue($bm->process());
     }
 
+    /**
+     * Provides CSV validation test cases
+     * @return array
+     */
     public static function csv_validation_provider(): array {
         // Build tests for every status.
-        $statustests = array_map(function($status) {
+        $statustests = array_map(function ($status) {
             return [
                 'valid status - ' . $status => [
                     'contents' => "email,session,status\n:email,:session," . $status,
                     'expectedexceptionmessage' => null,
                     'expectedstatus' => $status == '' ? 'booked' : $status,
-                ]
+                ],
             ];
         }, booking_manager::get_allowed_session_statuses());
 
@@ -996,10 +1000,14 @@ final class upload_test extends \advanced_testcase {
                 'contents' => 'email,session,status,discountcode',
                 'expectedexceptionmessage' => null,
             ],
-            ...$statustests
+            ...$statustests,
         ];
     }
 
+    /**
+     * Provides CSV processing test cases
+     * @return array
+     */
     public static function csv_process_provider(): array {
         // Build a matrix of status, date (past present future).
         $dateoptions = [
@@ -1031,10 +1039,18 @@ final class upload_test extends \advanced_testcase {
         return $tests;
     }
 
+    /**
+     * Sets up scenario for csv testing
+     *
+     * @param string $contents csv contents
+     * @param array $sessiondates dates for session, each entry should be in the form ['timestart' => xxx, 'timefinish' => xxx].
+     * If not given, defaults to a time period that is current (start < now, and end > now).
+     * @return array array of [$bookingmanager, $session, $student]
+     */
     private function setup_csv_test(string $contents, array $sessiondates = []): array {
         global $USER;
         $this->setAdminUser();
-        
+
         if (empty($sessiondates)) {
             $sessiondates = ['timestart' => time() - DAYSECS, 'timefinish' => time() + DAYSECS];
         }
@@ -1069,7 +1085,7 @@ final class upload_test extends \advanced_testcase {
             'filearea' => 'draft',
             'itemid' => 0,
             'filepath' => '/',
-            'filename' => uniqid() . '.csv'
+            'filename' => uniqid() . '.csv',
         ], $contents);
         $bm = new booking_manager($facetoface->id);
         $bm->load_from_file($storedfile->get_itemid());
@@ -1077,9 +1093,14 @@ final class upload_test extends \advanced_testcase {
     }
 
     /**
+     * Test booking_manager validate function
+     *
+     * @param string $contents csv contents
+     * @param string|null $expectedexceptionmessage if given, expect moodle_exception with this message.
+     *
      * @dataProvider csv_validation_provider
      */
-    public function test_csv_validation(string $contents, ?string $expectedexceptionmessage = null) {
+    public function test_csv_validation(string $contents, ?string $expectedexceptionmessage = null): void {
         [$bm, $session, $user] = $this->setup_csv_test($contents);
         if (!empty($expectedexceptionmessage)) {
             $this->expectException(moodle_exception::class);
@@ -1089,9 +1110,15 @@ final class upload_test extends \advanced_testcase {
     }
 
     /**
-     * @dataProvider csv_process_provider
+     * Test booking_manager process function
+     *
+     * @param string $contents csv contents
+     * @param array $sessiondates dates for session, with each entry in the form ['timestart' => xxx, 'timefinish' => xxx].
+     * @param string $expectedstatus expected signup or attendance status after processing the csv.
+     *
+     * @dataProvider csv_validation_provider
      */
-    public function test_csv_process(string $contents, array $sessiondates, string $expectedstatus) {
+    public function test_csv_process(string $contents, array $sessiondates, string $expectedstatus): void {
         global $DB;
         [$bm, $session, $user] = $this->setup_csv_test($contents, $sessiondates);
         // All of these should be valid, but run validation to catch anything just in case.

@@ -110,8 +110,8 @@ class booking_manager {
     }
 
     /**
-     * Get the headers for the records.
-     * @return array
+     * Get the required headers for the records.
+     * @return array string array
      */
     public static function get_required_headers(): array {
         return [
@@ -120,6 +120,10 @@ class booking_manager {
         ];
     }
 
+    /**
+     * Get the optional headers for the records.
+     * @return array string array
+     */
     public static function get_optional_headers(): array {
         return [
             'status',
@@ -127,7 +131,11 @@ class booking_manager {
             'notificationtype',
         ];
     }
-    
+
+    /**
+     * Get statuses allowed to be used in CSV upload.
+     * @return array status string names
+     */
     public static function get_allowed_session_statuses(): array {
         return [
             'waitlisted',
@@ -163,7 +171,6 @@ class booking_manager {
 
                 // First row, handle headers.
                 if ($rownumber === 1) {
-
                     // Check for headers that shouldn't be there.
                     $validheaders = array_merge(self::get_required_headers(), self::get_optional_headers());
                     $invalidheaders = array_filter($data, fn($fileheader) => !in_array($fileheader, $validheaders));
@@ -490,10 +497,6 @@ class booking_manager {
                             $signupstatus,
                             $user->id,
                             !$this->suppressemail,
-                            // // Sign them up for 1 second before, otherwise
-                            // // it breaks attendance taking.
-                            // // This is 100% a hack.
-                            // time() - 5
                         );
                     }
 

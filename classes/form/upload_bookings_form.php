@@ -59,7 +59,7 @@ class upload_bookings_form extends \moodleform {
         ]);
         $mform->setType('csvfile', PARAM_INT);
         $mform->addRule('csvfile', get_string('required'), 'required', null, 'client');
-        
+
         // Allowed statuses minus the '' one, as we have additional help text to explain '' status specifically.
         $allowedstatuses = array_filter(booking_manager::get_allowed_session_statuses(), fn($status) => !empty($status));
         $help = nl2br(get_string('facetoface:uploadbookingsfiledesc', 'mod_facetoface', implode(', ', $allowedstatuses)));
