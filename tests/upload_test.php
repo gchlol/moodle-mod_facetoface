@@ -979,7 +979,7 @@ final class upload_test extends \advanced_testcase {
         // Flatten.
         $statustests = array_merge(...$statustests);
 
-        return [
+        return array_merge([
             'empty' => [
                 'contents' => '',
                 'expectedexceptionmessage' => get_string('error:bookingsuploadfileempty', 'mod_facetoface'),
@@ -1000,8 +1000,7 @@ final class upload_test extends \advanced_testcase {
                 'contents' => 'email,session,status,discountcode',
                 'expectedexceptionmessage' => null,
             ],
-            ...$statustests,
-        ];
+        ], $statustests);
     }
 
     /**
@@ -1009,15 +1008,18 @@ final class upload_test extends \advanced_testcase {
      *
      * @param string $contents csv contents
      * @param array $sessiondates dates for session, each entry should be in the form ['timestart' => xxx, 'timefinish' => xxx].
-     * If not given, defaults to a time period that is current (start < now, and end > now).
      * @return array array of [$bookingmanager, $session, $student]
      */
     private function setup_csv_test(string $contents, array $sessiondates = []): array {
         global $USER;
         $this->setAdminUser();
 
+        // This is what facetoface does internally when you don't set a time.
+        // This is to test 'waitlisting' states.
+        $datetimeknown = true;
         if (empty($sessiondates)) {
-            $sessiondates = ['timestart' => time() - DAYSECS, 'timefinish' => time() + DAYSECS];
+            $sessiondates = ['timestart' => time(), 'timefinish' => time()];
+            $datetimeknown = false;
         }
 
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
@@ -1033,6 +1035,7 @@ final class upload_test extends \advanced_testcase {
             'normalcost' => '111',
             'discountcost' => '11',
             'allowcancellations' => '0',
+            'datetimeknown' => $datetimeknown,
             'sessiondates' => [$sessiondates],
         ];
         $session = $generator->create_session($record);
@@ -1079,11 +1082,12 @@ final class upload_test extends \advanced_testcase {
      * @return array
      */
     public static function csv_process_provider(): array {
-        // Build a matrix of status, date (past present future).
+        // Build a matrix of status, date (past present future and unknown).
         $dateoptions = [
             'past' => ['timestart' => time() - DAYSECS * 2, 'timefinish' => time() - DAYSECS],
             'present' => ['timestart' => time() - DAYSECS, 'timefinish' => time() + DAYSECS],
             'future' => ['timestart' => time() + DAYSECS, 'timefinish' => time() - DAYSECS * 2],
+            'unknown' => [],
         ];
 
         $statusoptions = booking_manager::get_allowed_session_statuses();
@@ -1096,12 +1100,19 @@ final class upload_test extends \advanced_testcase {
                     continue;
                 }
 
-                $tests['valid status - ' . $status . ' for time period ' . $datelabel] = [
+                // If no status is given, it should be either waitlisted or booked
+                // depending on the time of the session.
+                $expectedstatus = $status;
+                if ($status == '' && $datelabel == 'unknown') {
+                    $expectedstatus = 'waitlisted';
+                } else if ($status == '' && $datelabel !== 'unknown') {
+                    $expectedstatus = 'booked';
+                }
+
+                $tests["valid status '{$status}' for time period '{$datelabel}', expecting '{$expectedstatus}'"] = [
                     'contents' => "email,session,status\n:email,:session," . $status,
                     'sessiondates' => $dates,
-                    // Empty status defaults to booked.
-                    // Given all our tests have known dates (otherwise it would be whitelisted).
-                    'expectedstatus' => $status == '' ? 'booked' : $status,
+                    'expectedstatus' => $expectedstatus,
                 ];
             }
         }
@@ -1137,7 +1148,7 @@ final class upload_test extends \advanced_testcase {
 
         $status = facetoface_get_status($DB->get_record('facetoface_signups_status', ['signupid' => $signup->id, 'superceded' => '0'])->statuscode);
 
-        $signupstatuses = [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED];
+        $signupstatuses = [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED, ''];
         $attendancestatuses = [MDL_F2F_STATUS_NO_SHOW, MDL_F2F_STATUS_PARTIALLY_ATTENDED, MDL_F2F_STATUS_FULLY_ATTENDED];
 
         $issignup = in_array($expectedstatus, $signupstatuses);

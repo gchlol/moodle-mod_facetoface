@@ -144,7 +144,7 @@ class booking_manager {
             'fully_attended',
             'no_show',
             'cancelled',
-            '', // Defaults to booked.
+            '', // Defaults to booked or waitlisted (depending on session times).
         ];
     }
 
