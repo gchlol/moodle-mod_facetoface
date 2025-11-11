@@ -1005,41 +1005,6 @@ final class upload_test extends \advanced_testcase {
     }
 
     /**
-     * Provides CSV processing test cases
-     * @return array
-     */
-    public static function csv_process_provider(): array {
-        // Build a matrix of status, date (past present future).
-        $dateoptions = [
-            'past' => ['timestart' => time() - DAYSECS * 2, 'timefinish' => time() - DAYSECS],
-            'present' => ['timestart' => time() - DAYSECS, 'timefinish' => time() + DAYSECS],
-            'future' => ['timestart' => time() + DAYSECS, 'timefinish' => time() - DAYSECS * 2],
-        ];
-
-        $statusoptions = booking_manager::get_allowed_session_statuses();
-        $tests = [];
-
-        foreach ($dateoptions as $datelabel => $dates) {
-            foreach ($statusoptions as $status) {
-                // Cancelled status only applies to future dates.
-                if ($status == 'cancelled' && $datelabel != 'future') {
-                    continue;
-                }
-
-                $tests['valid status - ' . $status . ' for time period ' . $datelabel] = [
-                    'contents' => "email,session,status\n:email,:session," . $status,
-                    'sessiondates' => $dates,
-                    // Empty status defaults to booked.
-                    // Given all our tests have known dates (otherwise it would be whitelisted).
-                    'expectedstatus' => $status == '' ? 'booked' : $status,
-                ];
-            }
-        }
-
-        return $tests;
-    }
-
-    /**
      * Sets up scenario for csv testing
      *
      * @param string $contents csv contents
@@ -1110,13 +1075,48 @@ final class upload_test extends \advanced_testcase {
     }
 
     /**
+     * Provides CSV processing test cases
+     * @return array
+     */
+    public static function csv_process_provider(): array {
+        // Build a matrix of status, date (past present future).
+        $dateoptions = [
+            'past' => ['timestart' => time() - DAYSECS * 2, 'timefinish' => time() - DAYSECS],
+            'present' => ['timestart' => time() - DAYSECS, 'timefinish' => time() + DAYSECS],
+            'future' => ['timestart' => time() + DAYSECS, 'timefinish' => time() - DAYSECS * 2],
+        ];
+
+        $statusoptions = booking_manager::get_allowed_session_statuses();
+        $tests = [];
+
+        foreach ($dateoptions as $datelabel => $dates) {
+            foreach ($statusoptions as $status) {
+                // Cancelled status only applies to future dates.
+                if ($status == 'cancelled' && $datelabel != 'future') {
+                    continue;
+                }
+
+                $tests['valid status - ' . $status . ' for time period ' . $datelabel] = [
+                    'contents' => "email,session,status\n:email,:session," . $status,
+                    'sessiondates' => $dates,
+                    // Empty status defaults to booked.
+                    // Given all our tests have known dates (otherwise it would be whitelisted).
+                    'expectedstatus' => $status == '' ? 'booked' : $status,
+                ];
+            }
+        }
+
+        return $tests;
+    }
+
+    /**
      * Test booking_manager process function
      *
      * @param string $contents csv contents
      * @param array $sessiondates dates for session, with each entry in the form ['timestart' => xxx, 'timefinish' => xxx].
      * @param string $expectedstatus expected signup or attendance status after processing the csv.
      *
-     * @dataProvider csv_validation_provider
+     * @dataProvider csv_process_provider
      */
     public function test_csv_process(string $contents, array $sessiondates, string $expectedstatus): void {
         global $DB;
