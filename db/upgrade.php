@@ -19,13 +19,13 @@
  * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
- * @package    mod
- * @subpackage facetoface
+ * @package    mod_facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @author     Stacey Walker <stacey@catalyst-eu.net>
  * @author     Alastair Munro <alastair.munro@totaralms.com>
  * @author     Aaron Barnes <aaron.barnes@totaralms.com>
  * @author     Francois Marier <francois@catalyst.net.nz>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
@@ -60,15 +60,20 @@ function facetoface_send_admin_upgrade_msg($data) {
 
     $admin = get_admin();
 
-    email_to_user($admin,
-                  $admin,
-                  $title,
-                  '',
-                  $message);
-
+    email_to_user(
+        $admin,
+        $admin,
+        $title,
+        '',
+        $message
+    );
 }
 
-function xmldb_facetoface_upgrade($oldversion=0) {
+/**
+ * Update facetoface
+ * @param int $oldversion
+ */
+function xmldb_facetoface_upgrade($oldversion = 0) {
     global $CFG, $USER, $DB;
 
     $dbman = $DB->get_manager(); // Loads ddl manager and xmldb classes.
@@ -135,7 +140,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
     }
 
     if ($result && $oldversion < 2008090800) {
-
         // Define field timemodified to be added to facetoface_submissions.
         $table = new xmldb_table('facetoface_submissions');
         $field = new xmldb_field('timecancelled');
@@ -146,7 +150,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
     }
 
     if ($result && $oldversion < 2009111300) {
-
         // New fields necessary for the training calendar.
         $table = new xmldb_table('facetoface');
         $field1 = new xmldb_field('shortname');
@@ -163,7 +166,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
     }
 
     if ($result && $oldversion < 2009111600) {
-
         $table1 = new xmldb_table('facetoface_session_field');
         $table1->add_field('id', XMLDB_TYPE_INTEGER, '10', true, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table1->add_field('name', XMLDB_TYPE_CHAR, '255', null, null, null, null);
@@ -187,7 +189,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
     }
 
     if ($result && $oldversion < 2009111900) {
-
         // Remove unused field.
         $table = new xmldb_table('facetoface_sessions');
         $field = new xmldb_field('closed');
@@ -196,7 +197,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
 
     // Migration of old Location, Venue and Room fields.
     if ($result && $oldversion < 2009112300) {
-
         // Create three new custom fields.
         $newfield1 = new stdClass();
         $newfield1->name = 'Location';
@@ -299,12 +299,10 @@ function xmldb_facetoface_upgrade($oldversion=0) {
     }
 
     if ($result && $oldversion < 2009120900) {
-
         // Create Calendar events for all existing Face-to-face sessions.
         try {
             $transaction = $DB->start_delegated_transaction();
             if ($records = $DB->get_records('facetoface_sessions', '', '', '', 'id, facetoface')) {
-
                 // Remove all exising site-wide events (there shouldn't be any).
                 foreach ($records as $record) {
                     if (!facetoface_remove_session_from_calendar($record, SITEID)) {
@@ -331,7 +329,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
     }
 
     if ($result && $oldversion < 2009122901) {
-
         // Create table facetoface_session_roles.
         $table = new xmldb_table('facetoface_session_roles');
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', true, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
@@ -379,7 +376,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
             $rs = $DB->get_recordset('facetoface_submissions');
 
             foreach ($rs as $submission) {
-
                 // Insert signup.
                 $signup = new stdClass();
                 $signup->sessionid = $submission->sessionid;
@@ -396,9 +392,8 @@ function xmldb_facetoface_upgrade($oldversion=0) {
                 // Also, we need the course id so we can load the grade.
                 $facetoface = $DB->get_record('facetoface', 'id', $submission->facetoface);
                 if (!$facetoface) {
-
                     // If facetoface delete, ignore as it's of no use to us now.
-                    mtrace('Could not find facetoface instance '.$submission->facetoface);
+                    mtrace('Could not find facetoface instance ' . $submission->facetoface);
                     continue;
                 }
 
@@ -452,7 +447,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
     }
 
     if ($result && $oldversion < 2010012000) {
-
         // New field for storing recommendations/advice.
         $table = new xmldb_table('facetoface_signups_status');
         $field1 = new xmldb_field('advice');
@@ -461,7 +455,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
     }
 
     if ($result && $oldversion < 2010012001) {
-
         // New field for storing manager approval requirement.
         $table = new xmldb_table('facetoface');
         $field = new xmldb_field('approvalreqd');
@@ -470,7 +463,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
     }
 
     if ($result && $oldversion < 2010012700) {
-
         // New fields for storing request emails.
         $table = new xmldb_table('facetoface');
         $field = new xmldb_field('requestsubject');
@@ -487,12 +479,10 @@ function xmldb_facetoface_upgrade($oldversion=0) {
     }
 
     if ($result && $oldversion < 2010051000) {
-
         // Create Calendar events for all existing Face-to-face sessions.
         $transaction = $DB->start_delegated_transaction();
 
         if ($records = $DB->get_records('facetoface_sessions', '', '', '', 'id, facetoface')) {
-
             // Remove all exising site-wide events (there shouldn't be any).
             foreach ($records as $record) {
                 facetoface_remove_session_from_calendar($record, SITEID);
@@ -528,7 +518,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
     }
 
     if ($result && $oldversion < 2010100400) {
-
         // Remove unused mailed field.
         $table = new xmldb_table('facetoface_signups_status');
         $field = new xmldb_field('mailed');
@@ -539,7 +528,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
 
     // 2.0 upgrade line.
     if ($oldversion < 2011120701) {
-
         // Update existing select fields to use new seperator.
         $badrows = $DB->get_records_sql(
             "
@@ -550,7 +538,7 @@ function xmldb_facetoface_upgrade($oldversion=0) {
                 WHERE
                     possiblevalues LIKE '%;%'
                 AND possiblevalues NOT LIKE '%" . CUSTOMFIELD_DELIMITER . "%'
-                AND type IN (".CUSTOMFIELD_TYPE_SELECT.",".CUSTOMFIELD_TYPE_MULTISELECT.")
+                AND type IN (" . CUSTOMFIELD_TYPE_SELECT . "," . CUSTOMFIELD_TYPE_MULTISELECT . ")
             "
         );
 
@@ -578,8 +566,8 @@ function xmldb_facetoface_upgrade($oldversion=0) {
                     sd.fieldid=sf.id
                 WHERE
                     sd.data LIKE '%;%'
-                AND sd.data NOT LIKE '%". CUSTOMFIELD_DELIMITER ."%'
-                AND sf.type = ".CUSTOMFIELD_TYPE_MULTISELECT
+                AND sd.data NOT LIKE '%" . CUSTOMFIELD_DELIMITER . "%'
+                AND sf.type = " . CUSTOMFIELD_TYPE_MULTISELECT
         );
 
         if ($baddatarows) {
@@ -604,9 +592,10 @@ function xmldb_facetoface_upgrade($oldversion=0) {
         $index->set_attributes(XMLDB_INDEX_UNIQUE, ['shortname']);
 
         // Do we need to check for duplicates?
-        if ($dbman->table_exists($table)
-            && !$dbman->index_exists($table, $index)) {
-
+        if (
+            $dbman->table_exists($table)
+            && !$dbman->index_exists($table, $index)
+        ) {
             // Check for duplicate records and make them unique.
             $replacements = [];
 
@@ -637,7 +626,7 @@ function xmldb_facetoface_upgrade($oldversion=0) {
                     $data = (object)$item;
 
                     // Randomize the value.
-                    $data->shortname = $DB->escape($data->shortname.'_'.$data->id);
+                    $data->shortname = $DB->escape($data->shortname . '_' . $data->id);
                     $DB->update_record('facetoface_session_field', $data);
                     $replacements[] = [$item['id'], $item['shortname'], $data->shortname];
                 }
@@ -654,7 +643,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
     }
 
     if ($oldversion < 2011120703) {
-
         $table = new xmldb_table('facetoface');
         $field = new xmldb_field('intro', XMLDB_TYPE_TEXT, 'big', null, null, null, null, 'name');
 
@@ -671,7 +659,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
 
         $field = new xmldb_field('description');
         if ($dbman->field_exists($table, $field)) {
-
             // Move all data from description to intro.
             $facetofaces = $DB->get_records('facetoface');
             foreach ($facetofaces as $facetoface) {
@@ -689,7 +676,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
     }
 
     if ($oldversion < 2013010400) {
-
         // Add a field for the user calendar entry checkbox.
         $table = new xmldb_table('facetoface');
         $field = new xmldb_field('usercalentry');
@@ -713,7 +699,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
     }
 
     if ($oldversion < 2017053000) {
-
         // Define field allowcancellationsdefault to be added to facetoface.
         $table = new xmldb_table('facetoface');
         $field = new xmldb_field(
@@ -746,7 +731,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
     }
 
     if ($oldversion < 2022031800) {
-
         // Define field confirmationmessageformat to be added to facetoface.
         $table = new xmldb_table('facetoface');
         $field = new xmldb_field(
@@ -836,7 +820,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
     }
 
     if ($oldversion < 2023100200) {
-
         // Define field completionattendance to be added to facetoface.
         $table = new xmldb_table('facetoface');
         $field = new xmldb_field(
@@ -860,7 +843,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
     }
 
     if ($oldversion < 2025072400) {
-
         // Define field visibleto to be added to facetoface_session_field
         $table = new xmldb_table('facetoface_session_field');
         $field = new xmldb_field(
@@ -892,7 +874,6 @@ function xmldb_facetoface_upgrade($oldversion=0) {
     }
 
     if ($oldversion < 2025080600) {
-
         // Define field visible to be added to facetoface_sessions
         $table = new xmldb_table('facetoface_sessions');
         $field = new xmldb_field('visible', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'allowcancellations');
@@ -904,6 +885,27 @@ function xmldb_facetoface_upgrade($oldversion=0) {
 
         // Face-to-face savepoint reached
         upgrade_mod_savepoint(true, 2025080600, 'facetoface');
+    }
+
+    if ($oldversion < 2025103000) {
+        // Changing the default of field visibleto on table facetoface_session_field to 2.
+        $table = new xmldb_table('facetoface_session_field');
+        $field = new xmldb_field(
+            'visibleto',
+            XMLDB_TYPE_INTEGER,
+            '1',
+            null,
+            XMLDB_NOTNULL,
+            null,
+            MDL_F2F_FIELD_VISIBLETOALL,
+            'showinsummary'
+        );
+
+        // Launch change of default for field visibleto.
+        $dbman->change_field_default($table, $field);
+
+        // Facetoface savepoint reached.
+        upgrade_mod_savepoint(true, 2025103000, 'facetoface');
     }
 
     return $result;

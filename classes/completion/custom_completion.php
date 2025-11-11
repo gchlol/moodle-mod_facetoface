@@ -27,7 +27,6 @@ namespace mod_facetoface\completion;
  * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class custom_completion extends \core_completion\activity_custom_completion {
-
     /**
      * Fetches the completion state for a given completion rule.
      *

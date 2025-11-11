@@ -24,13 +24,13 @@ namespace mod_facetoface;
  * @license   https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers \mod_facetoface_generator
  */
-class generator_test extends \advanced_testcase {
-
+final class generator_test extends \advanced_testcase {
     public function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest();
     }
 
-    public function test_create_instance() {
+    public function test_create_instance(): void {
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
 
@@ -82,7 +82,7 @@ class generator_test extends \advanced_testcase {
         $this->assertSame($expected, (array) $facetoface);
     }
 
-    public function test_create_session() {
+    public function test_create_session(): void {
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
 

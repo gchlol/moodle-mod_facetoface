@@ -22,9 +22,7 @@
  * @copyright  2023 Catalyst IT
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class mod_facetoface_generator extends testing_module_generator {
-
     /**
      * Create a new instance of the facetoface activity.
      *
@@ -71,6 +69,11 @@ class mod_facetoface_generator extends testing_module_generator {
         return parent::create_instance($record, (array) $options);
     }
 
+    /**
+     * Create session
+     * @param object $record
+     * @return stdClass
+     */
     public function create_session($record): stdClass {
         global $DB, $CFG;
         require_once("$CFG->dirroot/mod/facetoface/lib.php");
@@ -170,7 +173,7 @@ class mod_facetoface_generator extends testing_module_generator {
             'required' => 0,
             'isfilter' => 0,
             'showinsummary' => 1,
-            'possiblevalues' => '',  // Added this
+            'possiblevalues' => '', // Added this
         ];
 
         foreach ($defaults as $key => $value) {

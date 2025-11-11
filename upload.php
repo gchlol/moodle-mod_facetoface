@@ -107,7 +107,8 @@ if ($validate) {
             new moodle_url('/mod/facetoface/upload.php', ['f' => $f]),
             get_string('facetoface:csvprocessed', 'mod_facetoface'),
             null,
-            notification::NOTIFY_SUCCESS);
+            notification::NOTIFY_SUCCESS
+        );
     }
 
     $errmsg = get_string('error:bookingsuploadfileerrorsfound', 'mod_facetoface', count($errors));
@@ -115,7 +116,8 @@ if ($validate) {
         new moodle_url('/mod/facetoface/upload.php', ['f' => $f]),
         $errmsg,
         null,
-        notification::NOTIFY_ERROR);
+        notification::NOTIFY_ERROR
+    );
 } else {
     $mform = new upload_bookings_form(null);
     $mform->set_data(['f' => $f, 'validate' => 1]);

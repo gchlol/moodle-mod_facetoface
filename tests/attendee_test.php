@@ -28,19 +28,19 @@ use lang_string;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers \mod_facetoface\booking_manager
  */
-class attendee_test extends \advanced_testcase {
-
+final class attendee_test extends \advanced_testcase {
     /**
      * This method runs before every test.
      */
     public function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest();
     }
 
     /**
      * Test attendees are returned in alphabetical order.
      */
-    public function test_attendees_sorted_alphabetically() {
+    public function test_attendees_sorted_alphabetically(): void {
         global $DB;
 
         /** @var \mod_facetoface_generator $generator */
@@ -52,7 +52,7 @@ class attendee_test extends \advanced_testcase {
         $users = [
             $this->getDataGenerator()->create_and_enrol($course, 'student', ['firstname' => 'Charlie', 'lastname' => 'Brown']),
             $this->getDataGenerator()->create_and_enrol($course, 'student', ['firstname' => 'Alice', 'lastname' => 'Smith']),
-            $this->getDataGenerator()->create_and_enrol($course, 'student', ['firstname' => 'Bob', 'lastname' => 'Jones'])
+            $this->getDataGenerator()->create_and_enrol($course, 'student', ['firstname' => 'Bob', 'lastname' => 'Jones']),
         ];
 
         // Create a session.
@@ -68,8 +68,15 @@ class attendee_test extends \advanced_testcase {
 
         // Sign up users for the session in non-alphabetical order.
         foreach ($users as $user) {
-            facetoface_user_signup($session, $facetoface, $course, '',
-                MDL_F2F_TEXT, MDL_F2F_STATUS_BOOKED, $user->id);
+            facetoface_user_signup(
+                $session,
+                $facetoface,
+                $course,
+                '',
+                MDL_F2F_TEXT,
+                MDL_F2F_STATUS_BOOKED,
+                $user->id
+            );
         }
 
         // Get attendees.

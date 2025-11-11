@@ -19,13 +19,13 @@
  * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
- * @package    mod
- * @subpackage facetoface
+ * @package    mod_facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @author     Stacey Walker <stacey@catalyst-eu.net>
  * @author     Alastair Munro <alastair.munro@totaralms.com>
  * @author     Aaron Barnes <aaron.barnes@totaralms.com>
  * @author     Francois Marier <francois@catalyst.net.nz>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
@@ -115,7 +115,7 @@ if (count($locations) > 2) {
     echo html_writer::start_tag('div');
     echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'f', 'value' => $facetoface->id]);
     echo html_writer::select($locations, 'location', $location, '', ['onchange' => 'this.form.submit();']);
-    echo html_writer::end_tag('div'). html_writer::end_tag('form');
+    echo html_writer::end_tag('div') . html_writer::end_tag('form');
 }
 
 print_session_list($course->id, $facetoface, $location);
@@ -132,12 +132,18 @@ if (has_capability('mod/facetoface:viewattendees', $context)) {
     ];
     echo html_writer::select($formats, 'download', 'excel', '');
     echo html_writer::empty_tag('input', ['type' => 'submit', 'value' => get_string('exporttofile', 'facetoface')]);
-    echo html_writer::end_tag('div'). html_writer::end_tag('form');
+    echo html_writer::end_tag('div') . html_writer::end_tag('form');
 }
 
 echo $OUTPUT->box_end();
 echo $OUTPUT->footer($course);
 
+/**
+ * Print session list
+ * @param int $courseid
+ * @param object $facetoface
+ * @param string $location
+ */
 function print_session_list($courseid, $facetoface, $location) {
     global $CFG, $USER, $DB, $OUTPUT, $PAGE;
 
@@ -169,7 +175,7 @@ function print_session_list($courseid, $facetoface, $location) {
     $previousarray = [];
     $upcomingtbdarray = [];
 
-    if ($sessions = facetoface_get_sessions($facetoface->id, $location) ) {
+    if ($sessions = facetoface_get_sessions($facetoface->id, $location)) {
         foreach ($sessions as $session) {
             if ($session->visible == '0' && !$editsessions) {
                 continue;

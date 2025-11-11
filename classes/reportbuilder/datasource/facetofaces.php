@@ -35,7 +35,6 @@ use core_reportbuilder\local\entities\user;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class facetofaces extends datasource {
-
     /**
      * Initialise report
      *
@@ -84,6 +83,7 @@ class facetofaces extends datasource {
         $attendeestatusentityjoin = "
             LEFT JOIN {facetoface_signups_status} {$attendeestatus}
             ON {$attendeestatus}.signupid = {$attendee}.id
+            AND {$attendeestatus}.superceded = 0
         ";
         $attendeeentity->add_joins([$facetofacejoin, $sessionjoin, $attendeeentityjoin, $attendeestatusentityjoin]);
         $this->add_entity($attendeeentity);

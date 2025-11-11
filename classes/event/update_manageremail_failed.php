@@ -14,21 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Copyright (C) 2007-2011 Catalyst IT (http://www.catalyst.net.nz)
- * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
- * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
- *
- * @package    mod
- * @subpackage facetoface
- * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
- * @author     Stacey Walker <stacey@catalyst-eu.net>
- */
-
 namespace mod_facetoface\event;
 
 /**
  * The mod_facetoface update manager email failed event class.
+ *
+ * Copyright (C) 2007-2011 Catalyst IT (http://www.catalyst.net.nz)
+ * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
+ * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
  * @package    mod_facetoface
  * @since      Moodle 2.7
@@ -37,7 +30,6 @@ namespace mod_facetoface\event;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class update_manageremail_failed extends \core\event\base {
-
     /**
      * Init method.
      *

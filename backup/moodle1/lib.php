@@ -19,20 +19,19 @@
  * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
- * @package    mod
- * @subpackage facetoface
+ * @package    mod_facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @author     Stacey Walker <stacey@catalyst-eu.net>
  * @author     Alastair Munro <alastair.munro@totaralms.com>
  * @author     Aaron Barnes <aaron.barnes@totaralms.com>
  * @author     Francois Marier <francois@catalyst.net.nz>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
  * Glossary conversion handler
  */
 class moodle1_mod_facetoface_handler extends moodle1_mod_handler {
-
     /** @var moodle1_file_manager */
     protected $fileman = null;
 
@@ -55,7 +54,8 @@ class moodle1_mod_facetoface_handler extends moodle1_mod_handler {
     public function get_paths() {
         return [
             new convert_path(
-                'facetoface', '/MOODLE_BACKUP/COURSE/MODULES/MOD/FACETOFACE',
+                'facetoface',
+                '/MOODLE_BACKUP/COURSE/MODULES/MOD/FACETOFACE',
                 [
                     'renamefields' => ['description' => 'intro'],
                     'newfields' => ['introformat' => FORMAT_MOODLE],
@@ -64,8 +64,10 @@ class moodle1_mod_facetoface_handler extends moodle1_mod_handler {
             new convert_path('facetoface_sessions', '/MOODLE_BACKUP/COURSE/MODULES/MOD/FACETOFACE/SESSIONS'),
             new convert_path('facetoface_session', '/MOODLE_BACKUP/COURSE/MODULES/MOD/FACETOFACE/SESSIONS/SESSION'),
             new convert_path('facetoface_sessions_dates', '/MOODLE_BACKUP/COURSE/MODULES/MOD/FACETOFACE/SESSIONS/SESSION/DATES'),
-            new convert_path('facetoface_sessions_date',
-                '/MOODLE_BACKUP/COURSE/MODULES/MOD/FACETOFACE/SESSIONS/SESSION/DATES/DATE'),
+            new convert_path(
+                'facetoface_sessions_date',
+                '/MOODLE_BACKUP/COURSE/MODULES/MOD/FACETOFACE/SESSIONS/SESSION/DATES/DATE'
+            ),
         ];
     }
 
@@ -125,7 +127,6 @@ class moodle1_mod_facetoface_handler extends moodle1_mod_handler {
      */
     public function process_facetoface_session($data) {
         $this->write_xml('session', $data, ['/session/id']);
-
     }
 
     /**
@@ -143,10 +144,16 @@ class moodle1_mod_facetoface_handler extends moodle1_mod_handler {
         $this->xmlwriter->begin_tag('sessions_dates');
     }
 
+    /**
+     * Process sessions date
+     */
     public function process_facetoface_sessions_date($data) {
         $this->write_xml('sessions_date', $data, ['/date/id']);
     }
 
+    /**
+     * Process session date ends
+     */
     public function on_facetoface_sessions_dates_end() {
         $this->xmlwriter->end_tag('sessions_dates');
     }

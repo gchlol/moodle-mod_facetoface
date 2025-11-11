@@ -19,13 +19,13 @@
  * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
- * @package    mod
- * @subpackage facetoface
+ * @package    mod_facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @author     Stacey Walker <stacey@catalyst-eu.net>
  * @author     Alastair Munro <alastair.munro@totaralms.com>
  * @author     Aaron Barnes <aaron.barnes@totaralms.com>
  * @author     Francois Marier <francois@catalyst.net.nz>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
@@ -67,7 +67,7 @@ $PAGE->set_heading($course->fullname);
 
 // Guests can't signup for a session, so offer them a choice of logging in or going back.
 if (isguestuser()) {
-    $loginurl = $CFG->wwwroot.'/login/index.php';
+    $loginurl = $CFG->wwwroot . '/login/index.php';
     if (!empty($CFG->loginhttps)) {
         $loginurl = str_replace('http:', 'https:', $loginurl);
     }
@@ -133,8 +133,10 @@ if ($fromform = $mform->get_data()) { // Form submitted.
             }
 
             // This shouldn't happen. Bulk signup can only be enabled when multiple signups are allowed.
-            if ($facetoface->signuptype == MOD_FACETOFACE_SIGNUP_SINGLE
-                && facetoface_get_user_submissions($facetoface->id, $USER->id)) {
+            if (
+                $facetoface->signuptype == MOD_FACETOFACE_SIGNUP_SINGLE
+                && facetoface_get_user_submissions($facetoface->id, $USER->id)
+            ) {
                 throw new moodle_exception('alreadysignedup', 'facetoface', $returnurl);
             }
 
@@ -146,16 +148,18 @@ if ($fromform = $mform->get_data()) { // Form submitted.
                 throw new moodle_exception('You cannot be enrolled to this course.');
             }
 
-            if ($submissionid = facetoface_user_signup(
-                $session,
-                $facetoface,
-                $course,
-                $fromform->discountcode,
-                $fromform->notificationtype,
-                $statuscode,
-                false,
-                false
-            )) {
+            if (
+                $submissionid = facetoface_user_signup(
+                    $session,
+                    $facetoface,
+                    $course,
+                    $fromform->discountcode,
+                    $fromform->notificationtype,
+                    $statuscode,
+                    false,
+                    true
+                )
+            ) {
                 // Logging and events trigger.
                 $params = [
                     'context'  => $contextmodule,
@@ -174,8 +178,10 @@ if ($fromform = $mform->get_data()) { // Form submitted.
 
     if (!facetoface_session_has_capacity($session, $context) && (!$session->allowoverbook)) {
         throw new moodle_exception('sessionisfull', 'facetoface', $returnurl);
-    } else if ($facetoface->signuptype == MOD_FACETOFACE_SIGNUP_SINGLE
-        && facetoface_get_user_submissions($facetoface->id, $USER->id)) {
+    } else if (
+        $facetoface->signuptype == MOD_FACETOFACE_SIGNUP_SINGLE
+        && facetoface_get_user_submissions($facetoface->id, $USER->id)
+    ) {
         throw new moodle_exception('alreadysignedup', 'facetoface', $returnurl);
     } else if (facetoface_manager_needed($facetoface) && !facetoface_get_manageremail($USER->id)) {
         throw new moodle_exception('error:manageremailaddressmissing', 'facetoface', $returnurl);
@@ -183,14 +189,16 @@ if ($fromform = $mform->get_data()) { // Form submitted.
         throw new moodle_exception('You cannot be enrolled to this course.');
     }
 
-    if ($submissionid = facetoface_user_signup(
-        $session,
-        $facetoface,
-        $course,
-        $fromform->discountcode,
-        $fromform->notificationtype,
-        $statuscode
-    )) {
+    if (
+        $submissionid = facetoface_user_signup(
+            $session,
+            $facetoface,
+            $course,
+            $fromform->discountcode,
+            $fromform->notificationtype,
+            $statuscode
+        )
+    ) {
         // Logging and events trigger.
         $params = [
             'context'  => $contextmodule,

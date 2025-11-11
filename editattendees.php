@@ -19,13 +19,13 @@
  * Copyright (C) 2011-2013 Totara LMS (http://www.totaralms.com)
  * Copyright (C) 2014 onwards Catalyst IT (http://www.catalyst-eu.net)
  *
- * @package    mod
- * @subpackage facetoface
+ * @package    mod_facetoface
  * @copyright  2014 onwards Catalyst IT <http://www.catalyst-eu.net>
  * @author     Stacey Walker <stacey@catalyst-eu.net>
  * @author     Alastair Munro <alastair.munro@totaralms.com>
  * @author     Aaron Barnes <aaron.barnes@totaralms.com>
  * @author     Francois Marier <francois@catalyst.net.nz>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once(dirname(dirname(dirname(__FILE__))) . '/config.php');
@@ -100,8 +100,10 @@ if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
             }
 
             $usernamefields = facetoface_get_all_user_name_fields(true);
-            if (facetoface_get_user_submissions($facetoface->id, $adduser)
-                && $facetoface->signuptype != MOD_FACETOFACE_SIGNUP_MULTIPLE) {
+            if (
+                facetoface_get_user_submissions($facetoface->id, $adduser)
+                && $facetoface->signuptype != MOD_FACETOFACE_SIGNUP_MULTIPLE
+            ) {
                 $erruser = $DB->get_record('user', ['id' => $adduser], "id, {$usernamefields}");
                 $errors[] = get_string('error:addalreadysignedupattendee', 'facetoface', fullname($erruser));
             } else {
@@ -120,8 +122,18 @@ if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
                     } else {
                         $status = MDL_F2F_STATUS_WAITLISTED;
                     }
-                    if (!facetoface_user_signup($session, $facetoface, $course, '', MDL_F2F_BOTH,
-                            $status, $adduser, !$suppressemail)) {
+                    if (
+                        !facetoface_user_signup(
+                            $session,
+                            $facetoface,
+                            $course,
+                            '',
+                            MDL_F2F_BOTH,
+                            $status,
+                            $adduser,
+                            !$suppressemail
+                        )
+                    ) {
                         $erruser = $DB->get_record('user', ['id' => $adduser], "id, {$usernamefields}");
                         $errors[] = get_string('error:addattendee', 'facetoface', fullname($erruser));
                     }
@@ -202,35 +214,50 @@ if ($facetoface->signuptype == MOD_FACETOFACE_SIGNUP_MULTIPLE) {
     $table->data[] = new html_table_row([$cell]);
 }
 
-$content = html_writer::checkbox('suppressemail', 1, 0, get_string('suppressemail', 'facetoface'),
-    ['id' => 'suppressemail']);
+$content = html_writer::checkbox(
+    'suppressemail',
+    1,
+    0,
+    get_string('suppressemail', 'facetoface'),
+    ['id' => 'suppressemail']
+);
 $content .= $OUTPUT->help_icon('suppressemail', 'facetoface');
 $cell = new html_table_cell($content);
 $cell->attributes['id'] = 'backcell';
 $cell->attributes['colspan'] = '3';
 $table->data[] = new html_table_row([$cell]);
 
-$content = html_writer::start_tag('p') . html_writer::tag('label', get_string('attendees', 'facetoface'),
-        ['for' => 'removeselect']) . html_writer::end_tag('p');
+$content = html_writer::start_tag('p') . html_writer::tag(
+    'label',
+    get_string('attendees', 'facetoface'),
+    ['for' => 'removeselect']
+) . html_writer::end_tag('p');
 $content .= $existinguserselector->display(true);
 $cell = new html_table_cell($content);
 $cell->attributes['id'] = 'existingcell';
 $cells[] = $cell;
-$content = html_writer::tag('div', html_writer::empty_tag('input',
+$content = html_writer::tag('div', html_writer::empty_tag(
+    'input',
     [
         'type' => 'submit', 'id' => 'add', 'name' => 'add', 'title' => get_string('add'),
-        'value' => $OUTPUT->larrow().' '.get_string('add'),
-]), ['id' => 'addcontrols']);
-$content .= html_writer::tag('div', html_writer::empty_tag('input',
+        'value' => $OUTPUT->larrow() . ' ' . get_string('add'),
+    ]
+), ['id' => 'addcontrols']);
+$content .= html_writer::tag('div', html_writer::empty_tag(
+    'input',
     [
         'type' => 'submit', 'id' => 'remove', 'name' => 'remove', 'title' => get_string('remove'),
-        'value' => $OUTPUT->rarrow().' '.get_string('remove'),
-]), ['id' => 'removecontrols']);
+        'value' => $OUTPUT->rarrow() . ' ' . get_string('remove'),
+    ]
+), ['id' => 'removecontrols']);
 $cell = new html_table_cell($content);
 $cell->attributes['id'] = 'buttonscell';
 $cells[] = $cell;
-$content = html_writer::start_tag('p') . html_writer::tag('label',
-        get_string('potentialattendees', 'facetoface'), ['for' => 'addselect']) . html_writer::end_tag('p');
+$content = html_writer::start_tag('p') . html_writer::tag(
+    'label',
+    get_string('potentialattendees', 'facetoface'),
+    ['for' => 'addselect']
+) . html_writer::end_tag('p');
 $content .= $potentialuserselector->display(true);
 $cell = new html_table_cell($content);
 $cell->attributes['id'] = 'potentialcell';
@@ -243,7 +270,7 @@ $out .= html_writer::table($table);
 $nonattendees = 0;
 $usernamefields = facetoface_get_all_user_name_fields(true, 'u');
 $nonattendeesrs = $DB->get_recordset_sql(
-     "SELECT
+    "SELECT
             u.id,
             {$usernamefields},
             u.email,
@@ -264,7 +291,8 @@ $nonattendeesrs = $DB->get_recordset_sql(
         AND ss.superceded != 1
         AND ss.statuscode = ?
         ORDER BY
-            u.lastname, u.firstname", [$session->id, MDL_F2F_STATUS_REQUESTED]
+            u.lastname, u.firstname",
+    [$session->id, MDL_F2F_STATUS_REQUESTED]
 );
 
 $table = new html_table();

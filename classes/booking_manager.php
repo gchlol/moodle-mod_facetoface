@@ -31,7 +31,6 @@ use moodle_exception;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class booking_manager {
-
     /** @var stored_file the file to process as a stored_file object */
     private $file;
 
@@ -221,16 +220,6 @@ class booking_manager {
                     $errors[] = [$row, new lang_string('error:sessionalreadystarted', 'mod_facetoface', $entry->session)];
                 }
 
-                if ($session->datetimeknown
-                    && in_array($entry->status, ['', 'booked'])
-                    && facetoface_has_session_started($session, $timenow)) {
-                    $inprogressstr = get_string('cannotsignupsessioninprogress', 'facetoface');
-                    $overstr = get_string('cannotsignupsessionover', 'facetoface');
-
-                    $errorstring = facetoface_is_session_in_progress($session, $timenow) ? $inprogressstr : $overstr;
-                    $errors[] = [$row, $errorstring];
-                }
-
                 // Set the session capacity if it hasn't been set yet.
                 if ($session->allowoverbook == 0 && !isset($sessioncapacitycache[$session->id])) {
                     // Total minus current capacity.
@@ -245,7 +234,10 @@ class booking_manager {
                 }
 
                 // Don't allow users to signup to another session if the signup type is not multiple.
-                if (isset($userid) && $entry->status !== 'cancelled' && $this->facetoface->signuptype != MOD_FACETOFACE_SIGNUP_MULTIPLE) {
+                if (
+                    isset($userid) && $entry->status !== 'cancelled'
+                    && $this->facetoface->signuptype != MOD_FACETOFACE_SIGNUP_MULTIPLE
+                ) {
                     if ($currusersessions = facetoface_get_user_submissions($this->f, $userid)) {
                         foreach ($currusersessions as $currusersession) {
                             if ($currusersession->sessionid != $session->id) {
@@ -266,11 +258,13 @@ class booking_manager {
             }
 
             // Check to ensure valid notification types are used if set.
-            if (isset($entry->notificationtype)
+            if (
+                isset($entry->notificationtype)
                 && !in_array(
                     $this->transform_notification_type($entry->notificationtype),
                     [MDL_F2F_BOTH, MDL_F2F_TEXT, MDL_F2F_ICAL]
-                )) {
+                )
+            ) {
                 $errors[] = [
                     $row,
                     new lang_string('error:invalidnotificationtypespecified', 'mod_facetoface', $entry->notificationtype),
@@ -278,13 +272,15 @@ class booking_manager {
             }
 
             // Check to ensure a valid status is set.
-            if (isset($entry->status) && !in_array(
-                $entry->status,
-                array_merge(facetoface_statuses(), [
-                    '',          // Defaults to booked.
+            if (
+                isset($entry->status) && !in_array(
+                    $entry->status,
+                    array_merge(facetoface_statuses(), [
+                    '', // Defaults to booked.
                     'cancelled', // Alternative to 'user_cancelled'.
-                ])
-            )) {
+                    ])
+                )
+            ) {
                 $errors[] = [
                     $row,
                     new lang_string('error:invalidstatusspecified', 'mod_facetoface', $entry->status),
@@ -313,7 +309,7 @@ class booking_manager {
         // If the signup type is not set to multiple, we need to create errors for users being added to multiple sessions.
         if ($this->facetoface->signuptype != MOD_FACETOFACE_SIGNUP_MULTIPLE) {
             // Get all users being added to more than 1 session.
-            $doublebookedusers = array_filter($usersessions, function($us) {
+            $doublebookedusers = array_filter($usersessions, function ($us) {
                 return count($us['sessions']) > 1;
             });
             // Create errors for the user rows.
@@ -429,11 +425,13 @@ class booking_manager {
                 }
 
                 // Handle attendance.
-                if (in_array($statuscode, [
+                if (
+                    in_array($statuscode, [
                     MDL_F2F_STATUS_NO_SHOW,
                     MDL_F2F_STATUS_PARTIALLY_ATTENDED,
                     MDL_F2F_STATUS_FULLY_ATTENDED,
-                ])) {
+                    ])
+                ) {
                     $attendees = facetoface_get_attendees($session->id);
                     // Get matching attendee.
                     foreach ($attendees as $attendee) {
