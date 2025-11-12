@@ -95,9 +95,8 @@ if ($fromform = $mform->get_data()) { // Form submitted.
 
     // Handle bulk signup cancellation
     if (!empty($fromform->f)) {
-
         $facetofaceid = $fromform->f;
-        
+
         facetoface_user_cancel_bulk($facetofaceid, $USER->id, $fromform->cancelreason);
 
         redirect(

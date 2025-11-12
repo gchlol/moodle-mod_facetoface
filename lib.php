@@ -2272,7 +2272,7 @@ function facetoface_update_signup_status($signupid, $statuscode, $createdby, $no
  * @param integer $userid ID of the user to remove from the session
  * @param string $cancelreason Optional justification for cancelling the signup
  */
-function facetoface_user_cancel_bulk($facetofaceid, $userid, $cancelreason='') {
+function facetoface_user_cancel_bulk($facetofaceid, $userid, $cancelreason = '') {
 
     $now = time();
 
@@ -2282,17 +2282,17 @@ function facetoface_user_cancel_bulk($facetofaceid, $userid, $cancelreason='') {
     $sessions = facetoface_get_sessions($facetofaceid);
 
     // Extract all session IDs from the user's submissions.
-    $submissionids = array_map(function($submission) {
+    $submissionids = array_map(function ($submission) {
         return $submission->sessionid;
     }, $submissions);
 
     // Filter the sessions to keep only those present in the user's submissions.
-    $sessions = array_filter($sessions, function($session) use ($submissionids) {
+    $sessions = array_filter($sessions, function ($session) use ($submissionids) {
         return in_array($session->id, $submissionids);
     });
 
     // Filter out invalid sessions in the past — keep only those with a future timestart.
-    $cancellable = array_filter($sessions, function($session) use ($now) {
+    $cancellable = array_filter($sessions, function ($session) use ($now) {
         if (empty($session->sessiondates) || !is_array($session->sessiondates)) {
             return false;
         }

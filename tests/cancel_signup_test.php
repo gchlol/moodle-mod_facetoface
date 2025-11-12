@@ -29,11 +29,11 @@ global $USER;
  * @covers \mod_facetoface\cancelsignup
  */
 class cancel_signup_test extends \advanced_testcase {
-
     /**
      * This method runs before every test.
      */
     protected function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest();
     }
 
@@ -59,7 +59,7 @@ class cancel_signup_test extends \advanced_testcase {
                 'sessionid' => $session->id,
                 'userid'    => $user->id,
                 'booked'    => MDL_F2F_STATUS_BOOKED,
-                'approved'  => MDL_F2F_STATUS_APPROVED
+                'approved'  => MDL_F2F_STATUS_APPROVED,
             ]
         );
     }

@@ -66,7 +66,6 @@ $string['bookingstatus'] = 'You are booked for the following session';
 $string['calendareventdescriptionbooking'] = 'You are booked for this <a href="{$a}">Face-to-Face session</a>.';
 $string['calendareventdescriptionsession'] = 'You have created this <a href="{$a}">Face-to-Face session</a>.';
 $string['calendaroptions'] = 'Calendar options';
-$string['cancellationconfirm'] = 'Are you sure you want to cancel your signup for this session?';
 $string['cancellationconfirmall'] = 'Are you sure you want to cancel your signup for all sessions in this activity?';
 $string['cancellationsuccessall'] = 'Your signup has been cancelled for all upcoming sessions.';
 $string['cancelallbookings'] = 'Cancel all bookings';
