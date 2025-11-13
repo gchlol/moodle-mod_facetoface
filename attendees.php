@@ -84,19 +84,6 @@ $canviewcancellations = has_capability('mod/facetoface:viewcancellations', $cont
 $canviewsession = $canviewattendees || $cantakeattendance || $canviewcancellations;
 $canapproverequests = false;
 
-$requests = [];
-$declines = [];
-
-// If a user can take attendance, they can approve staff's booking requests.
-if ($cantakeattendance) {
-    $requests = facetoface_get_requests($session->id);
-}
-
-// If requests found (but not in the middle of taking attendance), show requests table.
-if ($requests && !$takeattendance) {
-    $canapproverequests = true;
-}
-
 // GCHLOL: Add line manager check.
 $myusers = [];
 if (!$canviewsession) {
@@ -115,6 +102,29 @@ if (!$canviewsession) {
     $myusers = $DB->get_records_sql($sql, $params);
 }
 $ismanager = !empty($myusers);
+
+$requests = [];
+$declines = [];
+
+// If a user can take attendance, they can approve staff's booking requests.
+if ($cantakeattendance || $ismanager) {
+    $requests = facetoface_get_requests($session->id);
+}
+
+// GCHLOL: Only show the line managers users.
+if (!$cantakeattendance && $ismanager) {
+    foreach ($requests as $key => $request) {
+        // GCHLOL: Only show the line managers users.
+        if (!isset($myusers[$request->id])) {
+            unset($requests[$key]);
+        }
+    }
+}
+
+// If requests found (but not in the middle of taking attendance), show requests table.
+if ($requests && !$takeattendance) {
+    $canapproverequests = true;
+}
 
 // Check the user is allowed to view this page.
 // GCHLOL: Allow line managers to view the page.
@@ -403,7 +413,7 @@ if ($canapproverequests) {
     } else {
         $canbookuser = (facetoface_session_has_capacity($session, $contextmodule) || $session->allowoverbook);
 
-        $OUTPUT->heading(get_string('unapprovedrequests', 'facetoface'));
+        echo $OUTPUT->heading(get_string('unapprovedrequests', 'facetoface'));
 
         if (!$canbookuser) {
             echo html_writer::tag('p', get_string('cannotapproveatcapacity', 'facetoface'));
