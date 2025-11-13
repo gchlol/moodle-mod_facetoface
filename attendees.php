@@ -111,6 +111,16 @@ if ($cantakeattendance || $ismanager) {
     $requests = facetoface_get_requests($session->id);
 }
 
+// GCHLOL: Only show the line managers users.
+if (!$cantakeattendance && $ismanager) {
+    foreach ($requests as $key => $request) {
+        // GCHLOL: Only show the line managers users.
+        if (!isset($myusers[$request->id])) {
+            unset($requests[$key]);
+        }
+    }
+}
+
 // If requests found (but not in the middle of taking attendance), show requests table.
 if ($requests && !$takeattendance) {
     $canapproverequests = true;
@@ -393,27 +403,17 @@ if ($backtoallsessions) {
 }
 echo html_writer::link($url, get_string('goback', 'facetoface')) . html_writer::end_tag('p');
 
-// GCHLOL: Only show the line managers users.
-if (!$cantakeattendance && $ismanager) {
-    foreach ($requests as $key => $request) {
-        // GCHLOL: Only show the line managers users.
-        if (!isset($myusers[$request->id])) {
-            unset($requests[$key]);
-        }
-    }
-}
-
 /*
  * Print unapproved requests (if user able to view)
  */
-if ($canapproverequests || $ismanager) {
+if ($canapproverequests) {
     echo html_writer::empty_tag('br', ['id' => 'unapproved']);
     if (!$requests) {
         echo $OUTPUT->notification(get_string('noactionableunapprovedrequests', 'facetoface'));
     } else {
         $canbookuser = (facetoface_session_has_capacity($session, $contextmodule) || $session->allowoverbook);
 
-        $OUTPUT->heading(get_string('unapprovedrequests', 'facetoface'));
+        echo $OUTPUT->heading(get_string('unapprovedrequests', 'facetoface'));
 
         if (!$canbookuser) {
             echo html_writer::tag('p', get_string('cannotapproveatcapacity', 'facetoface'));
