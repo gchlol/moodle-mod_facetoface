@@ -16,7 +16,6 @@
 
 namespace mod_facetoface;
 
-use core\exception\moodle_exception;
 use file_storage;
 use mod_facetoface\booking_manager;
 use lang_string;
@@ -1071,7 +1070,7 @@ final class upload_test extends \advanced_testcase {
     public function test_csv_validation(string $contents, ?string $expectedexceptionmessage = null): void {
         [$bm, $session, $user] = $this->setup_csv_test($contents);
         if (!empty($expectedexceptionmessage)) {
-            $this->expectException(moodle_exception::class);
+            $this->expectException(\moodle_exception::class);
             $this->expectExceptionMessage($expectedexceptionmessage);
         }
         $bm->validate();
