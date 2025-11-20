@@ -4618,12 +4618,10 @@ function facetoface_enrol_user($context, $courseid, $userid): bool {
 class facetoface_candidate_selector extends user_selector_base {
     protected $sessionid;
     protected $courseid;
-    protected $ismanager = false; // GCHLOL: Added is line manager property.
 
     public function __construct($name, $options) {
         $this->sessionid = $options['sessionid'];
         $this->courseid = $options['courseid'];
-        $this->ismanager = $options['ismanager']; // GCHLOL: Added is line manager property.
         parent::__construct($name, $options);
     }
 
@@ -4640,7 +4638,7 @@ class facetoface_candidate_selector extends user_selector_base {
 
         // GCHLOL: Add DISTINCT (specifically for line managers)
         $fields      = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
-        $countfields = 'SELECT COUNT(u.id)';
+        $countfields = 'SELECT COUNT(DISTINCT u.id)';
 
         $limitsql = '';
         if (get_config('facetoface', 'limit_candidates')) {
@@ -4652,12 +4650,19 @@ class facetoface_candidate_selector extends user_selector_base {
         // GCHLOL: Add line manager SQL.
         $myjoins = '';
         $mywhere = '';
-        if ($this->ismanager && !has_capability('mod/facetoface:addattendees', $this->accesscontext)) {
+        if (!has_capability('mod/facetoface:addattendees', $this->accesscontext)) {
             [
                 'joins' => $myjoins,
                 'where' => $mywhere,
                 'params' => $myparams,
-            ] = \tool_organisation\api::get_myusers_sql($USER->id);
+            ] = \tool_organisation\api::get_myusers_sql(
+                $USER->id,
+                false,
+                [
+                    \tool_organisation\local\type\role_permission::MANAGER,
+                    \tool_organisation\local\type\role_permission::MANAGE_USERS,
+                ]
+            );
 
             $mywhere = 'AND '.$mywhere;
             $params = array_merge($params, $myparams);
@@ -4719,11 +4724,9 @@ class facetoface_candidate_selector extends user_selector_base {
  */
 class facetoface_existing_selector extends user_selector_base {
     protected $sessionid;
-    protected $ismanager = false; // GCHLOL: Added is line manager property.
 
     public function __construct($name, $options) {
         $this->sessionid = $options['sessionid'];
-        $this->ismanager = $options['ismanager']; // GCHLOL: Added is line manager property.
         parent::__construct($name, $options);
     }
 
@@ -4742,12 +4745,19 @@ class facetoface_existing_selector extends user_selector_base {
         $myjoins = '';
         $mywhere = '';
         $myparams = [];
-        if ($this->ismanager && !has_capability('mod/facetoface:removeattendees', $this->accesscontext)) {
+        if (!has_capability('mod/facetoface:removeattendees', $this->accesscontext)) {
             [
                 'joins' => $myjoins,
                 'where' => $mywhere,
                 'params' => $myparams,
-            ] = \tool_organisation\api::get_myusers_sql($USER->id);
+            ] = \tool_organisation\api::get_myusers_sql(
+                $USER->id,
+                false,
+                [
+                    \tool_organisation\local\type\role_permission::MANAGER,
+                    \tool_organisation\local\type\role_permission::MANAGE_USERS,
+                ]
+            );
 
             $mywhere = 'AND '.$mywhere;
         }
@@ -4755,7 +4765,7 @@ class facetoface_existing_selector extends user_selector_base {
         $fields  = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
         $fields .= ', su.id AS submissionid, s.discountcost, su.discountcode, su.notificationtype, f.id AS facetofaceid,
             f.course, ss.grade, ss.statuscode, sign.timecreated';
-        $countfields = 'SELECT COUNT(1)';
+        $countfields = 'SELECT COUNT(DISTINCT 1)';
         $sql = "
             FROM
                 {facetoface} f

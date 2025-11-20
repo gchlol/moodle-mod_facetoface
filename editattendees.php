@@ -66,7 +66,14 @@ $ismanager = false;
     'joins' => $joins,
     'where' => $where,
     'params' => $params,
-] = \tool_organisation\api::get_myusers_sql($USER->id);
+] = \tool_organisation\api::get_myusers_sql(
+    $USER->id,
+    false,
+    [
+        \tool_organisation\local\type\role_permission::MANAGER,
+        \tool_organisation\local\type\role_permission::MANAGE_USERS,
+    ]
+);
 
 $sql = "SELECT COUNT(u.id)
         FROM {user} u
@@ -95,12 +102,10 @@ $potentialuserselector = new facetoface_candidate_selector('addselect', [
     'sessionid' => $session->id,
     'courseid' => $course->id,
     'accesscontext' => $context,
-    'ismanager' => $ismanager, // GCHLOL: Add $ismanager to parameters
 ]);
 $existinguserselector = new facetoface_existing_selector('removeselect', [
     'sessionid' => $session->id,
     'accesscontext' => $context,
-    'ismanager' => $ismanager, // GCHLOL: Add $ismanager to parameters
 ]);
 
 // Process incoming user assignments.

@@ -230,7 +230,14 @@ function print_session_list($courseid, $facetoface, $location) {
             'joins' => $joins,
             'where' => $where,
             'params' => $params,
-        ] = \tool_organisation\api::get_myusers_sql($USER->id);
+        ] = \tool_organisation\api::get_myusers_sql(
+            $USER->id,
+            false,
+            [
+                \tool_organisation\local\type\role_permission::MANAGER,
+                \tool_organisation\local\type\role_permission::MANAGE_USERS,
+            ]
+        );
 
         $sql = "SELECT COUNT(u.id)
                 FROM {user} u
