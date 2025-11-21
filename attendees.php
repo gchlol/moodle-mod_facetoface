@@ -87,26 +87,15 @@ $canapproverequests = false;
 // GCHLOL: Add line manager check.
 $myusers = [];
 if (!$canviewsession) {
-    [
-        'joins' => $joins,
-        'where' => $where,
-        'params' => $params,
-    ] = \tool_organisation\api::get_myusers_sql(
-        $USER->id,
-        false,
-        [
-            \tool_organisation\local\type\role_permission::MANAGER,
-            \tool_organisation\local\type\role_permission::MANAGE_USERS,
-        ]
-    );
+    $myjoin = \mod_facetoface\manager_api::get_my_users_sql($USER->id);
 
     $sql = "SELECT DISTINCT u.id
-            FROM {user} u
-            $joins
+            FROM {user} u ".
+            $myjoin->joins . "
             WHERE u.deleted = 0
                   AND u.suspended = 0
-                  AND $where";
-    $myusers = $DB->get_records_sql($sql, $params);
+                  AND ". $myjoin->wheres;
+    $myusers = $DB->get_records_sql($sql, $myjoin->params);
 }
 $ismanager = !empty($myusers);
 

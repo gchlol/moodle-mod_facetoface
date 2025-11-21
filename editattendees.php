@@ -61,27 +61,7 @@ require_course_login($course, true, $cm);
 $context = context_course::instance($course->id);
 
 // GCHLOL: Add line manager check.
-$ismanager = false;
-[
-    'joins' => $joins,
-    'where' => $where,
-    'params' => $params,
-] = \tool_organisation\api::get_myusers_sql(
-    $USER->id,
-    false,
-    [
-        \tool_organisation\local\type\role_permission::MANAGER,
-        \tool_organisation\local\type\role_permission::MANAGE_USERS,
-    ]
-);
-
-$sql = "SELECT COUNT(u.id)
-        FROM {user} u
-        $joins
-        WHERE u.deleted = 0
-              AND u.suspended = 0
-              AND $where";
-$ismanager = (bool) $DB->count_records_sql($sql, $params);
+$ismanager = \mod_facetoface\manager_api::is_manager($USER->id);
 
 // GCHLOL: Allow line managers to view the page.
 if (!$ismanager) {

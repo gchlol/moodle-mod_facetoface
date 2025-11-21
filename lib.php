@@ -4651,21 +4651,12 @@ class facetoface_candidate_selector extends user_selector_base {
         $myjoins = '';
         $mywhere = '';
         if (!has_capability('mod/facetoface:addattendees', $this->accesscontext)) {
-            [
-                'joins' => $myjoins,
-                'where' => $mywhere,
-                'params' => $myparams,
-            ] = \tool_organisation\api::get_myusers_sql(
-                $USER->id,
-                false,
-                [
-                    \tool_organisation\local\type\role_permission::MANAGER,
-                    \tool_organisation\local\type\role_permission::MANAGE_USERS,
-                ]
-            );
+            $myjoin = \mod_facetoface\manager_api::get_my_users_sql($USER->id);
+            $myjoins = $myjoin->joins;
+            $mywhere = $myjoin->wheres;
 
-            $mywhere = 'AND '.$mywhere;
-            $params = array_merge($params, $myparams);
+            $mywhere = "AND $mywhere";
+            $params = array_merge($params, $myjoin->params);
         }
 
         $sql = "
@@ -4746,20 +4737,12 @@ class facetoface_existing_selector extends user_selector_base {
         $mywhere = '';
         $myparams = [];
         if (!has_capability('mod/facetoface:removeattendees', $this->accesscontext)) {
-            [
-                'joins' => $myjoins,
-                'where' => $mywhere,
-                'params' => $myparams,
-            ] = \tool_organisation\api::get_myusers_sql(
-                $USER->id,
-                false,
-                [
-                    \tool_organisation\local\type\role_permission::MANAGER,
-                    \tool_organisation\local\type\role_permission::MANAGE_USERS,
-                ]
-            );
+            $myjoin = \mod_facetoface\manager_api::get_my_users_sql($USER->id);
+            $myjoins = $myjoin->joins;
+            $mywhere = $myjoin->wheres;
+            $myparams = $myjoin->params;
 
-            $mywhere = 'AND '.$mywhere;
+            $mywhere = "AND $mywhere";
         }
 
         $fields  = 'SELECT DISTINCT ' . $this->required_fields_sql('u');
