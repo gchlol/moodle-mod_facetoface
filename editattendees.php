@@ -61,20 +61,7 @@ require_course_login($course, true, $cm);
 $context = context_course::instance($course->id);
 
 // GCHLOL: Add line manager check.
-$ismanager = false;
-[
-    'joins' => $joins,
-    'where' => $where,
-    'params' => $params,
-] = \tool_organisation\api::get_myusers_sql($USER->id);
-
-$sql = "SELECT COUNT(u.id)
-        FROM {user} u
-        $joins
-        WHERE u.deleted = 0
-              AND u.suspended = 0
-              AND $where";
-$ismanager = (bool) $DB->count_records_sql($sql, $params);
+$ismanager = \mod_facetoface\manager_api::is_manager($USER->id);
 
 // GCHLOL: Allow line managers to view the page.
 if (!$ismanager) {
@@ -95,12 +82,10 @@ $potentialuserselector = new facetoface_candidate_selector('addselect', [
     'sessionid' => $session->id,
     'courseid' => $course->id,
     'accesscontext' => $context,
-    'ismanager' => $ismanager, // GCHLOL: Add $ismanager to parameters
 ]);
 $existinguserselector = new facetoface_existing_selector('removeselect', [
     'sessionid' => $session->id,
     'accesscontext' => $context,
-    'ismanager' => $ismanager, // GCHLOL: Add $ismanager to parameters
 ]);
 
 // Process incoming user assignments.
