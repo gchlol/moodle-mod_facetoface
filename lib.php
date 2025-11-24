@@ -2273,6 +2273,7 @@ function facetoface_update_signup_status($signupid, $statuscode, $createdby, $no
  * @param string $cancelreason Optional justification for cancelling the signup
  */
 function facetoface_user_cancel_bulk($facetofaceid, $userid, $cancelreason = '') {
+    global $DB;
 
     $now = time();
 
@@ -2310,7 +2311,35 @@ function facetoface_user_cancel_bulk($facetofaceid, $userid, $cancelreason = '')
 
     foreach ($cancellable as $session) {
         try {
-            facetoface_user_cancel($session, false, false, $errorstr, $cancelreason);
+            if (facetoface_user_cancel($session, false, false, $errorstr, $cancelreason)) {
+                $facetoface = $DB->get_record('facetoface', ['id' => $session->facetoface], '*', MUST_EXIST);
+                $cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $facetoface->course, false, MUST_EXIST);
+                $contextmodule = context_module::instance($cm->id);
+
+                // Logging and events trigger.
+                $params = [
+                    'context'  => $contextmodule,
+                    'objectid' => $session->id,
+                ];
+                $event = \mod_facetoface\event\cancel_booking::create($params);
+                $event->add_record_snapshot('facetoface_sessions', $session);
+                $event->add_record_snapshot('facetoface', $facetoface);
+                $event->trigger();
+
+                if ($session->datetimeknown) {
+                    facetoface_send_cancellation_notice($facetoface, $session, $userid);
+                }
+            } else {
+                // Logging and events trigger.
+                $params = [
+                    'context'  => $contextmodule,
+                    'objectid' => $session->id,
+                ];
+                $event = \mod_facetoface\event\cancel_booking_failed::create($params);
+                $event->add_record_snapshot('facetoface_sessions', $session);
+                $event->add_record_snapshot('facetoface', $facetoface);
+                $event->trigger();
+            }
         } catch (Exception $e) {
             debugging("Could not cancel signup for session {$session->id}: " . $e->getMessage(), DEBUG_DEVELOPER);
         }
@@ -2327,7 +2356,7 @@ function facetoface_user_cancel_bulk($facetofaceid, $userid, $cancelreason = '')
  * @param string $cancelreason Optional justification for cancelling the signup
  */
 function facetoface_user_cancel($session, $userid = false, $forcecancel = false, &$errorstr = null, $cancelreason = '') {
-    global $USER;
+    global $DB, $USER;
 
     if (!$userid) {
         $userid = $USER->id;
