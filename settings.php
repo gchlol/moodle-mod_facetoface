@@ -168,10 +168,12 @@ $settings->add(new admin_setting_configcheckbox(
 $settings->add(new admin_setting_configselect(
     'facetoface/icalendarclass',
     get_string('setting:icalendarclass_caption', 'facetoface'),
-    get_string('setting:icalendarclass_desc', 'facetoface'), 'PRIVATE', [
+    get_string('setting:icalendarclass_desc', 'facetoface'),
+    'PRIVATE',
+    [
         'PUBLIC'        => get_string('icalendarclass:public', 'facetoface'),
         'PRIVATE'       => get_string('icalendarclass:private', 'facetoface'),
-        'CONFIDENTIAL'  => get_string('icalendarclass:confidential', 'facetoface')
+        'CONFIDENTIAL'  => get_string('icalendarclass:confidential', 'facetoface'),
     ]
 ));
 
