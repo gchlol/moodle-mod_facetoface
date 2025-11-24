@@ -3333,6 +3333,9 @@ function facetoface_get_ical_attachment($method, $facetoface, $session, $user) {
         $username = fullname($user);
         $mailto   = $user->email;
 
+        // Get the CLASS value from the new config (default to PRIVATE if not set)
+        $icalclass = get_config('facetoface', 'icalendarclass') ?: 'PRIVATE';
+
         // The extra newline at the bottom is so multiple events start on their
         // own lines. The very last one is trimmed outside the loop.
         $vevents .= <<<EOF
@@ -3345,7 +3348,7 @@ SEQUENCE:{$sequence}
 SUMMARY:{$summary}
 LOCATION:{$location}
 DESCRIPTION:{$description}
-CLASS:PRIVATE
+CLASS:{$icalclass}
 TRANSP:OPAQUE{$cancelstatus}
 ORGANIZER;CN={$organiseremail}:MAILTO:{$organiseremail}
 ATTENDEE;CUTYPE=INDIVIDUAL;ROLE={$role};PARTSTAT=NEEDS-ACTION;
