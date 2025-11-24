@@ -31,7 +31,6 @@ require_once("$CFG->dirroot/mod/facetoface/lib.php");
  * @covers ::facetoface_get_ical_attachment
  */
 final class icalendar_privacy_test extends \advanced_testcase {
-
     /**
      * Test that calendar invitations respect the private setting when enabled.
      */
@@ -130,5 +129,5 @@ final class icalendar_privacy_test extends \advanced_testcase {
         if (file_exists($icalfile)) {
             unlink($icalfile);
         }
-    }    
+    }
 }
