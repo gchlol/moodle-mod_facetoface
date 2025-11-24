@@ -216,21 +216,9 @@ function print_session_list($courseid, $facetoface, $location) {
         }
     }
 
-    // Upcoming sessions - cancel all button
-    if (!empty($bookedsessionmap)) { // Only display if the user has booked sessions
-        $cancelallurl = new moodle_url('/mod/facetoface/cancelsignup.php', ['f' => $facetoface->id]);
-        echo html_writer::div(
-            html_writer::link(
-                $cancelallurl,
-                get_string('cancelallbookings', 'facetoface'),
-                ['class' => 'btn btn-secondary my-2', 'title' => get_string('cancelallbookings', 'facetoface')]
-            )
-        );
-    }
-
     // Upcoming sessions.
     echo $OUTPUT->heading(get_string('upcomingsessions', 'facetoface'));
-
+    echo html_writer::start_tag('div', ['class' => 'd-flex']);
     if (!empty($upcomingarray) && $bulksignup) {
         $firstsession = $sessions[array_keys($sessions)[0]];
         $signupforstreamlink = html_writer::link(
@@ -238,8 +226,21 @@ function print_session_list($courseid, $facetoface, $location) {
             get_string('signupforstream', 'facetoface')
         );
 
-        echo html_writer::tag('p', $signupforstreamlink);
+        echo html_writer::tag('p', $signupforstreamlink, ['class' => 'pr-3']);
     }
+
+    // Upcoming sessions - cancel all
+    if (!empty($bookedsessionmap)) {
+        $cancelallurl = new moodle_url('/mod/facetoface/cancelsignup.php', ['f' => $facetoface->id]);
+        $cancelallbookingslink = html_writer::link($cancelallurl,
+            get_string('cancelallbookings', 'facetoface')
+        );
+
+        echo html_writer::tag('p', $cancelallbookingslink, ['class' => 'pr-0']);
+    }
+
+    echo html_writer::end_tag('div');
+
     if (empty($upcomingarray) && empty($upcomingtbdarray)) {
         print_string('noupcoming', 'facetoface');
     } else {
