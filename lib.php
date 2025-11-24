@@ -2293,8 +2293,9 @@ function facetoface_user_cancel_bulk($facetofaceid, $userid, $cancelreason = '')
 
     // Filter out invalid sessions in the past — keep only those with a future timestart.
     $cancellable = array_filter($sessions, function ($session) use ($now) {
-        if (empty($session->sessiondates) || !is_array($session->sessiondates)) {
-            return false;
+        // Return true if there is no sessiondate set.
+        if (!$session->datetimeknown || empty($session->sessiondates) || !is_array($session->sessiondates)) {
+            return true;
         }
 
         // Return true if any sessiondate has a timestart in the future.
