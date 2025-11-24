@@ -3333,8 +3333,8 @@ function facetoface_get_ical_attachment($method, $facetoface, $session, $user) {
         $username = fullname($user);
         $mailto   = $user->email;
 
-        // Check if private calendar invitations are enabled
-        $icalclass = get_config('facetoface', 'icalendarprivate') ? 'PRIVATE' : 'PUBLIC';
+        // Get the CLASS value from the new config (default to PRIVATE if not set)
+        $icalclass = get_config('facetoface', 'icalendarclass') ?: 'PRIVATE';
 
         // The extra newline at the bottom is so multiple events start on their
         // own lines. The very last one is trimmed outside the loop.

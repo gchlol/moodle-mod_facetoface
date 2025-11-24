@@ -165,11 +165,14 @@ $settings->add(new admin_setting_configcheckbox(
     0
 ));
 
-$settings->add(new admin_setting_configcheckbox(
-    'facetoface/icalendarprivate',
-    get_string('setting:icalendarprivate_caption', 'facetoface'),
-    get_string('setting:icalendarprivate', 'facetoface'),
-    1
+$settings->add(new admin_setting_configselect(
+    'facetoface/icalendarclass',
+    get_string('setting:icalendarclass_caption', 'facetoface'),
+    get_string('setting:icalendarclass_desc', 'facetoface'), 'PRIVATE', [
+        'PUBLIC'        => get_string('icalendarclass:public', 'facetoface'),
+        'PRIVATE'       => get_string('icalendarclass:private', 'facetoface'),
+        'CONFIDENTIAL'  => get_string('icalendarclass:confidential', 'facetoface')
+    ]
 ));
 
 // List of user profile fields to optionally be included in attendees export.
