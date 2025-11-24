@@ -37,6 +37,7 @@ final class icalendar_privacy_test extends \advanced_testcase {
      */
     public function test_icalendar_private_flag_enabled(): void {
         $this->resetAfterTest();
+        global $CFG;
 
         // Enable private calendar invitations.
         set_config('icalendarprivate', 1, 'facetoface');
@@ -64,6 +65,9 @@ final class icalendar_privacy_test extends \advanced_testcase {
 
         // Generate iCal attachement.
         $icalfile = facetoface_get_ical_attachment(MDL_F2F_INVITE, $facetoface, $session, $user);
+        $icalfile = $CFG->dataroot . '/' . $icalfile;
+        $this->assertFileExists($icalfile, 'iCal attachment was not created');
+        $icalcontent = file_get_contents($icalfile);
 
         // Read the generated iCal file.
         $icalcontent = file_get_contents($icalfile);
@@ -83,6 +87,7 @@ final class icalendar_privacy_test extends \advanced_testcase {
      */
     public function test_icalendar_private_flag_disabled(): void {
         $this->resetAfterTest();
+        global $CFG;
 
         // Enable private calendar invitations.
         set_config('icalendarprivate', 0, 'facetoface');
@@ -110,6 +115,9 @@ final class icalendar_privacy_test extends \advanced_testcase {
 
         // Generate iCal attachement.
         $icalfile = facetoface_get_ical_attachment(MDL_F2F_INVITE, $facetoface, $session, $user);
+        $icalfile = $CFG->dataroot . '/' . $icalfile;
+        $this->assertFileExists($icalfile, 'iCal attachment was not created');
+        $icalcontent = file_get_contents($icalfile);
 
         // Read the generated iCal file.
         $icalcontent = file_get_contents($icalfile);
