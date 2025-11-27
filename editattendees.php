@@ -217,7 +217,7 @@ if ($facetoface->signuptype == MOD_FACETOFACE_SIGNUP_MULTIPLE) {
     $table->data[] = new html_table_row([$cell]);
 }
 
-$content = html_writer::checkbox('suppressemail', 1, 0, get_string('suppressemail', 'facetoface'),
+$content = html_writer::checkbox('suppressemail', 1, $suppressemail, get_string('suppressemail', 'facetoface'),
     ['id' => 'suppressemail']);
 $content .= $OUTPUT->help_icon('suppressemail', 'facetoface');
 $cell = new html_table_cell($content);
