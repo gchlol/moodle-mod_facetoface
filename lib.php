@@ -2840,19 +2840,8 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
                         }
                     }
 
-                    // Ensure course completion time matches the latest criterion completion time.
-                    $maxcriteria = (int)$DB->get_field_sql(
-                    "
-                            SELECT MAX(timecompleted)
-                            FROM {course_completion_crit_compl}
-                            WHERE course = ? AND userid = ?
-                        ",
-                        [$course->id, $record->userid]
-                    );
-
-                    if ($maxcriteria) {
-                        completion_util::recalculate_course_for_user($course->id, $record->userid, $maxcriteria);
-                    }
+                    // Update the course completion entry.
+                    completion_util::recalculate_course_for_user($course->id, $record->userid);
                 }
             }
         }
