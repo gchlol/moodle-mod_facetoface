@@ -2840,7 +2840,7 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
                         }
                     }
 
-                    // Update the course completion entry.
+                    // GCHLOL - YZ - Update the course completion entry.
                     completion_util::recalculate_course_for_user($course->id, $record->userid);
                 }
             }
