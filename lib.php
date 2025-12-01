@@ -36,7 +36,7 @@ require_once($CFG->dirroot . '/lib/adminlib.php');
 require_once($CFG->dirroot . '/user/selector/lib.php');
 require_once($CFG->libdir . '/completionlib.php');
 
-use mod_signoff\util\completion_util;
+use mod_facetoface\util\completion_util;
 
 /*
  * Definitions for setting notification types.

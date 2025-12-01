@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace mod_facetoface\util;
+
+use completion_completion;
+
 /**
  * External facetoface API.
  *
@@ -31,7 +35,6 @@ class completion_util {
      * @param int $user_id Target user ID.
      * @param int|null $time_started Optional `timestarted` to set if not already set. Defaults to now.
      * @return void
-     * @throws coding_exception
      */
     public static function recalculate_course_for_user(int $course_id, int $user_id, ?int $time_started = null): void {
         $completion = new completion_completion([
