@@ -36,6 +36,8 @@ require_once($CFG->dirroot . '/lib/adminlib.php');
 require_once($CFG->dirroot . '/user/selector/lib.php');
 require_once($CFG->libdir . '/completionlib.php');
 
+use mod_signoff\util\completion_util;
+
 /*
  * Definitions for setting notification types.
  */
@@ -2849,32 +2851,7 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
                     );
 
                     if ($maxcriteria) {
-                        $coursecompletion = $DB->get_record(
-                            'course_completions',
-                            [
-                                'course' => $course->id,
-                                'userid' => $record->userid,
-                            ]
-                        );
-
-                        // Only adjust if the course is complete (row exists and timecompleted is set).
-                        if (
-                            $coursecompletion &&
-                            !empty($coursecompletion->timecompleted) &&
-                            (int)$coursecompletion->timecompleted !== $maxcriteria
-                        ) {
-
-                            $coursecompletion->timecompleted = $maxcriteria;
-                            $coursecompletion->timemodified = time();
-
-                            $DB->update_record('course_completions', $coursecompletion);
-                        }
-
-                        // Invalidate Moodle's cache for course completion for this user+course,
-                        // so that the course completion reports reflect the updated timecompleted immediately.
-                        $coursecompletioncache = cache::make('core', 'coursecompletion');
-                        $cachekey = $record->userid . '_' . $course->id;
-                        $coursecompletioncache->delete($cachekey);
+                        completion_util::recalculate_course_for_user($course->id, $record->userid, $maxcriteria);
                     }
                 }
             }
