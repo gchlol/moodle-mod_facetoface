@@ -462,7 +462,7 @@ class booking_manager {
 
                 // Handle signups.
                 if ($issignup) {
-                    if (($statuscode === MDL_F2F_STATUS_BOOKED) && !$session->datetimeknown) {
+                    if ($statuscode === MDL_F2F_STATUS_BOOKED && !$session->datetimeknown) {
                         // If booked, ensures the status is waitlisted instead, if the datetime is unknown.
                         $statuscode = MDL_F2F_STATUS_WAITLISTED;
                     }

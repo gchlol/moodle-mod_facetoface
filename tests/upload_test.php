@@ -1015,6 +1015,8 @@ final class upload_test extends \advanced_testcase {
 
         // This is what facetoface does internally when you don't set a time.
         // This is to test 'waitlisting' states.
+        // See session_form.php, it still submits timestart and timefinish, but allows user to check/uncheck
+        // 'Session date/time known'.
         $datetimeknown = true;
         if (empty($sessiondates)) {
             $sessiondates = ['timestart' => time(), 'timefinish' => time()];
@@ -1085,7 +1087,7 @@ final class upload_test extends \advanced_testcase {
         $dateoptions = [
             'past' => ['timestart' => time() - DAYSECS * 2, 'timefinish' => time() - DAYSECS],
             'present' => ['timestart' => time() - DAYSECS, 'timefinish' => time() + DAYSECS],
-            'future' => ['timestart' => time() + DAYSECS, 'timefinish' => time() - DAYSECS * 2],
+            'future' => ['timestart' => time() + DAYSECS, 'timefinish' => time() + DAYSECS * 2],
             'unknown' => [],
         ];
 
@@ -1095,16 +1097,16 @@ final class upload_test extends \advanced_testcase {
         foreach ($dateoptions as $datelabel => $dates) {
             foreach ($statusoptions as $status) {
                 // Cancelled status only applies to future dates.
-                if ($status == 'cancelled' && $datelabel != 'future') {
+                if ($status === 'cancelled' && $datelabel !== 'future') {
                     continue;
                 }
 
                 // If no status is given, it should be either waitlisted or booked
                 // depending on the time of the session.
                 $expectedstatus = $status;
-                if ($status == '' && $datelabel == 'unknown') {
+                if ($status === '' && $datelabel === 'unknown') {
                     $expectedstatus = 'waitlisted';
-                } else if ($status == '' && $datelabel !== 'unknown') {
+                } else if ($status === '' && $datelabel !== 'unknown') {
                     $expectedstatus = 'booked';
                 }
 
@@ -1145,20 +1147,24 @@ final class upload_test extends \advanced_testcase {
             return;
         }
 
-        $status = facetoface_get_status($DB->get_record('facetoface_signups_status', ['signupid' => $signup->id, 'superceded' => '0'])->statuscode);
+        // Otherwise get the status that ended up in the database.
+        $storedstatus = facetoface_get_status($DB->get_record('facetoface_signups_status', ['signupid' => $signup->id, 'superceded' => '0'])->statuscode);
 
-        $signupstatuses = [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED, ''];
+        $signupstatuses = [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED];
         $attendancestatuses = [MDL_F2F_STATUS_NO_SHOW, MDL_F2F_STATUS_PARTIALLY_ATTENDED, MDL_F2F_STATUS_FULLY_ATTENDED];
 
         $issignup = in_array($expectedstatus, $signupstatuses);
         $isattendance = in_array($expectedstatus, $attendancestatuses);
 
+        // If signed up only, the status should be equal to the expected status.
         if ($issignup) {
-            $this->assertEquals($expectedstatus, $status);
+            $this->assertEquals($expectedstatus, $storedstatus);
         }
 
+        // If attended, the 'signup' status should just be 'booked' (signups only allow booked/waitlisted status),
+        // and the 'attendance' status should be equal to the expected status.
         if ($isattendance) {
-            $this->assertEquals('booked', $status);
+            $this->assertEquals('booked', $storedstatus);
             $attendance = facetoface_get_attendee($session->id, $user->id);
             $this->assertEquals($expectedstatus, facetoface_get_status($attendance->statuscode));
         }
