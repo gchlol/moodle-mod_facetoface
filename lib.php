@@ -2837,6 +2837,45 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
                             $criteriacompletion->mark_complete($record->timefinish);
                         }
                     }
+
+                    // Ensure course completion time matches the latest criterion completion time.
+                    $maxcriteria = (int)$DB->get_field_sql(
+                    "
+                            SELECT MAX(timecompleted)
+                            FROM {course_completion_crit_compl}
+                            WHERE course = ? AND userid = ?
+                        ",
+                        [$course->id, $record->userid]
+                    );
+
+                    if ($maxcriteria) {
+                        $coursecompletion = $DB->get_record(
+                            'course_completions',
+                            [
+                                'course' => $course->id,
+                                'userid' => $record->userid,
+                            ]
+                        );
+
+                        // Only adjust if the course is complete (row exists and timecompleted is set).
+                        if (
+                            $coursecompletion &&
+                            !empty($coursecompletion->timecompleted) &&
+                            (int)$coursecompletion->timecompleted !== $maxcriteria
+                        ) {
+
+                            $coursecompletion->timecompleted = $maxcriteria;
+                            $coursecompletion->timemodified = time();
+
+                            $DB->update_record('course_completions', $coursecompletion);
+                        }
+
+                        // Invalidate Moodle's cache for course completion for this user+course,
+                        // so that the course completion reports reflect the updated timecompleted immediately.
+                        $coursecompletioncache = cache::make('core', 'coursecompletion');
+                        $cachekey = $record->userid . '_' . $course->id;
+                        $coursecompletioncache->delete($cachekey);
+                    }
                 }
             }
         }
