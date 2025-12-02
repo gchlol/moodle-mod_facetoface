@@ -230,7 +230,7 @@ function print_session_list($courseid, $facetoface, $location) {
     }
 
     // Upcoming sessions - cancel all
-    if (!empty($bookedsessionmap)) {
+    if (!empty($bookedsessionmap) && $bulksignup) {
         $cancelallurl = new moodle_url('/mod/facetoface/cancelsignup.php', ['f' => $facetoface->id]);
         $cancelallbookingslink = html_writer::link(
             $cancelallurl,
