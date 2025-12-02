@@ -36,6 +36,8 @@ require_once($CFG->dirroot . '/lib/adminlib.php');
 require_once($CFG->dirroot . '/user/selector/lib.php');
 require_once($CFG->libdir . '/completionlib.php');
 
+use mod_facetoface\util\completion_util;
+
 /*
  * Definitions for setting notification types.
  */
@@ -2837,6 +2839,9 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
                             $criteriacompletion->mark_complete($record->timefinish);
                         }
                     }
+
+                    // GCHLOL - YZ - Update the course completion entry.
+                    completion_util::recalculate_course_for_user($course->id, $record->userid);
                 }
             }
         }
