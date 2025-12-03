@@ -159,6 +159,7 @@ function print_session_list($courseid, $facetoface, $location) {
     $bulksignup = $facetoface->multiplesignupmethod == MOD_FACETOFACE_SIGNUP_MULTIPLE_PER_ACTIVITY;
 
     $bookedsession = null;
+    $bookedsessionmap = [];
     if ($submissions = facetoface_get_user_submissions($facetoface->id, $USER->id)) {
         $bookedsessionmap = array_combine(
             array_column($submissions, 'sessionid'),
