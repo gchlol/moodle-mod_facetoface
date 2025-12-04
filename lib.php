@@ -2266,6 +2266,87 @@ function facetoface_update_signup_status($signupid, $statuscode, $createdby, $no
 }
 
 /**
+ * Cancel a user from all sessions who signed up earlier.
+ *
+ * @param integer $facetofaceid ID of the activity
+ * @param integer $userid ID of the user to remove from the session
+ * @param string $cancelreason Optional justification for cancelling the signup
+ */
+function facetoface_user_cancel_bulk($facetofaceid, $userid, $cancelreason = '') {
+    global $DB;
+
+    $now = time();
+
+    $submissions = facetoface_get_user_submissions($facetofaceid, $userid);
+
+    // Get all sessions for this activity.
+    $sessions = facetoface_get_sessions($facetofaceid);
+
+    // Extract all session IDs from the user's submissions.
+    $submissionids = array_map(function ($submission) {
+        return $submission->sessionid;
+    }, $submissions);
+
+    // Filter the sessions to keep only those present in the user's submissions.
+    $sessions = array_filter($sessions, function ($session) use ($submissionids) {
+        return in_array($session->id, $submissionids);
+    });
+
+    // Filter out invalid sessions in the past — keep only those with a future timestart.
+    $cancellable = array_filter($sessions, function ($session) use ($now) {
+        // Return true if there is no sessiondate set.
+        if (!$session->datetimeknown || empty($session->sessiondates) || !is_array($session->sessiondates)) {
+            return true;
+        }
+
+        // Return true if any sessiondate has a timestart in the future.
+        foreach ($session->sessiondates as $sessiondate) {
+            if (!empty($sessiondate->timestart) && $sessiondate->timestart > $now) {
+                return true;
+            }
+        }
+
+        return false;
+    });
+
+    foreach ($cancellable as $session) {
+        try {
+            if (facetoface_user_cancel($session, false, false, $errorstr, $cancelreason)) {
+                $facetoface = $DB->get_record('facetoface', ['id' => $session->facetoface], '*', MUST_EXIST);
+                $cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $facetoface->course, false, MUST_EXIST);
+                $contextmodule = context_module::instance($cm->id);
+
+                // Logging and events trigger.
+                $params = [
+                    'context'  => $contextmodule,
+                    'objectid' => $session->id,
+                ];
+                $event = \mod_facetoface\event\cancel_booking::create($params);
+                $event->add_record_snapshot('facetoface_sessions', $session);
+                $event->add_record_snapshot('facetoface', $facetoface);
+                $event->trigger();
+
+                if ($session->datetimeknown) {
+                    facetoface_send_cancellation_notice($facetoface, $session, $userid);
+                }
+            } else {
+                // Logging and events trigger.
+                $params = [
+                    'context'  => $contextmodule,
+                    'objectid' => $session->id,
+                ];
+                $event = \mod_facetoface\event\cancel_booking_failed::create($params);
+                $event->add_record_snapshot('facetoface_sessions', $session);
+                $event->add_record_snapshot('facetoface', $facetoface);
+                $event->trigger();
+            }
+        } catch (Exception $e) {
+            debugging("Could not cancel signup for session {$session->id}: " . $e->getMessage(), DEBUG_DEVELOPER);
+        }
+    }
+}
+
+/**
  * Cancel a user who signed up earlier
  *
  * @param class $session       Record from the facetoface_sessions table
@@ -2275,7 +2356,7 @@ function facetoface_update_signup_status($signupid, $statuscode, $createdby, $no
  * @param string $cancelreason Optional justification for cancelling the signup
  */
 function facetoface_user_cancel($session, $userid = false, $forcecancel = false, &$errorstr = null, $cancelreason = '') {
-    global $USER;
+    global $DB, $USER;
 
     if (!$userid) {
         $userid = $USER->id;

@@ -42,13 +42,27 @@ class mod_facetoface_cancelsignup_form extends moodleform {
 
         $mform->addElement('header', 'general', get_string('cancelbooking', 'facetoface'));
 
+        // Hidden element for standard signup cancellation
         $mform->addElement('hidden', 's', $this->_customdata['s']);
         $mform->setType('s', PARAM_INT);
+
+        // Hidden element bulk signup cancellation
+        $f = $this->_customdata['f'] ?? 0;
+        $mform->addElement('hidden', 'f', $this->_customdata['f']);
+        $mform->setType('f', PARAM_INT);
 
         $mform->addElement('hidden', 'backtoallsessions', $this->_customdata['backtoallsessions']);
         $mform->setType('backtoallsessions', PARAM_INT);
 
-        $mform->addElement('html', get_string('cancellationconfirm', 'facetoface')); // Instructions.
+        // Get signup cancellation message depending on type
+        $isbulkcancellation = !empty($f);
+        if ($isbulkcancellation) {
+            $confirmmessage = get_string('cancellationconfirmall', 'facetoface');
+        } else {
+            $confirmmessage = get_string('cancellationconfirm', 'facetoface');
+        }
+
+        $mform->addElement('html', $confirmmessage); // Instructions.
 
         $mform->addElement('text', 'cancelreason', get_string('cancelreason', 'facetoface'), 'size="60" maxlength="255"');
         $mform->setType('cancelreason', PARAM_TEXT);

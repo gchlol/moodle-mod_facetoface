@@ -66,6 +66,9 @@ $string['bookingstatus'] = 'You are booked for the following session';
 $string['calendareventdescriptionbooking'] = 'You are booked for this <a href="{$a}">Face-to-Face session</a>.';
 $string['calendareventdescriptionsession'] = 'You have created this <a href="{$a}">Face-to-Face session</a>.';
 $string['calendaroptions'] = 'Calendar options';
+$string['cancellationconfirmall'] = 'Are you sure you want to cancel your signup for all sessions in this activity?';
+$string['cancellationsuccessall'] = 'Your signup has been cancelled for all upcoming sessions.';
+$string['cancelallbookings'] = 'Cancel all bookings';
 $string['cancelbooking'] = 'Cancel booking';
 $string['cancelbookingfor'] = 'Cancel booking for {$a}';
 $string['cancellation'] = 'Cancellation';
@@ -201,6 +204,7 @@ $string['error:manageremailaddressmissing'] = 'You are currently not assigned to
 $string['error:multipleusersessions'] = 'User {$a} has more than one session';
 $string['error:multipleusersmatched'] = 'Multiple users matched to identifier {$a}';
 $string['error:mustspecifycoursemodulefacetoface'] = 'Must specify a course module or a Face-to-Face ID';
+$string['error:mustspecifysessionfacetoface'] = 'Must specify a session or a Face-to-Face ID';
 $string['error:nomanageremail'] = 'You didn\'t provide an email address for your manager';
 $string['error:nomanagersemailset'] = 'No manager email is set';
 $string['error:nopermissiontosignup'] = 'You don\'t have permission to signup to this Face-to-Face session.';
