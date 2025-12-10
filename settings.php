@@ -101,6 +101,13 @@ $settings->add(new admin_setting_configcheckbox(
     0
 ));
 
+$settings->add(new admin_setting_configcheckbox(
+    'facetoface/attendeesshowusernames',
+    get_string('setting:attendeesshowusernames_caption', 'mod_facetoface'),
+    get_string('setting:attendeesshowusernames', 'mod_facetoface'),
+    0
+));
+
 $settings->add(new admin_setting_heading(
     'facetoface/manageremail_header',
     get_string('manageremailheading', 'facetoface'),

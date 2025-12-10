@@ -1430,6 +1430,7 @@ function facetoface_download_attendees($facetofacename, $session, $attendees, $f
     $timenow = time();
     $timeformat = str_replace(' ', '_', get_string('strftimedate', 'langconfig'));
     $downloadfilename = clean_filename($facetofacename . '_' . userdate($timenow, $timeformat));
+    $showusername = facetoface_should_attendees_show_usernames();
 
     $dateformat = 0;
     if ('ods' === $format) {
@@ -1485,6 +1486,10 @@ function facetoface_download_attendees($facetofacename, $session, $attendees, $f
             $fieldname = $shortname == 'lang' ? get_string('language') : get_string($shortname);
         }
         $worksheet->write_string($row, $column++, $fieldname, ['bold' => 1, 'border' => 1]);
+    }
+    // Username.
+    if ($showusername) {
+        $worksheet->write_string($row, $column++, get_string('username'), ['bold' => 1, 'border' => 1]);
     }
     // Current status.
     $worksheet->write_string($row, $column++, get_string('currentstatus', 'facetoface'), ['bold' => 1, 'border' => 1]);
@@ -1564,6 +1569,9 @@ function facetoface_download_attendees($facetofacename, $session, $attendees, $f
             } else {
                 $worksheet->write_string($row, $column++, $data, $format);
             }
+        }
+        if ($showusername) {
+            $worksheet->write_string($row, $column++, $user->username, ['border' => 1, 'v_align' => 'top']);
         }
         $worksheet->write_string(
             $row,
@@ -4755,6 +4763,21 @@ function facetoface_enrol_user($context, $courseid, $userid): bool {
     }
 
     return true;
+}
+
+/**
+ * Check if usernames should be shown in the attendees table.
+ *
+ * @return bool true if usernames can be displayed, false otherwise
+ */
+function facetoface_should_attendees_show_usernames(): bool {
+    global $CFG;
+
+    $protectusernames = $CFG->protectusernames;
+    $attendeesshowusernames = get_config('facetoface', 'attendeesshowusernames');
+    $showidentity = !empty($CFG->showuseridentity) && in_array('username', explode(',', $CFG->showuseridentity));
+
+    return $attendeesshowusernames && $showidentity && !$protectusernames;
 }
 
 /**
