@@ -36,6 +36,7 @@ require_once($CFG->dirroot . '/lib/adminlib.php');
 require_once($CFG->dirroot . '/user/selector/lib.php');
 require_once($CFG->libdir . '/completionlib.php');
 
+use mod_facetoface\completion\custom_completion;
 use mod_facetoface\util\completion_util;
 
 /*
@@ -2821,13 +2822,54 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
             $completion->update_state($cm, COMPLETION_UNKNOWN, $record->userid, false);
 
             if ($record->datetimeknown && get_config('facetoface', 'sessioncompletiondate')) {
+                // GCHLOL start - YZ - Fix completion time stamp bugs with not fully attended.
                 $cminfo = cm_info::create($cm);
-                $custom = new \mod_facetoface\completion\custom_completion($cminfo, $record->userid);
+                $custom = new custom_completion($cminfo, $record->userid);
 
                 if ($custom->get_state('completionattendance') === COMPLETION_COMPLETE) {
-                    // Get existing completion data, modify state, save, and update completion.
+
+                    // Determine the latest session finish time which meets the completion attendance threshold.
+                    $lastfinishsql = "
+                        SELECT  MAX(sessions_dates.timefinish) AS timefinish
+
+                        FROM    {facetoface_signups} signups
+                                JOIN {facetoface_sessions} sessions ON
+                                    sessions.id = signups.sessionid
+                                JOIN {facetoface_sessions_dates} sessions_dates ON
+                                    sessions_dates.sessionid = sessions.id
+                                JOIN {facetoface_signups_status} signups_status ON
+                                    signups_status.signupid = signups.id
+
+                        WHERE   sessions.facetoface = :f2fid AND
+                                signups.userid = :userid AND
+                                signups_status.superceded = 0 AND
+                                signups_status.statuscode >= :threshold
+                    ";
+
+                    $params = [
+                        'f2fid' => $record->id,
+                        'userid' => $record->userid,
+                        'threshold' => (int) $record->completionattendance,
+                    ];
+
+                    $lastfinish = $DB->get_field_sql($lastfinishsql, $params);
+
+                    // Get current completion data for this activity.
                     $data = $completion->get_data($cm, false, $record->userid);
-                    $data->timemodified = $record->timefinish;
+
+                    // Should never happen.
+                    if (empty($lastfinish)) {
+                        throw new \coding_exception(
+                            'facetoface_take_individual_attendance: No qualifying session finish time ' .
+                            "found for user {$record->userid} in facetoface activity {$record->id}\n" .
+                            "Should have never entered the " .
+                            "`if (\$custom->get_state('completionattendance') === COMPLETION_COMPLETE)` branch."
+                        );
+                    }
+
+                    $data->timemodified = $lastfinish;
+                    // GCHLOL end - YZ - Fix completion time stamp bugs with not fully attended.
+
                     $completion->internal_set_data($cm, $data);
                     $completion->update_state($cm, COMPLETION_UNKNOWN, $record->userid, false);
 
@@ -2836,7 +2878,9 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
                     foreach ($criteras as $criteria) {
                         if ($criteria->module == 'facetoface' && $criteria->moduleinstance == $cm->id) {
                             $criteriacompletion = $completion->get_user_completion($record->userid, $criteria);
-                            $criteriacompletion->mark_complete($record->timefinish);
+
+                            // GCHLOL - YZ - Use the latest session finish time which meets the completion attendance threshold.
+                            $criteriacompletion->mark_complete($lastfinish);
                         }
                     }
 
