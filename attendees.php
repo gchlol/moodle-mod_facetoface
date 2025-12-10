@@ -55,7 +55,18 @@ if (!$cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course
 
 // Load attendees.
 $attendees = facetoface_get_attendees($session->id);
-
+// Preload user records for attendees (single query to avoid N+1).
+$users = [];
+if (!empty($attendees)) {
+    $userids = array_map(function ($a) {
+        return $a->id;
+    }, $attendees);
+    $userids = array_unique($userids);
+    if (!empty($userids)) {
+        // Fetch only the fields we need (id and username).
+        $users = $DB->get_records_list('user', 'id', $userids, '', 'id, username');
+    }
+}
 // Load cancellations.
 $cancellations = facetoface_get_cancellations($session->id);
 
@@ -246,7 +257,14 @@ if ($canviewattendees || $cantakeattendance) {
         $table = new html_table();
         $table->head = [get_string('name')];
         $table->align = ['left'];
-        $table->size = ['100%'];
+        $table->size = ['70%'];
+
+        $showusername = facetoface_should_attendees_show_usernames();
+        if ($showusername) {
+            $table->head[] = get_string('username');
+            $table->align[] = 'left';
+            $table->size[] = '30%';
+        }
 
         if ($takeattendance) {
             $table->head[] = get_string('currentstatus', 'facetoface');
@@ -270,7 +288,15 @@ if ($canviewattendees || $cantakeattendance) {
         foreach ($attendees as $attendee) {
             $data = [];
             $attendeeurl = new moodle_url('/user/view.php', ['id' => $attendee->id, 'course' => $course->id]);
+            // Show name.
             $data[] = html_writer::link($attendeeurl, format_string(fullname($attendee)));
+
+            // Show username.
+            if ($showusername) {
+                $user = $users[$attendee->id] ?? null;
+                $username = $user ? $user->username : '';
+                $data[] = format_string($username);
+            }
 
             if ($takeattendance) {
                 // Show current status.
