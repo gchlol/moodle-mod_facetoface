@@ -36,7 +36,6 @@ require_once($CFG->dirroot . '/lib/adminlib.php');
 require_once($CFG->dirroot . '/user/selector/lib.php');
 require_once($CFG->libdir . '/completionlib.php');
 
-use mod_facetoface\completion\custom_completion;
 use mod_facetoface\util\completion_util;
 
 /*
@@ -2824,7 +2823,7 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
             if ($record->datetimeknown && get_config('facetoface', 'sessioncompletiondate')) {
                 // GCHLOL start - YZ - Fix completion time stamp bugs with not fully attended.
                 $cminfo = cm_info::create($cm);
-                $custom = new custom_completion($cminfo, $record->userid);
+                $custom = new \mod_facetoface\completion\custom_completion($cminfo, $record->userid);
 
                 if ($custom->get_state('completionattendance') === COMPLETION_COMPLETE) {
 
