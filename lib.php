@@ -1431,6 +1431,7 @@ function facetoface_download_attendees($facetofacename, $session, $attendees, $f
     $timeformat = str_replace(' ', '_', get_string('strftimedate', 'langconfig'));
     $downloadfilename = clean_filename($facetofacename . '_' . userdate($timenow, $timeformat));
     $showusername = facetoface_should_attendees_show_usernames();
+    $showidnumber = facetoface_should_attendees_show_idnumbers();
 
     $dateformat = 0;
     if ('ods' === $format) {
@@ -1490,6 +1491,10 @@ function facetoface_download_attendees($facetofacename, $session, $attendees, $f
     // Username.
     if ($showusername) {
         $worksheet->write_string($row, $column++, get_string('username'), ['bold' => 1, 'border' => 1]);
+    }
+    // ID number.
+    if ($showidnumber) {
+        $worksheet->write_string($row, $column++, get_string('idnumber'), ['bold' => 1, 'border' => 1]);
     }
     // Current status.
     $worksheet->write_string($row, $column++, get_string('currentstatus', 'facetoface'), ['bold' => 1, 'border' => 1]);
@@ -1572,6 +1577,9 @@ function facetoface_download_attendees($facetofacename, $session, $attendees, $f
         }
         if ($showusername) {
             $worksheet->write_string($row, $column++, $user->username, ['border' => 1, 'v_align' => 'top']);
+        }
+        if ($showidnumber) {
+            $worksheet->write_string($row, $column++, $user->idnumber ?? '', ['border' => 1, 'v_align' => 'top']);
         }
         $worksheet->write_string(
             $row,
@@ -4778,6 +4786,20 @@ function facetoface_should_attendees_show_usernames(): bool {
     $showidentity = !empty($CFG->showuseridentity) && in_array('username', explode(',', $CFG->showuseridentity));
 
     return $attendeesshowusernames && $showidentity && !$protectusernames;
+}
+
+/**
+ * Check if id numbers should be shown in the attendees table.
+ *
+ * @return bool true if id numbers can be displayed, false otherwise
+ */
+function facetoface_should_attendees_show_idnumbers(): bool {
+    global $CFG;
+
+    $attendeesshowidnumbers = get_config('facetoface', 'attendeesshowidnumbers');
+    $showidentity = !empty($CFG->showuseridentity) && in_array('idnumber', explode(',', $CFG->showuseridentity));
+
+    return $attendeesshowidnumbers && $showidentity;
 }
 
 /**

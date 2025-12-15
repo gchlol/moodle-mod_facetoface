@@ -64,7 +64,7 @@ if (!empty($attendees)) {
     $userids = array_unique($userids);
     if (!empty($userids)) {
         // Fetch only the fields we need (id and username).
-        $users = $DB->get_records_list('user', 'id', $userids, '', 'id, username');
+        $users = $DB->get_records_list('user', 'id', $userids, '', 'id, username, idnumber');
     }
 }
 // Load cancellations.
@@ -257,13 +257,20 @@ if ($canviewattendees || $cantakeattendance) {
         $table = new html_table();
         $table->head = [get_string('name')];
         $table->align = ['left'];
-        $table->size = ['70%'];
+        $table->size = ['50%'];
 
         $showusername = facetoface_should_attendees_show_usernames();
         if ($showusername) {
             $table->head[] = get_string('username');
             $table->align[] = 'left';
-            $table->size[] = '30%';
+            $table->size[] = '25%';
+        }
+
+        $showidnumber = facetoface_should_attendees_show_idnumbers();
+        if ($showidnumber) {
+            $table->head[] = get_string('idnumber');
+            $table->align[] = 'left';
+            $table->size[] = '25%';
         }
 
         if ($takeattendance) {
@@ -296,6 +303,13 @@ if ($canviewattendees || $cantakeattendance) {
                 $user = $users[$attendee->id] ?? null;
                 $username = $user ? $user->username : '';
                 $data[] = format_string($username);
+            }
+
+            // Show ID number.
+            if ($showidnumber) {
+                $user = $users[$attendee->id] ?? null;
+                $idnumber = $user ? $user->idnumber : '';
+                $data[] = format_string($idnumber);
             }
 
             if ($takeattendance) {
