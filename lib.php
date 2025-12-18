@@ -2800,9 +2800,39 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
                                 WHERE s.id = ? AND m.name='facetoface'",
                             [$submissionid]);
 
+    // Use the best attendance grade across all sessions for this activity, so that a later
+    // 'No show' or 'Partially attended' does not overwrite a previously passing attendance grade.
+    $bestgrade = "
+        SELECT  MAX(signups_status.grade)
+        
+        FROM    {facetoface_signups} signups
+                JOIN {facetoface_sessions} sessions ON
+                    sessions.id = signups.sessionid
+                JOIN {facetoface_signups_status} signups_status ON
+                    signups_status.signupid = signups.id AND
+                    signups_status.superceded = 0
+        
+        WHERE   sessions.facetoface = :facetofaceid AND
+                signups.userid = :userid AND
+                signups_status.statuscode >= :minstatus
+    ";
+
+    $overallgrade = $DB->get_field_sql(
+            $bestgrade,
+            [
+                'facetofaceid' => $record->id,
+                'userid' => $record->userid,
+                'minstatus' => MDL_F2F_STATUS_NO_SHOW,
+            ]
+    );
+
+    if ($overallgrade === false || $overallgrade === null) {
+        $overallgrade = $grading;
+    }
+
     $grade = new stdclass();
     $grade->userid = $record->userid;
-    $grade->rawgrade = $grading;
+    $grade->rawgrade = $overallgrade;
     $grade->rawgrademin = 0;
     $grade->rawgrademax = 100;
     $grade->timecreated = $timenow;
@@ -3520,7 +3550,19 @@ function facetoface_grade_item_update($facetoface, $grades=null) {
 
     $params['gradetype'] = GRADE_TYPE_VALUE;
     $params['grademin']  = 0;
-    $params['gradepass'] = 100;
+
+    // Align the grade pass mark with the attendance requirement used for activity completion.
+    // Attendance is graded as 0 (no-show), 50 (partial), 100 (full).
+    $gradepass = 100;
+    if (!empty($facetoface->completionattendance)) {
+        if ((int) $facetoface->completionattendance === MDL_F2F_STATUS_PARTIALLY_ATTENDED) {
+            $gradepass = 50;
+        } else if ((int) $facetoface->completionattendance === MDL_F2F_STATUS_FULLY_ATTENDED) {
+            $gradepass = 100;
+        }
+    }
+
+    $params['gradepass'] = $gradepass;
     $params['grademax']  = 100;
 
     if ($grades === 'reset') {
