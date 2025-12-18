@@ -149,8 +149,12 @@ $string['emptylocation'] = 'Location was empty';
 $string['enrolled'] = 'enrolled';
 $string['error:addalreadysignedupattendee'] = '{$a} is already signed-up for this Face-to-Face activity.';
 $string['error:addattendee'] = 'Could not add {$a} to the session.';
+$string['error:bookingsuploadfileduplicateheaders'] = 'Uploaded file had duplicate headers';
+$string['error:bookingsuploadfileempty'] = 'Uploaded bookings file was empty';
 $string['error:bookingsuploadfileerrorsfound'] = '{$a} errors were found in the uploaded file. Bookings cannot be processed until they are resolved.';
 $string['error:bookingsuploadfileheaderfieldmismatch'] = 'Mismatched number of fields in the uploaded file on row {$a}.';
+$string['error:bookingsuploadfilemissingrequiredheader'] = 'Uploaded file is missing required header(s): {$a}';
+$string['error:bookingsuploadinvalidheaders'] = 'Invalid headers found in upload file: {$a}';
 $string['error:cancelbooking'] = 'There was a problem cancelling your booking';
 $string['error:cancellationsnotallowed'] = 'You are not allowed to cancel this sign-up.';
 $string['error:cancellationtooclose'] = 'You are not allowed to cancel this sign-up. Bookings can only be cancelled {$a} before session.';
@@ -241,13 +245,18 @@ $string['facetoface:takeattendance'] = 'Take attendance';
 $string['facetoface:uploadandpreview'] = 'Upload and validate bookings';
 $string['facetoface:uploadbookings'] = 'Upload bookings';
 $string['facetoface:uploadbookingsfile'] = 'Bookings file';
-$string['facetoface:uploadbookingsfiledesc'] = "
+$string['facetoface:uploadbookingsfiledesc'] = '
 Fields expected:
 - Email address (required)
 - Session number (required)
+- Status (optional - one of: {$a}). If not given, the default is \'booked\'.
 - Discount code (optional)
-- Notification type (optional - valid options are 'email', 'ical', or 'both')
-";
+- Notification type (optional - valid options are \'email\', \'ical\', or \'both\')
+
+Note:
+- If you directly assign an attendance status (i.e. a status other than \'booked\' or \'waitlisted\') but the user has not already been signed up, they will automatically be signed up using the details provided on that row (e.g. calendar, discountcode).
+- Attendance can only be taken for current or past sessions. Even if you specify a attendance status here, it will be ignored (however, the above note still applies).
+';
 $string['facetoface:uploadreadytoprocess'] = 'Uploaded file has been validated and ready to be processed.';
 $string['facetoface:validatebookings'] = 'Validate bookings';
 $string['facetoface:view'] = 'View Face-to-Face activities and sessions';

@@ -2042,7 +2042,7 @@ function facetoface_user_signup(
     $notificationtype,
     $statuscode,
     $userid = false,
-    $notifyuser = true
+    $notifyuser = true,
 ) {
 
     global $CFG, $DB;

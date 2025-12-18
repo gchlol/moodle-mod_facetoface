@@ -16,6 +16,7 @@
 
 namespace mod_facetoface;
 
+use file_storage;
 use mod_facetoface\booking_manager;
 use lang_string;
 
@@ -956,5 +957,216 @@ final class upload_test extends \advanced_testcase {
 
         $this->assertEmpty($errors);
         $this->assertTrue($bm->process());
+    }
+
+    /**
+     * Provides CSV validation test cases
+     * @return array
+     */
+    public static function csv_validation_provider(): array {
+        // Build tests for every status.
+        $statustests = array_map(function ($status) {
+            return [
+                'valid status - ' . $status => [
+                    'contents' => "email,session,status\n:email,:session," . $status,
+                    'expectedexceptionmessage' => null,
+                    'expectedstatus' => $status == '' ? 'booked' : $status,
+                ],
+            ];
+        }, booking_manager::get_allowed_session_statuses());
+
+        // Flatten.
+        $statustests = array_merge(...$statustests);
+
+        return array_merge([
+            'empty' => [
+                'contents' => '',
+                'expectedexceptionmessage' => get_string('error:bookingsuploadfileempty', 'mod_facetoface'),
+            ],
+            'missing required headers' => [
+                'contents' => 'email,discountcode',
+                'expectedexceptionmessage' => get_string('error:bookingsuploadfilemissingrequiredheader', 'mod_facetoface', 'session'),
+            ],
+            'duplicate valid headers' => [
+                'contents' => 'email,email,session',
+                'expectedexceptionmessage' => get_string('error:bookingsuploadfileduplicateheaders', 'mod_facetoface'),
+            ],
+            'extra invalid headers' => [
+                'contents' => 'email,email,notvalid,alsonotvalid',
+                'expectedexceptionmessage' => get_string('error:bookingsuploadfileheaderfieldmismatch', 'mod_facetoface', 'notvalid,alsonotvalid'),
+            ],
+            'valid headers' => [
+                'contents' => 'email,session,status,discountcode',
+                'expectedexceptionmessage' => null,
+            ],
+        ], $statustests);
+    }
+
+    /**
+     * Sets up scenario for csv testing
+     *
+     * @param string $contents csv contents
+     * @param array $sessiondates dates for session, each entry should be in the form ['timestart' => xxx, 'timefinish' => xxx].
+     * @return array array of [$bookingmanager, $session, $student]
+     */
+    private function setup_csv_test(string $contents, array $sessiondates = []): array {
+        global $USER;
+        $this->setAdminUser();
+
+        // This is what facetoface does internally when you don't set a time.
+        // This is to test 'waitlisting' states.
+        // See session_form.php, it still submits timestart and timefinish, but allows user to check/uncheck
+        // 'Session date/time known'.
+        $datetimeknown = true;
+        if (empty($sessiondates)) {
+            $sessiondates = ['timestart' => time(), 'timefinish' => time()];
+            $datetimeknown = false;
+        }
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
+        $course = $this->getDataGenerator()->create_course();
+        $facetoface = $generator->create_instance(['course' => $course->id]);
+        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $record = [
+            'facetoface' => $facetoface->id,
+            'capacity' => '3',
+            'allowoverbook' => '0',
+            'details' => 'xyz',
+            'duration' => '1.5',
+            'normalcost' => '111',
+            'discountcost' => '11',
+            'allowcancellations' => '0',
+            'datetimeknown' => $datetimeknown,
+            'sessiondates' => [$sessiondates],
+        ];
+        $session = $generator->create_session($record);
+
+        // Replace contents placeholders.
+        $contents = str_replace(':email', $student->email, $contents);
+        $contents = str_replace(':session', $session->id, $contents);
+
+        // Write csv to stored_file
+        // booking_manager expects it to be in the users draft files.
+        $fs = new file_storage();
+        $storedfile = $fs->create_file_from_string([
+            'contextid' => \context_user::instance($USER->id)->id,
+            'component' => 'user',
+            'filearea' => 'draft',
+            'itemid' => 0,
+            'filepath' => '/',
+            'filename' => uniqid() . '.csv',
+        ], $contents);
+        $bm = new booking_manager($facetoface->id);
+        $bm->load_from_file($storedfile->get_itemid());
+        return [$bm, $session, $student];
+    }
+
+    /**
+     * Test booking_manager validate function
+     *
+     * @param string $contents csv contents
+     * @param string|null $expectedexceptionmessage if given, expect moodle_exception with this message.
+     *
+     * @dataProvider csv_validation_provider
+     */
+    public function test_csv_validation(string $contents, ?string $expectedexceptionmessage = null): void {
+        [$bm, $session, $user] = $this->setup_csv_test($contents);
+        if (!empty($expectedexceptionmessage)) {
+            $this->expectException(\moodle_exception::class);
+            $this->expectExceptionMessage($expectedexceptionmessage);
+        }
+        $bm->validate();
+    }
+
+    /**
+     * Provides CSV processing test cases
+     * @return array
+     */
+    public static function csv_process_provider(): array {
+        // Build a matrix of status, date (past present future and unknown).
+        $dateoptions = [
+            'past' => ['timestart' => time() - DAYSECS * 2, 'timefinish' => time() - DAYSECS],
+            'present' => ['timestart' => time() - DAYSECS, 'timefinish' => time() + DAYSECS],
+            'future' => ['timestart' => time() + DAYSECS, 'timefinish' => time() + DAYSECS * 2],
+            'unknown' => [],
+        ];
+
+        $statusoptions = booking_manager::get_allowed_session_statuses();
+        $tests = [];
+
+        foreach ($dateoptions as $datelabel => $dates) {
+            foreach ($statusoptions as $status) {
+                // Cancelled status only applies to future dates.
+                if ($status === 'cancelled' && $datelabel !== 'future') {
+                    continue;
+                }
+
+                // If no status is given, it should be either waitlisted or booked
+                // depending on the time of the session.
+                $expectedstatus = $status;
+                if ($status === '' && $datelabel === 'unknown') {
+                    $expectedstatus = 'waitlisted';
+                } else if ($status === '' && $datelabel !== 'unknown') {
+                    $expectedstatus = 'booked';
+                }
+
+                $tests["valid status '{$status}' for time period '{$datelabel}', expecting '{$expectedstatus}'"] = [
+                    'contents' => "email,session,status\n:email,:session," . $status,
+                    'sessiondates' => $dates,
+                    'expectedstatus' => $expectedstatus,
+                ];
+            }
+        }
+
+        return $tests;
+    }
+
+    /**
+     * Test booking_manager process function
+     *
+     * @param string $contents csv contents
+     * @param array $sessiondates dates for session, with each entry in the form ['timestart' => xxx, 'timefinish' => xxx].
+     * @param string $expectedstatus expected signup or attendance status after processing the csv.
+     *
+     * @dataProvider csv_process_provider
+     */
+    public function test_csv_process(string $contents, array $sessiondates, string $expectedstatus): void {
+        global $DB;
+        [$bm, $session, $user] = $this->setup_csv_test($contents, $sessiondates);
+        // All of these should be valid, but run validation to catch anything just in case.
+        $errors = $bm->validate();
+        $this->assertEmpty($errors);
+
+        $bm->process();
+
+        $signup = $DB->get_record('facetoface_signups', ['sessionid' => $session->id, 'userid' => $user->id]);
+
+        if ($expectedstatus == 'cancelled') {
+            // Cancelled deletes the signup entirely, so expect false.
+            $this->assertFalse($signup);
+            return;
+        }
+
+        // Otherwise get the status that ended up in the database.
+        $storedstatus = facetoface_get_status($DB->get_record('facetoface_signups_status', ['signupid' => $signup->id, 'superceded' => '0'])->statuscode);
+
+        $signupstatuses = [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED];
+        $attendancestatuses = [MDL_F2F_STATUS_NO_SHOW, MDL_F2F_STATUS_PARTIALLY_ATTENDED, MDL_F2F_STATUS_FULLY_ATTENDED];
+
+        $issignup = in_array($expectedstatus, $signupstatuses);
+        $isattendance = in_array($expectedstatus, $attendancestatuses);
+
+        // If signed up only, the status should be equal to the expected status.
+        if ($issignup) {
+            $this->assertEquals($expectedstatus, $storedstatus);
+        }
+
+        // If attended, the 'signup' status should just be 'booked' (signups only allow booked/waitlisted status),
+        // and the 'attendance' status should be equal to the expected status.
+        if ($isattendance) {
+            $this->assertEquals('booked', $storedstatus);
+            $attendance = facetoface_get_attendee($session->id, $user->id);
+            $this->assertEquals($expectedstatus, facetoface_get_status($attendance->statuscode));
+        }
     }
 }
