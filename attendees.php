@@ -257,20 +257,20 @@ if ($canviewattendees || $cantakeattendance) {
         $table = new html_table();
         $table->head = [get_string('name')];
         $table->align = ['left'];
-        $table->size = ['50%'];
+        $table->size = ['auto'];
 
         $showusername = facetoface_should_attendees_show_usernames();
         if ($showusername) {
             $table->head[] = get_string('username');
             $table->align[] = 'left';
-            $table->size[] = '25%';
+            $table->size[] = 'auto';
         }
 
         $showidnumber = facetoface_should_attendees_show_idnumbers();
         if ($showidnumber) {
             $table->head[] = get_string('idnumber');
             $table->align[] = 'left';
-            $table->size[] = '25%';
+            $table->size[] = 'auto';
         }
 
         if ($takeattendance) {
