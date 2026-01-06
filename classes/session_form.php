@@ -169,30 +169,17 @@ class mod_facetoface_session_form extends moodleform {
                 $rolename = $rolename->name;
 
                 // Attempt to load users with this role in this course.
-                $usernamefields = facetoface_get_all_user_name_fields(true);
-                $rs = $DB->get_recordset_sql("
-                    SELECT
-                        u.id,
-                        {$usernamefields}
-                    FROM
-                        {role_assignments} ra
-                    LEFT JOIN
-                        {user} u
-                      ON ra.userid = u.id
-                    WHERE
-                        contextid = {$context->id}
-                    AND roleid = {$role}
-                ");
+                // GCHLOL: Change logic to pull users from parent contexts instead of just the course.
+                $roleusers = get_role_users($role, $context, true);
 
-                if (!$rs) {
+                if (empty($roleusers)) {
                     continue;
                 }
 
                 $choices = [];
-                foreach ($rs as $roleuser) {
+                foreach ($roleusers as $roleuser) {
                     $choices[$roleuser->id] = fullname($roleuser);
                 }
-                $rs->close();
 
                 // Show header (if haven't already).
                 if ($choices && !$headershown) {
