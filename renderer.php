@@ -98,7 +98,7 @@ class mod_facetoface_renderer extends plugin_renderer_base {
                             format_string($customdata[$field->id]->data)
                         );
                     } else {
-                        $sessionrow[] = format_string($customdata[$field->id]->data);
+                        $sessionrow[] = $this->render_customfield_value($field, (string)$customdata[$field->id]->data);
                     }
                 }
             }
@@ -237,5 +237,47 @@ class mod_facetoface_renderer extends plugin_renderer_base {
         $output .= html_writer::table($table);
 
         return $output;
+    }
+
+    /**
+     * Returns true if this custom field should render as a clickable link.
+     *
+     * @param stdClass $field
+     * @return bool
+     */
+    protected function is_link_customfield(stdClass $field): bool {
+        return ($field->shortname === 'f2flink');
+    }
+
+    /**
+     * Render a custom field value (URL-only for f2flink).
+     *
+     * - If valid http(s) URL: render as clickable link
+     * - Otherwise: render as plain text
+     *
+     * @param stdClass $field
+     * @param string $raw
+     * @return string
+     */
+    protected function render_customfield_value(stdClass $field, string $raw): string {
+        $raw = trim($raw);
+        if ($raw === '') {
+            return '&nbsp;';
+        }
+
+        if (!$this->is_link_customfield($field)) {
+            return format_string($raw);
+        }
+
+        $url = clean_param($raw, PARAM_URL);
+        if (empty($url) || !preg_match('#^https?://#i', $url)) {
+            return format_string($raw);
+        }
+
+        return html_writer::link(
+            new moodle_url($url),
+            s($url),
+            ['target' => '_blank', 'rel' => 'noopener noreferrer']
+        );
     }
 }
