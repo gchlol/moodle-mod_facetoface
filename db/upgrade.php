@@ -958,5 +958,14 @@ function xmldb_facetoface_upgrade($oldversion=0) {
         upgrade_mod_savepoint(true, 2025103000, 'facetoface');
     }
 
+    if ($oldversion < 2025103001) {
+        // Queue a one-off task to rebuild Face-to-Face course completion times from activity criteria.
+        $task = new \mod_facetoface\task\reaggregate_course_completion_task();
+        \core\task\manager::queue_adhoc_task($task);
+
+        // Facetoface savepoint reached.
+        upgrade_mod_savepoint(true, 2025103001, 'facetoface');
+    }
+
     return $result;
 }
