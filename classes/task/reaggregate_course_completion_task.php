@@ -25,12 +25,15 @@
 
 namespace mod_facetoface\task;
 
+use core\task\adhoc_task;
+use core_php_time_limit;
 use mod_facetoface\util\completion_util;
+use Throwable;
 
 /**
  * Correct course completion times for Face-to-Face courses.
  */
-class reaggregate_course_completion_task extends \core\task\adhoc_task {
+class reaggregate_course_completion_task extends adhoc_task {
 
     /** @var int Emit progress output every N records. */
     private const PROGRESS_INTERVAL = 500;
@@ -38,7 +41,7 @@ class reaggregate_course_completion_task extends \core\task\adhoc_task {
     /**
      * Run the ad hoc task.
      */
-    public function execute() {
+    public function execute(): void {
         global $CFG, $DB;
 
         require_once($CFG->libdir . '/completionlib.php');
@@ -152,7 +155,10 @@ class reaggregate_course_completion_task extends \core\task\adhoc_task {
                 $currentrecord = $record;
 
                 // The helper clears `timecompleted` and then reaggregates via Moodle's completion API.
-                completion_util::recalculate_course_for_user((int) $record->course, (int) $record->userid);
+                completion_util::recalculate_course_for_user(
+                    (int) $record->course,
+                    (int) $record->userid
+                );
                 $processed++;
                 mtrace(
                     'mod_facetoface reaggregate_course_completion_task processed ' .
@@ -162,7 +168,7 @@ class reaggregate_course_completion_task extends \core\task\adhoc_task {
                 );
 
                 if ($processed % self::PROGRESS_INTERVAL === 0) {
-                    \core_php_time_limit::raise();
+                    core_php_time_limit::raise();
                     mtrace('mod_facetoface reaggregate_course_completion_task progress: ' .
                         $processed . ' processed');
                 }
@@ -170,7 +176,7 @@ class reaggregate_course_completion_task extends \core\task\adhoc_task {
 
             $transaction->allow_commit();
 
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // On failure, rollback all changes.
             $message = str_replace(["\r", "\n"], ' ', $e->getMessage());
             if ($currentrecord !== null) {
@@ -188,13 +194,14 @@ class reaggregate_course_completion_task extends \core\task\adhoc_task {
                 );
             }
             $transaction->rollback($e);
+
         } finally {
-            if ($recordset !== null) {
-                $recordset->close();
-            }
+            $recordset?->close();
         }
 
-        mtrace('mod_facetoface reaggregate_course_completion_task finished and committed: ' .
-            $processed . ' processed');
+        mtrace(
+            'mod_facetoface reaggregate_course_completion_task finished and committed: ' .
+            $processed . ' processed'
+        );
     }
 }
