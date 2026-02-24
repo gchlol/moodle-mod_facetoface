@@ -44,7 +44,6 @@ class reaggregate_course_completion_task extends \core\task\adhoc_task {
         require_once($CFG->libdir . '/completionlib.php');
 
         $processed = 0;
-        $errors = 0;
         $beforets = null;
 
         // The output `course_completions.id` values must be the same as `course_completions.id` in
@@ -141,10 +140,17 @@ class reaggregate_course_completion_task extends \core\task\adhoc_task {
         ";
         $params = ['beforets1' => $beforets, 'beforets2' => $beforets];
 
-        $recordset = $DB->get_recordset_sql($targetcoursecompletionsql, $params);
+        // Set up rollback on failure.
+        $transaction = $DB->start_delegated_transaction();
+        $recordset = null;
+        $currentrecord = null;
 
-        foreach ($recordset as $record) {
-            try {
+        try {
+            $recordset = $DB->get_recordset_sql($targetcoursecompletionsql, $params);
+
+            foreach ($recordset as $record) {
+                $currentrecord = $record;
+
                 // The helper clears `timecompleted` and then reaggregates via Moodle's completion API.
                 completion_util::recalculate_course_for_user((int) $record->course, (int) $record->userid);
                 $processed++;
@@ -155,26 +161,40 @@ class reaggregate_course_completion_task extends \core\task\adhoc_task {
                     'user=' . (int) $record->userid
                 );
 
-            } catch (\Throwable $e) {
-                $errors++;
+                if ($processed % self::PROGRESS_INTERVAL === 0) {
+                    \core_php_time_limit::raise();
+                    mtrace('mod_facetoface reaggregate_course_completion_task progress: ' .
+                        $processed . ' processed');
+                }
+            }
+
+            $transaction->allow_commit();
+
+        } catch (\Throwable $e) {
+            // On failure, rollback all changes.
+            $message = str_replace(["\r", "\n"], ' ', $e->getMessage());
+            if ($currentrecord !== null) {
                 mtrace(
-                    'mod_facetoface reaggregate_course_completion_task failed ' .
-                    'completion_id=' . (int) $record->id . ', ' .
-                    'course=' . (int) $record->course . ', ' .
-                    'user=' . (int) $record->userid . ', ' .
-                    'message=' . str_replace(["\r", "\n"], ' ', $e->getMessage())
+                    'mod_facetoface reaggregate_course_completion_task failed and rolling back ' .
+                    'completion_id=' . (int) $currentrecord->id . ', ' .
+                    'course=' . (int) $currentrecord->course . ', ' .
+                    'user=' . (int) $currentrecord->userid . ', ' .
+                    'message=' . $message
+                );
+            } else {
+                mtrace(
+                    'mod_facetoface reaggregate_course_completion_task failed and rolling back ' .
+                    'before processing records, message=' . $message
                 );
             }
-
-            if (($processed + $errors) % self::PROGRESS_INTERVAL === 0) {
-                \core_php_time_limit::raise();
-                mtrace('mod_facetoface reaggregate_course_completion_task progress: ' .
-                    $processed . ' processed, ' . $errors . ' errors');
+            $transaction->rollback($e);
+        } finally {
+            if ($recordset !== null) {
+                $recordset->close();
             }
         }
-        $recordset->close();
 
-        mtrace('mod_facetoface reaggregate_course_completion_task finished: ' .
-            $processed . ' processed, ' . $errors . ' errors');
+        mtrace('mod_facetoface reaggregate_course_completion_task finished and committed: ' .
+            $processed . ' processed');
     }
 }
