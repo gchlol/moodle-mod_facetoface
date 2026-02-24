@@ -148,12 +148,21 @@ class reaggregate_course_completion_task extends \core\task\adhoc_task {
                 // The helper clears `timecompleted` and then reaggregates via Moodle's completion API.
                 completion_util::recalculate_course_for_user((int) $record->course, (int) $record->userid);
                 $processed++;
+                mtrace(
+                    'mod_facetoface reaggregate_course_completion_task processed ' .
+                    'completion_id=' . (int) $record->id . ', ' .
+                    'course=' . (int) $record->course . ', ' .
+                    'user=' . (int) $record->userid
+                );
 
             } catch (\Throwable $e) {
                 $errors++;
                 mtrace(
-                    'mod_facetoface reaggregate_course_completion_task failed for ' .
-                    'course ' . (int) $record->course . ', user ' . (int) $record->userid . ': ' . $e->getMessage()
+                    'mod_facetoface reaggregate_course_completion_task failed ' .
+                    'completion_id=' . (int) $record->id . ', ' .
+                    'course=' . (int) $record->course . ', ' .
+                    'user=' . (int) $record->userid . ', ' .
+                    'message=' . str_replace(["\r", "\n"], ' ', $e->getMessage())
                 );
             }
 
