@@ -3394,6 +3394,7 @@ SEQUENCE:{$sequence}
 SUMMARY:{$summary}
 LOCATION:{$location}
 DESCRIPTION:{$description}
+X-ALT-DESC;FMTTYPE=text/html:{$descriptionalt}
 CLASS:PUBLIC
 TRANSP:OPAQUE{$cancelstatus}
 ORGANIZER;CN={$organiseremail}:MAILTO:{$organiseremail}
