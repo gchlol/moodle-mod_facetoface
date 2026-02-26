@@ -805,10 +805,25 @@ function facetoface_email_substitutions($msg, $facetofacename, $reminderperiod, 
     $msg = str_replace(get_string('placeholder:starttime', 'facetoface'), $starttime, $msg);
     $msg = str_replace(get_string('placeholder:finishtime', 'facetoface'), $finishtime, $msg);
     $msg = str_replace(get_string('placeholder:duration', 'facetoface'), facetoface_format_duration($data->duration), $msg);
+
+    $sessionurl = facetoface_get_session_url((int)$sessionid);
+    $ishtml = ($msg !== strip_tags($msg));
+    $sessionlinkreplacement = $ishtml
+    ? '<a href="' . s($sessionurl) . '">' . s($sessionurl) . '</a>'
+        : $sessionurl;
+    $msg = str_replace(get_string('placeholder:sessionlink', 'facetoface'), $sessionlinkreplacement, $msg);
+
     if (empty($data->details)) {
         $msg = str_replace(get_string('placeholder:details', 'facetoface'), '', $msg);
     } else {
-        $msg = str_replace(get_string('placeholder:details', 'facetoface'), html_to_text(format_text($data->details)), $msg);
+        $detailshtml = format_text($data->details);
+        if ($ishtml) {
+            $detailshtml .= '<br>' . $sessionlinkreplacement;
+            $replacement = $detailshtml;
+        } else {
+            $replacement = html_to_text($detailshtml) . "\n" . $sessionurl;
+        }
+        $msg = str_replace(get_string('placeholder:details', 'facetoface'), $replacement, $msg);
     }
     $msg = str_replace(get_string('placeholder:reminderperiod', 'facetoface'), $reminderperiod, $msg);
 
@@ -3265,6 +3280,11 @@ function facetoface_get_visiblefield_data($session) {
     ];
 }
 
+function facetoface_get_session_url(int $sessionid): string {
+    global $CFG;
+    return $CFG->wwwroot . '/mod/facetoface/view.php?s=' . $sessionid;
+}
+
 /**
  * Returns the ICAL data for a facetoface meeting.
  *
@@ -3309,7 +3329,15 @@ function facetoface_get_ical_attachment($method, $facetoface, $session, $user) {
         $sequence = ($method & MDL_F2F_CANCEL) ? 1 : 0;
 
         $summary     = facetoface_ical_escape(format_string($facetoface->name));
-        $description = facetoface_ical_escape(format_text($session->details), true);
+        $detailshtml = format_text($session->details);
+        $detailstext = html_to_text($detailshtml);
+
+        $sessionurl = facetoface_get_session_url((int)$session->id);
+        $detailstext .= "\n" . $sessionurl;
+        $detailshtml .= '<br><a href="' . s($sessionurl) . '">' . s($sessionurl) . '</a>';
+
+        $description    = facetoface_ical_escape($detailstext);
+        $descriptionalt = facetoface_ical_escape($detailshtml, false);
 
         // Get the location data from custom fields if they exist.
         $customfielddata = facetoface_get_customfielddata($session->id);
@@ -3418,6 +3446,26 @@ function facetoface_ical_generate_timestamp($timestamp) {
 }
 
 /**
+* Fold iCal content lines to 75 octets with a single whitespace continuation.
+*
+* @param string $text Unfolded line value (no CRLF), may contain literal "\n" sequences.
+* @return string Folded value using "\n " as the fold sequence used elsewhere in this file.
+*/
+function facetoface_ical_fold_75_octets(string $text): string {
+    $out = '';
+    while ($text !== '') {
+        $chunk = substr($text, 0, 75);
+        $text = substr($text, 75);
+        if ($out === '') {
+            $out = $chunk;
+        } else {
+            $out .= "\n " . $chunk;
+                }
+    }
+    return $out;
+}
+
+/**
  * Escapes data of the text datatype in ICAL documents.
  *
  * See RFC2445 or http://www.kanzaki.com/docs/ical/text.html or a more readable definition
@@ -3437,9 +3485,7 @@ function facetoface_ical_escape($text, $converthtml=false) {
         $text
     );
 
-    // Text should be wrapped at 75 octets, and there should be one whitespace after the newline that does the wrapping.
-    $text = rtrim(chunk_split($text, 75, "\n "), "\n ");
-    return $text;
+    return facetoface_ical_fold_75_octets($text);
 }
 
 /**
