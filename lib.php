@@ -3336,8 +3336,8 @@ function facetoface_get_ical_attachment($method, $facetoface, $session, $user) {
         $detailstext .= "\n" . $sessionurl;
         $detailshtml .= '<br><a href="' . s($sessionurl) . '">' . s($sessionurl) . '</a>';
 
-        $description    = facetoface_ical_escape($detailstext);
-        $descriptionalt = facetoface_ical_escape($detailshtml, false);
+        $description    = facetoface_ical_escape($detailstext, true);
+        $descriptionalt = facetoface_ical_escape($detailshtml);
 
         // Get the location data from custom fields if they exist.
         $customfielddata = facetoface_get_customfielddata($session->id);
@@ -3486,7 +3486,9 @@ function facetoface_ical_escape($text, $converthtml=false) {
         $text
     );
 
-    return facetoface_ical_fold_75_octets($text);
+    // Text should be wrapped at 75 octets, and there should be one whitespace after the newline that does the wrapping.
+    $text = rtrim(chunk_split($text, 75, "\n "), "\n ");
+    return $text;
 }
 
 /**
