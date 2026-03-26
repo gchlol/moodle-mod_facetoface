@@ -2814,73 +2814,25 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
     // Reset completion if set up.
     if ($record->completionattendance) {
         $course = $DB->get_record('course', ['id' => $record->course], '*', MUST_EXIST);
-        $completion = new completion_info($course);
+        $completion = new \completion_info($course);
         $cm = get_coursemodule_from_instance('facetoface', $record->id, $course->id);
         if ($completion->is_enabled($cm)) {
             // Update/create completion data
             $completion->update_state($cm, COMPLETION_UNKNOWN, $record->userid, false);
-
-            if ($record->datetimeknown && get_config('facetoface', 'sessioncompletiondate')) {
-                // GCHLOL start - YZ - Fix completion time stamp bugs with not fully attended.
-                $cminfo = cm_info::create($cm);
-                $custom = new \mod_facetoface\completion\custom_completion($cminfo, $record->userid);
-
-                if ($custom->get_state('completionattendance') === COMPLETION_COMPLETE) {
-
-                    // Determine the latest session finish time which meets the completion attendance threshold.
-                    $lastfinishsql = "
-                        SELECT  MAX(sessions_dates.timefinish) AS timefinish
-
-                        FROM    {facetoface_signups} signups
-                                JOIN {facetoface_sessions} sessions ON
-                                    sessions.id = signups.sessionid
-                                JOIN {facetoface_sessions_dates} sessions_dates ON
-                                    sessions_dates.sessionid = sessions.id
-                                JOIN {facetoface_signups_status} signups_status ON
-                                    signups_status.signupid = signups.id
-
-                        WHERE   sessions.facetoface = :f2fid AND
-                                signups.userid = :userid AND
-                                signups_status.superceded = 0 AND
-                                signups_status.statuscode >= :threshold
-                    ";
-
-                    $params = [
-                        'f2fid' => $record->id,
-                        'userid' => $record->userid,
-                        'threshold' => (int) $record->completionattendance,
-                    ];
-
-                    $lastfinish = $DB->get_field_sql($lastfinishsql, $params);
-
-                    // Get current completion data for this activity.
-                    $data = $completion->get_data($cm, false, $record->userid);
-
-                    // Should never happen.
-                    if (empty($lastfinish)) {
-                        throw new \coding_exception(
-                            'facetoface_take_individual_attendance: No qualifying session finish time ' .
-                            "found for user {$record->userid} in facetoface activity {$record->id}\n" .
-                            "Should have never entered the " .
-                            "`if (\$custom->get_state('completionattendance') === COMPLETION_COMPLETE)` branch."
-                        );
-                    }
-
-                    $data->timemodified = $lastfinish;
-                    // GCHLOL end - YZ - Fix completion time stamp bugs with not fully attended.
-
-                    $completion->internal_set_data($cm, $data);
-                    $completion->update_state($cm, COMPLETION_UNKNOWN, $record->userid, false);
-
-                    // Update the course completion criteria entry.
-                    $criteras = $completion->get_criteria(4); // 4 = completion_criteria_activity
-                    foreach ($criteras as $criteria) {
-                        if ($criteria->module == 'facetoface' && $criteria->moduleinstance == $cm->id) {
-                            $criteriacompletion = $completion->get_user_completion($record->userid, $criteria);
-
-                            // GCHLOL - YZ - Use the latest session finish time which meets the completion attendance threshold.
-                            $criteriacompletion->mark_complete($lastfinish);
-                        }
+            $meetscompletioncriteria = $grading >= $record->completionattendance;
+            if ($record->datetimeknown && get_config('facetoface', 'sessioncompletiondate') && $meetscompletioncriteria) {
+                $criterias = $completion->get_criteria(4); // 4 = completion_criteria_activity
+                foreach($criterias as $criterion) {
+                    if ($criterion->module == 'facetoface' && $criterion->moduleinstance == $cm->id) {
+                        // Get existing completion data, modify state, save, and update completion.
+                        $data = $completion->get_data($cm, false, $record->userid);
+                        $data->timemodified = $record->timefinish;
+                        $completion->internal_set_data($cm, $data);
+                        // Updating the completion state status to complete and marking criteria completion.
+                        $completion->update_state($cm, COMPLETION_COMPLETE, $record->userid, false);
+                        $criteriacompletion = $completion->get_user_completion($record->userid, $criterion);
+                        $criteriacompletion->mark_complete($record->timefinish);
+                        break;
                     }
 
                     // GCHLOL - YZ - Update the course completion entry.
