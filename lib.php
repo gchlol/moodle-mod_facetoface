@@ -2930,25 +2930,25 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
     // Reset completion if set up.
     if ($record->completionattendance) {
         $course = $DB->get_record('course', ['id' => $record->course], '*', MUST_EXIST);
-        $completion = new completion_info($course);
+        $completion = new \completion_info($course);
         $cm = get_coursemodule_from_instance('facetoface', $record->id, $course->id);
         if ($completion->is_enabled($cm)) {
             // Update/create completion data
             $completion->update_state($cm, COMPLETION_UNKNOWN, $record->userid, false);
-
-            if ($record->datetimeknown && get_config('facetoface', 'sessioncompletiondate')) {
-                // Get existing completion data, modify state, save, and update completion.
-                $data = $completion->get_data($cm, false, $record->userid);
-                $data->timemodified = $record->timefinish;
-                $completion->internal_set_data($cm, $data);
-                $completion->update_state($cm, COMPLETION_UNKNOWN, $record->userid, false);
-
-                // Update the course completion criteria entry.
-                $criteras = $completion->get_criteria(4); // 4 = completion_criteria_activity
-                foreach ($criteras as $criteria) {
-                    if ($criteria->module == 'facetoface' && $criteria->moduleinstance == $cm->id) {
-                        $criteriacompletion = $completion->get_user_completion($record->userid, $criteria);
+            $meetscompletioncriteria = $grading >= $record->completionattendance;
+            if ($record->datetimeknown && get_config('facetoface', 'sessioncompletiondate') && $meetscompletioncriteria) {
+                $criterias = $completion->get_criteria(4); // 4 = completion_criteria_activity
+                foreach($criterias as $criterion) {
+                    if ($criterion->module == 'facetoface' && $criterion->moduleinstance == $cm->id) {
+                        // Get existing completion data, modify state, save, and update completion.
+                        $data = $completion->get_data($cm, false, $record->userid);
+                        $data->timemodified = $record->timefinish;
+                        $completion->internal_set_data($cm, $data);
+                        // Updating the completion state status to complete and marking criteria completion.
+                        $completion->update_state($cm, COMPLETION_COMPLETE, $record->userid, false);
+                        $criteriacompletion = $completion->get_user_completion($record->userid, $criterion);
                         $criteriacompletion->mark_complete($record->timefinish);
+                        break;
                     }
                 }
             }
