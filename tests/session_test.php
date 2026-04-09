@@ -71,6 +71,40 @@ final class session_test extends \advanced_testcase {
     }
 
     /**
+     * Data provider for test_get_readable_session_date_with_short_format.
+     */
+    public static function readable_session_date_short_provider(): array {
+        $starttime = strtotime('01-01-2030 0900');
+        $dateformat = get_string('strftimedatefullshort', 'langconfig');
+
+        return [
+            'single day' => [
+                'timefinishoffset' => 8 * HOURSECS,
+                'expectedstring' => userdate($starttime, $dateformat),
+            ],
+            'multiple days' => [
+                'timefinishoffset' => 80 * HOURSECS,
+                'expectedstring' => userdate($starttime, $dateformat) . ' - '
+                    . userdate($starttime + 80 * HOURSECS, $dateformat),
+            ],
+        ];
+    }
+
+    /**
+     * Test getting session date with a short date format.
+     *
+     * @dataProvider readable_session_date_short_provider
+     */
+    public function test_get_readable_session_date_with_short_format(int $timefinishoffset, string $expectedstring): void {
+        $date = (object) [
+            'timestart' => $this->starttime,
+            'timefinish' => $this->starttime + $timefinishoffset,
+        ];
+
+        $this->assertEquals($expectedstring, session::get_readable_session_date($date, 'strftimedatefullshort'));
+    }
+
+    /**
      * Test getting session time.
      */
     public function test_get_readable_session_time(): void {

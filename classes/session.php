@@ -32,20 +32,26 @@ class session {
      * Get a human-readable string of the dates for a session instance.
      *
      * @param \stdClass $sessiondate Object containing a start and finish time for a session.
+     * @param string $dateformat Lang string key for the date format.
      * @return string Date string. If session is only over a day, it just returns one date, otherwise it will show a range.
      *
      * @throws \moodle_exception
      */
-    public static function get_readable_session_date(\stdClass $sessiondate): string {
+    public static function get_readable_session_date(\stdClass $sessiondate, string $dateformat = 'strftimedate'): string {
         if (!isset($sessiondate->timestart) || !isset($sessiondate->timefinish)) {
             throw new \moodle_exception('error:invalidsessiondate', 'facetoface');
         }
-        $formatteddate = facetoface_format_session_times($sessiondate->timestart, $sessiondate->timefinish, null);
-        $date = $formatteddate->startdate;
+
+        $targettz = \core_date::get_user_timezone();
+        $format = get_string($dateformat, 'langconfig');
+        $date = userdate($sessiondate->timestart, $format, $targettz);
+        $enddate = userdate($sessiondate->timefinish, $format, $targettz);
+
         // If start and finish date cover multiple days, append the finishing date.
-        if ($formatteddate->startdate !== $formatteddate->enddate) {
-            $date .= ' - ' . $formatteddate->enddate;
+        if ($date !== $enddate) {
+            $date .= ' - ' . $enddate;
         }
+
         return $date;
     }
 
