@@ -359,6 +359,7 @@ $string['placeholder:firstname'] = '[firstname]';
 $string['placeholder:lastname'] = '[lastname]';
 $string['placeholder:reminderperiod'] = '[reminderperiod]';
 $string['placeholder:sessiondate'] = '[sessiondate]';
+$string['placeholder:sessiondateshort'] = '[sessiondateshort]';
 $string['placeholder:starttime'] = '[starttime]';
 $string['pluginadministration'] = 'Face-to-Face administration';
 $string['pluginname'] = 'Face-to-Face';

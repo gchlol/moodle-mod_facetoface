@@ -784,6 +784,7 @@ function facetoface_email_substitutions($msg, $facetofacename, $reminderperiod, 
     if ($data->datetimeknown) {
         // Scheduled session.
         $sessiondate = \mod_facetoface\session::get_readable_session_datetime($data->sessiondates[0]);
+        $sessiondateshort = \mod_facetoface\session::get_readable_session_date($data->sessiondates[0], 'strftimedatefullshort');
         $starttime = userdate($data->sessiondates[0]->timestart, get_string('strftimetime'));
         $finishtime = userdate($data->sessiondates[0]->timefinish, get_string('strftimetime'));
 
@@ -797,6 +798,7 @@ function facetoface_email_substitutions($msg, $facetofacename, $reminderperiod, 
     } else {
         // Wait-listed session.
         $sessiondate = get_string('unknowndate', 'facetoface');
+        $sessiondateshort = get_string('unknowndate', 'facetoface');
         $alldates    = get_string('unknowndate', 'facetoface');
         $starttime   = get_string('unknowntime', 'facetoface');
         $finishtime  = get_string('unknowntime', 'facetoface');
@@ -808,6 +810,7 @@ function facetoface_email_substitutions($msg, $facetofacename, $reminderperiod, 
     $msg = str_replace(get_string('placeholder:cost', 'facetoface'), facetoface_cost($user->id, $sessionid, $data, false), $msg);
     $msg = str_replace(get_string('placeholder:alldates', 'facetoface'), $alldates, $msg);
     $msg = str_replace(get_string('placeholder:sessiondate', 'facetoface'), $sessiondate, $msg);
+    $msg = str_replace(get_string('placeholder:sessiondateshort', 'facetoface'), $sessiondateshort, $msg);
     $msg = str_replace(get_string('placeholder:starttime', 'facetoface'), $starttime, $msg);
     $msg = str_replace(get_string('placeholder:finishtime', 'facetoface'), $finishtime, $msg);
     $msg = str_replace(get_string('placeholder:duration', 'facetoface'), facetoface_format_duration($data->duration), $msg);
