@@ -951,6 +951,7 @@ $string['error:invalidallowoverbook'] = 'Allow overbookings must be "yes" or "no
 $string['error:invaliddatetimedata'] = 'Invalid Date Time data.';
 $string['error:failedtocreatesession'] = 'Failed to create session';
 $string['error:failedtocreatedates'] = 'Failed to create dates for session #{$a}';
+$string['error:couldnotfindbulksession'] = 'Could not find the newly inserted bulk upload session';
 $string['error:couldnotsavecustomfieldshort'] = 'Could not save custom field with short name "{$a}"';
 $string['facetoface:uploadbulksessions'] = 'Bulk Upload Sessions';
 $string['uploadbulksessions'] = 'Upload sessions';
