@@ -131,7 +131,7 @@ if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
                     } else {
                         $status = MDL_F2F_STATUS_WAITLISTED;
                     }
-                    if (!facetoface_user_signup($session, $facetoface, $course, '', MDL_F2F_BOTH,
+                    if (!facetoface_user_signup($session, $facetoface, $course, '', MDL_F2F_ICAL,
                             $status, $adduser, !$suppressemail)) {
                         $erruser = $DB->get_record('user', ['id' => $adduser], "id, {$usernamefields}");
                         $errors[] = get_string('error:addattendee', 'facetoface', fullname($erruser));

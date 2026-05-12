@@ -403,7 +403,7 @@ class booking_manager_bulk_attendance {
             'ical' => MDL_F2F_ICAL,
             'icalendar' => MDL_F2F_ICAL,
             'both' => MDL_F2F_BOTH,
-            '' => MDL_F2F_BOTH, // Defaults to sending both if nothing is specified.
+            '' => MDL_F2F_ICAL, // Defaults to iCalendar only if nothing is specified.
         ];
 
         return $mapping[strtolower($type)] ?? null;
