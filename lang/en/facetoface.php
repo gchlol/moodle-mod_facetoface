@@ -898,8 +898,8 @@ $string['error:nopermissiontoeditattendees'] = 'You don\'t have permission to ed
 $string['facetoface:deletesessions'] = 'Delete Face-to-face sessions';
 
 // Core
-$string['session:strftimedate'] = '';
-$string['session:strftimetime'] = '';
+$string['session:strftimedate'] = '%d %B %Y';
+$string['session:strftimetime'] = '%I:%M %p';
 
 // Pages
 $string['attendees:print'] = 'Print';
