@@ -900,6 +900,7 @@ $string['facetoface:deletesessions'] = 'Delete Face-to-face sessions';
 // Core
 $string['session:strftimedate'] = '%d %B %Y';
 $string['session:strftimetime'] = '%I:%M %p';
+$string['session:strftimedatetime'] = '%d %B %Y, %I:%M %p';
 
 // Pages
 $string['attendees:print'] = 'Print';
