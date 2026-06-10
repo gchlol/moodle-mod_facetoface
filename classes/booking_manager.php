@@ -17,6 +17,7 @@
 namespace mod_facetoface;
 
 use context_course;
+use context_module;
 use context_user;
 use file_storage;
 use lang_string;
@@ -43,6 +44,9 @@ class booking_manager {
 
     /** @var context_course The course context. */
     private $coursecontext;
+
+    /** @var context_module The module context. */
+    private $modulecontext;
 
     /** @var int The course id. */
     private $facetoface;
@@ -73,11 +77,15 @@ class booking_manager {
         if (!$course = $DB->get_record('course', ['id' => $facetoface->course])) {
             throw new moodle_exception('error:coursemisconfigured', 'facetoface');
         }
+        if (!$cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course->id)) {
+            throw new moodle_exception('error:incorrectcoursemoduleid', 'facetoface');
+        }
 
         $this->f = $f;
         $this->facetoface = $facetoface;
         $this->course = $course;
         $this->coursecontext = context_course::instance($course->id);
+        $this->modulecontext = context_module::instance($cm->id);
         $this->records = $records;
     }
 
@@ -473,6 +481,8 @@ class booking_manager {
                         !$this->suppressemail,
                     );
 
+                    $this->trigger_bulk_booking_created_event($session, $user);
+
                     continue;
                 }
 
@@ -502,6 +512,54 @@ class booking_manager {
         }
 
         return true;
+    }
+
+    /**
+     * Trigger a log event for a booking created from a CSV upload.
+     *
+     * @param \stdClass $session The session the user was booked into.
+     * @param \stdClass $user The booked user.
+     * @return void
+     */
+    private function trigger_bulk_booking_created_event(\stdClass $session, \stdClass $user): void {
+        if (!$this->usefile) {
+            return;
+        }
+
+        $statuscode = $this->get_current_signup_statuscode($session->id, $user->id);
+        $event = \mod_facetoface\event\bulk_booking_created::create([
+            'context' => $this->modulecontext,
+            'objectid' => $session->id,
+            'relateduserid' => $user->id,
+            'other' => [
+                'facetofaceid' => $this->facetoface->id,
+                'status' => facetoface_get_status($statuscode),
+                'statuscode' => $statuscode,
+            ],
+        ]);
+        $event->add_record_snapshot('facetoface_sessions', $session);
+        $event->add_record_snapshot('facetoface', $this->facetoface);
+        $event->trigger();
+    }
+
+    /**
+     * Get the current saved signup status code for a user in a session.
+     *
+     * @param int $sessionid The session ID.
+     * @param int $userid The user ID.
+     * @return int The current status code.
+     */
+    private function get_current_signup_statuscode(int $sessionid, int $userid): int {
+        global $DB;
+
+        $sql = "SELECT ss.statuscode
+                  FROM {facetoface_signups} su
+                  JOIN {facetoface_signups_status} ss ON ss.signupid = su.id
+                 WHERE su.sessionid = :sessionid
+                   AND su.userid = :userid
+                   AND ss.superceded = 0";
+
+        return (int) $DB->get_field_sql($sql, ['sessionid' => $sessionid, 'userid' => $userid], MUST_EXIST);
     }
 
     /**
