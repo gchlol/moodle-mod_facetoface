@@ -59,6 +59,7 @@ if (!$cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course
 // Check essential permissions.
 require_course_login($course, true, $cm);
 $context = context_course::instance($course->id);
+$contextmodule = context_module::instance($cm->id);
 
 // GCHLOL: Add line manager check.
 $ismanager = \mod_facetoface\manager_api::is_manager($USER->id);
@@ -135,6 +136,20 @@ if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
                             $status, $adduser, !$suppressemail)) {
                         $erruser = $DB->get_record('user', ['id' => $adduser], "id, {$usernamefields}");
                         $errors[] = get_string('error:addattendee', 'facetoface', fullname($erruser));
+                    } else {
+                        // Logging and events trigger.
+                        $params = [
+                            'context'       => $contextmodule,
+                            'objectid'      => $session->id,
+                            'relateduserid' => $adduser,
+                            'other'         => [
+                                'bookingmethod' => 'manual',
+                            ],
+                        ];
+                        $event = \mod_facetoface\event\signup_success::create($params);
+                        $event->add_record_snapshot('facetoface_sessions', $session);
+                        $event->add_record_snapshot('facetoface', $facetoface);
+                        $event->trigger();
                     }
                 }
             }

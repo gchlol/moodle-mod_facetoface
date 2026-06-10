@@ -158,8 +158,12 @@ if ($fromform = $mform->get_data()) { // Form submitted.
             )) {
                 // Logging and events trigger.
                 $params = [
-                    'context'  => $contextmodule,
-                    'objectid' => $session->id,
+                    'context'       => $contextmodule,
+                    'objectid'      => $session->id,
+                    'relateduserid' => $USER->id,
+                    'other'         => [
+                        'bookingmethod' => 'self',
+                    ],
                 ];
                 $event = \mod_facetoface\event\signup_success::create($params);
                 $event->add_record_snapshot('facetoface_sessions', $session);
@@ -193,8 +197,12 @@ if ($fromform = $mform->get_data()) { // Form submitted.
     )) {
         // Logging and events trigger.
         $params = [
-            'context'  => $contextmodule,
-            'objectid' => $session->id,
+            'context'       => $contextmodule,
+            'objectid'      => $session->id,
+            'relateduserid' => $USER->id,
+            'other'         => [
+                'bookingmethod' => 'self',
+            ],
         ];
         $event = \mod_facetoface\event\signup_success::create($params);
         $event->add_record_snapshot('facetoface_sessions', $session);

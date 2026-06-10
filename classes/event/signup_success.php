@@ -55,8 +55,12 @@ class signup_success extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "The user with id '$this->userid' has signed up for session with id '$this->objectid' in the facetoface instance " .
-            "with the course module id '$this->contextinstanceid'.";
+        $bookeduserid = empty($this->relateduserid) ? $this->userid : $this->relateduserid;
+        $bookingmethod = empty($this->other['bookingmethod']) ? 'unknown' : $this->other['bookingmethod'];
+
+        return "The user with id '$this->userid' has booked user with id '$bookeduserid' into session with id " .
+            "'$this->objectid' in the facetoface instance with the course module id '$this->contextinstanceid' " .
+            "using the '$bookingmethod' booking method.";
     }
 
     /**
