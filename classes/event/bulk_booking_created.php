@@ -27,12 +27,12 @@ namespace mod_facetoface\event;
 class bulk_booking_created extends signup_success {
 
     /**
-     * Trigger a bulk booking event when the booking came from a CSV upload.
+     * Trigger the bulk booking event for a booking created from a CSV upload.
      *
-     * @param bool $usefile Whether the booking manager is processing an uploaded file.
-     * @param \stdClass $facetoface The Face-to-Face activity.
-     * @param \stdClass $session The session the user was booked into.
-     * @param int $relateduserid The booked user.
+     * @param bool $usefile Whether the booking manager is processing an uploaded CSV file.
+     * @param \stdClass $facetoface The Face-to-Face activity record.
+     * @param \stdClass $session The session record the user was booked into.
+     * @param int $relateduserid The ID of the booked user.
      * @return void
      */
     public static function trigger_from_bulk_upload_if_needed(
@@ -49,12 +49,12 @@ class bulk_booking_created extends signup_success {
     }
 
     /**
-     * Create a bulk booking event from a saved signup record.
+     * Create a bulk booking event from the saved session signup data.
      *
-     * @param \stdClass $facetoface The Face-to-Face activity.
-     * @param \stdClass $session The session the user was booked into.
-     * @param int $relateduserid The booked user.
-     * @return self
+     * @param \stdClass $facetoface The Face-to-Face activity record.
+     * @param \stdClass $session The session record the user was booked into.
+     * @param int $relateduserid The ID of the booked user.
+     * @return self The configured bulk booking event instance.
      */
     public static function create_from_bulk_upload(
         \stdClass $facetoface,
@@ -78,9 +78,9 @@ class bulk_booking_created extends signup_success {
     }
 
     /**
-     * Returns description of what happened.
+     * Get the description of the bulk booking event.
      *
-     * @return string
+     * @return string The event description.
      */
     public function get_description(): string {
         $statuscode = $this->other['statuscode'] ?? null;
@@ -92,28 +92,28 @@ class bulk_booking_created extends signup_success {
     }
 
     /**
-     * Return localised event name.
+     * Get the localised bulk booking event name.
      *
-     * @return string
+     * @return string The localised event name.
      */
     public static function get_name(): string {
         return get_string('eventbulkbookingcreated', 'mod_facetoface');
     }
 
     /**
-     * Get URL related to the action.
+     * Get the attendees page URL for the booked session.
      *
-     * @return \moodle_url
+     * @return \moodle_url The attendees page URL.
      */
     public function get_url(): \moodle_url {
         return new \moodle_url('/mod/facetoface/attendees.php', ['s' => $this->objectid]);
     }
 
     /**
-     * Custom validation.
+     * Validate the event data for a bulk booking event.
      *
-     * @throws \coding_exception
      * @return void
+     * @throws \coding_exception If the related user ID or signup status code is missing.
      */
     protected function validate_data(): void {
         parent::validate_data();
@@ -128,11 +128,11 @@ class bulk_booking_created extends signup_success {
     }
 
     /**
-     * Get the current saved signup status code for a user in a session.
+     * Get the current saved signup status code for a user's session booking.
      *
-     * @param int $sessionid The session ID.
-     * @param int $userid The user ID.
-     * @return int
+     * @param int $sessionid The ID of the session.
+     * @param int $userid The ID of the booked user.
+     * @return int The current signup status code.
      */
     private static function get_current_signup_statuscode(int $sessionid, int $userid): int {
         global $DB;
