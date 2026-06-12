@@ -156,19 +156,11 @@ if ($fromform = $mform->get_data()) { // Form submitted.
                 false,
                 false
             )) {
-                // Logging and events trigger.
-                $params = [
-                    'context'       => $contextmodule,
-                    'objectid'      => $session->id,
-                    'relateduserid' => $USER->id,
-                    'other'         => [
-                        'bookingmethod' => 'self',
-                    ],
-                ];
-                $event = \mod_facetoface\event\signup_success::create($params);
-                $event->add_record_snapshot('facetoface_sessions', $session);
-                $event->add_record_snapshot('facetoface', $facetoface);
-                $event->trigger();
+                \mod_facetoface\event\signup_success::create_from_signup(
+                    $contextmodule,
+                    $session,
+                    $facetoface
+                )->trigger();
             }
         }
 
@@ -195,19 +187,11 @@ if ($fromform = $mform->get_data()) { // Form submitted.
         $fromform->notificationtype,
         $statuscode
     )) {
-        // Logging and events trigger.
-        $params = [
-            'context'       => $contextmodule,
-            'objectid'      => $session->id,
-            'relateduserid' => $USER->id,
-            'other'         => [
-                'bookingmethod' => 'self',
-            ],
-        ];
-        $event = \mod_facetoface\event\signup_success::create($params);
-        $event->add_record_snapshot('facetoface_sessions', $session);
-        $event->add_record_snapshot('facetoface', $facetoface);
-        $event->trigger();
+        \mod_facetoface\event\signup_success::create_from_signup(
+            $contextmodule,
+            $session,
+            $facetoface
+        )->trigger();
 
         $message = get_string('bookingcompleted', 'facetoface');
         if ($session->datetimeknown && $facetoface->confirmationinstrmngr) {

@@ -137,19 +137,12 @@ if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
                         $erruser = $DB->get_record('user', ['id' => $adduser], "id, {$usernamefields}");
                         $errors[] = get_string('error:addattendee', 'facetoface', fullname($erruser));
                     } else {
-                        // Logging and events trigger.
-                        $params = [
-                            'context'       => $contextmodule,
-                            'objectid'      => $session->id,
-                            'relateduserid' => $adduser,
-                            'other'         => [
-                                'bookingmethod' => 'manual',
-                            ],
-                        ];
-                        $event = \mod_facetoface\event\signup_success::create($params);
-                        $event->add_record_snapshot('facetoface_sessions', $session);
-                        $event->add_record_snapshot('facetoface', $facetoface);
-                        $event->trigger();
+                        \mod_facetoface\event\signup_success::create_from_signup(
+                            $contextmodule,
+                            $session,
+                            $facetoface,
+                            $adduser
+                        )->trigger();
                     }
                 }
             }

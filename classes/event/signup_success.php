@@ -39,6 +39,37 @@ namespace mod_facetoface\event;
 class signup_success extends \core\event\base {
 
     /**
+     * Create a signup success event for a session booking.
+     *
+     * @param \context_module $contextmodule The module context.
+     * @param \stdClass $session The session record.
+     * @param \stdClass $facetoface The facetoface activity record.
+     * @param int $relateduserid The user who was booked, when different from the actor.
+     * @return self
+     */
+    public static function create_from_signup(
+        \context_module $contextmodule,
+        \stdClass $session,
+        \stdClass $facetoface,
+        int $relateduserid = 0
+    ) {
+        $params = [
+            'context' => $contextmodule,
+            'objectid' => $session->id,
+        ];
+
+        if (!empty($relateduserid)) {
+            $params['relateduserid'] = $relateduserid;
+        }
+
+        $event = self::create($params);
+        $event->add_record_snapshot('facetoface_sessions', $session);
+        $event->add_record_snapshot('facetoface', $facetoface);
+
+        return $event;
+    }
+
+    /**
      * Init method.
      *
      * @return void
@@ -55,12 +86,14 @@ class signup_success extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        $bookeduserid = empty($this->relateduserid) ? $this->userid : $this->relateduserid;
-        $bookingmethod = empty($this->other['bookingmethod']) ? 'unknown' : $this->other['bookingmethod'];
+        if (!empty($this->relateduserid) && ((int) $this->relateduserid !== (int) $this->userid)) {
+            return "The user with id '$this->userid' has booked user with id '$this->relateduserid' into session " .
+                "with id '$this->objectid' in the facetoface instance with the course module id " .
+                "'$this->contextinstanceid'.";
+        }
 
-        return "The user with id '$this->userid' has booked user with id '$bookeduserid' into session with id " .
-            "'$this->objectid' in the facetoface instance with the course module id '$this->contextinstanceid' " .
-            "using the '$bookingmethod' booking method.";
+        return "The user with id '$this->userid' has signed up for session with id '$this->objectid' in the " .
+            "facetoface instance with the course module id '$this->contextinstanceid'.";
     }
 
     /**
