@@ -498,10 +498,10 @@ class booking_manager_bulk_attendance {
 
                 // GCHLOL: Log a successful site admin CSV bulk booking for this session user.
                 \mod_facetoface\event\bulk_booking_created::trigger_from_bulk_upload_if_needed(
-                    $this->usefile,
+                    (bool) $this->usefile,
                     $facetoface,
                     $session,
-                    $user->id
+                    (int) $user->id
                 );
                 // GCHLOL ends.
 

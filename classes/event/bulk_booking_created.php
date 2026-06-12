@@ -61,14 +61,21 @@ class bulk_booking_created extends signup_success {
         \stdClass $session,
         int $relateduserid
     ): self {
-        $cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $facetoface->course, false, MUST_EXIST);
+        $sessionid = (int) $session->id;
+        $cm = get_coursemodule_from_instance(
+            'facetoface',
+            (int) $facetoface->id,
+            (int) $facetoface->course,
+            false,
+            MUST_EXIST
+        );
 
         $event = self::create([
-            'context' => \context_module::instance($cm->id),
-            'objectid' => $session->id,
+            'context' => \context_module::instance((int) $cm->id),
+            'objectid' => $sessionid,
             'relateduserid' => $relateduserid,
             'other' => [
-                'statuscode' => self::get_current_signup_statuscode($session->id, $relateduserid),
+                'statuscode' => self::get_current_signup_statuscode($sessionid, $relateduserid),
             ],
         ]);
         $event->add_record_snapshot('facetoface_sessions', $session);
