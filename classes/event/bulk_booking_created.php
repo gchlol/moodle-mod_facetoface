@@ -23,17 +23,35 @@ namespace mod_facetoface\event;
  * @copyright  2026 Gold Coast Health
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class bulk_booking_created extends \core\event\base {
+class bulk_booking_created extends signup_success {
 
     /**
-     * Init method.
+     * Create a bulk booking event from a saved signup record.
      *
-     * @return void
+     * @param \stdClass $facetoface The Face-to-Face activity.
+     * @param \stdClass $session The session the user was booked into.
+     * @param int $relateduserid The booked user.
+     * @return self
      */
-    protected function init(): void {
-        $this->data['crud'] = 'r';
-        $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
-        $this->data['objecttable'] = 'facetoface_sessions';
+    public static function create_from_bulk_upload(
+        \stdClass $facetoface,
+        \stdClass $session,
+        int $relateduserid
+    ): self {
+        $cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $facetoface->course, false, MUST_EXIST);
+
+        $event = self::create([
+            'context' => \context_module::instance($cm->id),
+            'objectid' => $session->id,
+            'relateduserid' => $relateduserid,
+            'other' => [
+                'statuscode' => self::get_current_signup_statuscode($session->id, $relateduserid),
+            ],
+        ]);
+        $event->add_record_snapshot('facetoface_sessions', $session);
+        $event->add_record_snapshot('facetoface', $facetoface);
+
+        return $event;
     }
 
     /**
@@ -42,7 +60,8 @@ class bulk_booking_created extends \core\event\base {
      * @return string
      */
     public function get_description(): string {
-        $status = $this->other['status'] ?? 'booked';
+        $statuscode = $this->other['statuscode'] ?? null;
+        $status = $statuscode === null ? 'booked' : facetoface_get_status((int) $statuscode);
 
         return "The user with id '$this->userid' has booked the user with id '$this->relateduserid' "
             . "into session with id '$this->objectid' from a CSV upload with status '$status' "
@@ -76,10 +95,6 @@ class bulk_booking_created extends \core\event\base {
     protected function validate_data(): void {
         parent::validate_data();
 
-        if ($this->contextlevel != CONTEXT_MODULE) {
-            throw new \coding_exception('Context level must be CONTEXT_MODULE.');
-        }
-
         if (!isset($this->data['relateduserid'])) {
             throw new \coding_exception('The \'relateduserid\' must be set.');
         }
@@ -87,5 +102,25 @@ class bulk_booking_created extends \core\event\base {
         if (!isset($this->data['other']['statuscode'])) {
             throw new \coding_exception('The \'statuscode\' value must be set in other.');
         }
+    }
+
+    /**
+     * Get the current saved signup status code for a user in a session.
+     *
+     * @param int $sessionid The session ID.
+     * @param int $userid The user ID.
+     * @return int
+     */
+    private static function get_current_signup_statuscode(int $sessionid, int $userid): int {
+        global $DB;
+
+        $sql = "SELECT ss.statuscode
+                  FROM {facetoface_signups} su
+                  JOIN {facetoface_signups_status} ss ON ss.signupid = su.id
+                 WHERE su.sessionid = :sessionid
+                   AND su.userid = :userid
+                   AND ss.superceded = 0";
+
+        return (int) $DB->get_field_sql($sql, ['sessionid' => $sessionid, 'userid' => $userid], MUST_EXIST);
     }
 }
