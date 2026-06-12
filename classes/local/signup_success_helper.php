@@ -16,10 +16,8 @@
 
 namespace mod_facetoface\local;
 
-// GCHLOL: Add helper methods for booking success events and descriptions.
-
 /**
- * Helper for signup success logging customisations.
+ * GCHLOL: Helper for signup success logging customisations.
  *
  * @package    mod_facetoface
  * @copyright  2026 Gold Coast Health
@@ -77,5 +75,3 @@ class signup_success_helper {
             "'$objectid' in the facetoface instance with the course module id '$contextinstanceid'.";
     }
 }
-
-// GCHLOL ends.

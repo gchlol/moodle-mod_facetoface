@@ -28,7 +28,6 @@ use completion_completion;
  */
 class completion_util {
 
-    // GCHLOL: Use local variable naming in course completion recalculation.
     /**
      * Recalculate course completion for a given user.
      *
@@ -50,5 +49,4 @@ class completion_util {
         // Trigger aggregation to instantly update course completion.
         aggregate_completions($completion->id);
     }
-    // GCHLOL ends.
 }
