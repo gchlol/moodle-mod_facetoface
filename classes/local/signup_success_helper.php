@@ -42,9 +42,11 @@ class signup_success_helper {
         \stdClass $facetoface,
         int $relateduserid
     ): void {
+        $sessionid = (int) $session->id;
+
         $event = \mod_facetoface\event\signup_success::create([
             'context' => \context_module::instance($cmid),
-            'objectid' => $session->id,
+            'objectid' => $sessionid,
             'relateduserid' => $relateduserid,
         ]);
         $event->add_record_snapshot('facetoface_sessions', $session);

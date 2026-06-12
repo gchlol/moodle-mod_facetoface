@@ -138,7 +138,12 @@ if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
                     } else {
                         // GCHLOL
 
-                        \mod_facetoface\local\signup_success_helper::trigger_booking_event($cm->id, $session, $facetoface, $adduser);
+                        \mod_facetoface\local\signup_success_helper::trigger_booking_event(
+                            (int) $cm->id,
+                            $session,
+                            $facetoface,
+                            (int) $adduser
+                        );
 
                         // GCHLOL
                     }
