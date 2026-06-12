@@ -136,7 +136,7 @@ if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
                         $erruser = $DB->get_record('user', ['id' => $adduser], "id, {$usernamefields}");
                         $errors[] = get_string('error:addattendee', 'facetoface', fullname($erruser));
                     } else {
-                        // GCHLOL
+                        // GCHLOL: Trigger signup success logging for bookings made for another user.
 
                         \mod_facetoface\local\signup_success_helper::trigger_booking_event(
                             (int) $cm->id,
@@ -145,7 +145,7 @@ if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
                             (int) $adduser
                         );
 
-                        // GCHLOL
+                        // GCHLOL ends.
                     }
                 }
             }

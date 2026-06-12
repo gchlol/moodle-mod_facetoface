@@ -16,7 +16,7 @@
 
 namespace mod_facetoface\local;
 
-// GCHLOL
+// GCHLOL: Add helper methods for booking success events and descriptions.
 
 /**
  * Helper for signup success logging customisations.
@@ -78,4 +78,4 @@ class signup_success_helper {
     }
 }
 
-// GCHLOL
+// GCHLOL ends.

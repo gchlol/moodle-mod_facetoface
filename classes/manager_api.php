@@ -79,6 +79,7 @@ class manager_api {
         return (bool) $DB->count_records_sql($sql, $join->params);
     }
 
+    // GCHLOL: Use local variable naming for hierarchy user lookups.
     /**
      * Get SQL join data for reporting users based on the hierarchy.
      *
@@ -105,6 +106,7 @@ class manager_api {
 
         return new sql_join($join, $where, $params);
     }
+    // GCHLOL ends.
 
     /**
      * Get SQL join data for reporting users based on profile fields.

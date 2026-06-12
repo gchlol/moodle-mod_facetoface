@@ -66,10 +66,12 @@ abstract class bulk_session_upload_form_parent extends moodleform {
 
         $mform = $this->_form;
 
+        // GCHLOL: Use the form element key variable without underscores.
         $f2fidkey = $this->formelementkey;
         $f2fid = $this->_customdata[$f2fidkey] ?? 0;
         $mform->addElement('hidden', $f2fidkey, $f2fid);
         $mform->setType($f2fidkey, PARAM_INT);
+        // GCHLOL ends.
 
         $mform->addElement(
             'header',
