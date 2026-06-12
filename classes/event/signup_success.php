@@ -39,37 +39,6 @@ namespace mod_facetoface\event;
 class signup_success extends \core\event\base {
 
     /**
-     * Create a signup success event for a session booking.
-     *
-     * @param \context_module $contextmodule The module context.
-     * @param \stdClass $session The session record.
-     * @param \stdClass $facetoface The facetoface activity record.
-     * @param int $relateduserid The user who was booked, when different from the actor.
-     * @return self
-     */
-    public static function create_from_signup(
-        \context_module $contextmodule,
-        \stdClass $session,
-        \stdClass $facetoface,
-        int $relateduserid = 0
-    ) {
-        $params = [
-            'context' => $contextmodule,
-            'objectid' => $session->id,
-        ];
-
-        if (!empty($relateduserid)) {
-            $params['relateduserid'] = $relateduserid;
-        }
-
-        $event = self::create($params);
-        $event->add_record_snapshot('facetoface_sessions', $session);
-        $event->add_record_snapshot('facetoface', $facetoface);
-
-        return $event;
-    }
-
-    /**
      * Init method.
      *
      * @return void
@@ -86,14 +55,22 @@ class signup_success extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        if (!empty($this->relateduserid) && ((int) $this->relateduserid !== (int) $this->userid)) {
-            return "The user with id '$this->userid' has booked user with id '$this->relateduserid' into session " .
-                "with id '$this->objectid' in the facetoface instance with the course module id " .
-                "'$this->contextinstanceid'.";
+        // GCHLOL
+
+        $description = \mod_facetoface\local\signup_success_helper::get_booking_description(
+            (int) $this->userid,
+            empty($this->relateduserid) ? 0 : (int) $this->relateduserid,
+            (int) $this->objectid,
+            (int) $this->contextinstanceid
+        );
+        if ($description !== null) {
+            return $description;
         }
 
-        return "The user with id '$this->userid' has signed up for session with id '$this->objectid' in the " .
-            "facetoface instance with the course module id '$this->contextinstanceid'.";
+        // GCHLOL
+
+        return "The user with id '$this->userid' has signed up for session with id '$this->objectid' in the facetoface instance " .
+            "with the course module id '$this->contextinstanceid'.";
     }
 
     /**
