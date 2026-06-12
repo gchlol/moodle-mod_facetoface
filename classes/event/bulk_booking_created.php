@@ -16,6 +16,7 @@
 
 namespace mod_facetoface\event;
 
+// GCHLOL
 /**
  * The mod_facetoface bulk booking created event class.
  *
@@ -24,6 +25,28 @@ namespace mod_facetoface\event;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class bulk_booking_created extends signup_success {
+
+    /**
+     * Trigger a bulk booking event when the booking came from a CSV upload.
+     *
+     * @param bool $usefile Whether the booking manager is processing an uploaded file.
+     * @param \stdClass $facetoface The Face-to-Face activity.
+     * @param \stdClass $session The session the user was booked into.
+     * @param int $relateduserid The booked user.
+     * @return void
+     */
+    public static function trigger_from_bulk_upload_if_needed(
+        bool $usefile,
+        \stdClass $facetoface,
+        \stdClass $session,
+        int $relateduserid
+    ): void {
+        if (!$usefile) {
+            return;
+        }
+
+        self::create_from_bulk_upload($facetoface, $session, $relateduserid)->trigger();
+    }
 
     /**
      * Create a bulk booking event from a saved signup record.
@@ -124,3 +147,4 @@ class bulk_booking_created extends signup_success {
         return (int) $DB->get_field_sql($sql, ['sessionid' => $sessionid, 'userid' => $userid], MUST_EXIST);
     }
 }
+// GCHLOL

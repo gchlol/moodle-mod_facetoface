@@ -472,7 +472,14 @@ class booking_manager {
                         !$this->suppressemail,
                     );
 
-                    $this->trigger_bulk_booking_created_event($session, $user);
+                    // GCHLOL
+                    \mod_facetoface\event\bulk_booking_created::trigger_from_bulk_upload_if_needed(
+                        $this->usefile,
+                        $this->facetoface,
+                        $session,
+                        $user->id
+                    );
+                    // GCHLOL
 
                     continue;
                 }
@@ -503,25 +510,6 @@ class booking_manager {
         }
 
         return true;
-    }
-
-    /**
-     * Trigger a log event for a booking created from a CSV upload.
-     *
-     * @param \stdClass $session The session the user was booked into.
-     * @param \stdClass $user The booked user.
-     * @return void
-     */
-    private function trigger_bulk_booking_created_event(\stdClass $session, \stdClass $user): void {
-        if (!$this->usefile) {
-            return;
-        }
-
-        \mod_facetoface\event\bulk_booking_created::create_from_bulk_upload(
-            $this->facetoface,
-            $session,
-            $user->id
-        )->trigger();
     }
 
     /**
