@@ -14,18 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Local helper for signup success logging customisations.
- *
- * @package    mod_facetoface
- * @copyright  2026 Queensland Health
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 namespace mod_facetoface\local;
 
 // GCHLOL
 
+/**
+ * Helper for signup success logging customisations.
+ *
+ * @package    mod_facetoface
+ * @copyright  2026 Gold Coast Health
+ * @author     Yucheng Zhu
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class signup_success_helper {
     /**
      * Trigger the signup success event for booking another user into a session.
