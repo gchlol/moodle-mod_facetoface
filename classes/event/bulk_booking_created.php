@@ -16,13 +16,13 @@
 
 namespace mod_facetoface\event;
 
-// GCHLOL
 /**
- * The mod_facetoface bulk booking created event class.
+ * Bulk booking created event.
  *
  * @package    mod_facetoface
  * @copyright  2026 Gold Coast Health
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author     Yucheng Zhu
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class bulk_booking_created extends signup_success {
 
@@ -147,4 +147,3 @@ class bulk_booking_created extends signup_success {
         return (int) $DB->get_field_sql($sql, ['sessionid' => $sessionid, 'userid' => $userid], MUST_EXIST);
     }
 }
-// GCHLOL
