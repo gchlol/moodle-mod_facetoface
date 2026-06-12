@@ -34,7 +34,7 @@ class signup_success_helper {
      * @param \stdClass $session The session record.
      * @param \stdClass $facetoface The facetoface activity record.
      * @param int $relateduserid The booked user id.
-     * @return void
+     * @return void This method does not return a value.
      */
     public static function trigger_booking_event(
         int $cmid,
@@ -59,7 +59,7 @@ class signup_success_helper {
      * @param int $relateduserid The booked user id.
      * @param int $objectid The session id.
      * @param int $contextinstanceid The course module id.
-     * @return string|null
+     * @return string|null The custom booking description, or null when the user books themselves.
      */
     public static function get_booking_description(
         int $userid,
