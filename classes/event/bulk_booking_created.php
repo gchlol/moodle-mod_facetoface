@@ -17,7 +17,7 @@
 namespace mod_facetoface\event;
 
 /**
- * Bulk booking created event.
+ * GCHLOL: Bulk booking created event.
  *
  * @package    mod_facetoface
  * @copyright  2026 Gold Coast Health

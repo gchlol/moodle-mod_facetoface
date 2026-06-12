@@ -472,14 +472,14 @@ class booking_manager {
                         !$this->suppressemail,
                     );
 
-                    // GCHLOL
+                    // GCHLOL: Log a successful CSV bulk upload booking for this session user.
                     \mod_facetoface\event\bulk_booking_created::trigger_from_bulk_upload_if_needed(
                         $this->usefile,
                         $this->facetoface,
                         $session,
                         $user->id
                     );
-                    // GCHLOL
+                    // GCHLOL ends.
 
                     continue;
                 }
