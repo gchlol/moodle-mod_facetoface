@@ -66,10 +66,10 @@ abstract class bulk_session_upload_form_parent extends moodleform {
 
         $mform = $this->_form;
 
-        $f2fid_key = $this->formelementkey;
-        $f2fid = $this->_customdata[$f2fid_key] ?? 0;
-        $mform->addElement('hidden', $f2fid_key, $f2fid);
-        $mform->setType($f2fid_key, PARAM_INT);
+        $f2fidkey = $this->formelementkey;
+        $f2fid = $this->_customdata[$f2fidkey] ?? 0;
+        $mform->addElement('hidden', $f2fidkey, $f2fid);
+        $mform->setType($f2fidkey, PARAM_INT);
 
         $mform->addElement(
             'header',
