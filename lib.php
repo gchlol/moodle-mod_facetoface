@@ -2255,11 +2255,26 @@ function facetoface_update_signup_status($signupid, $statuscode, $createdby, $no
     global $DB;
     $timenow = time();
 
+    // GCHLOL: PB - Use the session finish time as the marked-off time for attendance statuses.
+    $sql = "SELECT DISTINCT fsd.timefinish
+              FROM {facetoface_sessions_dates} fsd
+              JOIN {facetoface_signups} fs
+                ON fs.sessionid = fsd.sessionid AND fs.id = ?";
+
+    $sessiontime = $DB->get_record_sql($sql, array($signupid));
+    if ($statuscode == MDL_F2F_STATUS_NO_SHOW
+            OR $statuscode == MDL_F2F_STATUS_PARTIALLY_ATTENDED
+            OR $statuscode == MDL_F2F_STATUS_FULLY_ATTENDED) {
+        $sessiontimes = $sessiontime->timefinish;
+    } else {
+        $sessiontimes = $timenow;
+    }
+
     $signupstatus = new stdclass;
     $signupstatus->signupid = $signupid;
     $signupstatus->statuscode = $statuscode;
     $signupstatus->createdby = $createdby;
-    $signupstatus->timecreated = $timenow;
+    $signupstatus->timecreated = $sessiontimes; // GCHLOL: PB change from $timenow to $sessiontimes.
     $signupstatus->note = $note;
     $signupstatus->grade = $grade;
     $signupstatus->superceded = 0;
