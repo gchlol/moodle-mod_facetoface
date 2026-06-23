@@ -55,6 +55,20 @@ class signup_success extends \core\event\base {
      * @return string
      */
     public function get_description() {
+        // GCHLOL: Use a custom event description when one user books another.
+
+        $description = \mod_facetoface\local\signup_success_helper::get_booking_description(
+            (int) $this->userid,
+            empty($this->relateduserid) ? 0 : (int) $this->relateduserid,
+            (int) $this->objectid,
+            (int) $this->contextinstanceid
+        );
+        if ($description !== null) {
+            return $description;
+        }
+
+        // GCHLOL ends.
+
         return "The user with id '$this->userid' has signed up for session with id '$this->objectid' in the facetoface instance " .
             "with the course module id '$this->contextinstanceid'.";
     }
