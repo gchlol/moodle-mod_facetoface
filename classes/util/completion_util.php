@@ -31,20 +31,20 @@ class completion_util {
     /**
      * Recalculate course completion for a given user.
      *
-     * @param int $course_id Target course ID.
-     * @param int $user_id Target user ID.
-     * @param int|null $time_started Optional `timestarted` to set if not already set. Defaults to now.
+     * @param int $courseid Target course ID.
+     * @param int $userid Target user ID.
+     * @param int|null $timestarted Optional `timestarted` to set if not already set. Defaults to now.
      * @return void
      */
-    public static function recalculate_course_for_user(int $course_id, int $user_id, ?int $time_started = null): void {
+    public static function recalculate_course_for_user(int $courseid, int $userid, ?int $timestarted = null): void {
         $completion = new completion_completion([
-            'userid' => $user_id,
-            'course' => $course_id,
+            'userid' => $userid,
+            'course' => $courseid,
         ]);
 
         // Unset `timecompleted` to force reaggregation as set in `mark_inprogress()`.
         $completion->timecompleted = null;
-        $completion->mark_inprogress($time_started);
+        $completion->mark_inprogress($timestarted);
 
         // Trigger aggregation to instantly update course completion.
         aggregate_completions($completion->id);
