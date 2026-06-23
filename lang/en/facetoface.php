@@ -841,6 +841,9 @@ $string['waitlistedmessage_help'] = 'This message is sent out whenever users sig
 
 /* Face-to-face events and logging */
 $string['eventaddsession'] = 'Session added';
+// GCHLOL: Add the localised event name for CSV bulk upload booking logs.
+$string['eventbulkbookingcreated'] = 'Bulk booking created';
+// GCHLOL ends.
 $string['eventcsvprocessed'] = 'CSV processed';
 $string['updatevalidrows'] = 'Upload only rows with no errors';
 $string['error:errormustbeanarray'] = 'Error must be an array. Currently, it is \'{$a}\'.';
@@ -1014,7 +1017,9 @@ $string['uploadandpreviewbulkbookings'] = 'Upload and preview bookings';
 $string['uploadbulkbookingsfile'] = 'Bulk Bookings File';
 $string['bulkattendanceprocessed'] = 'Bulk bookings have been successfully processed.';
 $string['eventcsvprocessedbulkattendance'] = 'Site Admin Bulk bookings CSV processed ';
-$string['eventcsvprocessedbulkattendancedesc'] = '{$a} processed a bulk attendance CSV file.';
+// GCHLOL: Describe CSV bulk booking processing logs using the acting user's ID.
+$string['eventcsvprocessedbulkattendancedesc'] = 'The user with id \'{$a->userid}\' has processed a bulk bookings CSV file.';
+// GCHLOL ends.
 $string['updatevalidrows'] = 'Upload only rows with no errors';
 $string['bulkattendanceprocessedwithskips'] = 'Processed {$a->processed} row(s). Skipped {$a->skipped} row(s) with errors.';
 $string['error:errormustbeanarray'] = 'Error must be an array. Currently, it is \'{$a}\'.';

@@ -496,6 +496,15 @@ class booking_manager_bulk_attendance {
                     !$this->suppressemail
                 );
 
+                // GCHLOL: Log a successful site admin CSV bulk booking for this session user.
+                \mod_facetoface\event\bulk_booking_created::trigger_from_bulk_upload_if_needed(
+                    (bool) $this->usefile,
+                    $facetoface,
+                    $session,
+                    (int) $user->id
+                );
+                // GCHLOL ends.
+
                 continue;
             }
 
