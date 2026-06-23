@@ -243,7 +243,7 @@ Fields expected:
 - Email address (required)
 - Session number (required)
 - Discount code (optional)
-- Notification type (optional - valid options are 'email', 'ical', or 'both')
+- Notification type (optional - valid options are 'email', 'ical', or 'both'; blank defaults to 'ical')
 ";
 
 $string['facetoface:uploadandpreview'] = 'Upload and validate bookings';
@@ -884,7 +884,7 @@ Fields expected:
 - Session number (required)
 - Status (optional - valid options are cancelled,  booked, waitlisted, no_show, partially_attended, and fully_attended)
 - Discount code (optional)
-- Notification type (optional - valid options are 'email', 'ical', or 'both')
+- Notification type (optional - valid options are 'email', 'ical', or 'both'; blank defaults to 'ical')
 ";
 $string['facetoface:editsessions'] = 'Add, edit and copy Face-to-face sessions';
 
@@ -1002,7 +1002,7 @@ $string['facetoface:uploadbookingsextfiledesc'] = "
 Fields expected:
 - Session ID (required)
 - Status (optional - valid options are cancelled,  booked, waitlisted, no_show, partially_attended, and fully_attended)
-- Notification type (optional - valid options are 'email', 'ical', or 'both')";
+- Notification type (optional - valid options are 'email', 'ical', or 'both'; blank defaults to 'ical')";
 $string['examplecsvfilename'] = 'example_bookings.csv';
 $string['uploadbulkattendance'] = 'Upload bookings';
 $string['error:activitydoesnotexist'] = 'Face-to-Face activity not found: {$a}';
@@ -1012,7 +1012,7 @@ $string['csvuploadhelp:status'] = 'Status';
 $string['csvuploadhelp:statustype'] = 'For now, only use "booked"';
 $string['csvuploadhelp:discountcode'] = 'Discount Code';
 $string['csvuploadhelp:notificationtype'] = 'Notification Type';
-$string['csvuploadhelp:oneofnotif'] = 'One of: email, ical, both';
+$string['csvuploadhelp:oneofnotif'] = 'One of: email, ical, both. Blank defaults to ical.';
 $string['uploadandpreviewbulkbookings'] = 'Upload and preview bookings';
 $string['uploadbulkbookingsfile'] = 'Bulk Bookings File';
 $string['bulkattendanceprocessed'] = 'Bulk bookings have been successfully processed.';
