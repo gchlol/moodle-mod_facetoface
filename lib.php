@@ -2912,12 +2912,13 @@ function facetoface_format_session_times($start, $end, $tz) {
         $targettz = core_date::get_user_timezone($tz);
     }
 
-    $formattedsession->startdate = userdate($start, get_string('strftimedate', 'langconfig'), $targettz);
-    $formattedsession->startdatetime = userdate($start, get_string('strftimedatetime', 'langconfig'), $targettz);
-    $formattedsession->starttime = userdate($start, get_string('strftimetime', 'langconfig'), $targettz);
-    $formattedsession->enddate = userdate($end, get_string('strftimedate', 'langconfig'), $targettz);
-    $formattedsession->enddatetime = userdate($end, get_string('strftimedatetime', 'langconfig'), $targettz);
-    $formattedsession->endtime = userdate($end, get_string('strftimetime', 'langconfig'), $targettz);
+    // GCHLOL NL: Use facetoface session specific strings instead of global.
+    $formattedsession->startdate = userdate($start, get_string('session:strftimedate', 'facetoface'), $targettz);
+    $formattedsession->startdatetime = userdate($start, get_string('session:strftimedatetime', 'facetoface'), $targettz);
+    $formattedsession->starttime = userdate($start, get_string('session:strftimetime', 'facetoface'), $targettz);
+    $formattedsession->enddate = userdate($end, get_string('session:strftimedate', 'facetoface'), $targettz);
+    $formattedsession->enddatetime = userdate($end, get_string('session:strftimedatetime', 'facetoface'), $targettz);
+    $formattedsession->endtime = userdate($end, get_string('session:strftimetime', 'facetoface'), $targettz);
     if (empty($displaytimezones)) {
         $formattedsession->timezone = '';
     } else {
