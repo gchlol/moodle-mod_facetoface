@@ -885,6 +885,8 @@ Fields expected:
 - Status (optional - valid options are cancelled,  booked, waitlisted, no_show, partially_attended, and fully_attended)
 - Discount code (optional)
 - Notification type (optional - valid options are 'email', 'ical', or 'both'; blank defaults to 'ical')
+
+Bookings can be uploaded for sessions that have already started or finished; no confirmation emails are sent for these. Attendance statuses (no_show, partially_attended and fully_attended) can only be used once the session has started, and will book the user into the session first if they are not already an attendee.
 ";
 $string['facetoface:editsessions'] = 'Add, edit and copy Face-to-face sessions';
 
@@ -895,6 +897,8 @@ $string['facetoface:editsessions'] = 'Add, edit and copy Face-to-face sessions';
 $string['division'] = 'Division';
 $string['stream'] = 'Stream';
 $string['error:invalidallowcancel'] = 'You must specify either "yes" or "no" for Allow Cancellations.';
+$string['error:cannotwaitliststartedsession'] = 'Unable to waitlist user for session {$a} because it has already started.';
+$string['error:attendancesessionnotstarted'] = 'Unable to record attendance for session {$a} because it has not started yet.';
 $string['error:missingrequiredcolumn'] = 'Missing required column: {$a}';
 $string['error:noheaderrow'] = 'No header row found in the uploaded file.';
 $string['error:nopermissiontoeditattendees'] = 'You don\'t have permission to edit attendees for this Face-to-Face session.';
@@ -1010,7 +1014,7 @@ $string['error:activitydoesnotexist'] = 'Face-to-Face activity not found: {$a}';
 $string['csvuploadhelp:username'] = 'Username';
 $string['csvuploadhelp:session'] = 'Session';
 $string['csvuploadhelp:status'] = 'Status';
-$string['csvuploadhelp:statustype'] = 'For now, only use "booked"';
+$string['csvuploadhelp:statustype'] = 'One of "booked", "waitlisted", "cancelled", "no_show", "partially_attended" or "fully_attended"; blank defaults to "booked". Attendance statuses require the session to have started, and will book the user into the session first if needed.';
 $string['csvuploadhelp:discountcode'] = 'Discount Code';
 $string['csvuploadhelp:notificationtype'] = 'Notification Type';
 $string['csvuploadhelp:oneofnotif'] = 'One of: email, ical, both. Blank defaults to ical.';

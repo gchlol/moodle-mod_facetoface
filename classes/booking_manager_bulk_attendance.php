@@ -49,6 +49,9 @@ class booking_manager_bulk_attendance {
     /** @var bool Will ignore case when matching users */
     private $caseinsensitive = false;
 
+    /** @var string[] GCHLOL: Statuses that record attendance rather than create a plain booking. */
+    private const ATTENDANCE_STATUSES = ['no_show', 'partially_attended', 'fully_attended'];
+
     /**
      * Constructor for the booking manager.
      *
@@ -282,21 +285,35 @@ class booking_manager_bulk_attendance {
                 continue;
             }
 
-            // 5) If booking or default ('', 'booked') into a session that’s in progress or over, error.
+            // 5) GCHLOL: Bookings ('', 'booked') into sessions that have already started or finished
+            // are allowed, so past sessions can be uploaded. Waitlisting only makes sense before
+            // the session starts, and attendance can only be recorded once it has started.
+            if ($status === 'waitlisted' && facetoface_has_session_started($session, $timenow)) {
+                $errors[] = [
+                    $row,
+                    get_string('error:cannotwaitliststartedsession', 'mod_facetoface', $sessionref)
+                ];
+
+                continue;
+            }
+
             if (
                 $session->datetimeknown &&
-                in_array($status, ['', 'booked'], true) &&
-                facetoface_has_session_started($session, $timenow)
+                in_array($status, self::ATTENDANCE_STATUSES, true) &&
+                !facetoface_has_session_started($session, $timenow)
             ) {
-                $inprog = get_string('cannotsignupsessioninprogress', 'facetoface');
-                $over = get_string('cannotsignupsessionover', 'facetoface');
-                $reason = facetoface_is_session_in_progress($session, $timenow) ? $inprog : $over;
-                $errors[] = [$row, $reason];
+                $errors[] = [
+                    $row,
+                    get_string('error:attendancesessionnotstarted', 'mod_facetoface', $sessionref)
+                ];
 
                 continue;
             }
 
             // 6) Capacity logic (only if not cancelled).
+            // GCHLOL: Users who already hold an active signup are already counted in the attendee
+            // total, so their rows (e.g. attendance updates for past sessions) must not consume
+            // capacity again.
             if ($session->allowoverbook == 0) {
                 if (!isset($sessioncapacitycache[$session->id])) {
                     $remaining = $session->capacity
@@ -306,7 +323,8 @@ class booking_manager_bulk_attendance {
                         'rows'     => []
                     ];
                 }
-                if ($status !== 'cancelled') {
+                $hasactivesignup = $this->get_active_signup_id($session->id, $userid) !== null;
+                if ($status !== 'cancelled' && !$hasactivesignup) {
                     $sessioncapacitycache[$session->id]['capacity']--;
                     $sessioncapacitycache[$session->id]['rows'][] = $row;
                 }
@@ -391,6 +409,31 @@ class booking_manager_bulk_attendance {
             $fields
         );
     }
+    /**
+     * GCHLOL: Get the user's active signup ID for a session, if any.
+     *
+     * A signup is active when its current status is approved or higher (approved, waitlisted,
+     * booked or an attendance status). Cancelled and declined signups are not active.
+     *
+     * @param int $sessionid The session ID.
+     * @param int $userid The user ID.
+     * @return int|null The signup ID, or null if the user holds no active signup.
+     */
+    private function get_active_signup_id(int $sessionid, int $userid): ?int {
+        global $DB;
+
+        $sql = "SELECT su.id
+                  FROM {facetoface_signups} su
+                  JOIN {facetoface_signups_status} ss ON ss.signupid = su.id
+                 WHERE su.sessionid = ?
+                   AND su.userid = ?
+                   AND ss.superceded = 0
+                   AND ss.statuscode >= ?";
+        $signupid = $DB->get_field_sql($sql, [$sessionid, $userid, MDL_F2F_STATUS_APPROVED]);
+
+        return $signupid ? (int) $signupid : null;
+    }
+
     /**
      * Transform notification type to internal representation.
      *
@@ -518,17 +561,44 @@ class booking_manager_bulk_attendance {
                 ],
                 true
             )) {
-                $attendees = facetoface_get_attendees($session->id);
-                foreach ($attendees as $attendee) {
-                    if ($attendee->username === $username) {
+                // GCHLOL: Users without an active signup (never booked, or previously cancelled) are
+                // booked in first, so attendance can be uploaded for sessions that have already run.
+                // Signup emails are suppressed by facetoface_user_signup() once a session has started.
+                $signupid = $this->get_active_signup_id($session->id, $user->id);
+                if ($signupid === null) {
+                    $coursecontext = context_course::instance($course->id);
+                    facetoface_enrol_user($coursecontext, $course->id, $user->id);
 
-                        break;
-                    }
+                    facetoface_user_signup(
+                        $session,
+                        $facetoface,
+                        $course,
+                        $discount ?? '',
+                        $mappednotify ?? -1,
+                        MDL_F2F_STATUS_BOOKED,
+                        $user->id,
+                        !$this->suppressemail
+                    );
+
+                    // GCHLOL: Log a successful site admin CSV bulk booking for this session user.
+                    \mod_facetoface\event\bulk_booking_created::trigger_from_bulk_upload_if_needed(
+                        (bool) $this->usefile,
+                        $facetoface,
+                        $session,
+                        (int) $user->id
+                    );
+
+                    $signupid = (int) $DB->get_field(
+                        'facetoface_signups',
+                        'id',
+                        ['sessionid' => $session->id, 'userid' => $user->id],
+                        MUST_EXIST
+                    );
                 }
 
                 $data = (object) [
                     's' => $session->id,
-                    'submissionid_' . $attendee->submissionid => $statuscode,
+                    'submissionid_' . $signupid => $statuscode,
                 ];
 
                 facetoface_take_attendance($data);
@@ -557,19 +627,24 @@ class booking_manager_bulk_attendance {
                 throw new moodle_exception('error:errormustbeanarray', 'mod_facetoface', '', $error);
             }
 
-            // First element must be an integer.
-            $row = $error[0];
+            // First element must be an integer row number, or a
+            // GCHLOL: comma-separated list of row numbers for aggregated errors such as overbookings.
+            $rows = is_string($error[0]) ? explode(',', $error[0]) : [$error[0]];
 
-            if (!is_numeric($row)) {
-                throw new moodle_exception(
-                    'error:invalidrownumber',
-                    'mod_facetoface',
-                    '',
-                    (object)['value' => $row, 'type' => gettype($row)]
-                );
+            foreach ($rows as $row) {
+                $row = trim((string) $row);
+
+                if (!is_numeric($row)) {
+                    throw new moodle_exception(
+                        'error:invalidrownumber',
+                        'mod_facetoface',
+                        '',
+                        (object)['value' => $error[0], 'type' => gettype($error[0])]
+                    );
+                }
+
+                $skip[(int) $row] = true;
             }
-
-            $skip[$row] = true;
         }
 
         return $skip;

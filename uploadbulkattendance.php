@@ -95,7 +95,11 @@ function display_bulk_upload_errors(array $errors, int $fileid): void {
             continue;
         }
         // Add 1 to the index to match the line number displayed in Excel (CSV header: + 1).
-        $line = $error[0] + 1;
+        // GCHLOL: The row may be a comma-separated list for aggregated errors such as overbookings.
+        $line = implode(', ', array_map(
+            fn($errorrow) => (int) trim($errorrow) + 1,
+            explode(',', (string) $error[0])
+        ));
         $messages = array_slice($error, 1);
 
         foreach ($messages as $message) {
@@ -212,26 +216,43 @@ if (
 
     $errors = $manager->validate();
 
-    if (empty($errors)) {
-        $success = $manager->process($errors);
+    // GCHLOL: Process even when validation errors exist; the manager skips the errored
+    // rows, which is what the "Upload only rows with no errors" button promises.
+    $success = $manager->process($errors);
 
-        if ($success) {
-            $event = csv_processed_bulkattendance::create([
-                'context'  => context_system::instance(),
-                'objectid' => 0,
+    if ($success) {
+        $event = csv_processed_bulkattendance::create([
+            'context'  => context_system::instance(),
+            'objectid' => 0,
+        ]);
+        $event->trigger();
+
+        if (empty($errors)) {
+            $message = get_string('bulkattendanceprocessed', 'mod_facetoface');
+        } else {
+            // GCHLOL: Report how many rows were processed and how many were skipped.
+            $skippedrows = [];
+            foreach ($errors as $error) {
+                foreach (explode(',', (string) $error[0]) as $errorrow) {
+                    $skippedrows[trim($errorrow)] = true;
+                }
+            }
+
+            $message = get_string('bulkattendanceprocessedwithskips', 'mod_facetoface', (object) [
+                'processed' => count($manager->get_records()) - count($skippedrows),
+                'skipped'   => count($skippedrows),
             ]);
-            $event->trigger();
-
-            redirect(
-                new moodle_url('/mod/facetoface/uploadbulkattendance.php'),
-                get_string('bulkattendanceprocessed', 'mod_facetoface'),
-                null,
-                notification::NOTIFY_SUCCESS
-            );
         }
+
+        redirect(
+            new moodle_url('/mod/facetoface/uploadbulkattendance.php'),
+            $message,
+            null,
+            notification::NOTIFY_SUCCESS
+        );
     }
 
-    display_bulk_upload_errors_site($errors);
+    display_bulk_upload_errors($errors, $fileid);
 }
 
 $uploadform->set_data(['validate' => 1]);
