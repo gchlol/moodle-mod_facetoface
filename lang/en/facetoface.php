@@ -243,7 +243,7 @@ Fields expected:
 - Email address (required)
 - Session number (required)
 - Discount code (optional)
-- Notification type (optional - valid options are 'email', 'ical', or 'both')
+- Notification type (optional - valid options are 'email', 'ical', or 'both'; blank defaults to 'ical')
 ";
 
 $string['facetoface:uploadandpreview'] = 'Upload and validate bookings';
@@ -841,6 +841,9 @@ $string['waitlistedmessage_help'] = 'This message is sent out whenever users sig
 
 /* Face-to-face events and logging */
 $string['eventaddsession'] = 'Session added';
+// GCHLOL: Add the localised event name for CSV bulk upload booking logs.
+$string['eventbulkbookingcreated'] = 'Bulk booking created';
+// GCHLOL ends.
 $string['eventcsvprocessed'] = 'CSV processed';
 $string['updatevalidrows'] = 'Upload only rows with no errors';
 $string['error:errormustbeanarray'] = 'Error must be an array. Currently, it is \'{$a}\'.';
@@ -881,7 +884,7 @@ Fields expected:
 - Session number (required)
 - Status (optional - valid options are cancelled,  booked, waitlisted, no_show, partially_attended, and fully_attended)
 - Discount code (optional)
-- Notification type (optional - valid options are 'email', 'ical', or 'both')
+- Notification type (optional - valid options are 'email', 'ical', or 'both'; blank defaults to 'ical')
 ";
 $string['facetoface:editsessions'] = 'Add, edit and copy Face-to-face sessions';
 
@@ -898,8 +901,9 @@ $string['error:nopermissiontoeditattendees'] = 'You don\'t have permission to ed
 $string['facetoface:deletesessions'] = 'Delete Face-to-face sessions';
 
 // Core
-$string['session:strftimedate'] = '';
-$string['session:strftimetime'] = '';
+$string['session:strftimedate'] = '%d %B %Y';
+$string['session:strftimetime'] = '%I:%M %p';
+$string['session:strftimedatetime'] = '%d %B %Y, %I:%M %p';
 
 // Pages
 $string['attendees:print'] = 'Print';
@@ -999,7 +1003,7 @@ $string['facetoface:uploadbookingsextfiledesc'] = "
 Fields expected:
 - Session ID (required)
 - Status (optional - valid options are cancelled,  booked, waitlisted, no_show, partially_attended, and fully_attended)
-- Notification type (optional - valid options are 'email', 'ical', or 'both')";
+- Notification type (optional - valid options are 'email', 'ical', or 'both'; blank defaults to 'ical')";
 $string['examplecsvfilename'] = 'example_bookings.csv';
 $string['uploadbulkattendance'] = 'Upload bookings';
 $string['error:activitydoesnotexist'] = 'Face-to-Face activity not found: {$a}';
@@ -1009,12 +1013,14 @@ $string['csvuploadhelp:status'] = 'Status';
 $string['csvuploadhelp:statustype'] = 'For now, only use "booked"';
 $string['csvuploadhelp:discountcode'] = 'Discount Code';
 $string['csvuploadhelp:notificationtype'] = 'Notification Type';
-$string['csvuploadhelp:oneofnotif'] = 'One of: email, ical, both';
+$string['csvuploadhelp:oneofnotif'] = 'One of: email, ical, both. Blank defaults to ical.';
 $string['uploadandpreviewbulkbookings'] = 'Upload and preview bookings';
 $string['uploadbulkbookingsfile'] = 'Bulk Bookings File';
 $string['bulkattendanceprocessed'] = 'Bulk bookings have been successfully processed.';
 $string['eventcsvprocessedbulkattendance'] = 'Site Admin Bulk bookings CSV processed ';
-$string['eventcsvprocessedbulkattendancedesc'] = '{$a} processed a bulk attendance CSV file.';
+// GCHLOL: Describe CSV bulk booking processing logs using the acting user's ID.
+$string['eventcsvprocessedbulkattendancedesc'] = 'The user with id \'{$a->userid}\' has processed a bulk bookings CSV file.';
+// GCHLOL ends.
 $string['updatevalidrows'] = 'Upload only rows with no errors';
 $string['bulkattendanceprocessedwithskips'] = 'Processed {$a->processed} row(s). Skipped {$a->skipped} row(s) with errors.';
 $string['error:errormustbeanarray'] = 'Error must be an array. Currently, it is \'{$a}\'.';
