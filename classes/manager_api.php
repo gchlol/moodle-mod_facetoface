@@ -82,16 +82,16 @@ class manager_api {
     /**
      * Get SQL join data for reporting users based on the hierarchy.
      *
-     * @param int $user_id ID of user to get reporting users for.
+     * @param int $userid ID of user to get reporting users for.
      * @return sql_join SQL join data.
      */
-    private static function get_my_hierarchy_users_sql(int $user_id): sql_join {
+    private static function get_my_hierarchy_users_sql(int $userid): sql_join {
         [
             'joins' => $join,
             'where' => $where,
             'params' => $params,
         ] = api::get_myusers_sql(
-            $user_id,
+            $userid,
             true,
             [
                 role_permission::MANAGER,

@@ -403,7 +403,7 @@ class booking_manager_bulk_attendance {
             'ical' => MDL_F2F_ICAL,
             'icalendar' => MDL_F2F_ICAL,
             'both' => MDL_F2F_BOTH,
-            '' => MDL_F2F_BOTH, // Defaults to sending both if nothing is specified.
+            '' => MDL_F2F_ICAL, // Defaults to iCalendar only if nothing is specified.
         ];
 
         return $mapping[strtolower($type)] ?? null;
@@ -495,6 +495,15 @@ class booking_manager_bulk_attendance {
                     $user->id,
                     !$this->suppressemail
                 );
+
+                // GCHLOL: Log a successful site admin CSV bulk booking for this session user.
+                \mod_facetoface\event\bulk_booking_created::trigger_from_bulk_upload_if_needed(
+                    (bool) $this->usefile,
+                    $facetoface,
+                    $session,
+                    (int) $user->id
+                );
+                // GCHLOL ends.
 
                 continue;
             }
