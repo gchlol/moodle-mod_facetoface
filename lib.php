@@ -3447,26 +3447,6 @@ function facetoface_ical_generate_timestamp($timestamp) {
 }
 
 /**
-* Fold iCal content lines to 75 octets with a single whitespace continuation.
-*
-* @param string $text Unfolded line value (no CRLF), may contain literal "\n" sequences.
-* @return string Folded value using "\n " as the fold sequence used elsewhere in this file.
-*/
-function facetoface_ical_fold_75_octets(string $text): string {
-    $out = '';
-    while ($text !== '') {
-        $chunk = substr($text, 0, 75);
-        $text = substr($text, 75);
-        if ($out === '') {
-            $out = $chunk;
-        } else {
-            $out .= "\n " . $chunk;
-                }
-    }
-    return $out;
-}
-
-/**
  * Escapes data of the text datatype in ICAL documents.
  *
  * See RFC2445 or http://www.kanzaki.com/docs/ical/text.html or a more readable definition
