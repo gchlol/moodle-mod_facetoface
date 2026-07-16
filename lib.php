@@ -809,21 +809,28 @@ function facetoface_email_substitutions($msg, $facetofacename, $reminderperiod, 
     $sessionurl = facetoface_get_session_url((int)$sessionid);
     $ishtml = ($msg !== strip_tags($msg));
     $sessionlinkreplacement = $ishtml
-    ? '<a href="' . s($sessionurl) . '">' . s($sessionurl) . '</a>'
+        ? '<a href="' . s($sessionurl) . '">' . s($sessionurl) . '</a>'
         : $sessionurl;
-    $msg = str_replace(get_string('placeholder:sessionlink', 'facetoface'), $sessionlinkreplacement, $msg);
+
+    $msg = str_replace(
+        get_string('placeholder:sessionlink', 'facetoface'),
+        $sessionlinkreplacement,
+        $msg
+    );
 
     if (empty($data->details)) {
         $msg = str_replace(get_string('placeholder:details', 'facetoface'), '', $msg);
     } else {
         $detailshtml = format_text($data->details);
-        if ($ishtml) {
-            $detailshtml .= '<br>' . $sessionlinkreplacement;
-            $replacement = $detailshtml;
-        } else {
-            $replacement = html_to_text($detailshtml) . "\n" . $sessionurl;
-        }
-        $msg = str_replace(get_string('placeholder:details', 'facetoface'), $replacement, $msg);
+        $replacement = $ishtml
+            ? $detailshtml
+            : html_to_text($detailshtml);
+
+        $msg = str_replace(
+            get_string('placeholder:details', 'facetoface'),
+            $replacement,
+            $msg
+        );
     }
     $msg = str_replace(get_string('placeholder:reminderperiod', 'facetoface'), $reminderperiod, $msg);
 
