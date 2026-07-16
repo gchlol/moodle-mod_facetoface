@@ -342,6 +342,7 @@ $string['placeholder:lastname'] = '[lastname]';
 $string['placeholder:cost'] = '[cost]';
 $string['placeholder:alldates'] = '[alldates]';
 $string['placeholder:sessiondate'] = '[sessiondate]';
+$string['placeholder:sessionlink'] = '[sessionlink]';
 $string['placeholder:starttime'] = '[starttime]';
 $string['placeholder:finishtime'] = '[finishtime]';
 $string['placeholder:duration'] = '[duration]';
