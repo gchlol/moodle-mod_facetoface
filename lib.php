@@ -3288,9 +3288,16 @@ function facetoface_get_visiblefield_data($session) {
     ];
 }
 
+/**
+ * Returns the URL for a face-to-face session.
+ *
+ * @param int $sessionid Session ID.
+ * @return string
+ */
 function facetoface_get_session_url(int $sessionid): string {
-    global $CFG;
-    return $CFG->wwwroot . '/mod/facetoface/view.php?s=' . $sessionid;
+    $url = new moodle_url('/mod/facetoface/view.php', ['s' => $sessionid]);
+
+    return $url->out(false);
 }
 
 /**
