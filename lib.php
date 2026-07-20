@@ -3347,10 +3347,6 @@ function facetoface_get_ical_attachment($method, $facetoface, $session, $user) {
         $detailshtml = format_text($session->details);
         $detailstext = html_to_text($detailshtml);
 
-        $sessionurl = facetoface_get_session_url((int)$session->id);
-        $detailstext .= "\n" . $sessionurl;
-        $detailshtml .= '<br><a href="' . s($sessionurl) . '">' . s($sessionurl) . '</a>';
-
         $description    = facetoface_ical_escape($detailstext, true);
         $descriptionalt = facetoface_ical_escape($detailshtml);
 
