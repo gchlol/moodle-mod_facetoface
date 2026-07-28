@@ -2832,11 +2832,12 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
                         $completion->update_state($cm, COMPLETION_COMPLETE, $record->userid, false);
                         $criteriacompletion = $completion->get_user_completion($record->userid, $criterion);
                         $criteriacompletion->mark_complete($record->timefinish);
+
+                        // GCHLOL - YZ - Update the course completion entry.
+                        completion_util::recalculate_course_for_user($course->id, $record->userid);
+
                         break;
                     }
-
-                    // GCHLOL - YZ - Update the course completion entry.
-                    completion_util::recalculate_course_for_user($course->id, $record->userid);
                 }
             }
         }
