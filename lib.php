@@ -805,10 +805,32 @@ function facetoface_email_substitutions($msg, $facetofacename, $reminderperiod, 
     $msg = str_replace(get_string('placeholder:starttime', 'facetoface'), $starttime, $msg);
     $msg = str_replace(get_string('placeholder:finishtime', 'facetoface'), $finishtime, $msg);
     $msg = str_replace(get_string('placeholder:duration', 'facetoface'), facetoface_format_duration($data->duration), $msg);
+
+    $sessionurl = facetoface_get_session_url((int)$sessionid);
+    $ishtml = ($msg !== strip_tags($msg));
+    $sessionlinkreplacement = $ishtml
+        ? '<a href="' . s($sessionurl) . '">' . s($sessionurl) . '</a>'
+        : $sessionurl;
+
+    $msg = str_replace(
+        get_string('placeholder:sessionlink', 'facetoface'),
+        $sessionlinkreplacement,
+        $msg
+    );
+
     if (empty($data->details)) {
         $msg = str_replace(get_string('placeholder:details', 'facetoface'), '', $msg);
     } else {
-        $msg = str_replace(get_string('placeholder:details', 'facetoface'), html_to_text(format_text($data->details)), $msg);
+        $detailshtml = format_text($data->details);
+        $replacement = $ishtml
+            ? $detailshtml
+            : html_to_text($detailshtml);
+
+        $msg = str_replace(
+            get_string('placeholder:details', 'facetoface'),
+            $replacement,
+            $msg
+        );
     }
     $msg = str_replace(get_string('placeholder:reminderperiod', 'facetoface'), $reminderperiod, $msg);
 
@@ -3220,6 +3242,18 @@ function facetoface_get_visiblefield_data($session) {
 }
 
 /**
+ * Returns the URL for a face-to-face session.
+ *
+ * @param int $sessionid Session ID.
+ * @return string
+ */
+function facetoface_get_session_url(int $sessionid): string {
+    $url = new moodle_url('/mod/facetoface/view.php', ['s' => $sessionid]);
+
+    return $url->out(false);
+}
+
+/**
  * Returns the ICAL data for a facetoface meeting.
  *
  * @param integer $method The method, @see {{MDL_F2F_INVITE}}
@@ -3263,7 +3297,11 @@ function facetoface_get_ical_attachment($method, $facetoface, $session, $user) {
         $sequence = ($method & MDL_F2F_CANCEL) ? 1 : 0;
 
         $summary     = facetoface_ical_escape(format_string($facetoface->name));
-        $description = facetoface_ical_escape(format_text($session->details), true);
+        $detailshtml = format_text($session->details);
+        $detailstext = html_to_text($detailshtml);
+
+        $description    = facetoface_ical_escape($detailstext, true);
+        $descriptionalt = facetoface_ical_escape($detailshtml);
 
         // Get the location data from custom fields if they exist.
         $customfielddata = facetoface_get_customfielddata($session->id);
@@ -3320,6 +3358,7 @@ SEQUENCE:{$sequence}
 SUMMARY:{$summary}
 LOCATION:{$location}
 DESCRIPTION:{$description}
+X-ALT-DESC;FMTTYPE=text/html:{$descriptionalt}
 CLASS:PUBLIC
 TRANSP:OPAQUE{$cancelstatus}
 ORGANIZER;CN={$organiseremail}:MAILTO:{$organiseremail}
