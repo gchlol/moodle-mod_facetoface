@@ -160,6 +160,85 @@ class calendar_event_test extends \advanced_testcase {
     }
 
     /**
+     * Test that activity-level bulk session uploads create calendar events.
+     */
+    public function test_calendar_events_created_for_activity_level_bulk_upload(): void {
+        /** @var \mod_facetoface_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
+
+        $course = $this->getDataGenerator()->create_course();
+        $facetoface = $generator->create_instance([
+            'course' => $course->id,
+            'showoncalendar' => F2F_CAL_COURSE,
+            'usercalentry' => 0,
+        ]);
+
+        $sessionmanager = new bulk_session_manager_activitylevel($facetoface->id);
+
+        $recordsproperty = new \ReflectionProperty(bulk_session_manager_parent::class, 'records');
+        $recordsproperty->setAccessible(true);
+        $recordsproperty->setValue($sessionmanager, [[
+            'Session Date/Time Known' => 'yes',
+            'Start Date' => '01/01/2030',
+            'Start Time' => '10:00',
+            'Finish Date' => '01/01/2030',
+            'Finish Time' => '11:00',
+            'Allow Cancellations' => 'yes',
+            'Capacity' => '10',
+            'Allow Overbookings' => 'no',
+            'Duration' => '60',
+            'Normal Cost' => '0',
+            'Discount Cost' => '0',
+            'Details' => 'Bulk upload session',
+        ]]);
+
+        $this->assertEmpty($sessionmanager->validate());
+        $this->assertTrue($sessionmanager->process());
+        $this->assert_events_count('session', 1);
+    }
+
+    /**
+     * Test that site-level bulk session uploads create calendar events.
+     */
+    public function test_calendar_events_created_for_site_level_bulk_upload(): void {
+        /** @var \mod_facetoface_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
+
+        $course = $this->getDataGenerator()->create_course();
+        $facetoface = $generator->create_instance([
+            'course' => $course->id,
+            'name' => 'Bulk upload activity',
+            'showoncalendar' => F2F_CAL_SITE,
+            'usercalentry' => 0,
+        ]);
+
+        $sessionmanager = new bulk_session_manager_sitelevel();
+
+        $recordsproperty = new \ReflectionProperty(bulk_session_manager_parent::class, 'records');
+        $recordsproperty->setAccessible(true);
+        $recordsproperty->setValue($sessionmanager, [[
+            'Course Shortname' => $course->shortname,
+            'Face-to-Face Activity Name' => $facetoface->name,
+            'Session Date/Time Known' => 'yes',
+            'Start Date' => '01/01/2030',
+            'Start Time' => '10:00',
+            'Finish Date' => '01/01/2030',
+            'Finish Time' => '11:00',
+            'Allow Cancellations' => 'yes',
+            'Capacity' => '10',
+            'Allow Overbookings' => 'no',
+            'Duration' => '60',
+            'Normal Cost' => '0',
+            'Discount Cost' => '0',
+            'Details' => 'Bulk upload session',
+        ]]);
+
+        $this->assertEmpty($sessionmanager->validate());
+        $this->assertTrue($sessionmanager->process());
+        $this->assert_events_count('session', 1);
+    }
+
+    /**
      * Assert that counts for eventtype and sessionid match expected value.
      *
      * @param string $eventtype 'booking' or 'session'
