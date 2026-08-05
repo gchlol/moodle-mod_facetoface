@@ -363,6 +363,8 @@ abstract class bulk_session_manager_parent {
     ): void {
         global $DB;
 
+        $errorcount = count($this->errors);
+
         $session->datetimeknown = 1;
         if (
             isset($record['Session Date/Time Known']) &&
@@ -509,6 +511,20 @@ abstract class bulk_session_manager_parent {
                 $this->errors[] = [
                     $index,
                     get_string('error:couldnotsavecustomfieldshort', 'facetoface', $shortname)
+                ];
+            }
+        }
+
+        // Only update the calendar if this row did not add any processing errors.
+        if (count($this->errors) === $errorcount) {
+            $calendarsession = facetoface_get_session($sessionid);
+            if ($calendarsession) {
+                facetoface_update_calendar_entries($calendarsession);
+
+            } else {
+                $this->errors[] = [
+                    $index,
+                    get_string('error:couldnotfindbulksession', 'facetoface')
                 ];
             }
         }
