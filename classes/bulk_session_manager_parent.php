@@ -52,6 +52,9 @@ abstract class bulk_session_manager_parent {
     /** @var array Accumulated validation or processing errors */
     protected array $errors = [];
 
+    /** @var stdClass[] Complete records for sessions successfully processed by the latest process call */
+    protected array $createdsessions = [];
+
     /** @var bool Whether CSV data is loaded from a file */
     protected bool $usefile = false;
 
@@ -187,6 +190,15 @@ abstract class bulk_session_manager_parent {
      */
     public function get_errors(): array {
         return $this->errors;
+    }
+
+    /**
+     * Returns complete database records for sessions successfully processed by the latest process call.
+     *
+     * @return stdClass[] Session records keyed by session ID.
+     */
+    public function get_created_sessions(): array {
+        return $this->createdsessions;
     }
 
     /**
@@ -329,6 +341,8 @@ abstract class bulk_session_manager_parent {
      * @return bool True if all sessions were created successfully, false otherwise.
      */
     public function process(): bool {
+        $this->createdsessions = [];
+
         $allcustomfields = facetoface_get_session_customfields();
         $customfieldsbyshortname = [];
 
@@ -520,6 +534,14 @@ abstract class bulk_session_manager_parent {
             $calendarsession = facetoface_get_session($sessionid);
             if ($calendarsession) {
                 facetoface_update_calendar_entries($calendarsession);
+
+                // Event snapshots require the complete database record.
+                $this->createdsessions[$sessionid] = $DB->get_record(
+                    'facetoface_sessions',
+                    ['id' => $sessionid],
+                    '*',
+                    MUST_EXIST
+                );
 
             } else {
                 $this->errors[] = [

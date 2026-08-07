@@ -27,6 +27,7 @@
 use core\event\base;
 use core\output\notification;
 use mod_facetoface\bulk_session_manager_parent;
+use mod_facetoface\event\add_session;
 use mod_facetoface\form\bulk_session_confirm_form;
 use mod_facetoface\form\bulk_session_upload_form_parent;
 
@@ -215,8 +216,11 @@ function process_bulk_session_confirmation(
     if (empty($errors)) {
         $success = $manager->process();
 
+        // Log completed rows even when a later row fails because bulk processing is not atomic.
+        trigger_bulk_session_created_events($manager);
+
         if ($success) {
-            $event->add_record_snapshot('facetoface', $facetoface);
+            add_bulk_session_event_snapshots($event, $manager, $facetoface);
             $event->trigger();
 
             redirect(
@@ -231,4 +235,74 @@ function process_bulk_session_confirmation(
     }
 
     $bulkuploaderrorhandler($errors);
+}
+
+/**
+ * Triggers a session-created event for every session successfully processed by a bulk upload.
+ *
+ * Each event uses the session's own activity context so that uploads spanning multiple courses are logged against
+ * the correct Face-to-Face activity.
+ *
+ * @param bulk_session_manager_parent $manager The manager that created the sessions.
+ * @return void
+ */
+function trigger_bulk_session_created_events(bulk_session_manager_parent $manager): void {
+    global $DB;
+
+    $facetofaces = [];
+    $contexts = [];
+
+    foreach ($manager->get_created_sessions() as $session) {
+        $facetofaceid = (int) $session->facetoface;
+
+        if (!isset($facetofaces[$facetofaceid])) {
+            $facetofaces[$facetofaceid] = $DB->get_record(
+                'facetoface',
+                ['id' => $facetofaceid],
+                '*',
+                MUST_EXIST
+            );
+            $cm = get_coursemodule_from_instance(
+                'facetoface',
+                $facetofaceid,
+                $facetofaces[$facetofaceid]->course,
+                false,
+                MUST_EXIST
+            );
+            $contexts[$facetofaceid] = context_module::instance($cm->id);
+        }
+
+        $event = add_session::create([
+            'context' => $contexts[$facetofaceid],
+            'objectid' => $session->id,
+        ]);
+        $event->add_record_snapshot('facetoface_sessions', $session);
+        $event->add_record_snapshot('facetoface', $facetofaces[$facetofaceid]);
+        $event->trigger();
+    }
+}
+
+/**
+ * Adds complete records created by a bulk upload to its CSV-processed event.
+ *
+ * A site-level upload can contain sessions from multiple Face-to-Face activities, so it has no single activity
+ * record to snapshot. Activity-level uploads retain their activity snapshot.
+ *
+ * @param base $event The CSV-processed event that will be triggered.
+ * @param bulk_session_manager_parent $manager The manager that created the sessions.
+ * @param stdClass|null $facetoface The activity record for an activity-level upload, or null for a site-level upload.
+ * @return void
+ */
+function add_bulk_session_event_snapshots(
+    base $event,
+    bulk_session_manager_parent $manager,
+    ?stdClass $facetoface
+): void {
+    foreach ($manager->get_created_sessions() as $session) {
+        $event->add_record_snapshot('facetoface_sessions', $session);
+    }
+
+    if ($facetoface !== null) {
+        $event->add_record_snapshot('facetoface', $facetoface);
+    }
 }
