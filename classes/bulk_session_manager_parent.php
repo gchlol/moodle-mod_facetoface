@@ -472,6 +472,7 @@ abstract class bulk_session_manager_parent {
             $session->details = $record['Details'];
         }
 
+        $session->visible = 1;
         $session->timecreated = time();
         $session->timemodified = time();
 
@@ -484,6 +485,7 @@ abstract class bulk_session_manager_parent {
 
             return;
         }
+        $session->id = $sessionid;
 
         // Insert session dates.
         $sessionsdate = new stdClass();
@@ -536,12 +538,8 @@ abstract class bulk_session_manager_parent {
                 facetoface_update_calendar_entries($calendarsession);
 
                 // Event snapshots require the complete database record.
-                $this->createdsessions[$sessionid] = $DB->get_record(
-                    'facetoface_sessions',
-                    ['id' => $sessionid],
-                    '*',
-                    MUST_EXIST
-                );
+                unset($session->starttime, $session->finishtime);
+                $this->createdsessions[$sessionid] = $session;
 
             } else {
                 $this->errors[] = [

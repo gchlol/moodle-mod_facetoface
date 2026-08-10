@@ -249,28 +249,27 @@ function process_bulk_session_confirmation(
 function trigger_bulk_session_created_events(bulk_session_manager_parent $manager): void {
     global $DB;
 
-    $facetofaces = [];
+    $sessions = $manager->get_created_sessions();
+    if (empty($sessions)) {
+        return;
+    }
+
+    $facetofaceids = array_unique(array_column($sessions, 'facetoface'));
+    $facetofaces = $DB->get_records_list('facetoface', 'id', $facetofaceids);
     $contexts = [];
+    foreach ($facetofaces as $facetofaceid => $facetoface) {
+        $cm = get_coursemodule_from_instance(
+            'facetoface',
+            $facetofaceid,
+            $facetoface->course,
+            false,
+            MUST_EXIST
+        );
+        $contexts[$facetofaceid] = context_module::instance($cm->id);
+    }
 
-    foreach ($manager->get_created_sessions() as $session) {
+    foreach ($sessions as $session) {
         $facetofaceid = (int) $session->facetoface;
-
-        if (!isset($facetofaces[$facetofaceid])) {
-            $facetofaces[$facetofaceid] = $DB->get_record(
-                'facetoface',
-                ['id' => $facetofaceid],
-                '*',
-                MUST_EXIST
-            );
-            $cm = get_coursemodule_from_instance(
-                'facetoface',
-                $facetofaceid,
-                $facetofaces[$facetofaceid]->course,
-                false,
-                MUST_EXIST
-            );
-            $contexts[$facetofaceid] = context_module::instance($cm->id);
-        }
 
         $event = add_session::create([
             'context' => $contexts[$facetofaceid],
