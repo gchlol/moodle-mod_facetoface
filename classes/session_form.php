@@ -152,6 +152,8 @@ class mod_facetoface_session_form extends moodleform {
             }
         }
 
+        $mform->addElement('static', 'detailshint', '', html_writer::tag('span',
+            get_string('detailshinttext', 'facetoface'), ['class' => 'hint-text']));
         $mform->addElement('editor', 'details_editor', get_string('details', 'facetoface'), null, $editoroptions);
         $mform->setType('details_editor', PARAM_RAW);
         $mform->addHelpButton('details_editor', 'details', 'facetoface');

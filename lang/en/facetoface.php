@@ -129,6 +129,7 @@ $string['deletingsession'] = 'Deleting session in {$a}';
 $string['decline'] = 'Decline';
 $string['description'] = 'Introduction text';
 $string['details'] = 'Details';
+$string['detailshinttext'] = 'Paste Microsoft Teams link required to attend the session below';
 $string['discountcode'] = 'Discount code';
 $string['discountcost'] = 'Discount cost';
 $string['discountcosthinttext'] = '';
