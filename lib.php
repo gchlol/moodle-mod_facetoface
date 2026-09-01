@@ -2038,11 +2038,11 @@ function facetoface_get_unmailed_reminders() {
  * @param integer $statuscode Status code to set
  * @param integer $userid user to signup
  * @param bool $notifyuser whether or not to send an email confirmation
- * @param bool $displayerrors whether or not to return an error page on errors
+ * @param bool $bypassapprovalforpastbooking Whether a historical booking import can bypass approval.
  */
 function facetoface_user_signup($session, $facetoface, $course, $discountcode,
                                 $notificationtype, $statuscode, $userid = false,
-                                $notifyuser = true) {
+                                $notifyuser = true, $bypassapprovalforpastbooking = false) {
 
     global $CFG, $DB;
 
@@ -2086,8 +2086,13 @@ function facetoface_user_signup($session, $facetoface, $course, $discountcode,
 
     // Work out which status to use.
 
-    // If approval not required.
-    if (!\mod_facetoface\helper::is_approval_required((object) $facetoface)) {
+    // GCHLOL: Historical CSV imports are authoritative records. Their callers may bypass
+    // approval only when explicitly importing Booked after the session has started.
+    $pastbookingoverride = $bypassapprovalforpastbooking
+        && $statuscode === MDL_F2F_STATUS_BOOKED
+        && facetoface_has_session_started($session, $timenow);
+
+    if ($pastbookingoverride || !\mod_facetoface\helper::is_approval_required((object) $facetoface)) {
         $newstatus = $statuscode;
     } else {
         // If approval required.

@@ -101,7 +101,7 @@ class upload_test extends \advanced_testcase {
         $expectederr = new lang_string(
             'error:sessionoverbooked',
             'mod_facetoface',
-            (object) ['session' => $nooverbooksession->id, 'amount' => 1]
+            (object) ['session' => $nooverbooksession->id]
         );
         $this->assertCount(1, $errors);
         $this->assertEquals($expectederr, $errors[0][1]);
@@ -431,7 +431,10 @@ class upload_test extends \advanced_testcase {
 
         $course = $this->getDataGenerator()->create_course();
         $facetoface = $generator->create_instance(['course' => $course->id]);
-        $this->getDataGenerator()->create_and_enrol($course, 'student', ['email' => 'test@test.com']);
+        $student = $this->getDataGenerator()->create_and_enrol($course, 'student', [
+            'username' => 'testuser',
+            'email' => 'test@test.com',
+        ]);
 
         $this->setCurrentTimeStart();
         $now = time();
@@ -451,6 +454,7 @@ class upload_test extends \advanced_testcase {
 
         $bm = new booking_manager($facetoface->id);
         $record = (object) [
+            'username' => strtoupper($student->username),
             'email' => 'TEST@test.com',
             'session' => $session->id,
             'status' => 'booked',
@@ -464,7 +468,7 @@ class upload_test extends \advanced_testcase {
 
         $errors = $bm->validate();
         $this->assertEmpty($errors);
-        $this->assertTrue($bm->process());
+        $this->assertTrue($bm->process($errors));
 
         // Check users are as expected.
         $users = facetoface_get_attendees($session->id);
@@ -474,9 +478,16 @@ class upload_test extends \advanced_testcase {
         $this->assertEquals(MDL_F2F_ICAL, current($users)->notificationtype);
         $this->assertEquals(MDL_F2F_STATUS_BOOKED, current($users)->statuscode);
 
-        // Re-booking the same user shouldn't cause any isssues. Run the validate again and check.
+        // Re-booking the same user is rejected and leaves the existing booking untouched.
         $errors = $bm->validate();
-        $this->assertEmpty($errors);
+        $this->assertTrue($this->check_row_validation_error_exists(
+            $errors,
+            1,
+            new lang_string('error:useralreadyinsession', 'mod_facetoface', (object) [
+                'user' => strtoupper($student->username),
+                'session' => $session->id,
+            ])
+        ));
     }
 
     /**
@@ -508,6 +519,7 @@ class upload_test extends \advanced_testcase {
 
         $bm = new booking_manager($facetoface->id);
         $record = (object) [
+            'username' => $student->username,
             'email' => $student->email,
             'session' => $session->id,
             'status' => 'booked',
@@ -520,7 +532,7 @@ class upload_test extends \advanced_testcase {
 
         $errors = $bm->validate();
         $this->assertEmpty($errors);
-        $this->assertTrue($bm->process());
+        $this->assertTrue($bm->process($errors));
 
         // Check users are as expected.
         $users = facetoface_get_attendees($session->id);
@@ -530,9 +542,16 @@ class upload_test extends \advanced_testcase {
         $this->assertEquals(MDL_F2F_ICAL, current($users)->notificationtype);
         $this->assertEquals(MDL_F2F_STATUS_BOOKED, current($users)->statuscode);
 
-        // Re-booking the same user shouldn't cause any isssues. Run the validate again and check.
+        // Re-booking the same user is rejected and leaves the existing booking untouched.
         $errors = $bm->validate();
-        $this->assertEmpty($errors);
+        $this->assertTrue($this->check_row_validation_error_exists(
+            $errors,
+            1,
+            new lang_string('error:useralreadyinsession', 'mod_facetoface', (object) [
+                'user' => $student->username,
+                'session' => $session->id,
+            ])
+        ));
     }
 
     /**
@@ -628,6 +647,7 @@ class upload_test extends \advanced_testcase {
         // Generate users.
         $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
         $latebooker = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $latewaitlister = $this->getDataGenerator()->create_and_enrol($course, 'student');
         $latecomer = $this->getDataGenerator()->create_and_enrol($course, 'student');
 
         $this->setCurrentTimeStart();
@@ -696,7 +716,7 @@ class upload_test extends \advanced_testcase {
         // Waitlisting into a session that has already started is rejected.
         $bm->load_from_array([
             (object) [
-                'username' => $latebooker->username,
+                'username' => $latewaitlister->username,
                 'session' => $session->id,
                 'status' => 'waitlisted',
             ],
