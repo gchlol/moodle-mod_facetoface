@@ -379,7 +379,7 @@ class booking_manager_bulk_attendance {
                 continue;
             }
 
-            $key = $details['session']->id . ':' . $details['userid'];
+            $key = "{$details['session']->id}:{$details['userid']}";
             if (isset($seen[$key])) {
                 $errors[] = [
                     $row,
@@ -630,7 +630,7 @@ class booking_manager_bulk_attendance {
      * @return string Cache key in sessionid:userid format.
      */
     private function get_signup_cache_key(int $sessionid, int $userid): string {
-        return $sessionid . ':' . $userid;
+        return "{$sessionid}:{$userid}";
     }
 
     /**

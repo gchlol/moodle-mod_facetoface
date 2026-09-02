@@ -3755,7 +3755,7 @@ function facetoface_add_session_to_calendar($session, $facetoface, $calendartype
         $courseid = 0;
         $modulename = '0';
         $urlvar = ($eventtype == 'session') ? 'attendees' : 'signup';
-        $linkurl = $CFG->wwwroot . "/mod/facetoface/" . $urlvar . ".php?s=$session->id";
+        $linkurl = "$CFG->wwwroot/mod/facetoface/{$urlvar}.php?s=$session->id";
         $description .= get_string("calendareventdescription{$eventtype}", 'facetoface', $linkurl);
     } else {
         return true;

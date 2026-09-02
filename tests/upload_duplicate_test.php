@@ -18,7 +18,7 @@ namespace mod_facetoface;
 
 defined('MOODLE_INTERNAL') || die();
 global $CFG;
-require_once($CFG->dirroot . '/mod/facetoface/lib.php');
+require_once("$CFG->dirroot/mod/facetoface/lib.php");
 
 // GCHLOL: Cover duplicate-row, capacity, signup-history, and unsupported-status validation
 // for both CSV booking-manager implementations.
@@ -771,7 +771,7 @@ class upload_duplicate_test extends \advanced_testcase {
 
         foreach (['course' => false, 'site-wide' => true] as $manager => $sitewide) {
             foreach ($statuses as $statusname => $statuscode) {
-                $cases[$manager . ' - ' . $statusname] = [$sitewide, $statuscode];
+                $cases["$manager - $statusname"] = [$sitewide, $statuscode];
             }
         }
 
@@ -787,7 +787,7 @@ class upload_duplicate_test extends \advanced_testcase {
         $cases = [];
         foreach (['course' => false, 'site-wide' => true] as $manager => $sitewide) {
             foreach (['default' => '', 'booked' => 'booked', 'waitlisted' => 'waitlisted'] as $name => $status) {
-                $cases[$manager . ' - ' . $name] = [$sitewide, $status];
+                $cases["$manager - $name"] = [$sitewide, $status];
             }
         }
 
@@ -850,7 +850,7 @@ class upload_duplicate_test extends \advanced_testcase {
         $cases = [];
         foreach (['course' => false, 'site-wide' => true] as $manager => $sitewide) {
             foreach ($statuses as $statusname => $statuscode) {
-                $cases[$manager . ' - ' . $statusname] = [$sitewide, $statuscode];
+                $cases["$manager - $statusname"] = [$sitewide, $statuscode];
             }
         }
 
@@ -866,7 +866,7 @@ class upload_duplicate_test extends \advanced_testcase {
         $cases = [];
         foreach (['course' => false, 'site-wide' => true] as $manager => $sitewide) {
             foreach (['user_cancelled', 'requested', 'approved', 'declined'] as $status) {
-                $cases[$manager . ' - ' . $status] = [$sitewide, $status];
+                $cases["$manager - $status"] = [$sitewide, $status];
             }
         }
 
@@ -960,7 +960,7 @@ class upload_duplicate_test extends \advanced_testcase {
         ], true)) {
             facetoface_take_attendance((object)[
                 's' => $session->id,
-                'submissionid_' . $signup->id => $statuscode,
+                "submissionid_{$signup->id}" => $statuscode,
             ]);
 
             return $signup;
@@ -1055,7 +1055,7 @@ class upload_duplicate_test extends \advanced_testcase {
             }
         }
 
-        $this->fail('Expected validation error was not found for row ' . $row . ': ' . $message);
+        $this->fail("Expected validation error was not found for row $row: $message");
     }
 
     /**
@@ -1069,7 +1069,7 @@ class upload_duplicate_test extends \advanced_testcase {
         foreach ($errors as $error) {
             $this->assertFalse(
                 $this->error_contains_row($error, $row),
-                'Unexpected validation error for row ' . $row . ': ' . (string)$error[1]
+                "Unexpected validation error for row $row: $error[1]"
             );
         }
     }

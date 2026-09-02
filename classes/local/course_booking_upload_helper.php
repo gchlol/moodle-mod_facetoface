@@ -349,7 +349,7 @@ class course_booking_upload_helper {
                 continue;
             }
 
-            $key = $details['session']->id . ':' . $details['userid'];
+            $key = "{$details['session']->id}:{$details['userid']}";
             if (isset($seen[$key])) {
                 $errors[] = [
                     $row,
@@ -633,7 +633,7 @@ class course_booking_upload_helper {
      * @return string Cache key in sessionid:userid format.
      */
     private function get_signup_cache_key(int $sessionid, int $userid): string {
-        return $sessionid . ':' . $userid;
+        return "{$sessionid}:{$userid}";
     }
 
     /**

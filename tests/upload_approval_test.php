@@ -18,7 +18,7 @@ namespace mod_facetoface;
 
 defined('MOODLE_INTERNAL') || die();
 global $CFG;
-require_once($CFG->dirroot . '/mod/facetoface/lib.php');
+require_once("$CFG->dirroot/mod/facetoface/lib.php");
 
 // GCHLOL: Cover approval-workflow behavior for historical and future CSV booking and
 // attendance uploads across both booking-manager implementations.
