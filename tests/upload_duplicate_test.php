@@ -68,8 +68,18 @@ class upload_duplicate_test extends \advanced_testcase {
         $gradebefore = facetoface_get_grade($existinguser->id, $course->id, $facetoface->id)->grade;
 
         $manager = $this->create_manager($sitewide, $facetoface, [
-            $this->create_row($sitewide, $existinguser, $session, 'booked'),
-            $this->create_row($sitewide, $newuser, $session, 'booked'),
+            $this->create_row(
+                $sitewide,
+                $existinguser,
+                $session,
+                'booked'
+            ),
+            $this->create_row(
+                $sitewide,
+                $newuser,
+                $session,
+                'booked'
+            ),
         ]);
         $errors = $manager->validate();
 
@@ -124,7 +134,12 @@ class upload_duplicate_test extends \advanced_testcase {
         );
 
         $manager = $this->create_manager($sitewide, $facetoface, [
-            $this->create_row($sitewide, $existinguser, $session, $uploadstatus),
+            $this->create_row(
+                $sitewide,
+                $existinguser,
+                $session,
+                $uploadstatus
+            ),
         ]);
         $errors = $manager->validate();
 
@@ -157,9 +172,24 @@ class upload_duplicate_test extends \advanced_testcase {
         [$course, $facetoface, $session, $firstuser, $seconduser] = $this->create_fixture(2, true);
         $secondstatus = $firststatus === 'booked' ? 'fully_attended' : 'booked';
         $manager = $this->create_manager($sitewide, $facetoface, [
-            $this->create_row($sitewide, $firstuser, $session, $firststatus),
-            $this->create_row($sitewide, $firstuser, $session, $secondstatus),
-            $this->create_row($sitewide, $seconduser, $session, 'booked'),
+            $this->create_row(
+                $sitewide,
+                $firstuser,
+                $session,
+                $firststatus
+            ),
+            $this->create_row(
+                $sitewide,
+                $firstuser,
+                $session,
+                $secondstatus
+            ),
+            $this->create_row(
+                $sitewide,
+                $seconduser,
+                $session,
+                'booked'
+            ),
         ]);
         $errors = $manager->validate();
 
@@ -208,8 +238,18 @@ class upload_duplicate_test extends \advanced_testcase {
 
         [, $facetoface, $session, $firstuser, $seconduser] = $this->create_fixture(1, true);
         $manager = $this->create_manager($sitewide, $facetoface, [
-            $this->create_row($sitewide, $firstuser, $session, 'booked'),
-            $this->create_row($sitewide, $seconduser, $session, 'booked'),
+            $this->create_row(
+                $sitewide,
+                $firstuser,
+                $session,
+                'booked'
+            ),
+            $this->create_row(
+                $sitewide,
+                $seconduser,
+                $session,
+                'booked'
+            ),
         ]);
         $errors = $manager->validate();
 
@@ -248,10 +288,30 @@ class upload_duplicate_test extends \advanced_testcase {
         $thirduser = $this->getDataGenerator()->create_and_enrol($course, 'student');
         $fourthuser = $this->getDataGenerator()->create_and_enrol($course, 'student');
         $manager = $this->create_manager($sitewide, $facetoface, [
-            $this->create_row($sitewide, $firstuser, $session, 'booked'),
-            $this->create_row($sitewide, $seconduser, $session, 'booked'),
-            $this->create_row($sitewide, $thirduser, $session, 'booked'),
-            $this->create_row($sitewide, $fourthuser, $session, 'booked'),
+            $this->create_row(
+                $sitewide,
+                $firstuser,
+                $session,
+                'booked'
+            ),
+            $this->create_row(
+                $sitewide,
+                $seconduser,
+                $session,
+                'booked'
+            ),
+            $this->create_row(
+                $sitewide,
+                $thirduser,
+                $session,
+                'booked'
+            ),
+            $this->create_row(
+                $sitewide,
+                $fourthuser,
+                $session,
+                'booked'
+            ),
         ]);
 
         $errors = $manager->validate();
@@ -290,8 +350,18 @@ class upload_duplicate_test extends \advanced_testcase {
             $existinguser,
             MDL_F2F_STATUS_BOOKED
         );
-        $cancellation = $this->create_row($sitewide, $existinguser, $session, 'cancelled');
-        $booking = $this->create_row($sitewide, $replacementuser, $session, 'booked');
+        $cancellation = $this->create_row(
+            $sitewide,
+            $existinguser,
+            $session,
+            'cancelled'
+        );
+        $booking = $this->create_row(
+            $sitewide,
+            $replacementuser,
+            $session,
+            'booked'
+        );
         $rows = $bookingfirst ? [$booking, $cancellation] : [$cancellation, $booking];
         $manager = $this->create_manager($sitewide, $facetoface, $rows);
 
@@ -335,8 +405,18 @@ class upload_duplicate_test extends \advanced_testcase {
             $user,
             MDL_F2F_STATUS_BOOKED
         );
-        $cancellation = $this->create_row($sitewide, $user, $session, 'cancelled');
-        $booking = $this->create_row($sitewide, $user, $session, 'booked');
+        $cancellation = $this->create_row(
+            $sitewide,
+            $user,
+            $session,
+            'cancelled'
+        );
+        $booking = $this->create_row(
+            $sitewide,
+            $user,
+            $session,
+            'booked'
+        );
         $manager = $this->create_manager(
             $sitewide,
             $facetoface,
@@ -374,14 +454,29 @@ class upload_duplicate_test extends \advanced_testcase {
         global $DB;
 
         [$course, $facetoface, $session, $firstuser, $seconduser] = $this->create_fixture(2, true);
-        $invalidrow = $this->create_row($sitewide, $firstuser, $session, 'booked');
+        $invalidrow = $this->create_row(
+            $sitewide,
+            $firstuser,
+            $session,
+            'booked'
+        );
         $notificationfield = $sitewide ? 'Notification Type' : 'notificationtype';
         $invalidrow->{$notificationfield} = 'invalid';
 
         $manager = $this->create_manager($sitewide, $facetoface, [
             $invalidrow,
-            $this->create_row($sitewide, $firstuser, $session, 'fully_attended'),
-            $this->create_row($sitewide, $seconduser, $session, 'booked'),
+            $this->create_row(
+                $sitewide,
+                $firstuser,
+                $session,
+                'fully_attended'
+            ),
+            $this->create_row(
+                $sitewide,
+                $seconduser,
+                $session,
+                'booked'
+            ),
         ]);
         $errors = $manager->validate();
 
@@ -446,8 +541,18 @@ class upload_duplicate_test extends \advanced_testcase {
             ],
         ]);
         $manager = $this->create_manager(false, $facetoface, [
-            $this->create_row(false, $user, $firstsession, 'booked'),
-            $this->create_row(false, $user, $secondsession, 'booked'),
+            $this->create_row(
+                false,
+                $user,
+                $firstsession,
+                'booked'
+            ),
+            $this->create_row(
+                false,
+                $user,
+                $secondsession,
+                'booked'
+            ),
         ]);
 
         $errors = $manager->validate();
@@ -490,7 +595,12 @@ class upload_duplicate_test extends \advanced_testcase {
             MDL_F2F_STATUS_BOOKED
         );
         $manager = $this->create_manager($sitewide, $facetoface, [
-            $this->create_row($sitewide, $user, $session, 'waitlisted'),
+            $this->create_row(
+                $sitewide,
+                $user,
+                $session,
+                'waitlisted'
+            ),
         ]);
 
         $errors = $manager->validate();
@@ -526,7 +636,12 @@ class upload_duplicate_test extends \advanced_testcase {
         );
         $historycountbefore = $DB->count_records('facetoface_signups_status', ['signupid' => $signup->id]);
         $manager = $this->create_manager($sitewide, $facetoface, [
-            $this->create_row($sitewide, $user, $session, 'fully_attended'),
+            $this->create_row(
+                $sitewide,
+                $user,
+                $session,
+                'fully_attended'
+            ),
         ]);
 
         $errors = $manager->validate();
@@ -564,7 +679,12 @@ class upload_duplicate_test extends \advanced_testcase {
             MDL_F2F_STATUS_BOOKED
         );
         $manager = $this->create_manager($sitewide, $facetoface, [
-            $this->create_row($sitewide, $user, $session, 'fully_attended'),
+            $this->create_row(
+                $sitewide,
+                $user,
+                $session,
+                'fully_attended'
+            ),
         ]);
         $errors = $manager->validate();
         $this->assertEmpty($errors);
@@ -608,7 +728,12 @@ class upload_duplicate_test extends \advanced_testcase {
 
         [, $facetoface, $session, $user] = $this->create_fixture(1, false);
         $manager = $this->create_manager($sitewide, $facetoface, [
-            $this->create_row($sitewide, $user, $session, $status),
+            $this->create_row(
+                $sitewide,
+                $user,
+                $session,
+                $status
+            ),
         ]);
 
         $errors = $manager->validate();
@@ -873,7 +998,12 @@ class upload_duplicate_test extends \advanced_testcase {
      * @param string $status CSV status.
      * @return \stdClass CSV row.
      */
-    private function create_row(bool $sitewide, \stdClass $user, \stdClass $session, string $status): \stdClass {
+    private function create_row(
+        bool $sitewide,
+        \stdClass $user,
+        \stdClass $session,
+        string $status
+    ): \stdClass {
         if ($sitewide) {
             return (object)[
                 'Username' => $user->username,

@@ -299,7 +299,14 @@ class booking_manager_bulk_attendance {
                 continue;
             }
 
-            if (!$this->validate_session_status_rules($row, $sessionref, $status, $session, $timenow, $errors)) {
+            if (!$this->validate_session_status_rules(
+                $row,
+                $sessionref,
+                $status,
+                $session,
+                $timenow,
+                $errors
+            )) {
                 continue;
             }
 
@@ -744,7 +751,15 @@ class booking_manager_bulk_attendance {
         $mappednotify = $this->transform_notification_type($notifytype);
         $statuscode = $this->get_status_code($status);
         if ($this->is_booking_status_code($statuscode)) {
-            $this->process_signup_row($session, $facetoface, $course, $user, $discount, $mappednotify, $statuscode);
+            $this->process_signup_row(
+                $session,
+                $facetoface,
+                $course,
+                $user,
+                $discount,
+                $mappednotify,
+                $statuscode
+            );
 
             return;
         }
@@ -789,8 +804,18 @@ class booking_manager_bulk_attendance {
     private function get_session_activity_context(\stdClass $session): array {
         global $DB;
 
-        $facetoface = $DB->get_record('facetoface', ['id' => $session->facetoface], '*', MUST_EXIST);
-        $course = $DB->get_record('course', ['id' => $facetoface->course], '*', MUST_EXIST);
+        $facetoface = $DB->get_record(
+            'facetoface',
+            ['id' => $session->facetoface],
+            '*',
+            MUST_EXIST
+        );
+        $course = $DB->get_record(
+            'course',
+            ['id' => $facetoface->course],
+            '*',
+            MUST_EXIST
+        );
 
         return [$facetoface, $course];
     }
@@ -805,7 +830,12 @@ class booking_manager_bulk_attendance {
      * @throws Exception When cancellation fails.
      */
     private function process_cancellation(\stdClass $session, \stdClass $facetoface, int $userid): void {
-        if (!facetoface_user_cancel($session, $userid, true, $cancelerr)) {
+        if (!facetoface_user_cancel(
+            $session,
+            $userid,
+            true,
+            $cancelerr
+        )) {
             throw new Exception($cancelerr);
         }
 
@@ -965,10 +995,21 @@ class booking_manager_bulk_attendance {
 
         if ($facetoface->usercalentry
             && $this->is_booking_status_code($statuscode)) {
-            facetoface_add_session_to_calendar($session, $facetoface, 'user', $userid, 'booking');
+            facetoface_add_session_to_calendar(
+                $session,
+                $facetoface,
+                'user',
+                $userid,
+                'booking'
+            );
         }
 
-        $this->mark_booking_completion_in_progress_if_enabled($course, $statuscode, $userid, $timenow);
+        $this->mark_booking_completion_in_progress_if_enabled(
+            $course,
+            $statuscode,
+            $userid,
+            $timenow
+        );
 
         return (int)$usersignup->id;
     }
@@ -1159,7 +1200,13 @@ class booking_manager_bulk_attendance {
 
         $grade = $this->get_attendance_grade($statuscode);
 
-        return facetoface_update_signup_status($signupid, $statuscode, $USER->id, '', $grade)
+        return facetoface_update_signup_status(
+            $signupid,
+            $statuscode,
+            $USER->id,
+            '',
+            $grade
+        )
             && facetoface_take_individual_attendance($signupid, $grade);
     }
 
@@ -1179,7 +1226,12 @@ class booking_manager_bulk_attendance {
                 return 100;
         }
 
-        throw new moodle_exception('error:invalidstatusspecified', 'mod_facetoface', '', $statuscode);
+        throw new moodle_exception(
+            'error:invalidstatusspecified',
+            'mod_facetoface',
+            '',
+            $statuscode
+        );
     }
 
     /**
@@ -1265,7 +1317,12 @@ class booking_manager_bulk_attendance {
 
         foreach ($errors as $error) {
             if (!is_array($error)) {
-                throw new moodle_exception('error:errormustbeanarray', 'mod_facetoface', '', $error);
+                throw new moodle_exception(
+                    'error:errormustbeanarray',
+                    'mod_facetoface',
+                    '',
+                    $error
+                );
             }
 
             // First element must be an integer row number, or a comma-separated list of row

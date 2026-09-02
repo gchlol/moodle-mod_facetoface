@@ -173,7 +173,14 @@ class course_booking_upload_helper {
             }
 
             if ($session) {
-                $this->validate_session_status_rules($row, $entry->session, $entry->status, $session, $timenow, $errors);
+                $this->validate_session_status_rules(
+                    $row,
+                    $entry->session,
+                    $entry->status,
+                    $session,
+                    $timenow,
+                    $errors
+                );
 
                 if (
                     isset($userid) &&
@@ -690,13 +697,24 @@ class course_booking_upload_helper {
 
         $statuscode = $this->get_status_code($entry->status);
         if ($this->is_booking_status_code($statuscode)) {
-            $this->process_signup_row($session, $user, $entry, $statuscode);
+            $this->process_signup_row(
+                $session,
+                $user,
+                $entry,
+                $statuscode
+            );
 
             return;
         }
 
         if ($this->is_attendance_status_code($statuscode)) {
-            $this->process_attendance_row($session, $user, $entry, $row, $statuscode);
+            $this->process_attendance_row(
+                $session,
+                $user,
+                $entry,
+                $row,
+                $statuscode
+            );
         }
     }
 
@@ -709,7 +727,12 @@ class course_booking_upload_helper {
      * @throws \Exception When cancellation fails.
      */
     private function process_cancellation(\stdClass $session, int $userid): void {
-        if (!facetoface_user_cancel($session, $userid, true, $cancelerr)) {
+        if (!facetoface_user_cancel(
+            $session,
+            $userid,
+            true,
+            $cancelerr
+        )) {
             throw new \Exception($cancelerr);
         }
 
@@ -728,7 +751,12 @@ class course_booking_upload_helper {
      * @param int $statuscode Signup status code.
      * @return void
      */
-    private function process_signup_row(\stdClass $session, \stdClass $user, \stdClass $entry, int $statuscode): void {
+    private function process_signup_row(
+        \stdClass $session,
+        \stdClass $user,
+        \stdClass $entry,
+        int $statuscode
+    ): void {
         $statuscode = $this->normalise_booking_status_code($session, $statuscode);
 
         $this->create_import_signup(
@@ -840,7 +868,13 @@ class course_booking_upload_helper {
         }
 
         if ($this->facetoface->usercalentry && $this->is_booking_status_code($statuscode)) {
-            facetoface_add_session_to_calendar($session, $this->facetoface, 'user', $userid, 'booking');
+            facetoface_add_session_to_calendar(
+                $session,
+                $this->facetoface,
+                'user',
+                $userid,
+                'booking'
+            );
         }
 
         $this->mark_booking_completion_in_progress_if_enabled($statuscode, $userid, $timenow);
@@ -1003,7 +1037,13 @@ class course_booking_upload_helper {
 
         $grade = $this->get_attendance_grade($statuscode);
 
-        return facetoface_update_signup_status($signupid, $statuscode, $USER->id, '', $grade)
+        return facetoface_update_signup_status(
+            $signupid,
+            $statuscode,
+            $USER->id,
+            '',
+            $grade
+        )
             && facetoface_take_individual_attendance($signupid, $grade);
     }
 
@@ -1023,7 +1063,12 @@ class course_booking_upload_helper {
                 return 100;
         }
 
-        throw new moodle_exception('error:invalidstatusspecified', 'mod_facetoface', '', $statuscode);
+        throw new moodle_exception(
+            'error:invalidstatusspecified',
+            'mod_facetoface',
+            '',
+            $statuscode
+        );
     }
 
     /**
@@ -1103,7 +1148,12 @@ class course_booking_upload_helper {
 
         foreach ($errors as $error) {
             if (!is_array($error)) {
-                throw new moodle_exception('error:errormustbeanarray', 'mod_facetoface', '', $error);
+                throw new moodle_exception(
+                    'error:errormustbeanarray',
+                    'mod_facetoface',
+                    '',
+                    $error
+                );
             }
 
             $rows = is_string($error[0]) ? explode(',', $error[0]) : [$error[0]];

@@ -56,7 +56,12 @@ class upload_approval_test extends \advanced_testcase {
         global $DB;
 
         [$facetoface, $session, $user] = $this->create_booking_fixture(true);
-        $manager = $this->create_booking_manager($sitewide, $facetoface, $session, $user);
+        $manager = $this->create_booking_manager(
+            $sitewide,
+            $facetoface,
+            $session,
+            $user
+        );
 
         $errors = $manager->validate();
         $this->assertEmpty($errors);
@@ -101,7 +106,13 @@ class upload_approval_test extends \advanced_testcase {
         global $DB;
 
         [$facetoface, $session, $user] = $this->create_booking_fixture(true);
-        $manager = $this->create_booking_manager($sitewide, $facetoface, $session, $user, 'fully_attended');
+        $manager = $this->create_booking_manager(
+            $sitewide,
+            $facetoface,
+            $session,
+            $user,
+            'fully_attended'
+        );
 
         $errors = $manager->validate();
         $this->assertEmpty($errors);
@@ -144,7 +155,12 @@ class upload_approval_test extends \advanced_testcase {
         global $DB;
 
         [$facetoface, $session, $user, $linemanager] = $this->create_booking_fixture(false);
-        $manager = $this->create_booking_manager($sitewide, $facetoface, $session, $user);
+        $manager = $this->create_booking_manager(
+            $sitewide,
+            $facetoface,
+            $session,
+            $user
+        );
 
         $errors = $manager->validate();
         $this->assertEmpty($errors);
@@ -189,7 +205,12 @@ class upload_approval_test extends \advanced_testcase {
         facetoface_user_signup(
             $session,
             $facetoface,
-            $DB->get_record('course', ['id' => $facetoface->course], '*', MUST_EXIST),
+            $DB->get_record(
+                'course',
+                ['id' => $facetoface->course],
+                '*',
+                MUST_EXIST
+            ),
             '',
             MDL_F2F_ICAL,
             MDL_F2F_STATUS_BOOKED,
