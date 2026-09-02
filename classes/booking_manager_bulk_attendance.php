@@ -206,7 +206,7 @@ class booking_manager_bulk_attendance {
      *  10) Capacity check for otherwise valid, unique rows
      *
      * @param int|null $timenow Current time to use for validation.
-     * @return array An array of errors.
+     * @return list<array{0:int|string, 1:string|\lang_string}> Validation errors keyed by CSV row.
      */
     public function validate(?int $timenow = null): array {
         global $DB;
@@ -697,6 +697,7 @@ class booking_manager_bulk_attendance {
      * booking-style rows. When no active signup exists, they create or reactivate the signup as
      * booked before applying attendance; this includes cancelled, declined and requested signups.
      *
+     * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors from validate().
      * @return bool
      * @throws moodle_exception When an attendance row cannot be applied.
      * @throws Exception If cancellation fails.

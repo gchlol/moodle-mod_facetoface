@@ -207,7 +207,7 @@ class booking_manager {
      * Validate the records provided to ensure they can be processed without errors.
      *
      * @param int|null $timenow The current time to use for validation.
-     * @return array An array of errors.
+     * @return list<array{0:int|string, 1:string|\lang_string}> Validation errors keyed by CSV row.
      */
     public function validate(?int $timenow = null): array {
         return $this->get_upload_helper()->validate($timenow);

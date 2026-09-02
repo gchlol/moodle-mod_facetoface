@@ -1091,7 +1091,7 @@ class course_booking_upload_helper {
     /**
      * Convert the error array into a set of row numbers to skip.
      *
-     * @param array<int, mixed> $errors Validation errors from validate().
+     * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors from validate().
      * @return array<int, bool> Map of CSV row numbers to skip.
      * @throws moodle_exception When the error format is invalid.
      */
