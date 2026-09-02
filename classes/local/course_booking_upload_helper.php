@@ -684,12 +684,14 @@ class course_booking_upload_helper {
 
         if ($entry->status === 'cancelled') {
             $this->process_cancellation($session, (int)$user->id);
+
             return;
         }
 
         $statuscode = $this->get_status_code($entry->status);
         if ($this->is_booking_status_code($statuscode)) {
             $this->process_signup_row($session, $user, $entry, $statuscode);
+
             return;
         }
 
@@ -885,6 +887,7 @@ class course_booking_upload_helper {
     private function persist_signup_record(\stdClass $usersignup): \stdClass {
         if (empty($usersignup->id)) {
             $usersignup->id = $this->insert_signup_record($usersignup);
+
             return $usersignup;
         }
 

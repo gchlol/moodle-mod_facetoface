@@ -587,6 +587,7 @@ class upload_duplicate_test extends \advanced_testcase {
         try {
             $manager->process($errors);
             $this->fail('Expected attendance processing to throw an exception.');
+
         } catch (\moodle_exception $exception) {
             $this->assertStringContainsString($expectedmessage, $exception->getMessage());
         }
@@ -836,6 +837,7 @@ class upload_duplicate_test extends \advanced_testcase {
                 's' => $session->id,
                 'submissionid_' . $signup->id => $statuscode,
             ]);
+
             return $signup;
         }
 

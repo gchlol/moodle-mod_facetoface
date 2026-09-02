@@ -737,6 +737,7 @@ class booking_manager_bulk_attendance {
 
         if ($status === 'cancelled') {
             $this->process_cancellation($session, $facetoface, (int)$user->id);
+
             return;
         }
 
@@ -744,6 +745,7 @@ class booking_manager_bulk_attendance {
         $statuscode = $this->get_status_code($status);
         if ($this->is_booking_status_code($statuscode)) {
             $this->process_signup_row($session, $facetoface, $course, $user, $discount, $mappednotify, $statuscode);
+
             return;
         }
 
@@ -1014,6 +1016,7 @@ class booking_manager_bulk_attendance {
     private function persist_signup_record(\stdClass $usersignup): \stdClass {
         if (empty($usersignup->id)) {
             $usersignup->id = $this->insert_signup_record($usersignup);
+
             return $usersignup;
         }
 
