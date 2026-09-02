@@ -206,10 +206,10 @@ class booking_manager {
     /**
      * Validate the records provided to ensure they can be processed without errors.
      *
-     * @param int $timenow The current time to use for validation.
+     * @param int|null $timenow The current time to use for validation.
      * @return array An array of errors.
      */
-    public function validate($timenow = null): array {
+    public function validate(?int $timenow = null): array {
         return $this->get_upload_helper()->validate($timenow);
     }
     // GCHLOL ends.

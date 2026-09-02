@@ -42,31 +42,31 @@ class course_booking_upload_helper {
     private const BOOKING_STATUSES = ['', 'booked', 'waitlisted'];
 
     /** @var \stdClass */
-    private $facetoface;
+    private \stdClass $facetoface;
 
     /** @var \stdClass */
-    private $course;
+    private \stdClass $course;
 
     /** @var context_course */
-    private $coursecontext;
+    private context_course $coursecontext;
 
     /** @var int */
-    private $facetofaceid;
+    private int $facetofaceid;
 
     /** @var bool */
-    private $usefile;
+    private bool $usefile;
 
     /** @var bool */
-    private $suppressemail;
+    private bool $suppressemail;
 
     /** @var Closure */
-    private $recorditerator;
+    private Closure $recorditerator;
 
     /** @var Closure */
-    private $usermatcher;
+    private Closure $usermatcher;
 
     /** @var Closure */
-    private $notificationtypetransformer;
+    private Closure $notificationtypetransformer;
 
     /**
      * Constructor.
@@ -109,7 +109,7 @@ class course_booking_upload_helper {
      * @param int|null $timenow The current time to use for validation.
      * @return list<array{0:int|string, 1:string|\lang_string}> Validation errors keyed by CSV row.
      */
-    public function validate($timenow = null): array {
+    public function validate(?int $timenow = null): array {
         $errors = [];
         $validationrows = [];
         $activesignupcache = [];
@@ -318,7 +318,7 @@ class course_booking_upload_helper {
      * @param string $type Notification type.
      * @return int|null Notification type constant, or null when the value is invalid.
      */
-    private function transform_notification_type($type) {
+    private function transform_notification_type(string $type) {
         $notificationtypetransformer = $this->notificationtypetransformer;
 
         return $notificationtypetransformer($type);

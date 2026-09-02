@@ -205,10 +205,10 @@ class booking_manager_bulk_attendance {
      *   9) Duplicate-row checks
      *  10) Capacity check for otherwise valid, unique rows
      *
-     * @param int $timenow Current time to use for validation.
+     * @param int|null $timenow Current time to use for validation.
      * @return array An array of errors.
      */
-    public function validate($timenow = null): array {
+    public function validate(?int $timenow = null): array {
         global $DB;
 
         $errors = [];
@@ -701,7 +701,7 @@ class booking_manager_bulk_attendance {
      * @throws moodle_exception When an attendance row cannot be applied.
      * @throws Exception If cancellation fails.
      */
-    public function process($errors): bool {
+    public function process(array $errors): bool {
         // Build a set of rows to skip from the error list.
         $skip = booking_manager_bulk_attendance::extract_rows_to_skip($errors);
 
