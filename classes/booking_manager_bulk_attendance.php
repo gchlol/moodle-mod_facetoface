@@ -16,6 +16,8 @@
 
 namespace mod_facetoface;
 
+use completion_completion;
+use completion_info;
 use context_course;
 use context_user;
 use file_storage;
@@ -831,20 +833,159 @@ class booking_manager_bulk_attendance {
     ): void {
         $statuscode = $this->normalise_booking_status_code($session, $statuscode);
 
+        $this->create_import_signup(
+            $session,
+            $facetoface,
+            $course,
+            $user,
+            $discount,
+            $mappednotify ?? -1,
+            $statuscode
+        );
+
+        $this->trigger_bulk_booking_created_event($facetoface, $session, (int) $user->id);
+    }
+
+    /**
+     * Create the signup required by a validated import row.
+     *
+     * @param \stdClass $session Session record.
+     * @param \stdClass $facetoface Face-to-face activity record.
+     * @param \stdClass $course Course record.
+     * @param \stdClass $user User record.
+     * @param string $discount Discount code from the CSV row.
+     * @param int $notificationtype Notification type code.
+     * @param int $statuscode Signup status code.
+     * @return int Signup ID.
+     */
+    private function create_import_signup(
+        \stdClass $session,
+        \stdClass $facetoface,
+        \stdClass $course,
+        \stdClass $user,
+        string $discount,
+        int $notificationtype,
+        int $statuscode
+    ): int {
         facetoface_enrol_user(context_course::instance($course->id), $course->id, $user->id);
+
+        if ($this->should_bypass_approval_for_past_booking($session, $facetoface, $statuscode)) {
+            return $this->upsert_historical_booking_signup(
+                $session,
+                $facetoface,
+                $course,
+                (int) $user->id,
+                $discount,
+                $notificationtype,
+                $statuscode
+            );
+        }
+
         facetoface_user_signup(
             $session,
             $facetoface,
             $course,
             $discount,
-            $mappednotify ?? -1,
+            $notificationtype,
             $statuscode,
             $user->id,
-            !$this->suppressemail,
-            true
+            !$this->suppressemail
         );
 
-        $this->trigger_bulk_booking_created_event($facetoface, $session, (int) $user->id);
+        return $this->get_signup_id($session->id, $user->id);
+    }
+
+    /**
+     * Return whether the import must bypass approval to preserve a historical booking.
+     *
+     * @param \stdClass $session Session record.
+     * @param \stdClass $facetoface Face-to-face activity record.
+     * @param int $statuscode Signup status code.
+     * @return bool
+     */
+    private function should_bypass_approval_for_past_booking(
+        \stdClass $session,
+        \stdClass $facetoface,
+        int $statuscode
+    ): bool {
+        return $statuscode === MDL_F2F_STATUS_BOOKED
+            && \mod_facetoface\helper::is_approval_required((object) $facetoface)
+            && facetoface_has_session_started($session, time());
+    }
+
+    /**
+     * Create or reactivate a historical booking without the legacy approval workflow.
+     *
+     * @param \stdClass $session Session record.
+     * @param \stdClass $facetoface Face-to-face activity record.
+     * @param \stdClass $course Course record.
+     * @param int $userid User ID.
+     * @param string $discount Discount code from the CSV row.
+     * @param int $notificationtype Notification type code.
+     * @param int $statuscode Signup status code.
+     * @return int Signup ID.
+     * @throws moodle_exception When the signup or status cannot be stored.
+     */
+    private function upsert_historical_booking_signup(
+        \stdClass $session,
+        \stdClass $facetoface,
+        \stdClass $course,
+        int $userid,
+        string $discount,
+        int $notificationtype,
+        int $statuscode
+    ): int {
+        global $DB;
+
+        $timenow = time();
+        $usersignup = $DB->get_record('facetoface_signups', ['sessionid' => $session->id, 'userid' => $userid]);
+        if (!$usersignup) {
+            $usersignup = new \stdClass();
+            $usersignup->sessionid = $session->id;
+            $usersignup->userid = $userid;
+        }
+
+        $usersignup->mailedreminder = 0;
+        $usersignup->notificationtype = $notificationtype;
+        $usersignup->discountcode = trim(strtoupper($discount));
+        if (empty($usersignup->discountcode)) {
+            $usersignup->discountcode = null;
+        }
+
+        if (!empty($usersignup->id)) {
+            $success = $DB->update_record('facetoface_signups', $usersignup);
+        } else {
+            $usersignup->id = $DB->insert_record('facetoface_signups', $usersignup);
+            $success = (bool) $usersignup->id;
+        }
+
+        if (!$success) {
+            throw new moodle_exception('error:couldnotupdatef2frecord', 'facetoface');
+        }
+
+        if (!facetoface_update_signup_status($usersignup->id, $statuscode, $userid)) {
+            throw new moodle_exception('error:f2ffailedupdatestatus', 'facetoface');
+        }
+
+        if ($facetoface->usercalentry
+            && in_array($statuscode, [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED], true)) {
+            facetoface_add_session_to_calendar($session, $facetoface, 'user', $userid, 'booking');
+        }
+
+        if (in_array($statuscode, [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED], true)) {
+            $completion = new completion_info($course);
+            if ($completion->is_enabled()) {
+                $ccdetails = [
+                    'course' => $course->id,
+                    'userid' => $userid,
+                ];
+
+                $completionrecord = new completion_completion($ccdetails);
+                $completionrecord->mark_inprogress($timenow);
+            }
+        }
+
+        return (int) $usersignup->id;
     }
 
     /**
@@ -881,12 +1022,7 @@ class booking_manager_bulk_attendance {
             $discount,
             $mappednotify
         );
-        $data = (object) [
-            's' => $session->id,
-            'submissionid_' . $signupid => $statuscode,
-        ];
-
-        if (!facetoface_take_attendance($data)) {
+        if (!$this->apply_attendance_signup_status($signupid, $statuscode)) {
             throw new moodle_exception(
                 'error:attendanceuploadfailed',
                 'mod_facetoface',
@@ -924,22 +1060,54 @@ class booking_manager_bulk_attendance {
             return $signupid;
         }
 
-        facetoface_enrol_user(context_course::instance($course->id), $course->id, $user->id);
-        facetoface_user_signup(
+        $signupid = $this->create_import_signup(
             $session,
             $facetoface,
             $course,
+            $user,
             $discount,
             $mappednotify ?? -1,
-            MDL_F2F_STATUS_BOOKED,
-            $user->id,
-            !$this->suppressemail,
-            true
+            MDL_F2F_STATUS_BOOKED
         );
 
         $this->trigger_bulk_booking_created_event($facetoface, $session, (int) $user->id);
 
-        return $this->get_signup_id($session->id, $user->id);
+        return $signupid;
+    }
+
+    /**
+     * Apply an attendance status to a signup.
+     *
+     * @param int $signupid Signup ID.
+     * @param int $statuscode Attendance status code.
+     * @return bool
+     */
+    private function apply_attendance_signup_status(int $signupid, int $statuscode): bool {
+        global $USER;
+
+        $grade = $this->get_attendance_grade($statuscode);
+
+        return facetoface_update_signup_status($signupid, $statuscode, $USER->id, '', $grade)
+            && facetoface_take_individual_attendance($signupid, $grade);
+    }
+
+    /**
+     * Convert an attendance status code into its grade.
+     *
+     * @param int $statuscode Attendance status code.
+     * @return int
+     */
+    private function get_attendance_grade(int $statuscode): int {
+        switch ($statuscode) {
+            case MDL_F2F_STATUS_NO_SHOW:
+                return 0;
+            case MDL_F2F_STATUS_PARTIALLY_ATTENDED:
+                return 50;
+            case MDL_F2F_STATUS_FULLY_ATTENDED:
+                return 100;
+        }
+
+        throw new moodle_exception('error:invalidstatusspecified', 'mod_facetoface', '', $statuscode);
     }
 
     /**

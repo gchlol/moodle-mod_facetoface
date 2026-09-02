@@ -2038,11 +2038,11 @@ function facetoface_get_unmailed_reminders() {
  * @param integer $statuscode Status code to set
  * @param integer $userid user to signup
  * @param bool $notifyuser whether or not to send an email confirmation
- * @param bool $bypassapprovalforpastbooking Whether a historical booking import can bypass approval.
+ * @param bool $displayerrors whether or not to return an error page on errors
  */
 function facetoface_user_signup($session, $facetoface, $course, $discountcode,
                                 $notificationtype, $statuscode, $userid = false,
-                                $notifyuser = true, $bypassapprovalforpastbooking = false) {
+                                $notifyuser = true) {
 
     global $CFG, $DB;
 
@@ -2086,13 +2086,8 @@ function facetoface_user_signup($session, $facetoface, $course, $discountcode,
 
     // Work out which status to use.
 
-    // GCHLOL: Historical CSV imports are authoritative records. Their callers may bypass
-    // approval only when explicitly importing Booked after the session has started.
-    $pastbookingoverride = $bypassapprovalforpastbooking
-        && $statuscode === MDL_F2F_STATUS_BOOKED
-        && facetoface_has_session_started($session, $timenow);
-
-    if ($pastbookingoverride || !\mod_facetoface\helper::is_approval_required((object) $facetoface)) {
+    // If approval not required.
+    if (!\mod_facetoface\helper::is_approval_required((object) $facetoface)) {
         $newstatus = $statuscode;
     } else {
         // If approval required.
@@ -2610,7 +2605,6 @@ function facetoface_check_manageremail($manageremail) {
  *                    and every submission ID to mark as attended
  *                    under the 'submissionid_XXXX' keys where XXXX is
  *                     the ID of the signup
- * @return bool True when attendance was applied, or false when it could not be applied.
  */
 function facetoface_take_attendance($data) {
     global $USER;
@@ -2664,9 +2658,7 @@ function facetoface_take_attendance($data) {
                     continue 2;
             }
 
-            if (!facetoface_update_signup_status($submissionid, $value, $USER->id, '', $grade)) {
-                return false;
-            }
+            facetoface_update_signup_status($submissionid, $value, $USER->id, '', $grade);
             if (!facetoface_take_individual_attendance($submissionid, $grade)) {
                 // F2F: could not mark '$submissionid' as $value.
                 return false;
