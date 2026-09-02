@@ -36,6 +36,8 @@ class upload_duplicate_test extends \advanced_testcase {
 
     /**
      * Set up each test.
+     *
+     * @return void
      */
     protected function setUp(): void {
         parent::setUp();
@@ -48,6 +50,7 @@ class upload_duplicate_test extends \advanced_testcase {
      * @dataProvider existing_status_provider
      * @param bool $sitewide Whether to use the site-wide manager.
      * @param int $existingstatus Existing current signup status.
+     * @return void
      */
     public function test_existing_signup_booking_is_skipped(bool $sitewide, int $existingstatus): void {
         global $DB;
@@ -108,6 +111,7 @@ class upload_duplicate_test extends \advanced_testcase {
      * @dataProvider booking_status_provider
      * @param bool $sitewide Whether to use the site-wide manager.
      * @param string $uploadstatus Booking status supplied by the CSV.
+     * @return void
      */
     public function test_each_booking_status_rejects_existing_signup(bool $sitewide, string $uploadstatus): void {
         [$course, $facetoface, $session, $existinguser] = $this->create_fixture(2, false);
@@ -141,6 +145,7 @@ class upload_duplicate_test extends \advanced_testcase {
      * @param bool $sitewide Whether to use the site-wide manager.
      * @param string $firststatus Status in the first duplicate row.
      * @param int $expectedstatus Expected final status for the duplicate user.
+     * @return void
      */
     public function test_later_duplicate_row_is_skipped_without_consuming_capacity(
         bool $sitewide,
@@ -196,6 +201,7 @@ class upload_duplicate_test extends \advanced_testcase {
      *
      * @dataProvider manager_provider
      * @param bool $sitewide Whether to use the site-wide manager.
+     * @return void
      */
     public function test_capacity_error_skips_only_overflow_row(bool $sitewide): void {
         global $DB;
@@ -233,6 +239,7 @@ class upload_duplicate_test extends \advanced_testcase {
      *
      * @dataProvider manager_provider
      * @param bool $sitewide Whether to use the site-wide manager.
+     * @return void
      */
     public function test_each_overflow_row_has_row_level_capacity_error(bool $sitewide): void {
         global $DB;
@@ -267,6 +274,7 @@ class upload_duplicate_test extends \advanced_testcase {
      * @dataProvider cancellation_order_provider
      * @param bool $sitewide Whether to use the site-wide manager.
      * @param bool $bookingfirst Whether the replacement booking is the first CSV row.
+     * @return void
      */
     public function test_cancellation_releases_capacity(
         bool $sitewide,
@@ -313,6 +321,7 @@ class upload_duplicate_test extends \advanced_testcase {
      * @dataProvider same_user_rebooking_order_provider
      * @param bool $sitewide Whether to use the site-wide manager.
      * @param bool $bookingfirst Whether the blocked booking row comes first.
+     * @return void
      */
     public function test_same_file_cancellation_does_not_allow_rebooking(
         bool $sitewide,
@@ -359,6 +368,7 @@ class upload_duplicate_test extends \advanced_testcase {
      *
      * @dataProvider manager_provider
      * @param bool $sitewide Whether to use the site-wide manager.
+     * @return void
      */
     public function test_first_valid_duplicate_row_wins(bool $sitewide): void {
         global $DB;
@@ -410,6 +420,8 @@ class upload_duplicate_test extends \advanced_testcase {
 
     /**
      * An errored existing-signup row must not invalidate another session for the same user.
+     *
+     * @return void
      */
     public function test_errored_row_does_not_contaminate_cross_session_validation(): void {
         global $DB;
@@ -466,6 +478,7 @@ class upload_duplicate_test extends \advanced_testcase {
      *
      * @dataProvider manager_provider
      * @param bool $sitewide Whether to use the site-wide manager.
+     * @return void
      */
     public function test_existing_historical_waitlist_has_one_error(bool $sitewide): void {
         [$course, $facetoface, $session, $user] = $this->create_fixture(2, true);
@@ -498,6 +511,7 @@ class upload_duplicate_test extends \advanced_testcase {
      * @dataProvider inactive_attendance_provider
      * @param bool $sitewide Whether to use the site-wide manager.
      * @param int $existingstatus Existing inactive signup status.
+     * @return void
      */
     public function test_attendance_reactivates_inactive_signup(bool $sitewide, int $existingstatus): void {
         global $DB;
@@ -536,6 +550,7 @@ class upload_duplicate_test extends \advanced_testcase {
      *
      * @dataProvider manager_provider
      * @param bool $sitewide Whether to use the site-wide manager.
+     * @return void
      */
     public function test_attendance_processing_failure_throws_exception(bool $sitewide): void {
         global $DB;
@@ -585,6 +600,7 @@ class upload_duplicate_test extends \advanced_testcase {
      * @dataProvider unhandled_status_provider
      * @param bool $sitewide Whether to use the site-wide manager.
      * @param string $status Unsupported workflow status.
+     * @return void
      */
     public function test_unhandled_status_is_rejected(bool $sitewide, string $status): void {
         global $DB;
@@ -611,7 +627,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Provide all current signup statuses for both booking managers.
      *
-     * @return array[]
+     * @return array[] Test cases keyed by manager and status name.
      */
     public static function existing_status_provider(): array {
         $statuses = [
@@ -639,7 +655,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Provide booking-style CSV statuses for both managers.
      *
-     * @return array[]
+     * @return array[] Test cases keyed by manager and booking status.
      */
     public static function booking_status_provider(): array {
         $cases = [];
@@ -655,7 +671,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Provide duplicate-row orders for both managers.
      *
-     * @return array[]
+     * @return array[] Test cases keyed by manager and first-row status.
      */
     public static function duplicate_order_provider(): array {
         return [
@@ -669,7 +685,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Provide both CSV orders for a cancellation and its replacement booking.
      *
-     * @return array[]
+     * @return array[] Test cases keyed by manager and row order.
      */
     public static function cancellation_order_provider(): array {
         return [
@@ -683,7 +699,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Provide both row orders for same-user cancellation/rebooking in both managers.
      *
-     * @return array[]
+     * @return array[] Test cases keyed by manager and row order.
      */
     public static function same_user_rebooking_order_provider(): array {
         return [
@@ -697,7 +713,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Provide inactive signup statuses for both booking managers.
      *
-     * @return array[]
+     * @return array[] Test cases keyed by manager and inactive status.
      */
     public static function inactive_attendance_provider(): array {
         $statuses = [
@@ -718,7 +734,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Provide unsupported workflow statuses for both booking managers.
      *
-     * @return array[]
+     * @return array[] Test cases keyed by manager and unsupported status.
      */
     public static function unhandled_status_provider(): array {
         $cases = [];
@@ -734,7 +750,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Provide both booking managers.
      *
-     * @return array[]
+     * @return array[] Booking-manager test cases keyed by scenario name.
      */
     public static function manager_provider(): array {
         return [
@@ -835,7 +851,7 @@ class upload_duplicate_test extends \advanced_testcase {
      * @param bool $sitewide Whether to create the site-wide manager.
      * @param \stdClass $facetoface Activity record.
      * @param array $rows CSV row objects.
-     * @return booking_manager|booking_manager_bulk_attendance
+     * @return booking_manager|booking_manager_bulk_attendance Loaded manager instance.
      */
     private function create_manager(bool $sitewide, \stdClass $facetoface, array $rows) {
         if ($sitewide) {
@@ -930,7 +946,7 @@ class upload_duplicate_test extends \advanced_testcase {
      *
      * @param array $error Validation error.
      * @param int $row CSV row number.
-     * @return bool
+     * @return bool True when the validation error applies to the supplied CSV row.
      */
     private function error_contains_row(array $error, int $row): bool {
         $rows = array_map('trim', explode(',', (string) $error[0]));

@@ -805,6 +805,8 @@ class upload_test extends \advanced_testcase {
 
     /**
      * Attendance statuses cannot be uploaded for sessions that have not started yet.
+     *
+     * @return void
      */
     public function test_attendance_rejected_for_future_sessions() {
         /** @var \mod_facetoface_generator $generator */

@@ -37,6 +37,8 @@ class upload_approval_test extends \advanced_testcase {
 
     /**
      * Set up each test.
+     *
+     * @return void
      */
     protected function setUp(): void {
         parent::setUp();
@@ -48,6 +50,7 @@ class upload_approval_test extends \advanced_testcase {
      *
      * @dataProvider booking_manager_provider
      * @param bool $sitewide Whether to exercise the site-wide booking manager.
+     * @return void
      */
     public function test_historical_csv_booking_bypasses_approval(bool $sitewide): void {
         global $DB;
@@ -92,6 +95,7 @@ class upload_approval_test extends \advanced_testcase {
      *
      * @dataProvider booking_manager_provider
      * @param bool $sitewide Whether to exercise the site-wide booking manager.
+     * @return void
      */
     public function test_historical_csv_attendance_bypasses_approval_during_prebooking(bool $sitewide): void {
         global $DB;
@@ -134,6 +138,7 @@ class upload_approval_test extends \advanced_testcase {
      *
      * @dataProvider booking_manager_provider
      * @param bool $sitewide Whether to exercise the site-wide booking manager.
+     * @return void
      */
     public function test_future_csv_booking_still_requires_approval(bool $sitewide): void {
         global $DB;
@@ -174,6 +179,8 @@ class upload_approval_test extends \advanced_testcase {
 
     /**
      * Manual historical signups must retain the normal approval workflow.
+     *
+     * @return void
      */
     public function test_manual_historical_booking_still_requires_approval(): void {
         global $DB;
@@ -209,7 +216,7 @@ class upload_approval_test extends \advanced_testcase {
     /**
      * Provide both CSV booking-manager implementations.
      *
-     * @return array[]
+     * @return array[] Booking-manager test cases keyed by scenario name.
      */
     public static function booking_manager_provider(): array {
         return [

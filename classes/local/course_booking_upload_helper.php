@@ -107,7 +107,7 @@ class course_booking_upload_helper {
      * Validate the records provided to ensure they can be processed without errors.
      *
      * @param int|null $timenow The current time to use for validation.
-     * @return array An array of errors.
+     * @return array Validation errors keyed by CSV row.
      */
     public function validate($timenow = null): array {
         $errors = [];
@@ -265,8 +265,8 @@ class course_booking_upload_helper {
     /**
      * Process the bookings in the file.
      *
-     * @param array $errors Validation errors to skip.
-     * @return bool
+     * @param array $errors Validation errors returned from validate().
+     * @return bool True after all rows without blocking errors are processed.
      * @throws moodle_exception When an attendance row cannot be applied.
      * @throws \Exception When cancellation fails.
      */
@@ -291,7 +291,7 @@ class course_booking_upload_helper {
     /**
      * Get an iterator for the records.
      *
-     * @return \Generator
+     * @return \Generator Iterator yielding CSV row objects for validation or processing.
      */
     private function get_iterator(): \Generator {
         $recorditerator = $this->recorditerator;
@@ -304,7 +304,7 @@ class course_booking_upload_helper {
      *
      * @param string $username Username to search.
      * @param string $fields Fields to return.
-     * @return array
+     * @return array Matching user records keyed by user ID.
      */
     private function match_users_username(string $username, string $fields): array {
         $usermatcher = $this->usermatcher;
@@ -316,7 +316,7 @@ class course_booking_upload_helper {
      * Transform notification type to internal representation.
      *
      * @param string $type Notification type.
-     * @return int|null
+     * @return int|null Notification type constant, or null when the value is invalid.
      */
     private function transform_notification_type($type) {
         $notificationtypetransformer = $this->notificationtypetransformer;
@@ -572,7 +572,7 @@ class course_booking_upload_helper {
      * Return whether a CSV status has a corresponding processing path.
      *
      * @param string $status CSV status.
-     * @return bool
+     * @return bool True when the status has a corresponding processing path.
      */
     private function is_processable_status(string $status): bool {
         return $status === 'cancelled'
@@ -584,7 +584,7 @@ class course_booking_upload_helper {
      * Return whether a CSV status creates a booking.
      *
      * @param string $status CSV status.
-     * @return bool
+     * @return bool True when the status creates or updates a booking.
      */
     private function is_booking_status(string $status): bool {
         return in_array($status, self::BOOKING_STATUSES, true);
@@ -594,7 +594,7 @@ class course_booking_upload_helper {
      * Return whether a CSV status records attendance.
      *
      * @param string $status CSV status.
-     * @return bool
+     * @return bool True when the status records attendance.
      */
     private function is_attendance_status(string $status): bool {
         return in_array($status, self::ATTENDANCE_STATUSES, true);
@@ -606,7 +606,7 @@ class course_booking_upload_helper {
      * @param \stdClass $session Session record.
      * @param int $userid Matched user ID.
      * @param string $status CSV status.
-     * @return bool
+     * @return bool True when the user already holds an active signup relevant to validation.
      */
     private function has_active_signup_for_validation(\stdClass $session, int $userid, string $status): bool {
         $needsactivelookup = !$session->allowoverbook
@@ -620,7 +620,7 @@ class course_booking_upload_helper {
      *
      * @param int $sessionid Session ID.
      * @param int $userid User ID.
-     * @return string
+     * @return string Cache key in sessionid:userid format.
      */
     private function get_signup_cache_key(int $sessionid, int $userid): string {
         return $sessionid . ':' . $userid;
@@ -785,7 +785,7 @@ class course_booking_upload_helper {
      *
      * @param \stdClass $session Session record.
      * @param int $statuscode Signup status code.
-     * @return bool
+     * @return bool True when the historical booking should bypass the approval workflow.
      */
     private function should_bypass_approval_for_past_booking(\stdClass $session, int $statuscode): bool {
         return $statuscode === MDL_F2F_STATUS_BOOKED
@@ -990,7 +990,7 @@ class course_booking_upload_helper {
      *
      * @param int $signupid Signup ID.
      * @param int $statuscode Attendance status code.
-     * @return bool
+     * @return bool True when both the signup status and attendance grade are stored.
      */
     private function apply_attendance_signup_status(int $signupid, int $statuscode): bool {
         global $USER;
@@ -1005,7 +1005,7 @@ class course_booking_upload_helper {
      * Convert an attendance status code into its grade.
      *
      * @param int $statuscode Attendance status code.
-     * @return int
+     * @return int Attendance grade percentage for the supplied status code.
      */
     private function get_attendance_grade(int $statuscode): int {
         switch ($statuscode) {
@@ -1040,7 +1040,7 @@ class course_booking_upload_helper {
      * Convert a CSV status into the corresponding status code.
      *
      * @param string $status CSV status.
-     * @return int
+     * @return int Signup status code derived from the CSV value.
      */
     private function get_status_code(string $status): int {
         return array_search($status, facetoface_statuses()) ?: MDL_F2F_STATUS_BOOKED;
@@ -1051,7 +1051,7 @@ class course_booking_upload_helper {
      *
      * @param \stdClass $session Session record.
      * @param int $statuscode Signup status code.
-     * @return int
+     * @return int Booking status code adjusted for the session timing rules.
      */
     private function normalise_booking_status_code(\stdClass $session, int $statuscode): int {
         if ($statuscode === MDL_F2F_STATUS_BOOKED && !$session->datetimeknown) {
@@ -1065,7 +1065,7 @@ class course_booking_upload_helper {
      * Return whether the status code creates a booking.
      *
      * @param int $statuscode Signup status code.
-     * @return bool
+     * @return bool True when the status code represents a booking state.
      */
     private function is_booking_status_code(int $statuscode): bool {
         return in_array($statuscode, [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED], true);
@@ -1075,7 +1075,7 @@ class course_booking_upload_helper {
      * Return whether the status code records attendance.
      *
      * @param int $statuscode Signup status code.
-     * @return bool
+     * @return bool True when the status code represents an attendance state.
      */
     private function is_attendance_status_code(int $statuscode): bool {
         return in_array($statuscode, [
@@ -1089,7 +1089,7 @@ class course_booking_upload_helper {
      * Convert the error array into a set of row numbers to skip.
      *
      * @param array<int, mixed> $errors Validation errors from validate().
-     * @return array<int, bool>
+     * @return array<int, bool> Map of CSV row numbers to skip.
      * @throws moodle_exception When the error format is invalid.
      */
     private static function extract_rows_to_skip(array $errors): array {

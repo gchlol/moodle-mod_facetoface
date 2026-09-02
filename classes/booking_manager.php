@@ -181,7 +181,7 @@ class booking_manager {
     /**
      * Build the helper that owns the branch-specific CSV upload behavior.
      *
-     * @return course_booking_upload_helper
+     * @return course_booking_upload_helper Helper configured with the manager's current upload state.
      */
     private function get_upload_helper(): course_booking_upload_helper {
         return new course_booking_upload_helper(
