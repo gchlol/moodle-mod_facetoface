@@ -646,14 +646,23 @@ class course_booking_upload_helper {
     private function get_active_signup_id(int $sessionid, int $userid): ?int {
         global $DB;
 
-        $sql = "SELECT su.id
-                  FROM {facetoface_signups} su
-                  JOIN {facetoface_signups_status} ss ON ss.signupid = su.id
-                 WHERE su.sessionid = ?
-                   AND su.userid = ?
-                   AND ss.superceded = 0
-                   AND ss.statuscode >= ?";
-        $signupid = $DB->get_field_sql($sql, [$sessionid, $userid, MDL_F2F_STATUS_APPROVED]);
+        $activesignupsql = "
+            SELECT  facetoface_signups.id
+
+            FROM    {facetoface_signups} facetoface_signups
+                    JOIN {facetoface_signups_status} facetoface_signups_status ON
+                        facetoface_signups_status.signupid = facetoface_signups.id
+
+            WHERE   facetoface_signups.sessionid = :sessionid AND
+                    facetoface_signups.userid = :userid AND
+                    facetoface_signups_status.superceded = 0 AND
+                    facetoface_signups_status.statuscode >= :status_approved
+        ";
+        $signupid = $DB->get_field_sql($activesignupsql, [
+            'sessionid' => $sessionid,
+            'userid' => $userid,
+            'status_approved' => MDL_F2F_STATUS_APPROVED,
+        ]);
 
         return $signupid ? (int)$signupid : null;
     }

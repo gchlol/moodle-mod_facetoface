@@ -144,13 +144,21 @@ class bulk_booking_created extends signup_success {
     private static function get_current_signup_statuscode(int $sessionid, int $userid): int {
         global $DB;
 
-        $sql = "SELECT ss.statuscode
-                  FROM {facetoface_signups} su
-                  JOIN {facetoface_signups_status} ss ON ss.signupid = su.id
-                 WHERE su.sessionid = :sessionid
-                   AND su.userid = :userid
-                   AND ss.superceded = 0";
+        $signupstatussql = "
+            SELECT  facetoface_signups_status.statuscode
 
-        return (int) $DB->get_field_sql($sql, ['sessionid' => $sessionid, 'userid' => $userid], MUST_EXIST);
+            FROM    {facetoface_signups} facetoface_signups
+                    JOIN {facetoface_signups_status} facetoface_signups_status ON
+                        facetoface_signups_status.signupid = facetoface_signups.id
+
+            WHERE   facetoface_signups.sessionid = :sessionid AND
+                    facetoface_signups.userid = :userid AND
+                    facetoface_signups_status.superceded = 0
+        ";
+
+        return (int) $DB->get_field_sql($signupstatussql, [
+            'sessionid' => $sessionid,
+            'userid' => $userid,
+        ], MUST_EXIST);
     }
 }
