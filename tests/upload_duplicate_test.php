@@ -27,7 +27,8 @@ require_once($CFG->dirroot . '/mod/facetoface/lib.php');
  *
  * @package    mod_facetoface
  * @copyright  2026 Gold Coast Health
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author     Yucheng Zhu
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \mod_facetoface\booking_manager
  * @covers     \mod_facetoface\booking_manager_bulk_attendance
  */

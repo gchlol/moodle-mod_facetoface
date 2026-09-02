@@ -30,7 +30,8 @@ use moodle_exception;
  *
  * @package    mod_facetoface
  * @copyright  2026 Gold Coast Health
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author     Yucheng Zhu
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class course_booking_upload_helper {
 
