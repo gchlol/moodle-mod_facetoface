@@ -251,34 +251,35 @@ class booking_manager {
                 $errors[] = [$row, new lang_string('error:sessiondoesnotexist', 'mod_facetoface', $entry->session)];
             }
 
+            // If the session supplied does not link to the face-to-face module expected, then it's invalid.
+            if ($session && $session->facetoface != $this->f) {
+                $errors[] = [
+                    $row,
+                    new lang_string('error:tryingtoupdatesessionfromanothermodule', 'mod_facetoface', (object) [
+                        'session' => $entry->session,
+                        'f' => $this->f,
+                    ]),
+                ];
+            }
+
+            if ($session
+                && $session->facetoface == $this->f
+                && isset($userid)
+                && !$this->validate_existing_booking_upload(
+                    $row,
+                    $entry->username,
+                    $session,
+                    $entry->status,
+                    $userid,
+                    $errors,
+                    $signupexistencecache,
+                    $activesignupcache
+                )) {
+                continue;
+            }
+
             // Check for session overbooking, that is, if it would go over session capacity.
             if ($session) {
-                // If the session supplied does not link to the face-to-face module expected, then it's invalid.
-                if ($session->facetoface != $this->f) {
-                    $errors[] = [
-                        $row,
-                        new lang_string('error:tryingtoupdatesessionfromanothermodule', 'mod_facetoface', (object) [
-                            'session' => $entry->session,
-                            'f' => $this->f,
-                        ]),
-                    ];
-                }
-
-                if ($session->facetoface == $this->f
-                    && isset($userid)
-                    && !$this->validate_existing_booking_upload(
-                        $row,
-                        $entry->username,
-                        $session,
-                        $entry->status,
-                        $userid,
-                        $errors,
-                        $signupexistencecache,
-                        $activesignupcache
-                    )) {
-                    continue;
-                }
-
                 $this->validate_session_status_rules($row, $entry->session, $entry->status, $session, $timenow, $errors);
 
                 // Don't allow users to signup to another session if the signup type is not multiple.
@@ -959,24 +960,44 @@ class booking_manager {
         }
 
         if ($this->facetoface->usercalentry
-            && in_array($statuscode, [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED], true)) {
+            && $this->is_booking_status_code($statuscode)) {
             facetoface_add_session_to_calendar($session, $this->facetoface, 'user', $userid, 'booking');
         }
 
-        if (in_array($statuscode, [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED], true)) {
-            $completion = new completion_info($this->course);
-            if ($completion->is_enabled()) {
-                $ccdetails = [
-                    'course' => $this->course->id,
-                    'userid' => $userid,
-                ];
-
-                $completionrecord = new completion_completion($ccdetails);
-                $completionrecord->mark_inprogress($timenow);
-            }
-        }
+        $this->mark_booking_completion_in_progress_if_enabled($statuscode, $userid, $timenow);
 
         return (int) $usersignup->id;
+    }
+
+    /**
+     * Mark course completion as in progress when a historical booking becomes active.
+     *
+     * @param int $statuscode Signup status code.
+     * @param int $userid User ID.
+     * @param int $timenow Timestamp used for the completion record.
+     * @return void
+     */
+    private function mark_booking_completion_in_progress_if_enabled(
+        int $statuscode,
+        int $userid,
+        int $timenow
+    ): void {
+        if (!$this->is_booking_status_code($statuscode)) {
+            return;
+        }
+
+        $completion = new completion_info($this->course);
+        if (!$completion->is_enabled()) {
+            return;
+        }
+
+        $ccdetails = [
+            'course' => $this->course->id,
+            'userid' => $userid,
+        ];
+
+        $completionrecord = new completion_completion($ccdetails);
+        $completionrecord->mark_inprogress($timenow);
     }
 
     /**
@@ -987,22 +1008,49 @@ class booking_manager {
      * @throws moodle_exception When the signup cannot be stored.
      */
     private function persist_signup_record(\stdClass $usersignup): \stdClass {
-        global $DB;
-
         if (empty($usersignup->id)) {
-            $usersignup->id = $DB->insert_record('facetoface_signups', $usersignup);
-            if (!$usersignup->id) {
-                throw new moodle_exception('error:couldnotupdatef2frecord', 'facetoface');
-            }
-
+            $usersignup->id = $this->insert_signup_record($usersignup);
             return $usersignup;
         }
 
-        if (!$DB->update_record('facetoface_signups', $usersignup)) {
-            throw new moodle_exception('error:couldnotupdatef2frecord', 'facetoface');
-        }
+        $this->update_signup_record($usersignup);
 
         return $usersignup;
+    }
+
+    /**
+     * Insert a new signup record.
+     *
+     * @param \stdClass $usersignup Signup record to persist.
+     * @return int Persisted signup ID.
+     * @throws moodle_exception When the signup cannot be stored.
+     */
+    private function insert_signup_record(\stdClass $usersignup): int {
+        global $DB;
+
+        $signupid = $DB->insert_record('facetoface_signups', $usersignup);
+        if ($signupid) {
+            return (int) $signupid;
+        }
+
+        throw new moodle_exception('error:couldnotupdatef2frecord', 'facetoface');
+    }
+
+    /**
+     * Update an existing signup record.
+     *
+     * @param \stdClass $usersignup Signup record to persist.
+     * @return void
+     * @throws moodle_exception When the signup cannot be stored.
+     */
+    private function update_signup_record(\stdClass $usersignup): void {
+        global $DB;
+
+        if ($DB->update_record('facetoface_signups', $usersignup)) {
+            return;
+        }
+
+        throw new moodle_exception('error:couldnotupdatef2frecord', 'facetoface');
     }
 
     /**

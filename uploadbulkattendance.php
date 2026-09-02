@@ -136,6 +136,44 @@ function display_bulk_upload_errors(array $errors, int $fileid): void {
     exit;
 }
 
+/**
+ * Count the distinct CSV rows skipped during bulk-upload processing.
+ *
+ * @param array $errors Validation errors keyed by CSV row.
+ * @return int
+ */
+function count_skipped_bulk_upload_rows(array $errors): int {
+    $skippedrows = [];
+
+    foreach ($errors as $error) {
+        foreach (explode(',', (string) $error[0]) as $errorrow) {
+            $skippedrows[trim($errorrow)] = true;
+        }
+    }
+
+    return count($skippedrows);
+}
+
+/**
+ * Build the success message for a processed bulk-attendance upload.
+ *
+ * @param booking_manager_bulk_attendance $manager Loaded CSV manager.
+ * @param array $errors Validation errors returned for the upload.
+ * @return string
+ */
+function get_bulk_upload_success_message(booking_manager_bulk_attendance $manager, array $errors): string {
+    if (empty($errors)) {
+        return get_string('bulkattendanceprocessed', 'mod_facetoface');
+    }
+
+    $skipped = count_skipped_bulk_upload_rows($errors);
+
+    return get_string('bulkattendanceprocessedwithskips', 'mod_facetoface', (object) [
+        'processed' => count($manager->get_records()) - $skipped,
+        'skipped'   => $skipped,
+    ]);
+}
+
 // 6) Handle the “Upload & Preview” step.
 if ($validate) {
     $data = $uploadform->get_data();
@@ -219,39 +257,22 @@ if (
     // GCHLOL: Process even when validation errors exist; the manager skips the errored
     // rows, which is what the "Upload only rows with no errors" button promises.
     $success = $manager->process($errors);
-
-    if ($success) {
-        $event = csv_processed_bulkattendance::create([
-            'context'  => context_system::instance(),
-            'objectid' => 0,
-        ]);
-        $event->trigger();
-
-        $message = get_string('bulkattendanceprocessed', 'mod_facetoface');
-        if (!empty($errors)) {
-            // GCHLOL: Report how many rows were processed and how many were skipped.
-            $skippedrows = [];
-            foreach ($errors as $error) {
-                foreach (explode(',', (string) $error[0]) as $errorrow) {
-                    $skippedrows[trim($errorrow)] = true;
-                }
-            }
-
-            $message = get_string('bulkattendanceprocessedwithskips', 'mod_facetoface', (object) [
-                'processed' => count($manager->get_records()) - count($skippedrows),
-                'skipped'   => count($skippedrows),
-            ]);
-        }
-
-        redirect(
-            new moodle_url('/mod/facetoface/uploadbulkattendance.php'),
-            $message,
-            null,
-            notification::NOTIFY_SUCCESS
-        );
+    if (!$success) {
+        display_bulk_upload_errors($errors, $fileid);
     }
 
-    display_bulk_upload_errors($errors, $fileid);
+    $event = csv_processed_bulkattendance::create([
+        'context'  => context_system::instance(),
+        'objectid' => 0,
+    ]);
+    $event->trigger();
+
+    redirect(
+        new moodle_url('/mod/facetoface/uploadbulkattendance.php'),
+        get_bulk_upload_success_message($manager, $errors),
+        null,
+        notification::NOTIFY_SUCCESS
+    );
 }
 
 $uploadform->set_data(['validate' => 1]);
