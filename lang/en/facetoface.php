@@ -147,17 +147,15 @@ $string['emptylocation'] = 'Location was empty';
 $string['enrolled'] = 'enrolled';
 $string['error:tryingtoupdatesessionfromanothermodule'] = 'Unable to update session id {$a->session} which belongs to another Face-to-Face activity with id {$a->f}.';
 $string['error:cannotloadfile'] = 'Unable to load the file, please check the file and try again.';
-$string['error:invalidstatusspecified'] = "Invalid status specified. Expecting 'booked', 'waitlisted', 'cancelled', 'no_show', 'partially_attended', or 'fully_attended'. Defaults to 'booked' if empty. Value provided was '{\$a}'";
+$string['error:invalidstatusspecified'] = "Invalid status specified. Expecting 'booked', 'cancelled', 'no_show', 'partially_attended', or 'fully_attended'. Defaults to 'booked' if empty. Value provided was '{\$a}'";
 $string['error:invalidnotificationtypespecified'] = "Invalid notification type specified. Expecting 'ical', 'email', 'both', or '', but actual was '{\$a}'";
 $string['error:sessionalreadystarted'] = 'Unable to use session {$a}, as it which has already started.';
 $string['error:userisnotenrolledintocourse'] = 'User {$a} is not enrolled into this course.';
 $string['error:bookingsuploadfileerrorsfound'] = '{$a} errors were found in the uploaded file. Bookings cannot be processed until they are resolved.';
 $string['error:bookingsuploadfileheaderfieldmismatch'] = 'Mismatched number of fields in the uploaded file on row {$a}.';
-$string['error:duplicateuserinsessionupload'] = '{$a->user} appears more than once for session {$a->session}. Only the first valid row will be processed.';
-$string['error:sessionoverbooked'] = 'Session ID {$a->session} has no remaining capacity for this row.';
+$string['error:sessionoverbooked'] = 'Session ID {$a->session} overbooked by {$a->amount} person(s).';
 $string['error:sessiondoesnotexist'] = 'Session ID {$a} does not exist';
 $string['error:userdoesnotexist'] = 'User {$a} does not exist';
-$string['error:useralreadyinsession'] = '{$a->user} already has a record for session {$a->session} and cannot be booked into it again.';
 $string['error:multipleusersessions'] = 'User {$a} has more than one session';
 $string['error:multipleusersmatched'] = 'Multiple users matched to identifier {$a}';
 $string['error:addalreadysignedupattendee'] = '{$a} is already signed-up for this Face-to-Face activity.';
@@ -884,11 +882,9 @@ $string['facetoface:uploadbookingsfiledesc'] = "
 Fields expected:
 - Username (required)
 - Session number (required)
-- Status (optional - valid options are cancelled, booked, waitlisted, no_show, partially_attended, and fully_attended)
+- Status (optional - valid options are cancelled,  booked, waitlisted, no_show, partially_attended, and fully_attended)
 - Discount code (optional)
 - Notification type (optional - valid options are 'email', 'ical', or 'both'; blank defaults to 'ical')
-
-Bookings can be uploaded for sessions that have already started or finished. These historical bookings are recorded directly as booked, even when the activity normally requires approval, and no confirmation or approval-request emails are sent. A blank, booked or waitlisted row is rejected when any signup history already exists for that user and session, including cancelled or declined records; cancellation and rebooking in one file is therefore not supported. Attendance statuses (no_show, partially_attended and fully_attended) can only be used once the session has started. They are authoritative historical updates and will create or reactivate the booking before recording attendance when no active signup exists. Internal workflow statuses user_cancelled, requested, approved and declined are not accepted; use cancelled to cancel a booking.
 ";
 $string['facetoface:editsessions'] = 'Add, edit and copy Face-to-face sessions';
 
@@ -899,9 +895,6 @@ $string['facetoface:editsessions'] = 'Add, edit and copy Face-to-face sessions';
 $string['division'] = 'Division';
 $string['stream'] = 'Stream';
 $string['error:invalidallowcancel'] = 'You must specify either "yes" or "no" for Allow Cancellations.';
-$string['error:cannotwaitliststartedsession'] = 'Unable to waitlist user for session {$a} because it has already started.';
-$string['error:attendancesessionnotstarted'] = 'Unable to record attendance for session {$a} because it has not started yet.';
-$string['error:attendanceuploadfailed'] = 'Could not record attendance for user {$a->user} in session {$a->session} (CSV line {$a->line}).';
 $string['error:missingrequiredcolumn'] = 'Missing required column: {$a}';
 $string['error:noheaderrow'] = 'No header row found in the uploaded file.';
 $string['error:nopermissiontoeditattendees'] = 'You don\'t have permission to edit attendees for this Face-to-Face session.';
@@ -1017,7 +1010,7 @@ $string['error:activitydoesnotexist'] = 'Face-to-Face activity not found: {$a}';
 $string['csvuploadhelp:username'] = 'Username';
 $string['csvuploadhelp:session'] = 'Session';
 $string['csvuploadhelp:status'] = 'Status';
-$string['csvuploadhelp:statustype'] = 'One of "booked", "waitlisted", "cancelled", "no_show", "partially_attended" or "fully_attended"; blank defaults to "booked". Historical bookings are recorded directly as booked even when approval is normally required. A blank, booked or waitlisted row is rejected if any signup history already exists for that user and session, including cancelled or declined records. Attendance statuses require the session to have started and are authoritative: they create or reactivate the booking first when no active signup exists. Internal statuses user_cancelled, requested, approved and declined are not accepted; use cancelled to cancel a booking.';
+$string['csvuploadhelp:statustype'] = 'For now, only use "booked"';
 $string['csvuploadhelp:discountcode'] = 'Discount Code';
 $string['csvuploadhelp:notificationtype'] = 'Notification Type';
 $string['csvuploadhelp:oneofnotif'] = 'One of: email, ical, both. Blank defaults to ical.';
@@ -1025,10 +1018,30 @@ $string['uploadandpreviewbulkbookings'] = 'Upload and preview bookings';
 $string['uploadbulkbookingsfile'] = 'Bulk Bookings File';
 $string['bulkattendanceprocessed'] = 'Bulk bookings have been successfully processed.';
 $string['eventcsvprocessedbulkattendance'] = 'Site Admin Bulk bookings CSV processed ';
-// GCHLOL: Describe CSV bulk booking processing logs using the acting user's ID.
 $string['eventcsvprocessedbulkattendancedesc'] = 'The user with id \'{$a->userid}\' has processed a bulk bookings CSV file.';
-// GCHLOL ends.
+
+// GCHLOL: Override booking-upload strings and add the branch-specific validation and processing
+// messages in one isolated block.
+$string['error:invalidstatusspecified'] = "Invalid status specified. Expecting 'booked', 'waitlisted', 'cancelled', 'no_show', 'partially_attended', or 'fully_attended'. Defaults to 'booked' if empty. Value provided was '{\$a}'";
+$string['error:duplicateuserinsessionupload'] = '{$a->user} appears more than once for session {$a->session}. Only the first valid row will be processed.';
+$string['error:sessionoverbooked'] = 'Session ID {$a->session} has no remaining capacity for this row.';
+$string['error:useralreadyinsession'] = '{$a->user} already has a record for session {$a->session} and cannot be booked into it again.';
+$string['facetoface:uploadbookingsfiledesc'] = "
+Fields expected:
+- Username (required)
+- Session number (required)
+- Status (optional - valid options are cancelled, booked, waitlisted, no_show, partially_attended, and fully_attended)
+- Discount code (optional)
+- Notification type (optional - valid options are 'email', 'ical', or 'both'; blank defaults to 'ical')
+
+Bookings can be uploaded for sessions that have already started or finished. These historical bookings are recorded directly as booked, even when the activity normally requires approval, and no confirmation or approval-request emails are sent. A blank, booked or waitlisted row is rejected when any signup history already exists for that user and session, including cancelled or declined records; cancellation and rebooking in one file is therefore not supported. Attendance statuses (no_show, partially_attended and fully_attended) can only be used once the session has started. They are authoritative historical updates and will create or reactivate the booking before recording attendance when no active signup exists. Internal workflow statuses user_cancelled, requested, approved and declined are not accepted; use cancelled to cancel a booking.
+";
+$string['error:cannotwaitliststartedsession'] = 'Unable to waitlist user for session {$a} because it has already started.';
+$string['error:attendancesessionnotstarted'] = 'Unable to record attendance for session {$a} because it has not started yet.';
+$string['error:attendanceuploadfailed'] = 'Could not record attendance for user {$a->user} in session {$a->session} (CSV line {$a->line}).';
+$string['csvuploadhelp:statustype'] = 'One of "booked", "waitlisted", "cancelled", "no_show", "partially_attended" or "fully_attended"; blank defaults to "booked". Historical bookings are recorded directly as booked even when approval is normally required. A blank, booked or waitlisted row is rejected if any signup history already exists for that user and session, including cancelled or declined records. Attendance statuses require the session to have started and are authoritative: they create or reactivate the booking first when no active signup exists. Internal statuses user_cancelled, requested, approved and declined are not accepted; use cancelled to cancel a booking.';
 $string['updatevalidrows'] = 'Upload only rows with no errors';
 $string['bulkattendanceprocessedwithskips'] = 'Processed {$a->processed} row(s). Skipped {$a->skipped} row(s) with errors.';
 $string['error:errormustbeanarray'] = 'Error must be an array. Currently, it is \'{$a}\'.';
 $string['error:invalidrownumber'] = 'The first item in an error is the Excel row number (as shown when opening the CSV in Excel) and must be an integer. Currently, it is \'{$a->value}\' (type: {$a->type}).';
+// GCHLOL ends.

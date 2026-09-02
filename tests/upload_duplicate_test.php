@@ -20,6 +20,8 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 
+// GCHLOL: Cover duplicate-row, capacity, signup-history, and unsupported-status validation
+// for both CSV booking-manager implementations.
 /**
  * Tests duplicate-user validation for CSV booking uploads.
  *
@@ -935,3 +937,4 @@ class upload_duplicate_test extends \advanced_testcase {
         return in_array((string) $row, $rows, true);
     }
 }
+// GCHLOL ends.

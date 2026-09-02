@@ -20,6 +20,8 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 
+// GCHLOL: Cover approval-workflow behavior for historical and future CSV booking and
+// attendance uploads across both booking-manager implementations.
 /**
  * Tests approval handling for CSV booking uploads.
  *
@@ -314,3 +316,4 @@ class upload_approval_test extends \advanced_testcase {
         return $manager;
     }
 }
+// GCHLOL ends.

@@ -142,15 +142,11 @@ if (!empty($download) && $canviewattendees) {
 /*
  * Handle submitted data
  */
-$form = data_submitted();
-if (
-    $form &&
-    !confirm_sesskey()
-) {
-    throw new moodle_exception('confirmsesskeybad', 'error');
-}
+if ($form = data_submitted()) {
+    if (!confirm_sesskey()) {
+        throw new moodle_exception('confirmsesskeybad', 'error');
+    }
 
-if ($form) {
     $return = "{$CFG->wwwroot}/mod/facetoface/attendees.php?s={$s}&backtoallsessions={$backtoallsessions}";
 
     if ($cancelform) {

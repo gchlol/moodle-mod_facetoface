@@ -101,7 +101,7 @@ class upload_test extends \advanced_testcase {
         $expectederr = new lang_string(
             'error:sessionoverbooked',
             'mod_facetoface',
-            (object) ['session' => $nooverbooksession->id]
+            (object) ['session' => $nooverbooksession->id, 'amount' => 1]
         );
         $this->assertCount(1, $errors);
         $this->assertEquals($expectederr, $errors[0][1]);
@@ -422,6 +422,8 @@ class upload_test extends \advanced_testcase {
         );
     }
 
+    // GCHLOL: Update the booking-processing tests to use username-based matching and verify
+    // duplicate signups are rejected without altering the original booking.
     /**
      * Tests uploading a booking where the emails should match regardless of case.
      */
@@ -553,6 +555,7 @@ class upload_test extends \advanced_testcase {
             ])
         ));
     }
+    // GCHLOL ends.
 
     /**
      * Test upload processing to ensure the happy path is working as expected, and users can be cancelled from a session.
@@ -629,12 +632,14 @@ class upload_test extends \advanced_testcase {
         $this->assertNotEmpty(current($users)->timecancelled);
     }
 
+    // GCHLOL: Extend the historical-session coverage to include past bookings, waitlist rejection,
+    // pre-booked attendance uploads, and future-session attendance validation.
     /**
      * Updates via uploads can be done for previous sessions.
      *
-     * GCHLOL: Book someone in, then once the session is over, update their attendance. Users can
-     * also be booked directly into past sessions, including with an attendance status even if they
-     * were never signed up while the session was open. Waitlisting into past sessions is rejected.
+     * Book someone in, then once the session is over, update their attendance. Users can also be
+     * booked directly into past sessions, including with an attendance status even if they were
+     * never signed up while the session was open. Waitlisting into past sessions is rejected.
      */
     public function test_updates_for_previous_sessions() {
         global $DB;
@@ -799,7 +804,7 @@ class upload_test extends \advanced_testcase {
     }
 
     /**
-     * GCHLOL: Attendance statuses cannot be uploaded for sessions that have not started yet.
+     * Attendance statuses cannot be uploaded for sessions that have not started yet.
      */
     public function test_attendance_rejected_for_future_sessions() {
         /** @var \mod_facetoface_generator $generator */
@@ -844,6 +849,7 @@ class upload_test extends \advanced_testcase {
             'Expecting attendance uploads for future sessions to be rejected.'
         );
     }
+    // GCHLOL ends.
 
     /**
      * Provides values to test_email_suppression
@@ -926,11 +932,9 @@ class upload_test extends \advanced_testcase {
         $emails = $sink->get_messages();
         if ($shouldsuppress) {
             $this->assertEmpty($emails);
-
-            return;
+        } else {
+            $this->assertNotEmpty($emails);
         }
-
-        $this->assertNotEmpty($emails);
     }
 
     /**

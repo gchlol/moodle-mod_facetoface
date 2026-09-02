@@ -14,42 +14,25 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace mod_facetoface;
+namespace mod_facetoface\local;
 
+use Closure;
 use completion_completion;
 use completion_info;
 use context_course;
-use context_user;
-use file_storage;
+use lang_string;
 use moodle_exception;
-use Generator;
-use Exception;
 
+// GCHLOL: Isolate the branch-specific course-level CSV upload validation and historical
+// booking and attendance workflow so the third-party manager file keeps only thin hooks.
 /**
- * Bulk version of booking_manager
- * Located in site administration
+ * Handles the branch-specific course-level CSV upload workflow.
  *
  * @package    mod_facetoface
- * @copyright  2025 Gold Coast Health
- * @author     Jonas Sajonas
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  2026 Gold Coast Health
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class booking_manager_bulk_attendance {
-
-    /** @var stored_file the file to process as a stored_file object */
-    private $file;
-
-    /** @var array collection of records (if loaded from memory), in an array. */
-    private $records = [];
-
-    /** @var bool Whether or not the bookings are loaded from a file. */
-    private $usefile = true;
-
-    /** @var bool When true, confirmation emails are not sent. */
-    private $suppressemail = false;
-
-    /** @var bool Will ignore case when matching users */
-    private $caseinsensitive = false;
+class course_booking_upload_helper {
 
     /** @var string[] Statuses that record attendance rather than create a plain booking. */
     private const ATTENDANCE_STATUSES = ['no_show', 'partially_attended', 'fully_attended'];
@@ -57,288 +40,210 @@ class booking_manager_bulk_attendance {
     /** @var string[] Statuses that add a user to a session. */
     private const BOOKING_STATUSES = ['', 'booked', 'waitlisted'];
 
-    /**
-     * Constructor for the booking manager.
-     *
-     * @param array $records Records to process.
-     */
-    public function __construct($records = []) {
-        $this->records = $records;
-    }
+    /** @var \stdClass */
+    private $facetoface;
+
+    /** @var \stdClass */
+    private $course;
+
+    /** @var context_course */
+    private $coursecontext;
+
+    /** @var int */
+    private $facetofaceid;
+
+    /** @var bool */
+    private $usefile;
+
+    /** @var bool */
+    private $suppressemail;
+
+    /** @var Closure */
+    private $recorditerator;
+
+    /** @var Closure */
+    private $usermatcher;
+
+    /** @var Closure */
+    private $notificationtypetransformer;
 
     /**
-     * Loads CSV data from a draft file area.
-     * Returns file from file system. File must exist.
+     * Constructor.
      *
-     * @param int $fileitemid Item id
-     * @throws moodle_exception
-     * @return void
+     * @param \stdClass $facetoface Face-to-face activity record.
+     * @param \stdClass $course Course record.
+     * @param context_course $coursecontext Course context.
+     * @param int $facetofaceid Face-to-face activity ID.
+     * @param bool $usefile Whether the manager is processing a real file upload.
+     * @param bool $suppressemail Whether confirmation emails are suppressed.
+     * @param Closure $recorditerator Callback that returns a row iterator.
+     * @param Closure $usermatcher Callback that matches a username to user records.
+     * @param Closure $notificationtypetransformer Callback that maps notification strings to MDL_F2F_* codes.
      */
-    public function load_from_file(int $fileitemid): void {
-        global $USER;
-
-        $this->usefile = true;
-
-        $fs = new file_storage();
-        $files = $fs->get_area_files(
-            context_user::instance($USER->id)->id,
-            'user',
-            'draft',
-            $fileitemid,
-            'itemid',
-            false
-        );
-
-        if (count($files) != 1) {
-            throw new moodle_exception('error:cannotloadfile', 'mod_facetoface');
-        }
-
-        $this->file = current($files);
-    }
-
-    /**
-     * Load in the records to process from an array
-     *
-     * @param array $records Array of record objects or arrays.
-     * @return self
-     */
-    public function load_from_array(array $records): self {
-        $this->usefile = false;
-        $this->records = $records;
-
-        return $this;
-    }
-
-    /**
-     * Get the headers for the records.
-     *
-     * @return array Indexed array of headers.
-     */
-    public static function get_headers(): array {
-        return [
-            'Username',
-            'Session',
-            'Status',
-            'Discount Code',
-            'Notification Type',
-        ];
-    }
-
-    /**
-     * Provides a record iterator for CSV rows, either from file.
-     *
-     * @return Generator Yields each CSV record as an object.
-     * @throws moodle_exception If CSV header count does not match expectations.
-     */
-    private function get_iterator(): Generator {
-        if (!$this->usefile) {
-            foreach ($this->records as $record) {
-
-                yield $record;
-            }
-
-            return;
-        }
-
-        $handle = $this->file->get_content_file_handle();
-        $maxlinelength = 1000;
-        $delimiter = ',';
-        $rownumber = 1;
-        $headers = self::get_headers();
-        $numheaders = count($headers);
-
-        // Read the CSV header and detect whether a "Discount Code" column exists (case-insensitive).
-        $fileheaders = fgetcsv($handle, $maxlinelength, $delimiter);
-        $hasdiscount = false;
-        if ($fileheaders !== false) {
-            $norm = array_map(
-                function($h) {
-                    return strtolower(trim($h));
-                },
-                $fileheaders
-            );
-            $hasdiscount = in_array('discount code', $norm, true);
-        }
-
-        // Where "Discount Code" is expected in our canonical header list.
-        $discountpos = array_search('Discount Code', $headers, true);
-
-        try {
-            while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
-                $rownumber++;
-
-                // If the uploaded CSV omitted "Discount Code", insert an empty string so counts still match.
-                if ($hasdiscount === false && $discountpos !== false) {
-                    array_splice($data, $discountpos, 0, '');
-                }
-
-                $numfields = count($data);
-
-                if ($numfields !== $numheaders) {
-                    throw new moodle_exception(
-                        'error:bookingsuploadfileheaderfieldmismatch',
-                        'mod_facetoface'
-                    );
-                }
-                $record = array_combine($headers, $data);
-
-                yield (object) $record;
-            }
-        } finally {
-            fclose($handle);
-        }
+    public function __construct(
+        \stdClass $facetoface,
+        \stdClass $course,
+        context_course $coursecontext,
+        int $facetofaceid,
+        bool $usefile,
+        bool $suppressemail,
+        Closure $recorditerator,
+        Closure $usermatcher,
+        Closure $notificationtypetransformer
+    ) {
+        $this->facetoface = $facetoface;
+        $this->course = $course;
+        $this->coursecontext = $coursecontext;
+        $this->facetofaceid = $facetofaceid;
+        $this->usefile = $usefile;
+        $this->suppressemail = $suppressemail;
+        $this->recorditerator = $recorditerator;
+        $this->usermatcher = $usermatcher;
+        $this->notificationtypetransformer = $notificationtypetransformer;
     }
 
     /**
      * Validate the records provided to ensure they can be processed without errors.
      *
-     * As there are multiple dependent data points (users, sessions, capacity),
-     * we check them in this order for each row:
-     *   1) Session exists (by id)
-     *   2) Face-to-Face activity & Course derived from session
-     *   3) User exists
-     *   4) Existing booking-style upload check
-     *   5) Session timing checks
-     *   6) Enrollment check
-     *   7) Notification type check
-     *   8) Status check
-     *   9) Duplicate-row checks
-     *  10) Capacity check for otherwise valid, unique rows
-     *
-     * @param int $timenow Current time to use for validation.
+     * @param int|null $timenow The current time to use for validation.
      * @return array An array of errors.
      */
     public function validate($timenow = null): array {
-        global $DB;
-
         $errors = [];
         $validationrows = [];
         $activesignupcache = [];
         $signupexistencecache = [];
+        $timenow ??= time();
 
-        if ($timenow === null) {
-            $timenow = time();
-        }
-
-        // Break into rows and validate the multiple interdependent fields together.
         foreach ($this->get_iterator() as $index => $entry) {
             $row = $index + 1;
             $errorcountbefore = count($errors);
 
-            // Trim whitespace from the CSV fields (Course/Activity removed).
-            $username      = trim($entry->Username);
-            $sessionref    = trim($entry->Session);
-            $status        = trim($entry->Status ?? '');
-            $discount      = trim($entry->{'Discount Code'} ?? '');
-            $notifytype    = trim($entry->{'Notification Type'} ?? '');
+            $entry->status = $entry->status ?? '';
+            $entry->notificationtype = $entry->notificationtype ?? '';
+            $entry->discountcode = $entry->discountcode ?? '';
 
-            // 1) Check session exists (CSV provides session id).
-            $session = facetoface_get_session($sessionref);
-            if (!$session) {
-                $errors[] = [
-                    $row,
-                    get_string('error:sessiondoesnotexist', 'mod_facetoface', $sessionref)
-                ];
+            $userid = null;
+            $userids = $this->match_users_username($entry->username, 'id');
 
-                continue;
-            }
-
-            // 2) Derive Face-to-Face activity & Course from the session.
-            $facetoface = $DB->get_record('facetoface', ['id' => $session->facetoface]);
-            if (!$facetoface) {
-                $errors[] = [
-                    $row,
-                    get_string('error:activitydoesnotexist', 'facetoface', $session->facetoface)
-                ];
-
-                continue;
-            }
-
-            $course = $DB->get_record('course', ['id' => $facetoface->course]);
-            if (!$course) {
-                $errors[] = [
-                    $row,
-                    get_string('error:coursemisconfigured', 'facetoface', $facetoface->course)
-                ];
-
-                continue;
-            }
-
-            // 3) Match user.
-            $userids = $this->match_users($username, 'id');
             if (count($userids) > 1) {
-                $errors[] = [
-                    $row,
-                    get_string('error:multipleusersmatched', 'mod_facetoface', $username)
-                ];
-
-                continue;
+                $errors[] = [$row, new lang_string('error:multipleusersmatched', 'mod_facetoface', $entry->username)];
             }
+
             if (empty($userids)) {
+                $errors[] = [$row, new lang_string('error:userdoesnotexist', 'mod_facetoface', $entry->username)];
+            }
+
+            if (count($userids) === 1) {
+                $userid = current($userids)->id;
+            }
+
+            $session = facetoface_get_session($entry->session);
+            if (!$session) {
+                $errors[] = [$row, new lang_string('error:sessiondoesnotexist', 'mod_facetoface', $entry->session)];
+            }
+
+            if ($session && $session->facetoface != $this->facetofaceid) {
                 $errors[] = [
                     $row,
-                    get_string('error:userdoesnotexist', 'mod_facetoface', $username)
+                    new lang_string('error:tryingtoupdatesessionfromanothermodule', 'mod_facetoface', (object) [
+                        'session' => $entry->session,
+                        'f' => $this->facetofaceid,
+                    ]),
                 ];
-
-                continue;
-            }
-            $userid = current($userids)->id;
-
-            // 4) Detect a re-booking before validation can auto-enrol the user. A skipped row
-            // must not change enrolment, signup history, attendance or grades.
-            if (!$this->validate_existing_booking_upload(
-                $row,
-                $username,
-                $session,
-                $status,
-                (int) $userid,
-                $errors,
-                $signupexistencecache,
-                $activesignupcache
-            )) {
-                continue;
             }
 
-            if (!$this->validate_session_status_rules($row, $sessionref, $status, $session, $timenow, $errors)) {
+            if (
+                $session &&
+                $session->facetoface == $this->facetofaceid &&
+                isset($userid) &&
+                !$this->validate_existing_booking_upload(
+                    $row,
+                    $entry->username,
+                    $session,
+                    $entry->status,
+                    (int) $userid,
+                    $errors,
+                    $signupexistencecache,
+                    $activesignupcache
+                )
+            ) {
                 continue;
             }
 
-            // 6) Enrollment check. Auto-enrol staff who are not yet enrolled in the course.
-            $coursecontext = context_course::instance($course->id);
-            if (!is_enrolled($coursecontext, $userid)) {
-                $isenrolled = facetoface_enrol_user($coursecontext, $course->id, $userid);
+            if ($session) {
+                $this->validate_session_status_rules($row, $entry->session, $entry->status, $session, $timenow, $errors);
+
+                if (
+                    isset($userid) &&
+                    $entry->status !== 'cancelled' &&
+                    $this->facetoface->signuptype != MOD_FACETOFACE_SIGNUP_MULTIPLE &&
+                    ($currusersessions = facetoface_get_user_submissions($this->facetofaceid, $userid))
+                ) {
+                    foreach ($currusersessions as $currusersession) {
+                        if ($currusersession->sessionid != $session->id) {
+                            $errors[] = [
+                                $row,
+                                new lang_string(
+                                    'error:addalreadysignedupattendee',
+                                    'mod_facetoface',
+                                    $entry->email ?? $entry->username
+                                ),
+                            ];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (isset($userid) && !is_enrolled($this->coursecontext, $userid)) {
+                $isenrolled = facetoface_enrol_user($this->coursecontext, $this->course->id, $userid);
                 if (!$isenrolled) {
                     $errors[] = [
                         $row,
-                        get_string('error:enrolmentfailed', 'mod_facetoface', $username)
+                        get_string('error:enrolmentfailed', 'mod_facetoface', $entry->username),
                     ];
                 }
             }
 
-            // 7) Check valid notification type.
-            $mapped = $this->transform_notification_type($notifytype);
-            if ($mapped === null) {
+            if (
+                isset($entry->notificationtype) &&
+                !in_array(
+                    $this->transform_notification_type($entry->notificationtype),
+                    [MDL_F2F_BOTH, MDL_F2F_TEXT, MDL_F2F_ICAL],
+                    true
+                )
+            ) {
                 $errors[] = [
                     $row,
-                    get_string('error:invalidnotificationtypespecified', 'mod_facetoface', $notifytype)
+                    new lang_string('error:invalidnotificationtypespecified', 'mod_facetoface', $entry->notificationtype),
                 ];
             }
 
-            // 8) Check valid, processable status. Internal workflow statuses are rejected instead
-            // of being accepted and then reported as successful no-ops.
-            $validstatuses = array_merge(self::BOOKING_STATUSES, ['cancelled'], self::ATTENDANCE_STATUSES);
-            if (!in_array($status, $validstatuses, true)) {
+            if (
+                isset($entry->status) &&
+                !in_array(
+                    $entry->status,
+                    array_merge(self::BOOKING_STATUSES, ['cancelled'], self::ATTENDANCE_STATUSES),
+                    true
+                )
+            ) {
                 $errors[] = [
                     $row,
-                    get_string('error:invalidstatusspecified', 'mod_facetoface', $status)
+                    new lang_string('error:invalidstatusspecified', 'mod_facetoface', $entry->status),
                 ];
             }
 
-            if (count($errors) === $errorcountbefore && $this->is_processable_status($status)) {
+            if (
+                $session &&
+                isset($userid) &&
+                count($errors) === $errorcountbefore &&
+                $this->is_processable_status($entry->status)
+            ) {
                 $this->cache_validation_row(
                     $row,
-                    $username,
-                    $status,
+                    $entry->username,
+                    $entry->status,
                     $session,
                     (int) $userid,
                     $validationrows,
@@ -347,11 +252,75 @@ class booking_manager_bulk_attendance {
             }
         }
 
-        // Reject later duplicate user/session rows, then apply capacity only to rows
-        // which have survived all other validation and will actually be processed.
+        if ($this->facetoface->signuptype != MOD_FACETOFACE_SIGNUP_MULTIPLE) {
+            $this->validate_multiple_user_sessions($validationrows, $errors);
+        }
+
         $this->validate_unique_rows_and_capacity($validationrows, $errors);
 
         return $errors;
+    }
+
+    /**
+     * Process the bookings in the file.
+     *
+     * @param array $errors Validation errors to skip.
+     * @return bool
+     * @throws moodle_exception When an attendance row cannot be applied.
+     * @throws \Exception When cancellation fails.
+     */
+    public function process(array $errors) {
+        $skip = self::extract_rows_to_skip($errors);
+
+        $index = -1;
+        foreach ($this->get_iterator() as $entry) {
+            $index++;
+            $row = $index + 1;
+
+            if (isset($skip[$row])) {
+                continue;
+            }
+
+            $this->process_row($entry, $row);
+        }
+
+        return true;
+    }
+
+    /**
+     * Get an iterator for the records.
+     *
+     * @return \Generator
+     */
+    private function get_iterator(): \Generator {
+        $recorditerator = $this->recorditerator;
+
+        return $recorditerator();
+    }
+
+    /**
+     * Match users for a given username.
+     *
+     * @param string $username Username to search.
+     * @param string $fields Fields to return.
+     * @return array
+     */
+    private function match_users_username(string $username, string $fields): array {
+        $usermatcher = $this->usermatcher;
+
+        return $usermatcher($username, $fields);
+    }
+
+    /**
+     * Transform notification type to internal representation.
+     *
+     * @param string $type Notification type.
+     * @return int|null
+     */
+    private function transform_notification_type($type) {
+        $notificationtypetransformer = $this->notificationtypetransformer;
+
+        return $notificationtypetransformer($type);
     }
 
     /**
@@ -375,7 +344,7 @@ class booking_manager_bulk_attendance {
             if (isset($seen[$key])) {
                 $errors[] = [
                     $row,
-                    get_string('error:duplicateuserinsessionupload', 'mod_facetoface', (object) [
+                    new lang_string('error:duplicateuserinsessionupload', 'mod_facetoface', (object) [
                         'user' => $details['username'],
                         'session' => $details['session']->id,
                     ]),
@@ -397,8 +366,6 @@ class booking_manager_bulk_attendance {
             $available = (int) $session->capacity
                 - facetoface_get_num_attendees($sessionid, MDL_F2F_STATUS_APPROVED);
 
-            // A valid cancellation releases its existing seat for another valid row in this file,
-            // regardless of whether the cancellation appears before or after that row.
             foreach ($sessionrows as $details) {
                 if ($details['status'] === 'cancelled' && $details['hasactivesignup']) {
                     $available++;
@@ -417,8 +384,9 @@ class booking_manager_bulk_attendance {
 
                 $errors[] = [
                     $row,
-                    get_string('error:sessionoverbooked', 'mod_facetoface', (object) [
+                    new lang_string('error:sessionoverbooked', 'mod_facetoface', (object) [
                         'session' => $sessionid,
+                        'amount' => 1,
                     ]),
                 ];
             }
@@ -465,7 +433,7 @@ class booking_manager_bulk_attendance {
         if ($signupexistencecache[$signupkey]) {
             $errors[] = [
                 $row,
-                get_string('error:useralreadyinsession', 'mod_facetoface', (object) [
+                new lang_string('error:useralreadyinsession', 'mod_facetoface', (object) [
                     'user' => $username,
                     'session' => $session->id,
                 ]),
@@ -474,7 +442,6 @@ class booking_manager_bulk_attendance {
             return false;
         }
 
-        // A booking row with no signup record cannot already occupy capacity.
         $activesignupcache[$signupkey] = false;
 
         return true;
@@ -489,7 +456,7 @@ class booking_manager_bulk_attendance {
      * @param \stdClass $session Session record.
      * @param int $timenow Timestamp used for validation.
      * @param array $errors Validation errors, updated in place.
-     * @return bool True when the row can continue validation.
+     * @return void
      */
     private function validate_session_status_rules(
         int $row,
@@ -498,41 +465,32 @@ class booking_manager_bulk_attendance {
         \stdClass $session,
         int $timenow,
         array &$errors
-    ): bool {
+    ): void {
         if ($status === 'cancelled' && facetoface_has_session_started($session, $timenow)) {
-            $errors[] = [
-                $row,
-                get_string('error:sessionalreadystarted', 'mod_facetoface', $sessionref)
-            ];
-
-            return false;
+            $errors[] = [$row, new lang_string('error:sessionalreadystarted', 'mod_facetoface', $sessionref)];
         }
 
         if ($status === 'waitlisted' && facetoface_has_session_started($session, $timenow)) {
             $errors[] = [
                 $row,
-                get_string('error:cannotwaitliststartedsession', 'mod_facetoface', $sessionref)
+                new lang_string('error:cannotwaitliststartedsession', 'mod_facetoface', $sessionref),
             ];
-
-            return false;
         }
 
-        if ($session->datetimeknown
-            && $this->is_attendance_status($status)
-            && !facetoface_has_session_started($session, $timenow)) {
+        if (
+            $session->datetimeknown &&
+            $this->is_attendance_status($status) &&
+            !facetoface_has_session_started($session, $timenow)
+        ) {
             $errors[] = [
                 $row,
-                get_string('error:attendancesessionnotstarted', 'mod_facetoface', $sessionref)
+                new lang_string('error:attendancesessionnotstarted', 'mod_facetoface', $sessionref),
             ];
-
-            return false;
         }
-
-        return true;
     }
 
     /**
-     * Cache a processable row for the cross-row validation pass.
+     * Cache a processable row for the cross-row validation passes.
      *
      * @param int $row CSV row number.
      * @param string $username Username from the CSV row.
@@ -564,6 +522,49 @@ class booking_manager_bulk_attendance {
             'status' => $status,
             'hasactivesignup' => $activesignupcache[$signupkey],
         ];
+    }
+
+    /**
+     * Validate rows for single-session activities after per-row validation succeeds.
+     *
+     * @param array $validationrows Resolved, processable CSV rows keyed by row number.
+     * @param array $errors Validation errors, updated in place.
+     * @return void
+     */
+    private function validate_multiple_user_sessions(array $validationrows, array &$errors): void {
+        $skip = self::extract_rows_to_skip($errors);
+        $usersessions = [];
+
+        foreach ($validationrows as $row => $details) {
+            if ($details['status'] === 'cancelled' || isset($skip[$row])) {
+                continue;
+            }
+
+            $userid = $details['userid'];
+            if (!isset($usersessions[$userid])) {
+                $usersessions[$userid] = [
+                    'username' => $details['username'],
+                    'rows' => [],
+                    'sessions' => [],
+                ];
+            }
+
+            $usersessions[$userid]['rows'][] = $row;
+            if (!in_array($details['session']->id, $usersessions[$userid]['sessions'], true)) {
+                $usersessions[$userid]['sessions'][] = $details['session']->id;
+            }
+        }
+
+        $doublebookedusers = array_filter($usersessions, function($usersession) {
+            return count($usersession['sessions']) > 1;
+        });
+
+        foreach ($doublebookedusers as $details) {
+            $errors[] = [
+                implode(', ', $details['rows']),
+                new lang_string('error:multipleusersessions', 'mod_facetoface', $details['username']),
+            ];
+        }
     }
 
     /**
@@ -625,31 +626,7 @@ class booking_manager_bulk_attendance {
     }
 
     /**
-     * Match users for a given username.
-     *
-     * @param string $username Username to search.
-     * @param string $fields Fields to return (e.g. 'id' or '*').
-     * @return array Array of matching user records.
-     */
-    private function match_users(string $username, string $fields): array {
-        global $DB;
-
-        $equals = $DB->sql_equal('username', ':username', !$this->caseinsensitive);
-
-        return $DB->get_records_select(
-            'user',
-            $equals,
-            ['username' => $username],
-            'id',
-            $fields
-        );
-    }
-
-    /**
      * Get the user's active signup ID for a session, if any.
-     *
-     * A signup is active when its current status is approved or higher (approved, waitlisted,
-     * booked or an attendance status). Cancelled and declined signups are not active.
      *
      * @param int $sessionid The session ID.
      * @param int $userid The user ID.
@@ -671,50 +648,21 @@ class booking_manager_bulk_attendance {
     }
 
     /**
-     * Transform notification type to internal representation.
+     * Get the user's signup ID for a session regardless of its current status.
      *
-     * @param string $type Notification type string.
-     * @return int|null   Mapped MDL_F2F_* constant or null if invalid.
+     * @param int $sessionid The session ID.
+     * @param int $userid The user ID.
+     * @return int The signup ID.
      */
-    private function transform_notification_type(string $type): ?int {
-        $mapping = [
-            'email' => MDL_F2F_TEXT,
-            'ical' => MDL_F2F_ICAL,
-            'icalendar' => MDL_F2F_ICAL,
-            'both' => MDL_F2F_BOTH,
-            '' => MDL_F2F_ICAL, // Defaults to iCalendar only if nothing is specified.
-        ];
+    private function get_signup_id(int $sessionid, int $userid): int {
+        global $DB;
 
-        return $mapping[strtolower($type)] ?? null;
-    }
-
-    /**
-     * Process the bookings in the file.
-     *
-     * Attendance rows are authoritative historical updates and deliberately differ from
-     * booking-style rows. When no active signup exists, they create or reactivate the signup as
-     * booked before applying attendance; this includes cancelled, declined and requested signups.
-     *
-     * @return bool
-     * @throws moodle_exception When an attendance row cannot be applied.
-     * @throws Exception If cancellation fails.
-     */
-    public function process($errors): bool {
-        // Build a set of rows to skip from the error list.
-        $skip = booking_manager_bulk_attendance::extract_rows_to_skip($errors);
-
-        foreach ($this->get_iterator() as $index => $entry) {
-            $row = $index + 1;
-
-            // Skip rows that had blocking validation errors.
-            if (isset($skip[$row])) {
-                continue;
-            }
-
-            $this->process_row($entry, $row);
-        }
-
-        return true;
+        return (int) $DB->get_field(
+            'facetoface_signups',
+            'id',
+            ['sessionid' => $sessionid, 'userid' => $userid],
+            MUST_EXIST
+        );
     }
 
     /**
@@ -723,90 +671,45 @@ class booking_manager_bulk_attendance {
      * @param \stdClass $entry CSV row data.
      * @param int $row CSV row number.
      * @return void
-     * @throws Exception When cancellation fails.
      * @throws moodle_exception When attendance cannot be applied.
+     * @throws \Exception When cancellation fails.
      */
     private function process_row(\stdClass $entry, int $row): void {
-        list($username, $sessionref, $status, $discount, $notifytype) = $this->extract_row_fields($entry);
-        $user = current($this->match_users($username, '*'));
-        $session = facetoface_get_session($sessionref);
-        list($facetoface, $course) = $this->get_session_activity_context($session);
+        $user = current($this->match_users_username($entry->username, '*'));
+        $session = facetoface_get_session($entry->session);
 
-        if ($status === 'cancelled') {
-            $this->process_cancellation($session, $facetoface, (int) $user->id);
+        if ($entry->status === 'cancelled') {
+            $this->process_cancellation($session, (int) $user->id);
             return;
         }
 
-        $mappednotify = $this->transform_notification_type($notifytype);
-        $statuscode = $this->get_status_code($status);
+        $statuscode = $this->get_status_code($entry->status);
         if ($this->is_booking_status_code($statuscode)) {
-            $this->process_signup_row($session, $facetoface, $course, $user, $discount, $mappednotify, $statuscode);
+            $this->process_signup_row($session, $user, $entry, $statuscode);
             return;
         }
 
         if ($this->is_attendance_status_code($statuscode)) {
-            $this->process_attendance_row(
-                $session,
-                $facetoface,
-                $course,
-                $user,
-                $username,
-                $discount,
-                $mappednotify,
-                $row,
-                $statuscode
-            );
+            $this->process_attendance_row($session, $user, $entry, $row, $statuscode);
         }
-    }
-
-    /**
-     * Extract the normalised field values used during processing.
-     *
-     * @param \stdClass $entry CSV row data.
-     * @return array
-     */
-    private function extract_row_fields(\stdClass $entry): array {
-        return [
-            trim($entry->Username),
-            trim($entry->Session),
-            trim($entry->Status),
-            trim($entry->{'Discount Code'} ?? ''),
-            trim($entry->{'Notification Type'} ?? ''),
-        ];
-    }
-
-    /**
-     * Load the face-to-face activity and course for a session.
-     *
-     * @param \stdClass $session Session record.
-     * @return array
-     */
-    private function get_session_activity_context(\stdClass $session): array {
-        global $DB;
-
-        $facetoface = $DB->get_record('facetoface', ['id' => $session->facetoface], '*', MUST_EXIST);
-        $course = $DB->get_record('course', ['id' => $facetoface->course], '*', MUST_EXIST);
-
-        return [$facetoface, $course];
     }
 
     /**
      * Cancel a booking for a validated row.
      *
      * @param \stdClass $session Session record.
-     * @param \stdClass $facetoface Face-to-face activity record.
      * @param int $userid User ID.
      * @return void
-     * @throws Exception When cancellation fails.
+     * @throws \Exception When cancellation fails.
      */
-    private function process_cancellation(\stdClass $session, \stdClass $facetoface, int $userid): void {
+    private function process_cancellation(\stdClass $session, int $userid): void {
         if (!facetoface_user_cancel($session, $userid, true, $cancelerr)) {
-            throw new Exception($cancelerr);
+            throw new \Exception($cancelerr);
         }
 
         $timenow = time();
         if (!facetoface_has_session_started($session, $timenow) && !$this->suppressemail) {
-            facetoface_send_cancellation_notice($facetoface->id, $session, $userid);
+            facetoface_send_cancellation_notice($this->facetoface, $session, $userid);
         }
     }
 
@@ -814,68 +717,49 @@ class booking_manager_bulk_attendance {
      * Create or update a booking-style signup for a validated row.
      *
      * @param \stdClass $session Session record.
-     * @param \stdClass $facetoface Face-to-face activity record.
-     * @param \stdClass $course Course record.
      * @param \stdClass $user User record.
-     * @param string $discount Discount code from the CSV row.
-     * @param int|null $mappednotify Notification type code.
+     * @param \stdClass $entry CSV row data.
      * @param int $statuscode Signup status code.
      * @return void
      */
-    private function process_signup_row(
-        \stdClass $session,
-        \stdClass $facetoface,
-        \stdClass $course,
-        \stdClass $user,
-        string $discount,
-        ?int $mappednotify,
-        int $statuscode
-    ): void {
+    private function process_signup_row(\stdClass $session, \stdClass $user, \stdClass $entry, int $statuscode): void {
         $statuscode = $this->normalise_booking_status_code($session, $statuscode);
 
         $this->create_import_signup(
             $session,
-            $facetoface,
-            $course,
             $user,
-            $discount,
-            $mappednotify ?? -1,
+            $entry->discountcode ?? '',
+            $this->transform_notification_type($entry->notificationtype) ?? -1,
             $statuscode
         );
 
-        $this->trigger_bulk_booking_created_event($facetoface, $session, (int) $user->id);
+        $this->trigger_bulk_booking_created_event($session, (int) $user->id);
     }
 
     /**
      * Create the signup required by a validated import row.
      *
      * @param \stdClass $session Session record.
-     * @param \stdClass $facetoface Face-to-face activity record.
-     * @param \stdClass $course Course record.
      * @param \stdClass $user User record.
-     * @param string $discount Discount code from the CSV row.
+     * @param string $discountcode Discount code from the CSV row.
      * @param int $notificationtype Notification type code.
      * @param int $statuscode Signup status code.
      * @return int Signup ID.
      */
     private function create_import_signup(
         \stdClass $session,
-        \stdClass $facetoface,
-        \stdClass $course,
         \stdClass $user,
-        string $discount,
+        string $discountcode,
         int $notificationtype,
         int $statuscode
     ): int {
-        facetoface_enrol_user(context_course::instance($course->id), $course->id, $user->id);
+        facetoface_enrol_user($this->coursecontext, $this->course->id, $user->id);
 
-        if ($this->should_bypass_approval_for_past_booking($session, $facetoface, $statuscode)) {
+        if ($this->should_bypass_approval_for_past_booking($session, $statuscode)) {
             return $this->upsert_historical_booking_signup(
                 $session,
-                $facetoface,
-                $course,
                 (int) $user->id,
-                $discount,
+                $discountcode,
                 $notificationtype,
                 $statuscode
             );
@@ -883,9 +767,9 @@ class booking_manager_bulk_attendance {
 
         facetoface_user_signup(
             $session,
-            $facetoface,
-            $course,
-            $discount,
+            $this->facetoface,
+            $this->course,
+            $discountcode,
             $notificationtype,
             $statuscode,
             $user->id,
@@ -899,17 +783,12 @@ class booking_manager_bulk_attendance {
      * Return whether the import must bypass approval to preserve a historical booking.
      *
      * @param \stdClass $session Session record.
-     * @param \stdClass $facetoface Face-to-face activity record.
      * @param int $statuscode Signup status code.
      * @return bool
      */
-    private function should_bypass_approval_for_past_booking(
-        \stdClass $session,
-        \stdClass $facetoface,
-        int $statuscode
-    ): bool {
+    private function should_bypass_approval_for_past_booking(\stdClass $session, int $statuscode): bool {
         return $statuscode === MDL_F2F_STATUS_BOOKED
-            && \mod_facetoface\helper::is_approval_required((object) $facetoface)
+            && \mod_facetoface\helper::is_approval_required((object) $this->facetoface)
             && facetoface_has_session_started($session, time());
     }
 
@@ -917,10 +796,8 @@ class booking_manager_bulk_attendance {
      * Create or reactivate a historical booking without the legacy approval workflow.
      *
      * @param \stdClass $session Session record.
-     * @param \stdClass $facetoface Face-to-face activity record.
-     * @param \stdClass $course Course record.
      * @param int $userid User ID.
-     * @param string $discount Discount code from the CSV row.
+     * @param string $discountcode Discount code from the CSV row.
      * @param int $notificationtype Notification type code.
      * @param int $statuscode Signup status code.
      * @return int Signup ID.
@@ -928,10 +805,8 @@ class booking_manager_bulk_attendance {
      */
     private function upsert_historical_booking_signup(
         \stdClass $session,
-        \stdClass $facetoface,
-        \stdClass $course,
         int $userid,
-        string $discount,
+        string $discountcode,
         int $notificationtype,
         int $statuscode
     ): int {
@@ -947,7 +822,7 @@ class booking_manager_bulk_attendance {
 
         $usersignup->mailedreminder = 0;
         $usersignup->notificationtype = $notificationtype;
-        $usersignup->discountcode = trim(strtoupper($discount));
+        $usersignup->discountcode = trim(strtoupper($discountcode));
         if (empty($usersignup->discountcode)) {
             $usersignup->discountcode = null;
         }
@@ -958,12 +833,11 @@ class booking_manager_bulk_attendance {
             throw new moodle_exception('error:f2ffailedupdatestatus', 'facetoface');
         }
 
-        if ($facetoface->usercalentry
-            && $this->is_booking_status_code($statuscode)) {
-            facetoface_add_session_to_calendar($session, $facetoface, 'user', $userid, 'booking');
+        if ($this->facetoface->usercalentry && $this->is_booking_status_code($statuscode)) {
+            facetoface_add_session_to_calendar($session, $this->facetoface, 'user', $userid, 'booking');
         }
 
-        $this->mark_booking_completion_in_progress_if_enabled($course, $statuscode, $userid, $timenow);
+        $this->mark_booking_completion_in_progress_if_enabled($statuscode, $userid, $timenow);
 
         return (int) $usersignup->id;
     }
@@ -971,14 +845,12 @@ class booking_manager_bulk_attendance {
     /**
      * Mark course completion as in progress when a historical booking becomes active.
      *
-     * @param \stdClass $course Course record.
      * @param int $statuscode Signup status code.
      * @param int $userid User ID.
      * @param int $timenow Timestamp used for the completion record.
      * @return void
      */
     private function mark_booking_completion_in_progress_if_enabled(
-        \stdClass $course,
         int $statuscode,
         int $userid,
         int $timenow
@@ -987,17 +859,15 @@ class booking_manager_bulk_attendance {
             return;
         }
 
-        $completion = new completion_info($course);
+        $completion = new completion_info($this->course);
         if (!$completion->is_enabled()) {
             return;
         }
 
-        $ccdetails = [
-            'course' => $course->id,
+        $completionrecord = new completion_completion([
+            'course' => $this->course->id,
             'userid' => $userid,
-        ];
-
-        $completionrecord = new completion_completion($ccdetails);
+        ]);
         $completionrecord->mark_inprogress($timenow);
     }
 
@@ -1058,12 +928,8 @@ class booking_manager_bulk_attendance {
      * Apply attendance for a validated row.
      *
      * @param \stdClass $session Session record.
-     * @param \stdClass $facetoface Face-to-face activity record.
-     * @param \stdClass $course Course record.
      * @param \stdClass $user User record.
-     * @param string $username Username from the CSV row.
-     * @param string $discount Discount code from the CSV row.
-     * @param int|null $mappednotify Notification type code.
+     * @param \stdClass $entry CSV row data.
      * @param int $row CSV row number.
      * @param int $statuscode Attendance status code.
      * @return void
@@ -1071,30 +937,19 @@ class booking_manager_bulk_attendance {
      */
     private function process_attendance_row(
         \stdClass $session,
-        \stdClass $facetoface,
-        \stdClass $course,
         \stdClass $user,
-        string $username,
-        string $discount,
-        ?int $mappednotify,
+        \stdClass $entry,
         int $row,
         int $statuscode
     ): void {
-        $signupid = $this->ensure_signup_for_attendance(
-            $session,
-            $facetoface,
-            $course,
-            $user,
-            $discount,
-            $mappednotify
-        );
+        $signupid = $this->ensure_signup_for_attendance($session, $user, $entry);
         if (!$this->apply_attendance_signup_status($signupid, $statuscode)) {
             throw new moodle_exception(
                 'error:attendanceuploadfailed',
                 'mod_facetoface',
                 '',
                 (object) [
-                    'user' => $username,
+                    'user' => $entry->username,
                     'session' => $session->id,
                     'line' => $row + 1,
                 ]
@@ -1106,21 +961,11 @@ class booking_manager_bulk_attendance {
      * Ensure that an attendance row has an active signup to update.
      *
      * @param \stdClass $session Session record.
-     * @param \stdClass $facetoface Face-to-face activity record.
-     * @param \stdClass $course Course record.
      * @param \stdClass $user User record.
-     * @param string $discount Discount code from the CSV row.
-     * @param int|null $mappednotify Notification type code.
+     * @param \stdClass $entry CSV row data.
      * @return int Active signup ID.
      */
-    private function ensure_signup_for_attendance(
-        \stdClass $session,
-        \stdClass $facetoface,
-        \stdClass $course,
-        \stdClass $user,
-        string $discount,
-        ?int $mappednotify
-    ): int {
+    private function ensure_signup_for_attendance(\stdClass $session, \stdClass $user, \stdClass $entry): int {
         $signupid = $this->get_active_signup_id($session->id, $user->id);
         if ($signupid !== null) {
             return $signupid;
@@ -1128,15 +973,13 @@ class booking_manager_bulk_attendance {
 
         $signupid = $this->create_import_signup(
             $session,
-            $facetoface,
-            $course,
             $user,
-            $discount,
-            $mappednotify ?? -1,
+            $entry->discountcode ?? '',
+            $this->transform_notification_type($entry->notificationtype) ?? -1,
             MDL_F2F_STATUS_BOOKED
         );
 
-        $this->trigger_bulk_booking_created_event($facetoface, $session, (int) $user->id);
+        $this->trigger_bulk_booking_created_event($session, (int) $user->id);
 
         return $signupid;
     }
@@ -1179,19 +1022,14 @@ class booking_manager_bulk_attendance {
     /**
      * Trigger the branch-introduced bulk booking event when processing a file upload.
      *
-     * @param \stdClass $facetoface Face-to-face activity record.
      * @param \stdClass $session Session record.
      * @param int $userid User ID.
      * @return void
      */
-    private function trigger_bulk_booking_created_event(
-        \stdClass $facetoface,
-        \stdClass $session,
-        int $userid
-    ): void {
+    private function trigger_bulk_booking_created_event(\stdClass $session, int $userid): void {
         \mod_facetoface\event\bulk_booking_created::trigger_from_bulk_upload_if_needed(
-            (bool) $this->usefile,
-            $facetoface,
+            $this->usefile,
+            $this->facetoface,
             $session,
             $userid
         );
@@ -1242,17 +1080,16 @@ class booking_manager_bulk_attendance {
         return in_array($statuscode, [
             MDL_F2F_STATUS_NO_SHOW,
             MDL_F2F_STATUS_PARTIALLY_ATTENDED,
-            MDL_F2F_STATUS_FULLY_ATTENDED
+            MDL_F2F_STATUS_FULLY_ATTENDED,
         ], true);
     }
 
     /**
      * Convert the error array into a set of row numbers to skip.
      *
-     * @param array<int,string> $errors Validation errors from validate()
-     * @return array<int,bool> Keys are row numbers to skip
-     * @throws moodle_exception Throws moodle_exception if an entry is not an array
-     *                          or the first element
+     * @param array<int, mixed> $errors Validation errors from validate().
+     * @return array<int, bool>
+     * @throws moodle_exception When the error format is invalid.
      */
     private static function extract_rows_to_skip(array $errors): array {
         $skip = [];
@@ -1262,19 +1099,15 @@ class booking_manager_bulk_attendance {
                 throw new moodle_exception('error:errormustbeanarray', 'mod_facetoface', '', $error);
             }
 
-            // First element must be an integer row number, or a comma-separated list of row
-            // numbers for aggregated errors such as overbookings.
             $rows = is_string($error[0]) ? explode(',', $error[0]) : [$error[0]];
-
             foreach ($rows as $row) {
                 $row = trim((string) $row);
-
                 if (!is_numeric($row)) {
                     throw new moodle_exception(
                         'error:invalidrownumber',
                         'mod_facetoface',
                         '',
-                        (object)['value' => $error[0], 'type' => gettype($error[0])]
+                        (object) ['value' => $error[0], 'type' => gettype($error[0])]
                     );
                 }
 
@@ -1284,32 +1117,5 @@ class booking_manager_bulk_attendance {
 
         return $skip;
     }
-
-    /**
-     * Stops confirmation emails from being sent
-     *
-     * @return void
-     */
-    public function suppress_email(): void {
-        $this->suppressemail = true;
-    }
-
-    /**
-     * Sets case insensitive match value
-     *
-     * @param bool $value True to match usernames case-insensitively.
-     * @return void
-     */
-    public function set_case_insensitive(bool $value): void {
-        $this->caseinsensitive = $value;
-    }
-
-    /**
-     * Return all CSV rows as an array of stdClass.
-     *
-     * @return array
-     */
-    public function get_records(): array {
-        return iterator_to_array($this->get_iterator());
-    }
 }
+// GCHLOL ends.

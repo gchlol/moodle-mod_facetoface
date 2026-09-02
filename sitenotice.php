@@ -58,35 +58,31 @@ if ($notice != null) {
 $PAGE->set_title($title);
 
 // Handle deletions.
-if (
-    !empty($d) &&
-    !confirm_sesskey()
-) {
-    throw new moodle_exception('confirmsesskeybad', 'error');
-}
+if (!empty($d)) {
+    if (!confirm_sesskey()) {
+        throw new moodle_exception('confirmsesskeybad', 'error');
+    }
 
-if (
-    !empty($d) &&
-    !$confirm
-) {
-    echo $OUTPUT->header();
-    echo $OUTPUT->heading($title);
+    if (!$confirm) {
+        echo $OUTPUT->header();
+        echo $OUTPUT->heading($title);
 
-    $info = new stdClass();
-    $info->name = format_string($notice->name);
-    $info->text = format_text($notice->text, FORMAT_HTML);
-    $optionsyes = ['id' => $id, 'sesskey' => $USER->sesskey, 'd' => 1, 'confirm' => 1];
-    echo $OUTPUT->confirm(get_string('noticedeleteconfirm', 'facetoface', $info),
-        new moodle_url("sitenotice.php", $optionsyes),
-        new moodle_url($returnurl));
-    echo $OUTPUT->footer();
-    exit;
-} else if (!empty($d)) {
-    $transaction = $DB->start_delegated_transaction();
-    $DB->delete_records('facetoface_notice', ['id' => $id]);
-    $DB->delete_records('facetoface_notice_data', ['noticeid' => $id]);
-    $transaction->allow_commit();
-    redirect($returnurl);
+        $info = new stdClass();
+        $info->name = format_string($notice->name);
+        $info->text = format_text($notice->text, FORMAT_HTML);
+        $optionsyes = ['id' => $id, 'sesskey' => $USER->sesskey, 'd' => 1, 'confirm' => 1];
+        echo $OUTPUT->confirm(get_string('noticedeleteconfirm', 'facetoface', $info),
+            new moodle_url("sitenotice.php", $optionsyes),
+            new moodle_url($returnurl));
+        echo $OUTPUT->footer();
+        exit;
+    } else {
+        $transaction = $DB->start_delegated_transaction();
+        $DB->delete_records('facetoface_notice', ['id' => $id]);
+        $DB->delete_records('facetoface_notice_data', ['noticeid' => $id]);
+        $transaction->allow_commit();
+        redirect($returnurl);
+    }
 }
 
 $customfields = facetoface_get_session_customfields();

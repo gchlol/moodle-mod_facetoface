@@ -36,11 +36,10 @@ $d       = optional_param('d', false, PARAM_BOOL); // Set to true to delete the 
 $confirm = optional_param('confirm', false, PARAM_BOOL); // Delete confirmationx.
 
 $field = null;
-if (
-    $id > 0 &&
-    !($field = $DB->get_record('facetoface_session_field', ['id' => $id]))
-) {
-    throw new moodle_exception('error:fieldidincorrect', 'facetoface', '', $id);
+if ($id > 0) {
+    if (!$field = $DB->get_record('facetoface_session_field', ['id' => $id])) {
+        throw new moodle_exception('error:fieldidincorrect', 'facetoface', '', $id);
+    }
 }
 
 // If custom field is selected to be shown on custom page, alert user field cannot be deleted until
@@ -70,43 +69,39 @@ if ($field != null) {
 $PAGE->set_title($title);
 
 // Handle deletions.
-if (
-    !empty($d) &&
-    !confirm_sesskey()
-) {
-    throw new moodle_exception('confirmsesskeybad', 'error');
-}
-
-if (
-    !empty($d) &&
-    !$confirm
-) {
-    echo $OUTPUT->header();
-    echo $OUTPUT->heading($title);
-    $optionsyes = ['id' => $id, 'sesskey' => $USER->sesskey, 'd' => 1, 'confirm' => 1];
-    echo $OUTPUT->confirm(get_string('fielddeleteconfirm', 'facetoface', format_string($field->name)),
-        new moodle_url("customfield.php", $optionsyes),
-        new moodle_url($returnurl));
-    echo $OUTPUT->footer();
-    exit;
-} else if (!empty($d)) {
-    $transaction = $DB->start_delegated_transaction();
-
-    try {
-        if (!$DB->delete_records('facetoface_session_field', ['id' => $id])) {
-            throw new Exception(get_string('error:couldnotdeletefield', 'facetoface'));
-        }
-
-        if (!$DB->delete_records('facetoface_session_data', ['fieldid' => $id])) {
-            throw new Exception(get_string('error:couldnotdeletefield', 'facetoface'));
-        }
-
-        $transaction->allow_commit();
-    } catch (Exception $e) {
-        $transaction->rollback($e);
+if (!empty($d)) {
+    if (!confirm_sesskey()) {
+        throw new moodle_exception('confirmsesskeybad', 'error');
     }
 
-    redirect($returnurl);
+    if (!$confirm) {
+        echo $OUTPUT->header();
+        echo $OUTPUT->heading($title);
+        $optionsyes = ['id' => $id, 'sesskey' => $USER->sesskey, 'd' => 1, 'confirm' => 1];
+        echo $OUTPUT->confirm(get_string('fielddeleteconfirm', 'facetoface', format_string($field->name)),
+            new moodle_url("customfield.php", $optionsyes),
+            new moodle_url($returnurl));
+        echo $OUTPUT->footer();
+        exit;
+    } else {
+        $transaction = $DB->start_delegated_transaction();
+
+        try {
+            if (!$DB->delete_records('facetoface_session_field', ['id' => $id])) {
+                throw new Exception(get_string('error:couldnotdeletefield', 'facetoface'));
+            }
+
+            if (!$DB->delete_records('facetoface_session_data', ['fieldid' => $id])) {
+                throw new Exception(get_string('error:couldnotdeletefield', 'facetoface'));
+            }
+
+            $transaction->allow_commit();
+        } catch (Exception $e) {
+            $transaction->rollback($e);
+        }
+
+        redirect($returnurl);
+    }
 }
 
 $mform = new mod_facetoface_customfield_form(null, compact('id'));
