@@ -270,7 +270,7 @@ class course_booking_upload_helper {
      * @throws moodle_exception When an attendance row cannot be applied.
      * @throws \Exception When cancellation fails.
      */
-    public function process(array $errors) {
+    public function process(array $errors): bool {
         $skip = self::extract_rows_to_skip($errors);
 
         $index = -1;
@@ -318,7 +318,7 @@ class course_booking_upload_helper {
      * @param string $type Notification type.
      * @return int|null Notification type constant, or null when the value is invalid.
      */
-    private function transform_notification_type(string $type) {
+    private function transform_notification_type(string $type): ?int {
         $notificationtypetransformer = $this->notificationtypetransformer;
 
         return $notificationtypetransformer($type);

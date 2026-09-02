@@ -427,7 +427,7 @@ class upload_test extends \advanced_testcase {
     /**
      * Tests uploading a booking where the emails should match regardless of case.
      */
-    public function test_processing_booking_case_insensitive() {
+    public function test_processing_booking_case_insensitive(): void {
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
 
@@ -495,7 +495,7 @@ class upload_test extends \advanced_testcase {
     /**
      * Test upload processing to ensure the happy path is working as expected, and users can be booked into a session.
      */
-    public function test_processing_booking() {
+    public function test_processing_booking(): void {
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
 
@@ -641,7 +641,7 @@ class upload_test extends \advanced_testcase {
      * booked directly into past sessions, including with an attendance status even if they were
      * never signed up while the session was open. Waitlisting into past sessions is rejected.
      */
-    public function test_updates_for_previous_sessions() {
+    public function test_updates_for_previous_sessions(): void {
         global $DB;
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
@@ -808,7 +808,7 @@ class upload_test extends \advanced_testcase {
      *
      * @return void
      */
-    public function test_attendance_rejected_for_future_sessions() {
+    public function test_attendance_rejected_for_future_sessions(): void {
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
 

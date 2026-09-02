@@ -265,7 +265,7 @@ class booking_manager {
      * @return bool
      * @throws moodle_exception
      */
-    public function process(array $errors) {
+    public function process(array $errors): bool {
         return $this->get_upload_helper()->process($errors);
     }
     // GCHLOL ends.

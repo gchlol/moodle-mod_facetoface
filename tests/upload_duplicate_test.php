@@ -854,7 +854,7 @@ class upload_duplicate_test extends \advanced_testcase {
      * @param list<\stdClass> $rows CSV row objects.
      * @return booking_manager|booking_manager_bulk_attendance Loaded manager instance.
      */
-    private function create_manager(bool $sitewide, \stdClass $facetoface, array $rows) {
+    private function create_manager(bool $sitewide, \stdClass $facetoface, array $rows): booking_manager|booking_manager_bulk_attendance {
         if ($sitewide) {
             return (new booking_manager_bulk_attendance())->load_from_array($rows);
         }

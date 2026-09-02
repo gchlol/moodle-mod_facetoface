@@ -295,7 +295,7 @@ class upload_approval_test extends \advanced_testcase {
         \stdClass $session,
         \stdClass $user,
         string $status = 'booked'
-    ) {
+    ): booking_manager|booking_manager_bulk_attendance {
         if ($sitewide) {
             $manager = new booking_manager_bulk_attendance();
             $manager->load_from_array([
