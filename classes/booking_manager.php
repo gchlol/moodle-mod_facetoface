@@ -283,21 +283,24 @@ class booking_manager {
                 $this->validate_session_status_rules($row, $entry->session, $entry->status, $session, $timenow, $errors);
 
                 // Don't allow users to signup to another session if the signup type is not multiple.
-                if (isset($userid) && $entry->status !== 'cancelled' && $this->facetoface->signuptype != MOD_FACETOFACE_SIGNUP_MULTIPLE) {
-                    if ($currusersessions = facetoface_get_user_submissions($this->f, $userid)) {
-                        foreach ($currusersessions as $currusersession) {
-                            if ($currusersession->sessionid != $session->id) {
-                                $errors[] = [
-                                    $row,
-                                    // GCHLOL: Records are keyed by username; fall back to it when no email is given.
-                                    new lang_string(
-                                        'error:addalreadysignedupattendee',
-                                        'mod_facetoface',
-                                        $entry->email ?? $entry->username
-                                    ),
-                                ];
-                                break;
-                            }
+                if (
+                    isset($userid) &&
+                    $entry->status !== 'cancelled' &&
+                    $this->facetoface->signuptype != MOD_FACETOFACE_SIGNUP_MULTIPLE &&
+                    ($currusersessions = facetoface_get_user_submissions($this->f, $userid))
+                ) {
+                    foreach ($currusersessions as $currusersession) {
+                        if ($currusersession->sessionid != $session->id) {
+                            $errors[] = [
+                                $row,
+                                // GCHLOL: Records are keyed by username; fall back to it when no email is given.
+                                new lang_string(
+                                    'error:addalreadysignedupattendee',
+                                    'mod_facetoface',
+                                    $entry->email ?? $entry->username
+                                ),
+                            ];
+                            break;
                         }
                     }
                 }

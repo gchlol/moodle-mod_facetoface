@@ -75,10 +75,11 @@ class mod_facetoface_signup_form extends moodleform {
         $errors = parent::validation($data, $files);
 
         $manageremail = $data['manageremail'];
-        if (!empty($manageremail)) {
-            if (!facetoface_check_manageremail($manageremail)) {
-                $errors['manageremail'] = facetoface_get_manageremailformat();
-            }
+        if (
+            !empty($manageremail) &&
+            !facetoface_check_manageremail($manageremail)
+        ) {
+            $errors['manageremail'] = facetoface_get_manageremailformat();
         }
 
         return $errors;

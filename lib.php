@@ -825,12 +825,13 @@ function facetoface_email_substitutions($msg, $facetofacename, $reminderperiod, 
     foreach ($customfields as $field) {
         $placeholder = "[session:{$field->shortname}]";
         $value = '';
-        if (!empty($customdata[$field->id])) {
-            if (CUSTOMFIELD_TYPE_MULTISELECT == $field->type) {
-                $value = str_replace(CUSTOMFIELD_DELIMITER, ', ', $customdata[$field->id]->data);
-            } else {
-                $value = $customdata[$field->id]->data;
-            }
+        if (
+            !empty($customdata[$field->id]) &&
+            CUSTOMFIELD_TYPE_MULTISELECT == $field->type
+        ) {
+            $value = str_replace(CUSTOMFIELD_DELIMITER, ', ', $customdata[$field->id]->data);
+        } else if (!empty($customdata[$field->id])) {
+            $value = $customdata[$field->id]->data;
         }
 
         $msg = str_replace($placeholder, $value, $msg);
@@ -1914,12 +1915,13 @@ function facetoface_write_activity_attendance_helper(
         }
 
         $data = '-';
-        if (!empty($customdata[$field->id])) {
-            if (CUSTOMFIELD_TYPE_MULTISELECT == $field->type) {
-                $data = str_replace(CUSTOMFIELD_DELIMITER, "\n", $customdata[$field->id]->data);
-            } else {
-                $data = $customdata[$field->id]->data;
-            }
+        if (
+            !empty($customdata[$field->id]) &&
+            CUSTOMFIELD_TYPE_MULTISELECT == $field->type
+        ) {
+            $data = str_replace(CUSTOMFIELD_DELIMITER, "\n", $customdata[$field->id]->data);
+        } else if (!empty($customdata[$field->id])) {
+            $data = $customdata[$field->id]->data;
         }
         $worksheet->write_string($i, $j++, $data);
     }
@@ -2115,10 +2117,11 @@ function facetoface_user_signup($session, $facetoface, $course, $discountcode,
     }
 
     // Add to user calendar -- if facetoface usercalentry is set to true.
-    if ($facetoface->usercalentry) {
-        if (in_array($newstatus, [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED])) {
-            facetoface_add_session_to_calendar($session, $facetoface, 'user', $userid, 'booking');
-        }
+    if (
+        $facetoface->usercalentry &&
+        in_array($newstatus, [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED])
+    ) {
+        facetoface_add_session_to_calendar($session, $facetoface, 'user', $userid, 'booking');
     }
 
     // Course completion.
@@ -2360,12 +2363,16 @@ function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
     }
 
     // If we are sending an ical attachment, set file name.
-    if ($notificationtype & MDL_F2F_ICAL) {
-        if ($notificationtype & MDL_F2F_INVITE) {
-            $attachmentfilename = 'invite.ics';
-        } else if ($notificationtype & MDL_F2F_CANCEL) {
-            $attachmentfilename = 'cancel.ics';
-        }
+    if (
+        ($notificationtype & MDL_F2F_ICAL) &&
+        ($notificationtype & MDL_F2F_INVITE)
+    ) {
+        $attachmentfilename = 'invite.ics';
+    } else if (
+        ($notificationtype & MDL_F2F_ICAL) &&
+        ($notificationtype & MDL_F2F_CANCEL)
+    ) {
+        $attachmentfilename = 'cancel.ics';
     }
 
     // Define a simple reusable function so we don't have to copy
@@ -2376,26 +2383,16 @@ function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
 
     // Do iCal attachement stuff.
     $icalattachments = [];
-    if ($notificationtype & MDL_F2F_ICAL) {
-        if (get_config('facetoface', 'oneemailperday')) {
-            // Keep track of all sessiondates.
-            $sessiondates = $session->sessiondates;
+    if (
+        ($notificationtype & MDL_F2F_ICAL) &&
+        get_config('facetoface', 'oneemailperday')
+    ) {
+        // Keep track of all sessiondates.
+        $sessiondates = $session->sessiondates;
 
-            foreach ($sessiondates as $sessiondate) {
-                $session->sessiondates = [$sessiondate]; // One day at a time.
+        foreach ($sessiondates as $sessiondate) {
+            $session->sessiondates = [$sessiondate]; // One day at a time.
 
-                $filename = facetoface_get_ical_attachment($notificationtype, $facetoface, $session, $user);
-                $subject = $substitute($postsubject, $session);
-                $body = $substitute($posttext, $session);
-                $icalattachments[] = [
-                    'filename' => $filename, 'subject' => $subject,
-                    'body' => $body,
-                ];
-            }
-
-            // Restore session dates.
-            $session->sessiondates = $sessiondates;
-        } else {
             $filename = facetoface_get_ical_attachment($notificationtype, $facetoface, $session, $user);
             $subject = $substitute($postsubject, $session);
             $body = $substitute($posttext, $session);
@@ -2404,6 +2401,17 @@ function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
                 'body' => $body,
             ];
         }
+
+        // Restore session dates.
+        $session->sessiondates = $sessiondates;
+    } else if ($notificationtype & MDL_F2F_ICAL) {
+        $filename = facetoface_get_ical_attachment($notificationtype, $facetoface, $session, $user);
+        $subject = $substitute($postsubject, $session);
+        $body = $substitute($posttext, $session);
+        $icalattachments[] = [
+            'filename' => $filename, 'subject' => $subject,
+            'body' => $body,
+        ];
     }
 
     // Fill-in the email placeholders.
@@ -3938,13 +3946,14 @@ function facetoface_print_session($session, $showcapacity, $calendaroutput=false
             continue;
         }
         $data = '';
-        if (!empty($customdata[$field->id])) {
-            if (CUSTOMFIELD_TYPE_MULTISELECT == $field->type) {
-                $values = explode(CUSTOMFIELD_DELIMITER, format_string($customdata[$field->id]->data));
-                $data = implode(html_writer::empty_tag('br'), $values);
-            } else {
-                $data = format_string($customdata[$field->id]->data);
-            }
+        if (
+            !empty($customdata[$field->id]) &&
+            CUSTOMFIELD_TYPE_MULTISELECT == $field->type
+        ) {
+            $values = explode(CUSTOMFIELD_DELIMITER, format_string($customdata[$field->id]->data));
+            $data = implode(html_writer::empty_tag('br'), $values);
+        } else if (!empty($customdata[$field->id])) {
+            $data = format_string($customdata[$field->id]->data);
         }
         $table->data[] = [str_replace(' ', '&nbsp;', format_string($field->name)), $data];
     }
@@ -3966,15 +3975,16 @@ function facetoface_print_session($session, $showcapacity, $calendaroutput=false
     $signupcount = facetoface_get_num_attendees($session->id);
     $placesleft = $session->capacity - $signupcount;
 
-    if ($showcapacity) {
-        if ($session->allowoverbook) {
-            $table->data[] = [
-                get_string('capacity', 'facetoface'),
-                $session->capacity . ' ('.strtolower(get_string('allowoverbook', 'facetoface')).')',
-            ];
-        } else {
-            $table->data[] = [get_string('capacity', 'facetoface'), $session->capacity];
-        }
+    if (
+        $showcapacity &&
+        $session->allowoverbook
+    ) {
+        $table->data[] = [
+            get_string('capacity', 'facetoface'),
+            $session->capacity . ' ('.strtolower(get_string('allowoverbook', 'facetoface')).')',
+        ];
+    } else if ($showcapacity) {
+        $table->data[] = [get_string('capacity', 'facetoface'), $session->capacity];
     } else if (!$calendaroutput) {
         $table->data[] = [get_string('seatsavailable', 'facetoface'), max(0, $placesleft)];
     }
@@ -4309,10 +4319,14 @@ function facetoface_get_trainers($sessionid, $roleid = null) {
     $rs->close();
 
     // If we are only after one roleid.
+    if (
+        $roleid &&
+        empty($return[$roleid])
+    ) {
+        return false;
+    }
+
     if ($roleid) {
-        if (empty($return[$roleid])) {
-            return false;
-        }
         return $return[$roleid];
     }
 
