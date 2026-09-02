@@ -737,10 +737,10 @@ class booking_manager_bulk_attendance {
      * @throws moodle_exception When attendance cannot be applied.
      */
     private function process_row(\stdClass $entry, int $row): void {
-        list($username, $sessionref, $status, $discount, $notifytype) = $this->extract_row_fields($entry);
+        [$username, $sessionref, $status, $discount, $notifytype] = $this->extract_row_fields($entry);
         $user = current($this->match_users($username, '*'));
         $session = facetoface_get_session($sessionref);
-        list($facetoface, $course) = $this->get_session_activity_context($session);
+        [$facetoface, $course] = $this->get_session_activity_context($session);
 
         if ($status === 'cancelled') {
             $this->process_cancellation($session, $facetoface, (int)$user->id);
