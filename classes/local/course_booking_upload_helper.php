@@ -147,7 +147,7 @@ class course_booking_upload_helper {
             if ($session && $session->facetoface != $this->facetofaceid) {
                 $errors[] = [
                     $row,
-                    new lang_string('error:tryingtoupdatesessionfromanothermodule', 'mod_facetoface', (object) [
+                    new lang_string('error:tryingtoupdatesessionfromanothermodule', 'mod_facetoface', (object)[
                         'session' => $entry->session,
                         'f' => $this->facetofaceid,
                     ]),
@@ -163,7 +163,7 @@ class course_booking_upload_helper {
                     $entry->username,
                     $session,
                     $entry->status,
-                    (int) $userid,
+                    (int)$userid,
                     $errors,
                     $signupexistencecache,
                     $activesignupcache
@@ -246,7 +246,7 @@ class course_booking_upload_helper {
                     $entry->username,
                     $entry->status,
                     $session,
-                    (int) $userid,
+                    (int)$userid,
                     $validationrows,
                     $activesignupcache
                 );
@@ -346,7 +346,7 @@ class course_booking_upload_helper {
             if (isset($seen[$key])) {
                 $errors[] = [
                     $row,
-                    new lang_string('error:duplicateuserinsessionupload', 'mod_facetoface', (object) [
+                    new lang_string('error:duplicateuserinsessionupload', 'mod_facetoface', (object)[
                         'user' => $details['username'],
                         'session' => $details['session']->id,
                     ]),
@@ -365,7 +365,7 @@ class course_booking_upload_helper {
                 continue;
             }
 
-            $available = (int) $session->capacity
+            $available = (int)$session->capacity
                 - facetoface_get_num_attendees($sessionid, MDL_F2F_STATUS_APPROVED);
 
             foreach ($sessionrows as $details) {
@@ -386,7 +386,7 @@ class course_booking_upload_helper {
 
                 $errors[] = [
                     $row,
-                    new lang_string('error:sessionoverbooked', 'mod_facetoface', (object) [
+                    new lang_string('error:sessionoverbooked', 'mod_facetoface', (object)[
                         'session' => $sessionid,
                         'amount' => 1,
                     ]),
@@ -435,7 +435,7 @@ class course_booking_upload_helper {
         if ($signupexistencecache[$signupkey]) {
             $errors[] = [
                 $row,
-                new lang_string('error:useralreadyinsession', 'mod_facetoface', (object) [
+                new lang_string('error:useralreadyinsession', 'mod_facetoface', (object)[
                     'user' => $username,
                     'session' => $session->id,
                 ]),
@@ -648,7 +648,7 @@ class course_booking_upload_helper {
                    AND ss.statuscode >= ?";
         $signupid = $DB->get_field_sql($sql, [$sessionid, $userid, MDL_F2F_STATUS_APPROVED]);
 
-        return $signupid ? (int) $signupid : null;
+        return $signupid ? (int)$signupid : null;
     }
 
     /**
@@ -661,7 +661,7 @@ class course_booking_upload_helper {
     private function get_signup_id(int $sessionid, int $userid): int {
         global $DB;
 
-        return (int) $DB->get_field(
+        return (int)$DB->get_field(
             'facetoface_signups',
             'id',
             ['sessionid' => $sessionid, 'userid' => $userid],
@@ -683,7 +683,7 @@ class course_booking_upload_helper {
         $session = facetoface_get_session($entry->session);
 
         if ($entry->status === 'cancelled') {
-            $this->process_cancellation($session, (int) $user->id);
+            $this->process_cancellation($session, (int)$user->id);
             return;
         }
 
@@ -737,7 +737,7 @@ class course_booking_upload_helper {
             $statuscode
         );
 
-        $this->trigger_bulk_booking_created_event($session, (int) $user->id);
+        $this->trigger_bulk_booking_created_event($session, (int)$user->id);
     }
 
     /**
@@ -762,7 +762,7 @@ class course_booking_upload_helper {
         if ($this->should_bypass_approval_for_past_booking($session, $statuscode)) {
             return $this->upsert_historical_booking_signup(
                 $session,
-                (int) $user->id,
+                (int)$user->id,
                 $discountcode,
                 $notificationtype,
                 $statuscode
@@ -792,7 +792,7 @@ class course_booking_upload_helper {
      */
     private function should_bypass_approval_for_past_booking(\stdClass $session, int $statuscode): bool {
         return $statuscode === MDL_F2F_STATUS_BOOKED
-            && \mod_facetoface\helper::is_approval_required((object) $this->facetoface)
+            && \mod_facetoface\helper::is_approval_required((object)$this->facetoface)
             && facetoface_has_session_started($session, time());
     }
 
@@ -843,7 +843,7 @@ class course_booking_upload_helper {
 
         $this->mark_booking_completion_in_progress_if_enabled($statuscode, $userid, $timenow);
 
-        return (int) $usersignup->id;
+        return (int)$usersignup->id;
     }
 
     /**
@@ -905,7 +905,7 @@ class course_booking_upload_helper {
 
         $signupid = $DB->insert_record('facetoface_signups', $usersignup);
         if ($signupid) {
-            return (int) $signupid;
+            return (int)$signupid;
         }
 
         throw new moodle_exception('error:couldnotupdatef2frecord', 'facetoface');
@@ -952,7 +952,7 @@ class course_booking_upload_helper {
                 'error:attendanceuploadfailed',
                 'mod_facetoface',
                 '',
-                (object) [
+                (object)[
                     'user' => $entry->username,
                     'session' => $session->id,
                     'line' => $row + 1,
@@ -983,7 +983,7 @@ class course_booking_upload_helper {
             MDL_F2F_STATUS_BOOKED
         );
 
-        $this->trigger_bulk_booking_created_event($session, (int) $user->id);
+        $this->trigger_bulk_booking_created_event($session, (int)$user->id);
 
         return $signupid;
     }
@@ -1105,17 +1105,17 @@ class course_booking_upload_helper {
 
             $rows = is_string($error[0]) ? explode(',', $error[0]) : [$error[0]];
             foreach ($rows as $row) {
-                $row = trim((string) $row);
+                $row = trim((string)$row);
                 if (!is_numeric($row)) {
                     throw new moodle_exception(
                         'error:invalidrownumber',
                         'mod_facetoface',
                         '',
-                        (object) ['value' => $error[0], 'type' => gettype($error[0])]
+                        (object)['value' => $error[0], 'type' => gettype($error[0])]
                     );
                 }
 
-                $skip[(int) $row] = true;
+                $skip[(int)$row] = true;
             }
         }
 

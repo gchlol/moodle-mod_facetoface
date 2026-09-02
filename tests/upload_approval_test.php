@@ -79,7 +79,7 @@ class upload_approval_test extends \advanced_testcase {
             MUST_EXIST
         );
 
-        $this->assertSame(MDL_F2F_STATUS_BOOKED, (int) $status->statuscode);
+        $this->assertSame(MDL_F2F_STATUS_BOOKED, (int)$status->statuscode);
         $this->assertSame(
             1,
             $DB->count_records('facetoface_signups_status', ['signupid' => $signup->id]),
@@ -123,7 +123,7 @@ class upload_approval_test extends \advanced_testcase {
             'id ASC',
             'id, statuscode'
         );
-        $statuses = array_map(fn($status) => (int) $status->statuscode, array_values($statusrecords));
+        $statuses = array_map(fn($status) => (int)$status->statuscode, array_values($statusrecords));
 
         $this->assertSame(
             [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_FULLY_ATTENDED],
@@ -173,7 +173,7 @@ class upload_approval_test extends \advanced_testcase {
             MUST_EXIST
         );
 
-        $this->assertSame(MDL_F2F_STATUS_REQUESTED, (int) $status->statuscode);
+        $this->assertSame(MDL_F2F_STATUS_REQUESTED, (int)$status->statuscode);
         $this->assertArrayNotHasKey($user->id, facetoface_get_attendees($session->id));
     }
 
@@ -210,7 +210,7 @@ class upload_approval_test extends \advanced_testcase {
             MUST_EXIST
         );
 
-        $this->assertSame(MDL_F2F_STATUS_REQUESTED, (int) $status->statuscode);
+        $this->assertSame(MDL_F2F_STATUS_REQUESTED, (int)$status->statuscode);
     }
 
     /**
@@ -299,7 +299,7 @@ class upload_approval_test extends \advanced_testcase {
         if ($sitewide) {
             $manager = new booking_manager_bulk_attendance();
             $manager->load_from_array([
-                (object) [
+                (object)[
                     'Username' => $user->username,
                     'Session' => $session->id,
                     'Status' => $status,
@@ -313,7 +313,7 @@ class upload_approval_test extends \advanced_testcase {
 
         $manager = new booking_manager($facetoface->id);
         $manager->load_from_array([
-            (object) [
+            (object)[
                 'username' => $user->username,
                 'session' => $session->id,
                 'status' => $status,

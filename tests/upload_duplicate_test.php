@@ -76,7 +76,7 @@ class upload_duplicate_test extends \advanced_testcase {
         $this->assert_row_has_error(
             $errors,
             1,
-            get_string('error:useralreadyinsession', 'mod_facetoface', (object) [
+            get_string('error:useralreadyinsession', 'mod_facetoface', (object)[
                 'user' => $existinguser->username,
                 'session' => $session->id,
             ])
@@ -86,7 +86,7 @@ class upload_duplicate_test extends \advanced_testcase {
 
         $statusafter = $this->get_current_status($signup->id);
         $this->assertSame($statusbefore->id, $statusafter->id);
-        $this->assertSame($existingstatus, (int) $statusafter->statuscode);
+        $this->assertSame($existingstatus, (int)$statusafter->statuscode);
         $this->assertSame(
             $historycountbefore,
             $DB->count_records('facetoface_signups_status', ['signupid' => $signup->id])
@@ -102,7 +102,7 @@ class upload_duplicate_test extends \advanced_testcase {
             '*',
             MUST_EXIST
         );
-        $this->assertSame(MDL_F2F_STATUS_BOOKED, (int) $this->get_current_status($newsignup->id)->statuscode);
+        $this->assertSame(MDL_F2F_STATUS_BOOKED, (int)$this->get_current_status($newsignup->id)->statuscode);
     }
 
     /**
@@ -131,7 +131,7 @@ class upload_duplicate_test extends \advanced_testcase {
         $this->assert_row_has_error(
             $errors,
             1,
-            get_string('error:useralreadyinsession', 'mod_facetoface', (object) [
+            get_string('error:useralreadyinsession', 'mod_facetoface', (object)[
                 'user' => $existinguser->username,
                 'session' => $session->id,
             ])
@@ -167,7 +167,7 @@ class upload_duplicate_test extends \advanced_testcase {
         $this->assert_row_has_error(
             $errors,
             2,
-            get_string('error:duplicateuserinsessionupload', 'mod_facetoface', (object) [
+            get_string('error:duplicateuserinsessionupload', 'mod_facetoface', (object)[
                 'user' => $firstuser->username,
                 'session' => $session->id,
             ])
@@ -189,8 +189,8 @@ class upload_duplicate_test extends \advanced_testcase {
             MUST_EXIST
         );
 
-        $this->assertSame($expectedstatus, (int) $this->get_current_status($firstsignup->id)->statuscode);
-        $this->assertSame(MDL_F2F_STATUS_BOOKED, (int) $this->get_current_status($secondsignup->id)->statuscode);
+        $this->assertSame($expectedstatus, (int)$this->get_current_status($firstsignup->id)->statuscode);
+        $this->assertSame(MDL_F2F_STATUS_BOOKED, (int)$this->get_current_status($secondsignup->id)->statuscode);
         if ($expectedstatus === MDL_F2F_STATUS_FULLY_ATTENDED) {
             $this->assertEquals(100, facetoface_get_grade($firstuser->id, $course->id, $facetoface->id)->grade);
         }
@@ -218,7 +218,7 @@ class upload_duplicate_test extends \advanced_testcase {
         $this->assert_row_has_error(
             $errors,
             2,
-            get_string('error:sessionoverbooked', 'mod_facetoface', (object) [
+            get_string('error:sessionoverbooked', 'mod_facetoface', (object)[
                 'session' => $session->id,
             ])
         );
@@ -255,7 +255,7 @@ class upload_duplicate_test extends \advanced_testcase {
         ]);
 
         $errors = $manager->validate();
-        $message = get_string('error:sessionoverbooked', 'mod_facetoface', (object) [
+        $message = get_string('error:sessionoverbooked', 'mod_facetoface', (object)[
             'session' => $session->id,
         ]);
         $this->assertCount(2, $errors);
@@ -301,7 +301,7 @@ class upload_duplicate_test extends \advanced_testcase {
 
         $this->assertSame(
             MDL_F2F_STATUS_USER_CANCELLED,
-            (int) $this->get_current_status($existingsignup->id)->statuscode
+            (int)$this->get_current_status($existingsignup->id)->statuscode
         );
         $replacementsignup = $DB->get_record(
             'facetoface_signups',
@@ -311,7 +311,7 @@ class upload_duplicate_test extends \advanced_testcase {
         );
         $this->assertSame(
             MDL_F2F_STATUS_BOOKED,
-            (int) $this->get_current_status($replacementsignup->id)->statuscode
+            (int)$this->get_current_status($replacementsignup->id)->statuscode
         );
     }
 
@@ -350,7 +350,7 @@ class upload_duplicate_test extends \advanced_testcase {
         $this->assert_row_has_error(
             $errors,
             $bookingrow,
-            get_string('error:useralreadyinsession', 'mod_facetoface', (object) [
+            get_string('error:useralreadyinsession', 'mod_facetoface', (object)[
                 'user' => $user->username,
                 'session' => $session->id,
             ])
@@ -359,7 +359,7 @@ class upload_duplicate_test extends \advanced_testcase {
         $this->assertTrue($manager->process($errors));
         $this->assertSame(
             MDL_F2F_STATUS_USER_CANCELLED,
-            (int) $this->get_current_status($signup->id)->statuscode
+            (int)$this->get_current_status($signup->id)->statuscode
         );
     }
 
@@ -409,11 +409,11 @@ class upload_duplicate_test extends \advanced_testcase {
         );
         $this->assertSame(
             MDL_F2F_STATUS_FULLY_ATTENDED,
-            (int) $this->get_current_status($firstsignup->id)->statuscode
+            (int)$this->get_current_status($firstsignup->id)->statuscode
         );
         $this->assertSame(
             MDL_F2F_STATUS_BOOKED,
-            (int) $this->get_current_status($secondsignup->id)->statuscode
+            (int)$this->get_current_status($secondsignup->id)->statuscode
         );
         $this->assertEquals(100, facetoface_get_grade($firstuser->id, $course->id, $facetoface->id)->grade);
     }
@@ -455,7 +455,7 @@ class upload_duplicate_test extends \advanced_testcase {
         $this->assert_row_has_error(
             $errors,
             1,
-            get_string('error:useralreadyinsession', 'mod_facetoface', (object) [
+            get_string('error:useralreadyinsession', 'mod_facetoface', (object)[
                 'user' => $user->username,
                 'session' => $firstsession->id,
             ])
@@ -465,7 +465,7 @@ class upload_duplicate_test extends \advanced_testcase {
 
         $this->assertSame(
             MDL_F2F_STATUS_USER_CANCELLED,
-            (int) $this->get_current_status($firstsignup->id)->statuscode
+            (int)$this->get_current_status($firstsignup->id)->statuscode
         );
         $this->assertTrue($DB->record_exists('facetoface_signups', [
             'sessionid' => $secondsession->id,
@@ -498,7 +498,7 @@ class upload_duplicate_test extends \advanced_testcase {
         $this->assert_row_has_error(
             $errors,
             1,
-            get_string('error:useralreadyinsession', 'mod_facetoface', (object) [
+            get_string('error:useralreadyinsession', 'mod_facetoface', (object)[
                 'user' => $user->username,
                 'session' => $session->id,
             ])
@@ -534,7 +534,7 @@ class upload_duplicate_test extends \advanced_testcase {
         $this->assertTrue($manager->process($errors));
         $this->assertSame(
             MDL_F2F_STATUS_FULLY_ATTENDED,
-            (int) $this->get_current_status($signup->id)->statuscode
+            (int)$this->get_current_status($signup->id)->statuscode
         );
         $this->assertGreaterThan(
             $historycountbefore,
@@ -579,7 +579,7 @@ class upload_duplicate_test extends \advanced_testcase {
         $sessiondate->timefinish = time() + 2 * DAYSECS;
         $DB->update_record('facetoface_sessions_dates', $sessiondate);
 
-        $expectedmessage = get_string('error:attendanceuploadfailed', 'mod_facetoface', (object) [
+        $expectedmessage = get_string('error:attendanceuploadfailed', 'mod_facetoface', (object)[
             'user' => $user->username,
             'session' => $session->id,
             'line' => 2,
@@ -591,7 +591,7 @@ class upload_duplicate_test extends \advanced_testcase {
             $this->assertStringContainsString($expectedmessage, $exception->getMessage());
         }
 
-        $this->assertSame(MDL_F2F_STATUS_BOOKED, (int) $this->get_current_status($signup->id)->statuscode);
+        $this->assertSame(MDL_F2F_STATUS_BOOKED, (int)$this->get_current_status($signup->id)->statuscode);
     }
 
     /**
@@ -832,7 +832,7 @@ class upload_duplicate_test extends \advanced_testcase {
             MDL_F2F_STATUS_PARTIALLY_ATTENDED,
             MDL_F2F_STATUS_FULLY_ATTENDED,
         ], true)) {
-            facetoface_take_attendance((object) [
+            facetoface_take_attendance((object)[
                 's' => $session->id,
                 'submissionid_' . $signup->id => $statuscode,
             ]);
@@ -873,7 +873,7 @@ class upload_duplicate_test extends \advanced_testcase {
      */
     private function create_row(bool $sitewide, \stdClass $user, \stdClass $session, string $status): \stdClass {
         if ($sitewide) {
-            return (object) [
+            return (object)[
                 'Username' => $user->username,
                 'Session' => $session->id,
                 'Status' => $status,
@@ -882,7 +882,7 @@ class upload_duplicate_test extends \advanced_testcase {
             ];
         }
 
-        return (object) [
+        return (object)[
             'username' => $user->username,
             'session' => $session->id,
             'status' => $status,
@@ -918,7 +918,7 @@ class upload_duplicate_test extends \advanced_testcase {
      */
     private function assert_row_has_error(array $errors, int $row, string $message): void {
         foreach ($errors as $error) {
-            if ($this->error_contains_row($error, $row) && (string) $error[1] === $message) {
+            if ($this->error_contains_row($error, $row) && (string)$error[1] === $message) {
                 return;
             }
         }
@@ -937,7 +937,7 @@ class upload_duplicate_test extends \advanced_testcase {
         foreach ($errors as $error) {
             $this->assertFalse(
                 $this->error_contains_row($error, $row),
-                'Unexpected validation error for row ' . $row . ': ' . (string) $error[1]
+                'Unexpected validation error for row ' . $row . ': ' . (string)$error[1]
             );
         }
     }
@@ -950,9 +950,9 @@ class upload_duplicate_test extends \advanced_testcase {
      * @return bool True when the validation error applies to the supplied CSV row.
      */
     private function error_contains_row(array $error, int $row): bool {
-        $rows = array_map('trim', explode(',', (string) $error[0]));
+        $rows = array_map('trim', explode(',', (string)$error[0]));
 
-        return in_array((string) $row, $rows, true);
+        return in_array((string)$row, $rows, true);
     }
 }
 // GCHLOL ends.

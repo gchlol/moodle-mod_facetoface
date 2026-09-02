@@ -291,7 +291,7 @@ class booking_manager_bulk_attendance {
                 $username,
                 $session,
                 $status,
-                (int) $userid,
+                (int)$userid,
                 $errors,
                 $signupexistencecache,
                 $activesignupcache
@@ -340,7 +340,7 @@ class booking_manager_bulk_attendance {
                     $username,
                     $status,
                     $session,
-                    (int) $userid,
+                    (int)$userid,
                     $validationrows,
                     $activesignupcache
                 );
@@ -376,7 +376,7 @@ class booking_manager_bulk_attendance {
             if (isset($seen[$key])) {
                 $errors[] = [
                     $row,
-                    get_string('error:duplicateuserinsessionupload', 'mod_facetoface', (object) [
+                    get_string('error:duplicateuserinsessionupload', 'mod_facetoface', (object)[
                         'user' => $details['username'],
                         'session' => $details['session']->id,
                     ]),
@@ -395,7 +395,7 @@ class booking_manager_bulk_attendance {
                 continue;
             }
 
-            $available = (int) $session->capacity
+            $available = (int)$session->capacity
                 - facetoface_get_num_attendees($sessionid, MDL_F2F_STATUS_APPROVED);
 
             // A valid cancellation releases its existing seat for another valid row in this file,
@@ -418,7 +418,7 @@ class booking_manager_bulk_attendance {
 
                 $errors[] = [
                     $row,
-                    get_string('error:sessionoverbooked', 'mod_facetoface', (object) [
+                    get_string('error:sessionoverbooked', 'mod_facetoface', (object)[
                         'session' => $sessionid,
                     ]),
                 ];
@@ -466,7 +466,7 @@ class booking_manager_bulk_attendance {
         if ($signupexistencecache[$signupkey]) {
             $errors[] = [
                 $row,
-                get_string('error:useralreadyinsession', 'mod_facetoface', (object) [
+                get_string('error:useralreadyinsession', 'mod_facetoface', (object)[
                     'user' => $username,
                     'session' => $session->id,
                 ]),
@@ -669,7 +669,7 @@ class booking_manager_bulk_attendance {
                    AND ss.statuscode >= ?";
         $signupid = $DB->get_field_sql($sql, [$sessionid, $userid, MDL_F2F_STATUS_APPROVED]);
 
-        return $signupid ? (int) $signupid : null;
+        return $signupid ? (int)$signupid : null;
     }
 
     /**
@@ -736,7 +736,7 @@ class booking_manager_bulk_attendance {
         list($facetoface, $course) = $this->get_session_activity_context($session);
 
         if ($status === 'cancelled') {
-            $this->process_cancellation($session, $facetoface, (int) $user->id);
+            $this->process_cancellation($session, $facetoface, (int)$user->id);
             return;
         }
 
@@ -846,7 +846,7 @@ class booking_manager_bulk_attendance {
             $statuscode
         );
 
-        $this->trigger_bulk_booking_created_event($facetoface, $session, (int) $user->id);
+        $this->trigger_bulk_booking_created_event($facetoface, $session, (int)$user->id);
     }
 
     /**
@@ -877,7 +877,7 @@ class booking_manager_bulk_attendance {
                 $session,
                 $facetoface,
                 $course,
-                (int) $user->id,
+                (int)$user->id,
                 $discount,
                 $notificationtype,
                 $statuscode
@@ -912,7 +912,7 @@ class booking_manager_bulk_attendance {
         int $statuscode
     ): bool {
         return $statuscode === MDL_F2F_STATUS_BOOKED
-            && \mod_facetoface\helper::is_approval_required((object) $facetoface)
+            && \mod_facetoface\helper::is_approval_required((object)$facetoface)
             && facetoface_has_session_started($session, time());
     }
 
@@ -968,7 +968,7 @@ class booking_manager_bulk_attendance {
 
         $this->mark_booking_completion_in_progress_if_enabled($course, $statuscode, $userid, $timenow);
 
-        return (int) $usersignup->id;
+        return (int)$usersignup->id;
     }
 
     /**
@@ -1034,7 +1034,7 @@ class booking_manager_bulk_attendance {
 
         $signupid = $DB->insert_record('facetoface_signups', $usersignup);
         if ($signupid) {
-            return (int) $signupid;
+            return (int)$signupid;
         }
 
         throw new moodle_exception('error:couldnotupdatef2frecord', 'facetoface');
@@ -1096,7 +1096,7 @@ class booking_manager_bulk_attendance {
                 'error:attendanceuploadfailed',
                 'mod_facetoface',
                 '',
-                (object) [
+                (object)[
                     'user' => $username,
                     'session' => $session->id,
                     'line' => $row + 1,
@@ -1139,7 +1139,7 @@ class booking_manager_bulk_attendance {
             MDL_F2F_STATUS_BOOKED
         );
 
-        $this->trigger_bulk_booking_created_event($facetoface, $session, (int) $user->id);
+        $this->trigger_bulk_booking_created_event($facetoface, $session, (int)$user->id);
 
         return $signupid;
     }
@@ -1270,7 +1270,7 @@ class booking_manager_bulk_attendance {
             $rows = is_string($error[0]) ? explode(',', $error[0]) : [$error[0]];
 
             foreach ($rows as $row) {
-                $row = trim((string) $row);
+                $row = trim((string)$row);
 
                 if (!is_numeric($row)) {
                     throw new moodle_exception(
@@ -1281,7 +1281,7 @@ class booking_manager_bulk_attendance {
                     );
                 }
 
-                $skip[(int) $row] = true;
+                $skip[(int)$row] = true;
             }
         }
 

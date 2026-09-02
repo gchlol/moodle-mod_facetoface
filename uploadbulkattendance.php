@@ -96,8 +96,8 @@ function display_bulk_upload_errors(array $errors, int $fileid): void {
         }
         // Add 1 to the index to match the line number displayed in Excel (CSV header: + 1).
         $line = implode(', ', array_map(
-            fn($errorrow) => (int) trim($errorrow) + 1,
-            explode(',', (string) $error[0])
+            fn($errorrow) => (int)trim($errorrow) + 1,
+            explode(',', (string)$error[0])
         ));
         $messages = array_slice($error, 1);
 
@@ -145,7 +145,7 @@ function count_skipped_bulk_upload_rows(array $errors): int {
     $skippedrows = [];
 
     foreach ($errors as $error) {
-        foreach (explode(',', (string) $error[0]) as $errorrow) {
+        foreach (explode(',', (string)$error[0]) as $errorrow) {
             $skippedrows[trim($errorrow)] = true;
         }
     }
@@ -167,7 +167,7 @@ function get_bulk_upload_success_message(booking_manager_bulk_attendance $manage
 
     $skipped = count_skipped_bulk_upload_rows($errors);
 
-    return get_string('bulkattendanceprocessedwithskips', 'mod_facetoface', (object) [
+    return get_string('bulkattendanceprocessedwithskips', 'mod_facetoface', (object)[
         'processed' => count($manager->get_records()) - $skipped,
         'skipped'   => $skipped,
     ]);
