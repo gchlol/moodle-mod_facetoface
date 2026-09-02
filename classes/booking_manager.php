@@ -189,8 +189,8 @@ class booking_manager {
             $this->course,
             $this->coursecontext,
             $this->f,
-            (bool) $this->usefile,
-            (bool) $this->suppressemail,
+            $this->usefile,
+            $this->suppressemail,
             function(): \Generator {
                 return $this->get_iterator();
             },

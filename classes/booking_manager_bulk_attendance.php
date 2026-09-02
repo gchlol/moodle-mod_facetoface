@@ -1193,7 +1193,7 @@ class booking_manager_bulk_attendance {
         int $userid
     ): void {
         \mod_facetoface\event\bulk_booking_created::trigger_from_bulk_upload_if_needed(
-            (bool) $this->usefile,
+            $this->usefile,
             $facetoface,
             $session,
             $userid
