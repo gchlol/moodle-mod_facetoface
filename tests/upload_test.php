@@ -926,9 +926,11 @@ class upload_test extends \advanced_testcase {
         $emails = $sink->get_messages();
         if ($shouldsuppress) {
             $this->assertEmpty($emails);
-        } else {
-            $this->assertNotEmpty($emails);
+
+            return;
         }
+
+        $this->assertNotEmpty($emails);
     }
 
     /**

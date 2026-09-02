@@ -247,12 +247,11 @@ class upload_approval_test extends \advanced_testcase {
         ]);
 
         $now = time();
+        $timestart = $now + DAYSECS;
+        $timefinish = $now + 2 * DAYSECS;
         if ($historical) {
             $timestart = $now - 2 * DAYSECS;
             $timefinish = $now - DAYSECS;
-        } else {
-            $timestart = $now + DAYSECS;
-            $timefinish = $now + 2 * DAYSECS;
         }
 
         $session = $generator->create_session([

@@ -239,7 +239,9 @@ class booking_manager {
             // None matched at all - missing.
             if (empty($userids)) {
                 $errors[] = [$row, new lang_string('error:userdoesnotexist', 'mod_facetoface', $entry->username)];
-            } else if (count($userids) === 1) {
+            }
+
+            if (count($userids) === 1) {
                 $userid = current($userids)->id;
             }
 
@@ -950,16 +952,7 @@ class booking_manager {
             $usersignup->discountcode = null;
         }
 
-        if (!empty($usersignup->id)) {
-            $success = $DB->update_record('facetoface_signups', $usersignup);
-        } else {
-            $usersignup->id = $DB->insert_record('facetoface_signups', $usersignup);
-            $success = (bool) $usersignup->id;
-        }
-
-        if (!$success) {
-            throw new moodle_exception('error:couldnotupdatef2frecord', 'facetoface');
-        }
+        $usersignup = $this->persist_signup_record($usersignup);
 
         if (!facetoface_update_signup_status($usersignup->id, $statuscode, $userid)) {
             throw new moodle_exception('error:f2ffailedupdatestatus', 'facetoface');
@@ -984,6 +977,32 @@ class booking_manager {
         }
 
         return (int) $usersignup->id;
+    }
+
+    /**
+     * Insert or update a signup record.
+     *
+     * @param \stdClass $usersignup Signup record to persist.
+     * @return \stdClass Persisted signup record.
+     * @throws moodle_exception When the signup cannot be stored.
+     */
+    private function persist_signup_record(\stdClass $usersignup): \stdClass {
+        global $DB;
+
+        if (empty($usersignup->id)) {
+            $usersignup->id = $DB->insert_record('facetoface_signups', $usersignup);
+            if (!$usersignup->id) {
+                throw new moodle_exception('error:couldnotupdatef2frecord', 'facetoface');
+            }
+
+            return $usersignup;
+        }
+
+        if (!$DB->update_record('facetoface_signups', $usersignup)) {
+            throw new moodle_exception('error:couldnotupdatef2frecord', 'facetoface');
+        }
+
+        return $usersignup;
     }
 
     /**

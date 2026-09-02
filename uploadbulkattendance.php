@@ -227,9 +227,8 @@ if (
         ]);
         $event->trigger();
 
-        if (empty($errors)) {
-            $message = get_string('bulkattendanceprocessed', 'mod_facetoface');
-        } else {
+        $message = get_string('bulkattendanceprocessed', 'mod_facetoface');
+        if (!empty($errors)) {
             // GCHLOL: Report how many rows were processed and how many were skipped.
             $skippedrows = [];
             foreach ($errors as $error) {

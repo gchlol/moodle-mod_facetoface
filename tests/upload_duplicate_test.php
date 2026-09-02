@@ -362,11 +362,8 @@ class upload_duplicate_test extends \advanced_testcase {
 
         [$course, $facetoface, $session, $firstuser, $seconduser] = $this->create_fixture(2, true);
         $invalidrow = $this->create_row($sitewide, $firstuser, $session, 'booked');
-        if ($sitewide) {
-            $invalidrow->{'Notification Type'} = 'invalid';
-        } else {
-            $invalidrow->notificationtype = 'invalid';
-        }
+        $notificationfield = $sitewide ? 'Notification Type' : 'notificationtype';
+        $invalidrow->{$notificationfield} = 'invalid';
 
         $manager = $this->create_manager($sitewide, $facetoface, [
             $invalidrow,
@@ -819,7 +816,10 @@ class upload_duplicate_test extends \advanced_testcase {
                 's' => $session->id,
                 'submissionid_' . $signup->id => $statuscode,
             ]);
-        } else if ($statuscode !== MDL_F2F_STATUS_BOOKED) {
+            return $signup;
+        }
+
+        if ($statuscode !== MDL_F2F_STATUS_BOOKED) {
             facetoface_update_signup_status($signup->id, $statuscode, $USER->id);
         }
 
