@@ -557,7 +557,7 @@ class booking_manager_bulk_attendance {
      * booked before applying attendance; this includes cancelled, declined and requested signups.
      *
      * @return bool
-     * @throws moodle_exception If validation errors exist.
+     * @throws moodle_exception When an attendance row cannot be applied.
      * @throws Exception If cancellation fails.
      */
     public function process($errors): bool {
@@ -708,7 +708,18 @@ class booking_manager_bulk_attendance {
                     'submissionid_' . $signupid => $statuscode,
                 ];
 
-                facetoface_take_attendance($data);
+                if (!facetoface_take_attendance($data)) {
+                    throw new moodle_exception(
+                        'error:attendanceuploadfailed',
+                        'mod_facetoface',
+                        '',
+                        (object) [
+                            'user' => $username,
+                            'session' => $session->id,
+                            'line' => $row + 1,
+                        ]
+                    );
+                }
 
                 continue;
             }

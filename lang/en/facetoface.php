@@ -901,6 +901,7 @@ $string['stream'] = 'Stream';
 $string['error:invalidallowcancel'] = 'You must specify either "yes" or "no" for Allow Cancellations.';
 $string['error:cannotwaitliststartedsession'] = 'Unable to waitlist user for session {$a} because it has already started.';
 $string['error:attendancesessionnotstarted'] = 'Unable to record attendance for session {$a} because it has not started yet.';
+$string['error:attendanceuploadfailed'] = 'Could not record attendance for user {$a->user} in session {$a->session} (CSV line {$a->line}).';
 $string['error:missingrequiredcolumn'] = 'Missing required column: {$a}';
 $string['error:noheaderrow'] = 'No header row found in the uploaded file.';
 $string['error:nopermissiontoeditattendees'] = 'You don\'t have permission to edit attendees for this Face-to-Face session.';

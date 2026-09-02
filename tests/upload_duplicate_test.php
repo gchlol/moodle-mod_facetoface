@@ -530,6 +530,56 @@ class upload_duplicate_test extends \advanced_testcase {
     }
 
     /**
+     * A runtime attendance failure must not be reported as a successful upload.
+     *
+     * This simulates the session being moved into the future after validation but before processing.
+     *
+     * @dataProvider manager_provider
+     * @param bool $sitewide Whether to use the site-wide manager.
+     */
+    public function test_attendance_processing_failure_throws_exception(bool $sitewide): void {
+        global $DB;
+
+        [$course, $facetoface, $session, $user] = $this->create_fixture(1, true);
+        $signup = $this->create_signup_with_status(
+            $course,
+            $facetoface,
+            $session,
+            $user,
+            MDL_F2F_STATUS_BOOKED
+        );
+        $manager = $this->create_manager($sitewide, $facetoface, [
+            $this->create_row($sitewide, $user, $session, 'fully_attended'),
+        ]);
+        $errors = $manager->validate();
+        $this->assertEmpty($errors);
+
+        $sessiondate = $DB->get_record(
+            'facetoface_sessions_dates',
+            ['sessionid' => $session->id],
+            '*',
+            MUST_EXIST
+        );
+        $sessiondate->timestart = time() + DAYSECS;
+        $sessiondate->timefinish = time() + 2 * DAYSECS;
+        $DB->update_record('facetoface_sessions_dates', $sessiondate);
+
+        $expectedmessage = get_string('error:attendanceuploadfailed', 'mod_facetoface', (object) [
+            'user' => $user->username,
+            'session' => $session->id,
+            'line' => 2,
+        ]);
+        try {
+            $manager->process($errors);
+            $this->fail('Expected attendance processing to throw an exception.');
+        } catch (\moodle_exception $exception) {
+            $this->assertStringContainsString($expectedmessage, $exception->getMessage());
+        }
+
+        $this->assertSame(MDL_F2F_STATUS_BOOKED, (int) $this->get_current_status($signup->id)->statuscode);
+    }
+
+    /**
      * Statuses without a processing path are rejected rather than reported as successful no-ops.
      *
      * @dataProvider unhandled_status_provider

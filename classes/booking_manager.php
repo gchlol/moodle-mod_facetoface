@@ -602,7 +602,7 @@ class booking_manager {
      * booked before applying attendance; this includes cancelled, declined and requested signups.
      *
      * @return bool
-     * @throws moodle_exception
+     * @throws moodle_exception When an attendance row cannot be applied.
      */
     public function process(array $errors) {
         // Build a set of rows to skip from the error list.
@@ -717,7 +717,18 @@ class booking_manager {
                         's' => $session->id,
                         'submissionid_' . $signupid => $statuscode,
                     ];
-                    facetoface_take_attendance($data);
+                    if (!facetoface_take_attendance($data)) {
+                        throw new moodle_exception(
+                            'error:attendanceuploadfailed',
+                            'mod_facetoface',
+                            '',
+                            (object) [
+                                'user' => $entry->username,
+                                'session' => $session->id,
+                                'line' => $row + 1,
+                            ]
+                        );
+                    }
 
                     continue;
                 }
