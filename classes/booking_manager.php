@@ -73,19 +73,34 @@ class booking_manager {
      * @param array $records The records to process.
      */
     public function __construct($f, $records = []) {
+        $this->f = $f;
+        $this->records = $records;
+    }
+
+    /**
+     * Load the facetoface activity context on first use.
+     *
+     * @return void
+     * @throws moodle_exception When the configured activity or course does not exist.
+     */
+    private function ensure_activity_loaded(): void {
         global $DB;
 
-        if (!$facetoface = $DB->get_record('facetoface', ['id' => $f])) {
+        if ($this->facetoface !== null) {
+            return;
+        }
+
+        if (!$facetoface = $DB->get_record('facetoface', ['id' => $this->f])) {
             throw new moodle_exception('error:incorrectfacetofaceid', 'facetoface');
         }
+
         if (!$course = $DB->get_record('course', ['id' => $facetoface->course])) {
             throw new moodle_exception('error:coursemisconfigured', 'facetoface');
         }
-        $this->f = $f;
+
         $this->facetoface = $facetoface;
         $this->course = $course;
         $this->coursecontext = context_course::instance($course->id);
-        $this->records = $records;
     }
 
     /**
@@ -192,6 +207,8 @@ class booking_manager {
      * @return array An array of errors.
      */
     public function validate($timenow = null): array {
+        $this->ensure_activity_loaded();
+
         $errors = [];
         $validationrows = [];
         $activesignupcache = [];
@@ -748,6 +765,8 @@ class booking_manager {
      * @throws \Exception When cancellation fails.
      */
     public function process(array $errors) {
+        $this->ensure_activity_loaded();
+
         // Build a set of rows to skip from the error list.
         $skip = self::extract_rows_to_skip($errors);
 
