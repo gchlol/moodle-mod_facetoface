@@ -138,7 +138,7 @@ function display_bulk_upload_errors(array $errors, int $fileid): void {
 /**
  * Count the distinct CSV rows skipped during bulk-upload processing.
  *
- * @param array $errors Validation errors keyed by CSV row.
+ * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors keyed by CSV row.
  * @return int Number of distinct CSV rows that will be skipped during processing.
  */
 function count_skipped_bulk_upload_rows(array $errors): int {
@@ -157,7 +157,7 @@ function count_skipped_bulk_upload_rows(array $errors): int {
  * Build the success message for a processed bulk-attendance upload.
  *
  * @param booking_manager_bulk_attendance $manager Loaded CSV manager.
- * @param array $errors Validation errors returned for the upload.
+ * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors returned for the upload.
  * @return string Success message describing the processed and skipped row counts.
  */
 function get_bulk_upload_success_message(booking_manager_bulk_attendance $manager, array $errors): string {

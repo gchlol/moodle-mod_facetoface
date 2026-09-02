@@ -216,7 +216,7 @@ class upload_approval_test extends \advanced_testcase {
     /**
      * Provide both CSV booking-manager implementations.
      *
-     * @return array[] Booking-manager test cases keyed by scenario name.
+     * @return array<string, array{0:bool}> Booking-manager test cases keyed by scenario name.
      */
     public static function booking_manager_provider(): array {
         return [
@@ -229,7 +229,8 @@ class upload_approval_test extends \advanced_testcase {
      * Create an approval-required Face-to-Face activity and dated session.
      *
      * @param bool $historical Whether the session should already have finished.
-     * @return array The Face-to-Face activity, session, user and line-manager records.
+     * @return array{0:\stdClass, 1:\stdClass, 2:\stdClass, 3:\stdClass}
+     *     The Face-to-Face activity, session, user and line-manager records.
      */
     private function create_booking_fixture(bool $historical): array {
         set_config('enableapprovals', '1', 'facetoface');

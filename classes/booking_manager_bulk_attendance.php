@@ -357,8 +357,9 @@ class booking_manager_bulk_attendance {
     /**
      * Validate duplicate CSV rows and projected session capacity.
      *
-     * @param array $validationrows Resolved, processable CSV rows keyed by row number.
-     * @param array $errors Validation errors, updated in place.
+     * @param array<int, array{session:\stdClass, userid:int, username:string, status:string, hasactivesignup:bool}>
+     *     $validationrows Resolved, processable CSV rows keyed by row number.
+     * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors, updated in place.
      * @return void
      */
     private function validate_unique_rows_and_capacity(array $validationrows, array &$errors): void {
@@ -433,9 +434,9 @@ class booking_manager_bulk_attendance {
      * @param \stdClass $session Session record.
      * @param string $status CSV status.
      * @param int $userid Matched user ID.
-     * @param array $errors Validation errors, updated in place.
-     * @param array $signupexistencecache Cached signup existence checks.
-     * @param array $activesignupcache Cached active signup checks.
+     * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors, updated in place.
+     * @param array<string, bool> $signupexistencecache Cached signup existence checks.
+     * @param array<string, bool> $activesignupcache Cached active signup checks.
      * @return bool True when the row can continue validation.
      */
     private function validate_existing_booking_upload(
@@ -488,7 +489,7 @@ class booking_manager_bulk_attendance {
      * @param string $status CSV status.
      * @param \stdClass $session Session record.
      * @param int $timenow Timestamp used for validation.
-     * @param array $errors Validation errors, updated in place.
+     * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors, updated in place.
      * @return bool True when the row can continue validation.
      */
     private function validate_session_status_rules(
@@ -539,8 +540,9 @@ class booking_manager_bulk_attendance {
      * @param string $status CSV status.
      * @param \stdClass $session Session record.
      * @param int $userid Matched user ID.
-     * @param array $validationrows Cached row metadata, updated in place.
-     * @param array $activesignupcache Cached active signup checks.
+     * @param array<int, array{session:\stdClass, userid:int, username:string, status:string, hasactivesignup:bool}>
+     *     $validationrows Cached row metadata, updated in place.
+     * @param array<string, bool> $activesignupcache Cached active signup checks.
      * @return void
      */
     private function cache_validation_row(
@@ -779,7 +781,7 @@ class booking_manager_bulk_attendance {
      * Load the face-to-face activity and course for a session.
      *
      * @param \stdClass $session Session record.
-     * @return array Face-to-face activity and course records for the session.
+     * @return array{0:\stdClass, 1:\stdClass} Face-to-face activity and course records for the session.
      */
     private function get_session_activity_context(\stdClass $session): array {
         global $DB;

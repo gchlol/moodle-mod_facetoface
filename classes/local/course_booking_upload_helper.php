@@ -107,7 +107,7 @@ class course_booking_upload_helper {
      * Validate the records provided to ensure they can be processed without errors.
      *
      * @param int|null $timenow The current time to use for validation.
-     * @return array Validation errors keyed by CSV row.
+     * @return list<array{0:int|string, 1:string|\lang_string}> Validation errors keyed by CSV row.
      */
     public function validate($timenow = null): array {
         $errors = [];
@@ -265,7 +265,7 @@ class course_booking_upload_helper {
     /**
      * Process the bookings in the file.
      *
-     * @param array $errors Validation errors returned from validate().
+     * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors returned from validate().
      * @return bool True after all rows without blocking errors are processed.
      * @throws moodle_exception When an attendance row cannot be applied.
      * @throws \Exception When cancellation fails.
@@ -304,7 +304,7 @@ class course_booking_upload_helper {
      *
      * @param string $username Username to search.
      * @param string $fields Fields to return.
-     * @return array Matching user records keyed by user ID.
+     * @return array<int, \stdClass> Matching user records keyed by user ID.
      */
     private function match_users_username(string $username, string $fields): array {
         $usermatcher = $this->usermatcher;
@@ -327,8 +327,9 @@ class course_booking_upload_helper {
     /**
      * Validate duplicate CSV rows and projected session capacity.
      *
-     * @param array $validationrows Resolved, processable CSV rows keyed by row number.
-     * @param array $errors Validation errors, updated in place.
+     * @param array<int, array{session:\stdClass, userid:int, username:string, status:string, hasactivesignup:bool}>
+     *     $validationrows Resolved, processable CSV rows keyed by row number.
+     * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors, updated in place.
      * @return void
      */
     private function validate_unique_rows_and_capacity(array $validationrows, array &$errors): void {
@@ -402,9 +403,9 @@ class course_booking_upload_helper {
      * @param \stdClass $session Session record.
      * @param string $status CSV status.
      * @param int $userid Matched user ID.
-     * @param array $errors Validation errors, updated in place.
-     * @param array $signupexistencecache Cached signup existence checks.
-     * @param array $activesignupcache Cached active signup checks.
+     * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors, updated in place.
+     * @param array<string, bool> $signupexistencecache Cached signup existence checks.
+     * @param array<string, bool> $activesignupcache Cached active signup checks.
      * @return bool True when the row can continue validation.
      */
     private function validate_existing_booking_upload(
@@ -456,7 +457,7 @@ class course_booking_upload_helper {
      * @param string $status CSV status.
      * @param \stdClass $session Session record.
      * @param int $timenow Timestamp used for validation.
-     * @param array $errors Validation errors, updated in place.
+     * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors, updated in place.
      * @return void
      */
     private function validate_session_status_rules(
@@ -498,8 +499,9 @@ class course_booking_upload_helper {
      * @param string $status CSV status.
      * @param \stdClass $session Session record.
      * @param int $userid Matched user ID.
-     * @param array $validationrows Cached row metadata, updated in place.
-     * @param array $activesignupcache Cached active signup checks.
+     * @param array<int, array{session:\stdClass, userid:int, username:string, status:string, hasactivesignup:bool}>
+     *     $validationrows Cached row metadata, updated in place.
+     * @param array<string, bool> $activesignupcache Cached active signup checks.
      * @return void
      */
     private function cache_validation_row(
@@ -528,8 +530,9 @@ class course_booking_upload_helper {
     /**
      * Validate rows for single-session activities after per-row validation succeeds.
      *
-     * @param array $validationrows Resolved, processable CSV rows keyed by row number.
-     * @param array $errors Validation errors, updated in place.
+     * @param array<int, array{session:\stdClass, userid:int, username:string, status:string, hasactivesignup:bool}>
+     *     $validationrows Resolved, processable CSV rows keyed by row number.
+     * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors, updated in place.
      * @return void
      */
     private function validate_multiple_user_sessions(array $validationrows, array &$errors): void {

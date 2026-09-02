@@ -261,7 +261,7 @@ class booking_manager {
     /**
      * Process the bookings in the file.
      *
-     * @param array $errors Validation errors from validate().
+     * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors from validate().
      * @return bool
      * @throws moodle_exception
      */

@@ -627,7 +627,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Provide all current signup statuses for both booking managers.
      *
-     * @return array[] Test cases keyed by manager and status name.
+     * @return array<string, array{0:bool, 1:int}> Test cases keyed by manager and status name.
      */
     public static function existing_status_provider(): array {
         $statuses = [
@@ -655,7 +655,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Provide booking-style CSV statuses for both managers.
      *
-     * @return array[] Test cases keyed by manager and booking status.
+     * @return array<string, array{0:bool, 1:string}> Test cases keyed by manager and booking status.
      */
     public static function booking_status_provider(): array {
         $cases = [];
@@ -671,7 +671,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Provide duplicate-row orders for both managers.
      *
-     * @return array[] Test cases keyed by manager and first-row status.
+     * @return array<string, array{0:bool, 1:string, 2:int}> Test cases keyed by manager and first-row status.
      */
     public static function duplicate_order_provider(): array {
         return [
@@ -685,7 +685,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Provide both CSV orders for a cancellation and its replacement booking.
      *
-     * @return array[] Test cases keyed by manager and row order.
+     * @return array<string, array{0:bool, 1:bool}> Test cases keyed by manager and row order.
      */
     public static function cancellation_order_provider(): array {
         return [
@@ -699,7 +699,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Provide both row orders for same-user cancellation/rebooking in both managers.
      *
-     * @return array[] Test cases keyed by manager and row order.
+     * @return array<string, array{0:bool, 1:bool}> Test cases keyed by manager and row order.
      */
     public static function same_user_rebooking_order_provider(): array {
         return [
@@ -713,7 +713,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Provide inactive signup statuses for both booking managers.
      *
-     * @return array[] Test cases keyed by manager and inactive status.
+     * @return array<string, array{0:bool, 1:int}> Test cases keyed by manager and inactive status.
      */
     public static function inactive_attendance_provider(): array {
         $statuses = [
@@ -734,7 +734,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Provide unsupported workflow statuses for both booking managers.
      *
-     * @return array[] Test cases keyed by manager and unsupported status.
+     * @return array<string, array{0:bool, 1:string}> Test cases keyed by manager and unsupported status.
      */
     public static function unhandled_status_provider(): array {
         $cases = [];
@@ -750,7 +750,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Provide both booking managers.
      *
-     * @return array[] Booking-manager test cases keyed by scenario name.
+     * @return array<string, array{0:bool}> Booking-manager test cases keyed by scenario name.
      */
     public static function manager_provider(): array {
         return [
@@ -764,7 +764,8 @@ class upload_duplicate_test extends \advanced_testcase {
      *
      * @param int $capacity Session capacity.
      * @param bool $historical Whether the session has finished.
-     * @return array Course, activity, session and two users.
+     * @return array{0:\stdClass, 1:\stdClass, 2:\stdClass, 3:\stdClass, 4:\stdClass}
+     *     Course, activity, session and two users.
      */
     private function create_fixture(int $capacity, bool $historical): array {
         /** @var \mod_facetoface_generator $generator */
@@ -850,7 +851,7 @@ class upload_duplicate_test extends \advanced_testcase {
      *
      * @param bool $sitewide Whether to create the site-wide manager.
      * @param \stdClass $facetoface Activity record.
-     * @param array $rows CSV row objects.
+     * @param list<\stdClass> $rows CSV row objects.
      * @return booking_manager|booking_manager_bulk_attendance Loaded manager instance.
      */
     private function create_manager(bool $sitewide, \stdClass $facetoface, array $rows) {
@@ -910,7 +911,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Assert that a row has the expected validation error.
      *
-     * @param array $errors Validation errors.
+     * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors.
      * @param int $row CSV row number.
      * @param string $message Expected message.
      * @return void
@@ -928,7 +929,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Assert that a row has no validation errors.
      *
-     * @param array $errors Validation errors.
+     * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors.
      * @param int $row CSV row number.
      * @return void
      */
@@ -944,7 +945,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Return whether an error applies to a row.
      *
-     * @param array $error Validation error.
+     * @param array{0:int|string, 1:string|\lang_string} $error Validation error.
      * @param int $row CSV row number.
      * @return bool True when the validation error applies to the supplied CSV row.
      */
