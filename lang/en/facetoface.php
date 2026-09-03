@@ -342,6 +342,7 @@ $string['placeholder:lastname'] = '[lastname]';
 $string['placeholder:cost'] = '[cost]';
 $string['placeholder:alldates'] = '[alldates]';
 $string['placeholder:sessiondate'] = '[sessiondate]';
+$string['placeholder:sessionlink'] = '[sessionlink]';
 $string['placeholder:starttime'] = '[starttime]';
 $string['placeholder:finishtime'] = '[finishtime]';
 $string['placeholder:duration'] = '[duration]';
@@ -955,6 +956,7 @@ $string['error:invalidallowoverbook'] = 'Allow overbookings must be "yes" or "no
 $string['error:invaliddatetimedata'] = 'Invalid Date Time data.';
 $string['error:failedtocreatesession'] = 'Failed to create session';
 $string['error:failedtocreatedates'] = 'Failed to create dates for session #{$a}';
+$string['error:couldnotfindbulksession'] = 'Could not find the newly inserted bulk upload session';
 $string['error:couldnotsavecustomfieldshort'] = 'Could not save custom field with short name "{$a}"';
 $string['facetoface:uploadbulksessions'] = 'Bulk Upload Sessions';
 $string['uploadbulksessions'] = 'Upload sessions';
@@ -966,9 +968,9 @@ $string['csvuploadhelp:field'] = 'Field';
 $string['csvuploadhelp:requirement'] = 'Requirement';
 $string['csvuploadhelp:format'] = 'Format';
 $string['eventcsvprocessedbulksession'] = 'Bulk session CSV processed';
-$string['eventscsvprocessedsitebulksession'] = 'Site Admin Bulk session CSV processed';
-$string['eventscsvprocessedsitebulksessiondesc'] =
-    'The user with id \'{$a}\' has processed a CSV file to create/update Face-to-Face sessions site-wide.';
+$string['eventcsvprocessedsitebulksession'] = 'Site Admin Bulk session CSV processed';
+$string['eventcsvprocessedsitebulksessiondesc'] =
+    'The user with id \'{$a->userid}\' has processed a CSV file to create/update Face-to-Face sessions site-wide.';
 $string['eventcsvprocessedbulksessiondesc'] =
     'The user with id \'{$a->userid}\' has processed an uploaded CSV file for bulk session bookings '
     . 'in the Face-to-Face instance with the course module id \'{$a->contextinstanceid}\'.';
