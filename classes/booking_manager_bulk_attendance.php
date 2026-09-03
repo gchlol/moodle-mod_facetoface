@@ -24,12 +24,10 @@ use Generator;
 use lang_string;
 use mod_facetoface\local\booking_upload_service;
 use moodle_exception;
-use stdClass;
 
 /**
- * Bulk version of booking_manager.
- *
- * Located in site administration.
+ * Bulk version of booking_manager
+ * Located in site administration
  *
  * @package    mod_facetoface
  * @copyright  2025 Gold Coast Health
@@ -38,41 +36,43 @@ use stdClass;
  */
 class booking_manager_bulk_attendance {
 
-    /** @var stored_file File to process. */
+    /** @var stored_file the file to process as a stored_file object */
     private $file;
 
-    /** @var stdClass[] Collection of records loaded from memory. */
+    /** @var array collection of records (if loaded from memory), in an array. */
     private $records = [];
 
-    /** @var bool Whether bookings are loaded from a file. */
+    /** @var bool Whether or not the bookings are loaded from a file. */
     private $usefile = true;
 
-    /** @var bool Whether confirmation emails are suppressed. */
+    /** @var bool When true, confirmation emails are not sent. */
     private $suppressemail = false;
 
-    /** @var bool Whether username matching ignores case. */
+    /** @var bool Will ignore case when matching users */
     private $caseinsensitive = false;
 
     /**
-     * Constructor.
+     * Constructor for the booking manager.
      *
-     * @param stdClass[] $records Records to process.
+     * @param array $records Records to process.
      */
     public function __construct($records = []) {
         $this->records = $records;
     }
 
     /**
-     * Load CSV data from a draft file area.
+     * Loads CSV data from a draft file area.
+     * Returns file from file system. File must exist.
      *
-     * @param int $fileitemid Draft file-area item ID.
+     * @param int $fileitemid Item id
+     * @throws moodle_exception
      * @return void
-     * @throws moodle_exception When exactly one upload file cannot be found.
      */
     public function load_from_file(int $fileitemid): void {
         global $USER;
 
         $this->usefile = true;
+
         $fs = new file_storage();
         $files = $fs->get_area_files(
             context_user::instance($USER->id)->id,
@@ -91,9 +91,9 @@ class booking_manager_bulk_attendance {
     }
 
     /**
-     * Load records from memory.
+     * Load in the records to process from an array
      *
-     * @param stdClass[] $records Record objects.
+     * @param array $records Array of record objects or arrays.
      * @return self
      */
     public function load_from_array(array $records): self {
@@ -104,9 +104,9 @@ class booking_manager_bulk_attendance {
     }
 
     /**
-     * Return the site-wide CSV headers.
+     * Get the headers for the records.
      *
-     * @return string[] Headers in file order.
+     * @return array Indexed array of headers.
      */
     public static function get_headers(): array {
         return [
@@ -119,14 +119,15 @@ class booking_manager_bulk_attendance {
     }
 
     /**
-     * Return a fresh iterator over file or in-memory records.
+     * Provides a record iterator for CSV rows, either from file.
      *
-     * @return Generator CSV rows.
-     * @throws moodle_exception When a file row has the wrong number of fields.
+     * @return Generator Yields each CSV record as an object.
+     * @throws moodle_exception If CSV header count does not match expectations.
      */
     private function get_iterator(): Generator {
         if (!$this->usefile) {
             foreach ($this->records as $record) {
+
                 yield $record;
             }
 
@@ -136,39 +137,47 @@ class booking_manager_bulk_attendance {
         $handle = $this->file->get_content_file_handle();
         $maxlinelength = 1000;
         $delimiter = ',';
-        $headers = static::get_headers();
+        $rownumber = 1;
+        $headers = self::get_headers();
         $numheaders = count($headers);
+
+        // Read the CSV header and detect whether a "Discount Code" column exists (case-insensitive).
         $fileheaders = fgetcsv($handle, $maxlinelength, $delimiter);
         $hasdiscount = false;
-
         if ($fileheaders !== false) {
-            $normalisedheaders = array_map(
-                static function(string $header): string {
-                    return strtolower(trim($header));
+            $norm = array_map(
+                function($h) {
+                    return strtolower(trim($h));
                 },
                 $fileheaders
             );
-            $hasdiscount = in_array('discount code', $normalisedheaders, true);
+            $hasdiscount = in_array('discount code', $norm, true);
         }
 
-        $discountposition = array_search('Discount Code', $headers, true);
+        // Where "Discount Code" is expected in our canonical header list.
+        $discountpos = array_search('Discount Code', $headers, true);
 
         try {
             while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
-                if (!$hasdiscount && $discountposition !== false) {
-                    array_splice($data, $discountposition, 0, '');
+                $rownumber++;
+
+                // If the uploaded CSV omitted "Discount Code", insert an empty string so counts still match.
+                if ($hasdiscount === false && $discountpos !== false) {
+                    array_splice($data, $discountpos, 0, '');
                 }
 
-                if (count($data) !== $numheaders) {
+                $numfields = count($data);
+
+                if ($numfields !== $numheaders) {
                     throw new moodle_exception(
                         'error:bookingsuploadfileheaderfieldmismatch',
                         'mod_facetoface'
                     );
                 }
+                $record = array_combine($headers, $data);
 
-                yield (object)array_combine($headers, $data);
+                yield (object) $record;
             }
-
         } finally {
             fclose($handle);
         }
@@ -187,26 +196,44 @@ class booking_manager_bulk_attendance {
         $validationrows = [];
         $activesignupcache = [];
         $signupexistencecache = [];
-        $timenow ??= time();
+
+        if ($timenow === null) {
+            $timenow = time();
+        }
+
         $uploadservice = $this->get_upload_service();
 
+        // Break into rows and validate the multiple interdependent fields together.
         foreach ($this->get_iterator() as $index => $entry) {
             $row = $index + 1;
             $errorcountbefore = count($errors);
-            [$username, $sessionref, $status, $discountcode, $notifytype] = $this->extract_row_fields($entry);
 
+            // Trim whitespace from the CSV fields (Course/Activity removed).
+            $username      = trim($entry->Username);
+            $sessionref    = trim($entry->Session);
+            $status        = trim($entry->Status ?? '');
+            $discount      = trim($entry->{'Discount Code'} ?? '');
+            $notifytype    = trim($entry->{'Notification Type'} ?? '');
+
+            // 1) Check session exists (CSV provides session id).
             $session = facetoface_get_session($sessionref);
             if (!$session) {
-                $errors[] = [$row, get_string('error:sessiondoesnotexist', 'mod_facetoface', $sessionref)];
+                $errors[] = [
+                    $row,
+                    get_string('error:sessiondoesnotexist', 'mod_facetoface', $sessionref)
+                ];
+
                 continue;
             }
 
+            // 2) Derive Face-to-Face activity & Course from the session.
             $facetoface = $DB->get_record('facetoface', ['id' => $session->facetoface]);
             if (!$facetoface) {
                 $errors[] = [
                     $row,
-                    get_string('error:activitydoesnotexist', 'facetoface', $session->facetoface),
+                    get_string('error:activitydoesnotexist', 'facetoface', $session->facetoface)
                 ];
+
                 continue;
             }
 
@@ -214,23 +241,34 @@ class booking_manager_bulk_attendance {
             if (!$course) {
                 $errors[] = [
                     $row,
-                    get_string('error:coursemisconfigured', 'facetoface', $facetoface->course),
+                    get_string('error:coursemisconfigured', 'facetoface', $facetoface->course)
                 ];
+
                 continue;
             }
 
+            // 3) Match user.
             $userids = $this->match_users($username, 'id');
             if (count($userids) > 1) {
-                $errors[] = [$row, get_string('error:multipleusersmatched', 'mod_facetoface', $username)];
+                $errors[] = [
+                    $row,
+                    get_string('error:multipleusersmatched', 'mod_facetoface', $username)
+                ];
+
                 continue;
             }
-
             if (empty($userids)) {
-                $errors[] = [$row, get_string('error:userdoesnotexist', 'mod_facetoface', $username)];
+                $errors[] = [
+                    $row,
+                    get_string('error:userdoesnotexist', 'mod_facetoface', $username)
+                ];
+
                 continue;
             }
 
             $userid = current($userids)->id;
+
+            // Reject a second booking-style upload when any signup history already exists.
             if (!$uploadservice->validate_existing_booking_upload(
                 $row,
                 $username,
@@ -244,6 +282,7 @@ class booking_manager_bulk_attendance {
                 continue;
             }
 
+            // Apply the cancellation, waitlist, and attendance timing rules.
             if (!$uploadservice->validate_session_status_rules(
                 $row,
                 $sessionref,
@@ -255,24 +294,33 @@ class booking_manager_bulk_attendance {
                 continue;
             }
 
+            // Auto-enrol staff who are not yet enrolled in the course.
             $coursecontext = context_course::instance($course->id);
             if (!is_enrolled($coursecontext, $userid)) {
                 $isenrolled = facetoface_enrol_user($coursecontext, $course->id, $userid);
                 if (!$isenrolled) {
-                    $errors[] = [$row, get_string('error:enrolmentfailed', 'mod_facetoface', $username)];
+                    $errors[] = [
+                        $row,
+                        get_string('error:enrolmentfailed', 'mod_facetoface', $username)
+                    ];
                 }
             }
 
-            $mappednotification = $this->transform_notification_type($notifytype);
-            if ($mappednotification === null) {
+            // Check valid notification type.
+            $mapped = $this->transform_notification_type($notifytype);
+            if ($mapped === null) {
                 $errors[] = [
                     $row,
-                    get_string('error:invalidnotificationtypespecified', 'mod_facetoface', $notifytype),
+                    get_string('error:invalidnotificationtypespecified', 'mod_facetoface', $notifytype)
                 ];
             }
 
+            // Check that the status has an implemented processing path.
             if (!$uploadservice->is_processable_status($status)) {
-                $errors[] = [$row, get_string('error:invalidstatusspecified', 'mod_facetoface', $status)];
+                $errors[] = [
+                    $row,
+                    get_string('error:invalidstatusspecified', 'mod_facetoface', $status)
+                ];
             }
 
             if (
@@ -297,6 +345,45 @@ class booking_manager_bulk_attendance {
     }
 
     /**
+     * Match users for a given username.
+     *
+     * @param string $username Username to search.
+     * @param string $fields Fields to return (e.g. 'id' or '*').
+     * @return array Array of matching user records.
+     */
+    private function match_users(string $username, string $fields): array {
+        global $DB;
+
+        $equals = $DB->sql_equal('username', ':username', !$this->caseinsensitive);
+
+        return $DB->get_records_select(
+            'user',
+            $equals,
+            ['username' => $username],
+            'id',
+            $fields
+        );
+    }
+
+    /**
+     * Transform notification type to internal representation.
+     *
+     * @param string $type Notification type string.
+     * @return int|null   Mapped MDL_F2F_* constant or null if invalid.
+     */
+    private function transform_notification_type(string $type): ?int {
+        $mapping = [
+            'email' => MDL_F2F_TEXT,
+            'ical' => MDL_F2F_ICAL,
+            'icalendar' => MDL_F2F_ICAL,
+            'both' => MDL_F2F_BOTH,
+            '' => MDL_F2F_ICAL, // Defaults to iCalendar only if nothing is specified.
+        ];
+
+        return $mapping[strtolower($type)] ?? null;
+    }
+
+    /**
      * Process all rows without validation errors.
      *
      * Attendance rows can create or reactivate a signup before applying attendance.
@@ -307,23 +394,32 @@ class booking_manager_bulk_attendance {
      * @throws Exception When cancellation fails.
      */
     public function process($errors): bool {
+        global $DB;
+
         $skip = booking_upload_service::extract_rows_to_skip($errors);
         $uploadservice = $this->get_upload_service();
 
         foreach ($this->get_iterator() as $index => $entry) {
             $row = $index + 1;
+
             if (isset($skip[$row])) {
                 continue;
             }
 
-            [$username, $sessionref, $status, $discountcode, $notifytype] = $this->extract_row_fields($entry);
+            $username      = trim($entry->Username);
+            $sessionref    = trim($entry->Session);
+            $status        = trim($entry->Status ?? '');
+            $discount      = trim($entry->{'Discount Code'} ?? '');
+            $notifytype    = trim($entry->{'Notification Type'} ?? '');
+
             $user = current($this->match_users($username, '*'));
             $session = facetoface_get_session($sessionref);
-            [$facetoface, $course] = $this->get_session_activity_context($session);
+            $facetoface = $DB->get_record('facetoface', ['id' => $session->facetoface], '*', MUST_EXIST);
+            $course = $DB->get_record('course', ['id' => $facetoface->course], '*', MUST_EXIST);
             $normalisedentry = (object)[
                 'username' => $username,
                 'status' => $status,
-                'discountcode' => $discountcode,
+                'discountcode' => $discount,
             ];
 
             $uploadservice->process_row(
@@ -351,88 +447,7 @@ class booking_manager_bulk_attendance {
     }
 
     /**
-     * Return normalised values from a site-wide row.
-     *
-     * @param stdClass $entry Raw CSV row.
-     * @return array{0:string, 1:string, 2:string, 3:string, 4:string} Username, session, status,
-     *     discount code, and notification type.
-     */
-    private function extract_row_fields(stdClass $entry): array {
-        return [
-            trim($entry->Username),
-            trim($entry->Session),
-            trim($entry->Status ?? ''),
-            trim($entry->{'Discount Code'} ?? ''),
-            trim($entry->{'Notification Type'} ?? ''),
-        ];
-    }
-
-    /**
-     * Load the activity and course for a session during processing.
-     *
-     * @param stdClass $session Session record.
-     * @return array{0:stdClass, 1:stdClass} Activity and course records.
-     */
-    private function get_session_activity_context(stdClass $session): array {
-        global $DB;
-
-        $facetoface = $DB->get_record(
-            'facetoface',
-            ['id' => $session->facetoface],
-            '*',
-            MUST_EXIST
-        );
-        $course = $DB->get_record(
-            'course',
-            ['id' => $facetoface->course],
-            '*',
-            MUST_EXIST
-        );
-
-        return [$facetoface, $course];
-    }
-
-    /**
-     * Match users by username.
-     *
-     * @param string $username Username to search.
-     * @param string $fields Fields to return.
-     * @return array<int, stdClass> Matching users keyed by user ID.
-     */
-    private function match_users(string $username, string $fields): array {
-        global $DB;
-
-        $equals = $DB->sql_equal('username', ':username', !$this->caseinsensitive);
-
-        return $DB->get_records_select(
-            'user',
-            $equals,
-            ['username' => $username],
-            'id',
-            $fields
-        );
-    }
-
-    /**
-     * Map a notification string to its internal code.
-     *
-     * @param string $type Notification type.
-     * @return int|null Notification code, or null when invalid.
-     */
-    private function transform_notification_type(string $type): ?int {
-        $mapping = [
-            'email' => MDL_F2F_TEXT,
-            'ical' => MDL_F2F_ICAL,
-            'icalendar' => MDL_F2F_ICAL,
-            'both' => MDL_F2F_BOTH,
-            '' => MDL_F2F_ICAL,
-        ];
-
-        return $mapping[strtolower($type)] ?? null;
-    }
-
-    /**
-     * Suppress confirmation emails.
+     * Stops confirmation emails from being sent
      *
      * @return void
      */
@@ -441,9 +456,9 @@ class booking_manager_bulk_attendance {
     }
 
     /**
-     * Configure case-insensitive username matching.
+     * Sets case insensitive match value
      *
-     * @param bool $value True to ignore case.
+     * @param bool $value True to match usernames case-insensitively.
      * @return void
      */
     public function set_case_insensitive(bool $value): void {
@@ -451,9 +466,9 @@ class booking_manager_bulk_attendance {
     }
 
     /**
-     * Return all raw CSV rows for preview.
+     * Return all CSV rows as an array of stdClass.
      *
-     * @return stdClass[] CSV rows.
+     * @return array
      */
     public function get_records(): array {
         return iterator_to_array($this->get_iterator());

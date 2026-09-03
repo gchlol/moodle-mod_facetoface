@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 namespace mod_facetoface\local;
 
@@ -226,7 +226,7 @@ final class course_booking_manager {
 
                 if (
                     isset($userid) &&
-                    $entry->status !== 'cancelled' &&
+                    $uploadservice->is_booking_status($entry->status) &&
                     $this->facetoface->signuptype != MOD_FACETOFACE_SIGNUP_MULTIPLE &&
                     ($currusersessions = facetoface_get_user_submissions($this->facetofaceid, $userid))
                 ) {
@@ -299,7 +299,7 @@ final class course_booking_manager {
         }
 
         if ($this->facetoface->signuptype != MOD_FACETOFACE_SIGNUP_MULTIPLE) {
-            $this->validate_multiple_user_sessions($validationrows, $errors);
+            $this->validate_multiple_user_sessions($validationrows, $errors, $uploadservice);
         }
 
         $uploadservice->validate_unique_rows_and_capacity($validationrows, $errors);
@@ -518,14 +518,19 @@ final class course_booking_manager {
      * @param array<int, array{session:stdClass, userid:int, username:string, status:string, hasactivesignup:bool}>
      *     $validationrows Resolved, processable CSV rows keyed by row number.
      * @param list<array{0:int|string, 1:string|lang_string}> $errors Validation errors, updated in place.
+     * @param booking_upload_service $uploadservice Shared status classifier.
      * @return void
      */
-    private function validate_multiple_user_sessions(array $validationrows, array &$errors): void {
+    private function validate_multiple_user_sessions(
+        array $validationrows,
+        array &$errors,
+        booking_upload_service $uploadservice
+    ): void {
         $skip = booking_upload_service::extract_rows_to_skip($errors);
         $usersessions = [];
 
         foreach ($validationrows as $row => $details) {
-            if ($details['status'] === 'cancelled' || isset($skip[$row])) {
+            if (!$uploadservice->is_booking_status($details['status']) || isset($skip[$row])) {
                 continue;
             }
 

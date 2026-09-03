@@ -1018,7 +1018,13 @@ $string['uploadandpreviewbulkbookings'] = 'Upload and preview bookings';
 $string['uploadbulkbookingsfile'] = 'Bulk Bookings File';
 $string['bulkattendanceprocessed'] = 'Bulk bookings have been successfully processed.';
 $string['eventcsvprocessedbulkattendance'] = 'Site Admin Bulk bookings CSV processed ';
+// GCHLOL: Describe CSV bulk booking processing logs using the acting user's ID.
 $string['eventcsvprocessedbulkattendancedesc'] = 'The user with id \'{$a->userid}\' has processed a bulk bookings CSV file.';
+// GCHLOL ends.
+$string['updatevalidrows'] = 'Upload only rows with no errors';
+$string['bulkattendanceprocessedwithskips'] = 'Processed {$a->processed} row(s). Skipped {$a->skipped} row(s) with errors.';
+$string['error:errormustbeanarray'] = 'Error must be an array. Currently, it is \'{$a}\'.';
+$string['error:invalidrownumber'] = 'The first item in an error is the Excel row number (as shown when opening the CSV in Excel) and must be an integer. Currently, it is \'{$a->value}\' (type: {$a->type}).';
 
 // GCHLOL: Override booking-upload strings and add the branch-specific validation and processing
 // messages in one isolated block.
@@ -1040,8 +1046,4 @@ $string['error:cannotwaitliststartedsession'] = 'Unable to waitlist user for ses
 $string['error:attendancesessionnotstarted'] = 'Unable to record attendance for session {$a} because it has not started yet.';
 $string['error:attendanceuploadfailed'] = 'Could not record attendance for user {$a->user} in session {$a->session} (CSV line {$a->line}).';
 $string['csvuploadhelp:statustype'] = 'One of "booked", "waitlisted", "cancelled", "no_show", "partially_attended" or "fully_attended"; blank defaults to "booked". Historical bookings are recorded directly as booked even when approval is normally required. A blank, booked or waitlisted row is rejected if any signup history already exists for that user and session, including cancelled or declined records. Attendance statuses require the session to have started and are authoritative: they create or reactivate the booking first when no active signup exists. Internal statuses user_cancelled, requested, approved and declined are not accepted; use cancelled to cancel a booking.';
-$string['updatevalidrows'] = 'Upload only rows with no errors';
-$string['bulkattendanceprocessedwithskips'] = 'Processed {$a->processed} row(s). Skipped {$a->skipped} row(s) with errors.';
-$string['error:errormustbeanarray'] = 'Error must be an array. Currently, it is \'{$a}\'.';
-$string['error:invalidrownumber'] = 'The first item in an error is the Excel row number (as shown when opening the CSV in Excel) and must be an integer. Currently, it is \'{$a->value}\' (type: {$a->type}).';
 // GCHLOL ends.

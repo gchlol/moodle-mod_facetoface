@@ -19,7 +19,6 @@ namespace mod_facetoface;
 use lang_string;
 // GCHLOL: Exercise the isolated course upload manager used by upload.php.
 use mod_facetoface\local\course_booking_manager as booking_manager;
-// GCHLOL ends.
 
 /**
  * Test the upload helper class.
@@ -31,6 +30,7 @@ use mod_facetoface\local\course_booking_manager as booking_manager;
  * @covers \mod_facetoface\local\course_booking_manager
  */
 class upload_test extends \advanced_testcase {
+    // GCHLOL ends.
 
     /**
      * This method runs before every test.
@@ -100,11 +100,13 @@ class upload_test extends \advanced_testcase {
         ];
         $bm->load_from_array($records);
         $errors = $bm->validate();
+        // GCHLOL: Per-row capacity errors do not report a misleading aggregate amount.
         $expectederr = new lang_string(
             'error:sessionoverbooked',
             'mod_facetoface',
-            (object) ['session' => $nooverbooksession->id, 'amount' => 1]
+            (object)['session' => $nooverbooksession->id]
         );
+        // GCHLOL ends.
         $this->assertCount(1, $errors);
         $this->assertEquals($expectederr, $errors[0][1]);
 
@@ -308,14 +310,16 @@ class upload_test extends \advanced_testcase {
             'Expecting status error, since the status should be either booked or cancelled.'
         );
 
-        $this->assertTrue(
+        // GCHLOL: Rows with their own validation errors must not create cross-session errors.
+        $this->assertFalse(
             $this->check_row_validation_error_exists(
                 $errors,
                 '4, 5, 6, 7',
                 new lang_string('error:multipleusersessions', 'mod_facetoface', $student2->email)
             ),
-            'Expecting multiple sessions error for user when f2f signup type is single.'
+            'Expecting invalid rows to be excluded from cross-session validation.'
         );
+        // GCHLOL ends.
 
         $this->assertTrue(
             $this->check_row_validation_error_exists(
@@ -424,21 +428,17 @@ class upload_test extends \advanced_testcase {
         );
     }
 
-    // GCHLOL: Update the booking-processing tests to use username-based matching and verify
-    // duplicate signups are rejected without altering the original booking.
+    // GCHLOL: Verify duplicate signups are rejected without altering the original booking.
     /**
      * Tests uploading a booking where the emails should match regardless of case.
      */
-    public function test_processing_booking_case_insensitive(): void {
+    public function test_processing_booking_case_insensitive() {
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
 
         $course = $this->getDataGenerator()->create_course();
         $facetoface = $generator->create_instance(['course' => $course->id]);
-        $student = $this->getDataGenerator()->create_and_enrol($course, 'student', [
-            'username' => 'testuser',
-            'email' => 'test@test.com',
-        ]);
+        $this->getDataGenerator()->create_and_enrol($course, 'student', ['email' => 'test@test.com']);
 
         $this->setCurrentTimeStart();
         $now = time();
@@ -458,7 +458,6 @@ class upload_test extends \advanced_testcase {
 
         $bm = new booking_manager($facetoface->id);
         $record = (object) [
-            'username' => strtoupper($student->username),
             'email' => 'TEST@test.com',
             'session' => $session->id,
             'status' => 'booked',
@@ -472,7 +471,7 @@ class upload_test extends \advanced_testcase {
 
         $errors = $bm->validate();
         $this->assertEmpty($errors);
-        $this->assertTrue($bm->process($errors));
+        $this->assertTrue($bm->process());
 
         // Check users are as expected.
         $users = facetoface_get_attendees($session->id);
@@ -487,8 +486,8 @@ class upload_test extends \advanced_testcase {
         $this->assertTrue($this->check_row_validation_error_exists(
             $errors,
             1,
-            new lang_string('error:useralreadyinsession', 'mod_facetoface', (object) [
-                'user' => strtoupper($student->username),
+            new lang_string('error:useralreadyinsession', 'mod_facetoface', (object)[
+                'user' => $record->email,
                 'session' => $session->id,
             ])
         ));
@@ -497,7 +496,7 @@ class upload_test extends \advanced_testcase {
     /**
      * Test upload processing to ensure the happy path is working as expected, and users can be booked into a session.
      */
-    public function test_processing_booking(): void {
+    public function test_processing_booking() {
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
 
@@ -523,7 +522,6 @@ class upload_test extends \advanced_testcase {
 
         $bm = new booking_manager($facetoface->id);
         $record = (object) [
-            'username' => $student->username,
             'email' => $student->email,
             'session' => $session->id,
             'status' => 'booked',
@@ -536,7 +534,7 @@ class upload_test extends \advanced_testcase {
 
         $errors = $bm->validate();
         $this->assertEmpty($errors);
-        $this->assertTrue($bm->process($errors));
+        $this->assertTrue($bm->process());
 
         // Check users are as expected.
         $users = facetoface_get_attendees($session->id);
@@ -551,8 +549,8 @@ class upload_test extends \advanced_testcase {
         $this->assertTrue($this->check_row_validation_error_exists(
             $errors,
             1,
-            new lang_string('error:useralreadyinsession', 'mod_facetoface', (object) [
-                'user' => $student->username,
+            new lang_string('error:useralreadyinsession', 'mod_facetoface', (object)[
+                'user' => $record->email,
                 'session' => $session->id,
             ])
         ));
@@ -634,8 +632,7 @@ class upload_test extends \advanced_testcase {
         $this->assertNotEmpty(current($users)->timecancelled);
     }
 
-    // GCHLOL: Extend the historical-session coverage to include past bookings, waitlist rejection,
-    // pre-booked attendance uploads, and future-session attendance validation.
+    // GCHLOL: Cover historical bookings, attendance creation, and future-attendance validation.
     /**
      * Updates via uploads can be done for previous sessions.
      *
@@ -643,7 +640,7 @@ class upload_test extends \advanced_testcase {
      * booked directly into past sessions, including with an attendance status even if they were
      * never signed up while the session was open. Waitlisting into past sessions is rejected.
      */
-    public function test_updates_for_previous_sessions(): void {
+    public function test_updates_for_previous_sessions() {
         global $DB;
         /** @var \mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
@@ -677,7 +674,7 @@ class upload_test extends \advanced_testcase {
         // Book the student.
         $records = [
             (object) [
-                'username' => $student->username,
+                'email' => $student->email,
                 'session' => $session->id,
                 'status' => 'booked',
             ],
@@ -693,7 +690,7 @@ class upload_test extends \advanced_testcase {
             ),
             'Expecting user to be booked without issues.'
         );
-        $bm->process($errors);
+        $bm->process();
 
         $DB->update_record(
             'facetoface_sessions_dates',
@@ -706,7 +703,7 @@ class upload_test extends \advanced_testcase {
 
         // Booking another user into the session after it has finished is allowed.
         $bm->load_from_array([
-            (object) [
+            (object)[
                 'username' => $latebooker->username,
                 'session' => $session->id,
                 'status' => 'booked',
@@ -722,7 +719,7 @@ class upload_test extends \advanced_testcase {
 
         // Waitlisting into a session that has already started is rejected.
         $bm->load_from_array([
-            (object) [
+            (object)[
                 'username' => $latewaitlister->username,
                 'session' => $session->id,
                 'status' => 'waitlisted',
@@ -741,19 +738,19 @@ class upload_test extends \advanced_testcase {
         // Update the student's attendance after the session finishes.
         $attendanceupdates = [
             (object) [
-                'username' => $student->username,
+                'email' => $student->email,
                 'session' => $session->id,
                 'status' => 'no_show',
                 'grade_expected' => 0,
             ],
             (object) [
-                'username' => $student->username,
+                'email' => $student->email,
                 'session' => $session->id,
                 'status' => 'partially_attended',
                 'grade_expected' => 50,
             ],
             (object) [
-                'username' => $student->username,
+                'email' => $student->email,
                 'session' => $session->id,
                 'status' => 'fully_attended',
                 'grade_expected' => 100,
@@ -773,7 +770,7 @@ class upload_test extends \advanced_testcase {
                 ),
                 'Expecting update to be valid (even though session has started or finished).'
             );
-            $bm->process($errors);
+            $bm->process();
 
             // Check to ensure the grade is as expected from the update.
             $grade = facetoface_get_grade($student->id, $course->id, $facetoface->id);
@@ -783,7 +780,7 @@ class upload_test extends \advanced_testcase {
         // A user who was never signed up can be uploaded with an attendance status; they are
         // booked into the past session first and their attendance is then recorded.
         $bm->load_from_array([
-            (object) [
+            (object)[
                 'username' => $latecomer->username,
                 'session' => $session->id,
                 'status' => 'fully_attended',
@@ -836,7 +833,7 @@ class upload_test extends \advanced_testcase {
 
         $bm = new booking_manager($facetoface->id);
         $bm->load_from_array([
-            (object) [
+            (object)[
                 'username' => $student->username,
                 'session' => $session->id,
                 'status' => 'fully_attended',

@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,18 +12,21 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 namespace mod_facetoface;
 
+use advanced_testcase;
+use lang_string;
 use mod_facetoface\local\course_booking_manager as booking_manager;
+use mod_facetoface_generator;
+use moodle_exception;
+use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once("$CFG->dirroot/mod/facetoface/lib.php");
 
-// GCHLOL: Cover duplicate-row, capacity, signup-history, and unsupported-status validation
-// for both CSV booking-manager implementations.
 /**
  * Tests duplicate-user validation for CSV booking uploads.
  *
@@ -34,7 +37,7 @@ require_once("$CFG->dirroot/mod/facetoface/lib.php");
  * @covers     \mod_facetoface\local\course_booking_manager
  * @covers     \mod_facetoface\booking_manager_bulk_attendance
  */
-class upload_duplicate_test extends \advanced_testcase {
+class upload_duplicate_test extends advanced_testcase {
 
     /**
      * Set up each test.
@@ -531,7 +534,7 @@ class upload_duplicate_test extends \advanced_testcase {
             $user,
             MDL_F2F_STATUS_USER_CANCELLED
         );
-        /** @var \mod_facetoface_generator $generator */
+        /** @var mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
         $now = time();
         $secondsession = $generator->create_session([
@@ -578,6 +581,79 @@ class upload_duplicate_test extends \advanced_testcase {
             'sessionid' => $secondsession->id,
             'userid' => $user->id,
         ]));
+    }
+
+    /**
+     * Historical attendance can span sessions even when ordinary bookings are limited to one session.
+     *
+     * @return void
+     */
+    public function test_single_signup_allows_historical_attendance_across_sessions(): void {
+        global $DB;
+
+        [$course, $facetoface, $firstpastsession, $user] = $this->create_fixture(2, true);
+        $facetoface->signuptype = MOD_FACETOFACE_SIGNUP_SINGLE;
+        $DB->update_record('facetoface', $facetoface);
+        /** @var mod_facetoface_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
+        $now = time();
+        $secondpastsession = $generator->create_session([
+            'facetoface' => $facetoface->id,
+            'capacity' => 2,
+            'allowoverbook' => 0,
+            'sessiondates' => [
+                ['timestart' => $now - 4 * DAYSECS, 'timefinish' => $now - 3 * DAYSECS],
+            ],
+        ]);
+        $futuresession = $generator->create_session([
+            'facetoface' => $facetoface->id,
+            'capacity' => 2,
+            'allowoverbook' => 0,
+            'sessiondates' => [
+                ['timestart' => $now + DAYSECS, 'timefinish' => $now + 2 * DAYSECS],
+            ],
+        ]);
+        $futuresignup = $this->create_signup_with_status(
+            $course,
+            $facetoface,
+            $futuresession,
+            $user,
+            MDL_F2F_STATUS_BOOKED
+        );
+        $manager = $this->create_manager(false, $facetoface, [
+            $this->create_row(false, $user, $firstpastsession, 'fully_attended'),
+            $this->create_row(false, $user, $secondpastsession, 'partially_attended'),
+        ]);
+
+        $errors = $manager->validate();
+        $this->assertEmpty($errors);
+        $this->assertTrue($manager->process($errors));
+
+        $firstpastsignup = $DB->get_record(
+            'facetoface_signups',
+            ['sessionid' => $firstpastsession->id, 'userid' => $user->id],
+            '*',
+            MUST_EXIST
+        );
+        $secondpastsignup = $DB->get_record(
+            'facetoface_signups',
+            ['sessionid' => $secondpastsession->id, 'userid' => $user->id],
+            '*',
+            MUST_EXIST
+        );
+
+        $this->assertSame(
+            MDL_F2F_STATUS_FULLY_ATTENDED,
+            (int)$this->get_current_status($firstpastsignup->id)->statuscode
+        );
+        $this->assertSame(
+            MDL_F2F_STATUS_PARTIALLY_ATTENDED,
+            (int)$this->get_current_status($secondpastsignup->id)->statuscode
+        );
+        $this->assertSame(
+            MDL_F2F_STATUS_BOOKED,
+            (int)$this->get_current_status($futuresignup->id)->statuscode
+        );
     }
 
     /**
@@ -710,7 +786,7 @@ class upload_duplicate_test extends \advanced_testcase {
             $manager->process($errors);
             $this->fail('Expected attendance processing to throw an exception.');
 
-        } catch (\moodle_exception $exception) {
+        } catch (moodle_exception $exception) {
             $this->assertStringContainsString($expectedmessage, $exception->getMessage());
         }
 
@@ -892,11 +968,11 @@ class upload_duplicate_test extends \advanced_testcase {
      *
      * @param int $capacity Session capacity.
      * @param bool $historical Whether the session has finished.
-     * @return array{0:\stdClass, 1:\stdClass, 2:\stdClass, 3:\stdClass, 4:\stdClass}
+     * @return array{0:stdClass, 1:stdClass, 2:stdClass, 3:stdClass, 4:stdClass}
      *     Course, activity, session and two users.
      */
     private function create_fixture(int $capacity, bool $historical): array {
-        /** @var \mod_facetoface_generator $generator */
+        /** @var mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
         $course = $this->getDataGenerator()->create_course();
         $facetoface = $generator->create_instance(['course' => $course->id]);
@@ -922,20 +998,20 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Create a signup with the requested current status.
      *
-     * @param \stdClass $course Course record.
-     * @param \stdClass $facetoface Activity record.
-     * @param \stdClass $session Session record.
-     * @param \stdClass $user User record.
+     * @param stdClass $course Course record.
+     * @param stdClass $facetoface Activity record.
+     * @param stdClass $session Session record.
+     * @param stdClass $user User record.
      * @param int $statuscode Current signup status.
-     * @return \stdClass Signup record.
+     * @return stdClass Signup record.
      */
     private function create_signup_with_status(
-        \stdClass $course,
-        \stdClass $facetoface,
-        \stdClass $session,
-        \stdClass $user,
+        stdClass $course,
+        stdClass $facetoface,
+        stdClass $session,
+        stdClass $user,
         int $statuscode
-    ): \stdClass {
+    ): stdClass {
         global $DB, $USER;
 
         facetoface_user_signup(
@@ -979,11 +1055,15 @@ class upload_duplicate_test extends \advanced_testcase {
      * Create and load either CSV manager.
      *
      * @param bool $sitewide Whether to create the site-wide manager.
-     * @param \stdClass $facetoface Activity record.
-     * @param list<\stdClass> $rows CSV row objects.
+     * @param stdClass $facetoface Activity record.
+     * @param list<stdClass> $rows CSV row objects.
      * @return booking_manager|booking_manager_bulk_attendance Loaded manager instance.
      */
-    private function create_manager(bool $sitewide, \stdClass $facetoface, array $rows): booking_manager|booking_manager_bulk_attendance {
+    private function create_manager(
+        bool $sitewide,
+        stdClass $facetoface,
+        array $rows
+    ): booking_manager|booking_manager_bulk_attendance {
         if ($sitewide) {
             return (new booking_manager_bulk_attendance())->load_from_array($rows);
         }
@@ -995,17 +1075,17 @@ class upload_duplicate_test extends \advanced_testcase {
      * Create a row in the selected manager's format.
      *
      * @param bool $sitewide Whether to use site-wide field names.
-     * @param \stdClass $user User record.
-     * @param \stdClass $session Session record.
+     * @param stdClass $user User record.
+     * @param stdClass $session Session record.
      * @param string $status CSV status.
-     * @return \stdClass CSV row.
+     * @return stdClass CSV row.
      */
     private function create_row(
         bool $sitewide,
-        \stdClass $user,
-        \stdClass $session,
+        stdClass $user,
+        stdClass $session,
         string $status
-    ): \stdClass {
+    ): stdClass {
         if ($sitewide) {
             return (object)[
                 'Username' => $user->username,
@@ -1029,9 +1109,9 @@ class upload_duplicate_test extends \advanced_testcase {
      * Return the current signup status record.
      *
      * @param int $signupid Signup ID.
-     * @return \stdClass Current status record.
+     * @return stdClass Current status record.
      */
-    private function get_current_status(int $signupid): \stdClass {
+    private function get_current_status(int $signupid): stdClass {
         global $DB;
 
         return $DB->get_record(
@@ -1045,7 +1125,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Assert that a row has the expected validation error.
      *
-     * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors.
+     * @param list<array{0:int|string, 1:string|lang_string}> $errors Validation errors.
      * @param int $row CSV row number.
      * @param string $message Expected message.
      * @return void
@@ -1063,7 +1143,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Assert that a row has no validation errors.
      *
-     * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors.
+     * @param list<array{0:int|string, 1:string|lang_string}> $errors Validation errors.
      * @param int $row CSV row number.
      * @return void
      */
@@ -1079,7 +1159,7 @@ class upload_duplicate_test extends \advanced_testcase {
     /**
      * Return whether an error applies to a row.
      *
-     * @param array{0:int|string, 1:string|\lang_string} $error Validation error.
+     * @param array{0:int|string, 1:string|lang_string} $error Validation error.
      * @param int $row CSV row number.
      * @return bool True when the validation error applies to the supplied CSV row.
      */
@@ -1089,4 +1169,3 @@ class upload_duplicate_test extends \advanced_testcase {
         return in_array((string)$row, $rows, true);
     }
 }
-// GCHLOL ends.

@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,18 +12,19 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 namespace mod_facetoface;
 
+use advanced_testcase;
 use mod_facetoface\local\course_booking_manager as booking_manager;
+use mod_facetoface_generator;
+use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once("$CFG->dirroot/mod/facetoface/lib.php");
 
-// GCHLOL: Cover approval-workflow behavior for historical and future CSV booking and
-// attendance uploads across both booking-manager implementations.
 /**
  * Tests approval handling for CSV booking uploads.
  *
@@ -35,7 +36,7 @@ require_once("$CFG->dirroot/mod/facetoface/lib.php");
  * @covers     \mod_facetoface\booking_manager_bulk_attendance
  * @covers     ::facetoface_user_signup
  */
-class upload_approval_test extends \advanced_testcase {
+class upload_approval_test extends advanced_testcase {
 
     /**
      * Set up each test.
@@ -252,13 +253,13 @@ class upload_approval_test extends \advanced_testcase {
      * Create an approval-required Face-to-Face activity and dated session.
      *
      * @param bool $historical Whether the session should already have finished.
-     * @return array{0:\stdClass, 1:\stdClass, 2:\stdClass, 3:\stdClass}
+     * @return array{0:stdClass, 1:stdClass, 2:stdClass, 3:stdClass}
      *     The Face-to-Face activity, session, user and line-manager records.
      */
     private function create_booking_fixture(bool $historical): array {
         set_config('enableapprovals', '1', 'facetoface');
 
-        /** @var \mod_facetoface_generator $generator */
+        /** @var mod_facetoface_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
         $course = $this->getDataGenerator()->create_course();
         $facetoface = $generator->create_instance([
@@ -306,17 +307,17 @@ class upload_approval_test extends \advanced_testcase {
      * Create and load one of the CSV booking managers.
      *
      * @param bool $sitewide Whether to create the site-wide manager.
-     * @param \stdClass $facetoface Face-to-Face activity record.
-     * @param \stdClass $session Session record.
-     * @param \stdClass $user User record.
+     * @param stdClass $facetoface Face-to-Face activity record.
+     * @param stdClass $session Session record.
+     * @param stdClass $user User record.
      * @param string $status CSV status to load.
      * @return booking_manager|booking_manager_bulk_attendance The loaded manager.
      */
     private function create_booking_manager(
         bool $sitewide,
-        \stdClass $facetoface,
-        \stdClass $session,
-        \stdClass $user,
+        stdClass $facetoface,
+        stdClass $session,
+        stdClass $user,
         string $status = 'booked'
     ): booking_manager|booking_manager_bulk_attendance {
         if ($sitewide) {
@@ -348,4 +349,3 @@ class upload_approval_test extends \advanced_testcase {
         return $manager;
     }
 }
-// GCHLOL ends.

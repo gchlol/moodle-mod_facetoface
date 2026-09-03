@@ -95,10 +95,7 @@ function display_bulk_upload_errors(array $errors, int $fileid): void {
             continue;
         }
         // Add 1 to the index to match the line number displayed in Excel (CSV header: + 1).
-        $line = implode(', ', array_map(
-            fn($errorrow) => (int)trim($errorrow) + 1,
-            explode(',', (string)$error[0])
-        ));
+        $line = $error[0] + 1;
         $messages = array_slice($error, 1);
 
         foreach ($messages as $message) {
@@ -133,44 +130,6 @@ function display_bulk_upload_errors(array $errors, int $fileid): void {
     echo $OUTPUT->footer();
 
     exit;
-}
-
-/**
- * Count the distinct CSV rows skipped during bulk-upload processing.
- *
- * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors keyed by CSV row.
- * @return int Number of distinct CSV rows that will be skipped during processing.
- */
-function count_skipped_bulk_upload_rows(array $errors): int {
-    $skippedrows = [];
-
-    foreach ($errors as $error) {
-        foreach (explode(',', (string)$error[0]) as $errorrow) {
-            $skippedrows[trim($errorrow)] = true;
-        }
-    }
-
-    return count($skippedrows);
-}
-
-/**
- * Build the success message for a processed bulk-attendance upload.
- *
- * @param booking_manager_bulk_attendance $manager Loaded CSV manager.
- * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors returned for the upload.
- * @return string Success message describing the processed and skipped row counts.
- */
-function get_bulk_upload_success_message(booking_manager_bulk_attendance $manager, array $errors): string {
-    if (empty($errors)) {
-        return get_string('bulkattendanceprocessed', 'mod_facetoface');
-    }
-
-    $skipped = count_skipped_bulk_upload_rows($errors);
-
-    return get_string('bulkattendanceprocessedwithskips', 'mod_facetoface', (object)[
-        'processed' => count($manager->get_records()) - $skipped,
-        'skipped'   => $skipped,
-    ]);
 }
 
 // 6) Handle the “Upload & Preview” step.
@@ -264,9 +223,19 @@ if (
     ]);
     $event->trigger();
 
+    $message = get_string('bulkattendanceprocessed', 'mod_facetoface');
+    if (!empty($errors)) {
+        $skippedrowcount = count(array_unique(array_column($errors, 0)));
+
+        $message = get_string('bulkattendanceprocessedwithskips', 'mod_facetoface', (object)[
+            'processed' => count($manager->get_records()) - $skippedrowcount,
+            'skipped' => $skippedrowcount,
+        ]);
+    }
+
     redirect(
         new moodle_url('/mod/facetoface/uploadbulkattendance.php'),
-        get_bulk_upload_success_message($manager, $errors),
+        $message,
         null,
         notification::NOTIFY_SUCCESS
     );
