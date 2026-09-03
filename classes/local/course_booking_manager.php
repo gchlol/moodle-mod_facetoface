@@ -29,9 +29,10 @@ use stored_file;
 /**
  * Course-level CSV booking upload facade.
  *
- * This plugin-owned facade keeps CSV loading and course-specific orchestration
- * outside the third-party booking manager. Shared booking and attendance rules
- * are delegated to booking_upload_service.
+ * This plugin-owned facade replaces the open-source \mod_facetoface\booking_manager, which
+ * upload.php now imports as an alias of this class. The upstream class is left unmodified
+ * and unused, keeping upstream merges free of conflicts in the course upload workflow.
+ * Shared booking and attendance rules are delegated to booking_upload_service.
  *
  * @package    mod_facetoface
  * @copyright  2026 Gold Coast Health
