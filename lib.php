@@ -2605,6 +2605,7 @@ function facetoface_check_manageremail($manageremail) {
  *                    and every submission ID to mark as attended
  *                    under the 'submissionid_XXXX' keys where XXXX is
  *                     the ID of the signup
+ * @return bool True when attendance was applied, or false when it could not be applied.
  */
 function facetoface_take_attendance($data) {
     global $USER;
@@ -2658,7 +2659,9 @@ function facetoface_take_attendance($data) {
                     continue 2;
             }
 
-            facetoface_update_signup_status($submissionid, $value, $USER->id, '', $grade);
+            if (!facetoface_update_signup_status($submissionid, $value, $USER->id, '', $grade)) {
+                return false;
+            }
             if (!facetoface_take_individual_attendance($submissionid, $grade)) {
                 // F2F: could not mark '$submissionid' as $value.
                 return false;

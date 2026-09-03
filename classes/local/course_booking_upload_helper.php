@@ -993,7 +993,11 @@ class course_booking_upload_helper {
         int $statuscode
     ): void {
         $signupid = $this->ensure_signup_for_attendance($session, $user, $entry);
-        if (!$this->apply_attendance_signup_status($signupid, $statuscode)) {
+        $data = (object)[
+            's' => $session->id,
+            "submissionid_{$signupid}" => $statuscode,
+        ];
+        if (!facetoface_take_attendance($data)) {
             throw new moodle_exception(
                 'error:attendanceuploadfailed',
                 'mod_facetoface',
@@ -1032,52 +1036,6 @@ class course_booking_upload_helper {
         $this->trigger_bulk_booking_created_event($session, (int)$user->id);
 
         return $signupid;
-    }
-
-    /**
-     * Apply an attendance status to a signup.
-     *
-     * @param int $signupid Signup ID.
-     * @param int $statuscode Attendance status code.
-     * @return bool True when both the signup status and attendance grade are stored.
-     */
-    private function apply_attendance_signup_status(int $signupid, int $statuscode): bool {
-        global $USER;
-
-        $grade = $this->get_attendance_grade($statuscode);
-
-        return facetoface_update_signup_status(
-            $signupid,
-            $statuscode,
-            $USER->id,
-            '',
-            $grade
-        )
-            && facetoface_take_individual_attendance($signupid, $grade);
-    }
-
-    /**
-     * Convert an attendance status code into its grade.
-     *
-     * @param int $statuscode Attendance status code.
-     * @return int Attendance grade percentage for the supplied status code.
-     */
-    private function get_attendance_grade(int $statuscode): int {
-        switch ($statuscode) {
-            case MDL_F2F_STATUS_NO_SHOW:
-                return 0;
-            case MDL_F2F_STATUS_PARTIALLY_ATTENDED:
-                return 50;
-            case MDL_F2F_STATUS_FULLY_ATTENDED:
-                return 100;
-        }
-
-        throw new moodle_exception(
-            'error:invalidstatusspecified',
-            'mod_facetoface',
-            '',
-            $statuscode
-        );
     }
 
     /**
