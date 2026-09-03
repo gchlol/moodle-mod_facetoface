@@ -16,23 +16,35 @@
 
 namespace mod_facetoface\local;
 
-use Closure;
 use context_course;
+use context_user;
 use Exception;
+use file_storage;
 use Generator;
 use lang_string;
 use moodle_exception;
 use stdClass;
+use stored_file;
 
 /**
- * Adapts the course-level booking uploader to the shared upload workflow.
+ * Course-level CSV booking upload facade.
+ *
+ * This plugin-owned facade keeps CSV loading and course-specific orchestration
+ * outside the third-party booking manager. Shared booking and attendance rules
+ * are delegated to booking_upload_service.
  *
  * @package    mod_facetoface
  * @copyright  2026 Gold Coast Health
  * @author     Yucheng Zhu
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-final class course_booking_upload_helper {
+final class course_booking_manager {
+
+    /** @var stored_file|null Uploaded CSV file. */
+    protected ?stored_file $file = null;
+
+    /** @var int Face-to-face activity ID. */
+    protected int $facetofaceid;
 
     /** @var stdClass Face-to-face activity record. */
     protected stdClass $facetoface;
@@ -43,67 +55,100 @@ final class course_booking_upload_helper {
     /** @var context_course Course context. */
     protected context_course $coursecontext;
 
-    /** @var int Face-to-face activity ID. */
-    protected int $facetofaceid;
+    /** @var list<stdClass> In-memory upload rows. */
+    protected array $records;
 
-    /** @var Closure Callback which returns a fresh row iterator. */
-    protected Closure $recorditerator;
+    /** @var bool Whether rows are loaded from a stored file. */
+    protected bool $usefile = true;
 
-    /** @var Closure Callback which matches a username to user records. */
-    protected Closure $usermatcher;
+    /** @var bool Whether confirmation emails are suppressed. */
+    protected bool $suppressemail = false;
 
-    /** @var Closure Callback which maps notification strings to MDL_F2F_* codes. */
-    protected Closure $notificationtypetransformer;
-
-    /** @var booking_upload_service Shared upload workflow. */
-    protected booking_upload_service $uploadservice;
+    /** @var bool Whether username matching ignores case. */
+    protected bool $caseinsensitive = false;
 
     /**
      * Constructor.
      *
-     * @param stdClass $facetoface Face-to-face activity record.
-     * @param stdClass $course Course record.
-     * @param context_course $coursecontext Course context.
      * @param int $facetofaceid Face-to-face activity ID.
-     * @param bool $usefile Whether the manager is processing a real file upload.
-     * @param bool $suppressemail Whether confirmation emails are suppressed.
-     * @param Closure $recorditerator Callback which returns a fresh row iterator.
-     * @param Closure $usermatcher Callback which matches a username to user records.
-     * @param Closure $notificationtypetransformer Callback which maps notification strings to MDL_F2F_* codes.
+     * @param list<stdClass> $records Initial in-memory upload rows.
      */
-    public function __construct(
-        stdClass $facetoface,
-        stdClass $course,
-        context_course $coursecontext,
-        int $facetofaceid,
-        bool $usefile,
-        bool $suppressemail,
-        Closure $recorditerator,
-        Closure $usermatcher,
-        Closure $notificationtypetransformer
-    ) {
-        $this->facetoface = $facetoface;
-        $this->course = $course;
-        $this->coursecontext = $coursecontext;
+    public function __construct(int $facetofaceid, array $records = []) {
         $this->facetofaceid = $facetofaceid;
-        $this->recorditerator = $recorditerator;
-        $this->usermatcher = $usermatcher;
-        $this->notificationtypetransformer = $notificationtypetransformer;
-        $this->uploadservice = new booking_upload_service($usefile, $suppressemail, true);
+        $this->records = $records;
     }
 
     /**
-     * Validate the records provided to ensure they can be processed without errors.
+     * Load upload rows from a draft-area file.
      *
-     * @param int|null $timenow Current time to use for validation.
+     * @param int $fileitemid Draft file area item ID.
+     * @return void
+     * @throws moodle_exception When the draft area does not contain exactly one file.
+     */
+    public function load_from_file(int $fileitemid): void {
+        global $USER;
+
+        $filesystem = new file_storage();
+        $files = $filesystem->get_area_files(
+            context_user::instance($USER->id)->id,
+            'user',
+            'draft',
+            $fileitemid,
+            'itemid',
+            false
+        );
+
+        if (count($files) !== 1) {
+            throw new moodle_exception('error:cannotloadfile', 'mod_facetoface');
+        }
+
+        $this->usefile = true;
+        $this->file = current($files);
+    }
+
+    /**
+     * Load upload rows from memory.
+     *
+     * @param list<stdClass> $records Upload rows. Email-only rows remain supported for legacy callers.
+     * @return self This manager.
+     */
+    public function load_from_array(array $records): self {
+        $this->usefile = false;
+        $this->records = $records;
+
+        return $this;
+    }
+
+    /**
+     * Return the canonical CSV headers.
+     *
+     * @return list<string> Header names in file order.
+     */
+    public static function get_headers(): array {
+        return [
+            'username',
+            'session',
+            'status',
+            'discountcode',
+            'notificationtype',
+        ];
+    }
+
+    /**
+     * Validate all configured upload rows.
+     *
+     * @param int|null $timenow Timestamp to use for validation.
      * @return list<array{0:int|string, 1:string|lang_string}> Validation errors keyed by CSV row.
      */
     public function validate(?int $timenow = null): array {
+        $this->ensure_activity_loaded();
+
         $errors = [];
         $validationrows = [];
         $activesignupcache = [];
         $signupexistencecache = [];
         $timenow ??= time();
+        $uploadservice = $this->get_upload_service();
 
         foreach ($this->get_iterator() as $index => $entry) {
             $row = $index + 1;
@@ -111,15 +156,22 @@ final class course_booking_upload_helper {
             $entry->status = $entry->status ?? '';
             $entry->notificationtype = $entry->notificationtype ?? '';
             $entry->discountcode = $entry->discountcode ?? '';
+            $useridentifier = $this->get_user_identifier($entry);
 
             $userid = null;
-            $userids = $this->match_users_username($entry->username, 'id');
+            $userids = $this->match_entry_user($entry, 'id');
             if (count($userids) > 1) {
-                $errors[] = [$row, new lang_string('error:multipleusersmatched', 'mod_facetoface', $entry->username)];
+                $errors[] = [
+                    $row,
+                    new lang_string('error:multipleusersmatched', 'mod_facetoface', $useridentifier),
+                ];
             }
 
             if (empty($userids)) {
-                $errors[] = [$row, new lang_string('error:userdoesnotexist', 'mod_facetoface', $entry->username)];
+                $errors[] = [
+                    $row,
+                    new lang_string('error:userdoesnotexist', 'mod_facetoface', $useridentifier),
+                ];
             }
 
             if (count($userids) === 1) {
@@ -128,7 +180,10 @@ final class course_booking_upload_helper {
 
             $session = facetoface_get_session($entry->session);
             if (!$session) {
-                $errors[] = [$row, new lang_string('error:sessiondoesnotexist', 'mod_facetoface', $entry->session)];
+                $errors[] = [
+                    $row,
+                    new lang_string('error:sessiondoesnotexist', 'mod_facetoface', $entry->session),
+                ];
             }
 
             if ($session && $session->facetoface != $this->facetofaceid) {
@@ -145,9 +200,9 @@ final class course_booking_upload_helper {
                 $session &&
                 $session->facetoface == $this->facetofaceid &&
                 isset($userid) &&
-                !$this->uploadservice->validate_existing_booking_upload(
+                !$uploadservice->validate_existing_booking_upload(
                     $row,
-                    $entry->username,
+                    $useridentifier,
                     $session,
                     $entry->status,
                     (int)$userid,
@@ -160,7 +215,7 @@ final class course_booking_upload_helper {
             }
 
             if ($session) {
-                $this->uploadservice->validate_session_status_rules(
+                $uploadservice->validate_session_status_rules(
                     $row,
                     $entry->session,
                     $entry->status,
@@ -185,7 +240,7 @@ final class course_booking_upload_helper {
                             new lang_string(
                                 'error:addalreadysignedupattendee',
                                 'mod_facetoface',
-                                $entry->email ?? $entry->username
+                                $useridentifier
                             ),
                         ];
                         break;
@@ -196,7 +251,10 @@ final class course_booking_upload_helper {
             if (isset($userid) && !is_enrolled($this->coursecontext, $userid)) {
                 $isenrolled = facetoface_enrol_user($this->coursecontext, $this->course->id, $userid);
                 if (!$isenrolled) {
-                    $errors[] = [$row, get_string('error:enrolmentfailed', 'mod_facetoface', $entry->username)];
+                    $errors[] = [
+                        $row,
+                        get_string('error:enrolmentfailed', 'mod_facetoface', $useridentifier),
+                    ];
                 }
             }
 
@@ -215,7 +273,7 @@ final class course_booking_upload_helper {
                 ];
             }
 
-            if (!$this->uploadservice->is_processable_status($entry->status)) {
+            if (!$uploadservice->is_processable_status($entry->status)) {
                 $errors[] = [
                     $row,
                     new lang_string('error:invalidstatusspecified', 'mod_facetoface', $entry->status),
@@ -226,11 +284,11 @@ final class course_booking_upload_helper {
                 $session &&
                 isset($userid) &&
                 count($errors) === $errorcountbefore &&
-                $this->uploadservice->is_processable_status($entry->status)
+                $uploadservice->is_processable_status($entry->status)
             ) {
-                $this->uploadservice->cache_validation_row(
+                $uploadservice->cache_validation_row(
                     $row,
-                    $entry->username,
+                    $useridentifier,
                     $entry->status,
                     $session,
                     (int)$userid,
@@ -244,7 +302,7 @@ final class course_booking_upload_helper {
             $this->validate_multiple_user_sessions($validationrows, $errors);
         }
 
-        $this->uploadservice->validate_unique_rows_and_capacity($validationrows, $errors);
+        $uploadservice->validate_unique_rows_and_capacity($validationrows, $errors);
 
         return $errors;
     }
@@ -252,13 +310,16 @@ final class course_booking_upload_helper {
     /**
      * Process all rows without validation errors.
      *
-     * @param list<array{0:int|string, 1:string|lang_string}> $errors Validation errors returned by validate().
+     * @param list<array{0:int|string, 1:string|lang_string}> $errors Validation errors returned by validate(), or none.
      * @return bool True after all processable rows have been handled.
      * @throws moodle_exception When attendance cannot be applied.
      * @throws Exception When cancellation fails.
      */
-    public function process(array $errors): bool {
+    public function process(array $errors = []): bool {
+        $this->ensure_activity_loaded();
+
         $skip = booking_upload_service::extract_rows_to_skip($errors);
+        $uploadservice = $this->get_upload_service();
 
         foreach ($this->get_iterator() as $index => $entry) {
             $row = $index + 1;
@@ -269,10 +330,10 @@ final class course_booking_upload_helper {
             $entry->status = $entry->status ?? '';
             $entry->discountcode = $entry->discountcode ?? '';
             $entry->notificationtype = $entry->notificationtype ?? '';
-            $user = current($this->match_users_username($entry->username, '*'));
+            $user = current($this->match_entry_user($entry, '*'));
             $session = facetoface_get_session($entry->session);
 
-            $this->uploadservice->process_row(
+            $uploadservice->process_row(
                 $entry,
                 $session,
                 $this->facetoface,
@@ -288,27 +349,149 @@ final class course_booking_upload_helper {
     }
 
     /**
-     * Return a fresh iterator for the configured records.
+     * Suppress confirmation emails for subsequent processing.
      *
-     * @return Generator CSV row iterator.
+     * @return void
      */
-    private function get_iterator(): Generator {
-        $recorditerator = $this->recorditerator;
-
-        return $recorditerator();
+    public function suppress_email(): void {
+        $this->suppressemail = true;
     }
 
     /**
-     * Match users by username.
+     * Configure case-insensitive username matching.
      *
-     * @param string $username Username to search.
+     * @param bool $value Whether username matching should ignore case.
+     * @return void
+     */
+    public function set_case_insensitive(bool $value): void {
+        $this->caseinsensitive = $value;
+    }
+
+    /**
+     * Load the activity and course context on first use.
+     *
+     * @return void
+     * @throws moodle_exception When the configured activity or course does not exist.
+     */
+    private function ensure_activity_loaded(): void {
+        global $DB;
+
+        if (isset($this->facetoface)) {
+            return;
+        }
+
+        $facetoface = $DB->get_record('facetoface', ['id' => $this->facetofaceid]);
+        if (!$facetoface) {
+            throw new moodle_exception('error:incorrectfacetofaceid', 'facetoface');
+        }
+
+        $course = $DB->get_record('course', ['id' => $facetoface->course]);
+        if (!$course) {
+            throw new moodle_exception('error:coursemisconfigured', 'facetoface');
+        }
+
+        $this->facetoface = $facetoface;
+        $this->course = $course;
+        $this->coursecontext = context_course::instance($course->id);
+    }
+
+    /**
+     * Build the shared workflow service for the current manager options.
+     *
+     * @return booking_upload_service Shared upload workflow.
+     */
+    private function get_upload_service(): booking_upload_service {
+        return new booking_upload_service($this->usefile, $this->suppressemail, true);
+    }
+
+    /**
+     * Return a fresh iterator for the configured records.
+     *
+     * @return Generator CSV row iterator.
+     * @throws moodle_exception When a file row has the wrong field count.
+     */
+    private function get_iterator(): Generator {
+        if (!$this->usefile) {
+            foreach ($this->records as $record) {
+                yield $record;
+            }
+
+            return;
+        }
+
+        if ($this->file === null) {
+            throw new moodle_exception('error:cannotloadfile', 'mod_facetoface');
+        }
+
+        $handle = $this->file->get_content_file_handle();
+        $maxlinelength = 1000;
+        $delimiter = ',';
+        $headers = static::get_headers();
+        $numheaders = count($headers);
+        $fileheaders = fgetcsv($handle, $maxlinelength, $delimiter);
+        $hasdiscount = false;
+        if ($fileheaders !== false) {
+            $normalisedheaders = array_map(
+                static function(string $header): string {
+                    return strtolower(trim($header));
+                },
+                $fileheaders
+            );
+            $hasdiscount = in_array('discountcode', $normalisedheaders, true);
+        }
+
+        $discountposition = array_search('discountcode', $headers, true);
+
+        try {
+            while (($data = fgetcsv($handle, $maxlinelength, $delimiter)) !== false) {
+                if (!$hasdiscount && $discountposition !== false) {
+                    array_splice($data, $discountposition, 0, '');
+                }
+
+                if (count($data) !== $numheaders) {
+                    throw new moodle_exception(
+                        'error:bookingsuploadfileheaderfieldmismatch',
+                        'mod_facetoface'
+                    );
+                }
+
+                yield (object)array_combine($headers, $data);
+            }
+
+        } finally {
+            fclose($handle);
+        }
+    }
+
+    /**
+     * Match a user from either the current username row shape or the legacy email row shape.
+     *
+     * @param stdClass $entry Upload row.
      * @param string $fields Fields to return.
      * @return array<int, stdClass> Matching users keyed by user ID.
      */
-    private function match_users_username(string $username, string $fields): array {
-        $usermatcher = $this->usermatcher;
+    private function match_entry_user(stdClass $entry, string $fields): array {
+        global $DB;
 
-        return $usermatcher($username, $fields);
+        $field = property_exists($entry, 'username') ? 'username' : 'email';
+        $identifier = $this->get_user_identifier($entry);
+        $equals = $DB->sql_equal($field, ':identifier', !$this->caseinsensitive);
+
+        return $DB->get_records_select('user', $equals, ['identifier' => $identifier], 'id', $fields);
+    }
+
+    /**
+     * Return the learner identifier displayed for an upload row.
+     *
+     * @param stdClass $entry Upload row.
+     * @return string Username, or the legacy email value when username is absent.
+     */
+    private function get_user_identifier(stdClass $entry): string {
+        if (property_exists($entry, 'username')) {
+            return (string)($entry->username ?? '');
+        }
+
+        return (string)($entry->email ?? '');
     }
 
     /**
@@ -318,13 +501,19 @@ final class course_booking_upload_helper {
      * @return int|null Notification code, or null when invalid.
      */
     private function transform_notification_type(string $type): ?int {
-        $notificationtypetransformer = $this->notificationtypetransformer;
+        $mapping = [
+            'email' => MDL_F2F_TEXT,
+            'ical' => MDL_F2F_ICAL,
+            'icalendar' => MDL_F2F_ICAL,
+            'both' => MDL_F2F_BOTH,
+            '' => MDL_F2F_ICAL,
+        ];
 
-        return $notificationtypetransformer($type);
+        return $mapping[strtolower($type)] ?? null;
     }
 
     /**
-     * Validate that a single-signup activity does not contain one user in multiple uploaded sessions.
+     * Validate that one user is not uploaded to multiple sessions in single-signup mode.
      *
      * @param array<int, array{session:stdClass, userid:int, username:string, status:string, hasactivesignup:bool}>
      *     $validationrows Resolved, processable CSV rows keyed by row number.

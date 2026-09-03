@@ -16,8 +16,10 @@
 
 namespace mod_facetoface;
 
-use mod_facetoface\booking_manager;
 use lang_string;
+// GCHLOL: Exercise the isolated course upload manager used by upload.php.
+use mod_facetoface\local\course_booking_manager as booking_manager;
+// GCHLOL ends.
 
 /**
  * Test the upload helper class.
@@ -26,7 +28,7 @@ use lang_string;
  * @author     Kevin Pham <kevinpham@catalyst-au.net>
  * @copyright  Catalyst IT, 2024
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers \mod_facetoface\booking_manager
+ * @covers \mod_facetoface\local\course_booking_manager
  */
 class upload_test extends \advanced_testcase {
 

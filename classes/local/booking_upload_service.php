@@ -365,7 +365,7 @@ final class booking_upload_service {
                 $course,
                 $coursecontext,
                 $user,
-                $entry->username,
+                $entry->username ?? $entry->email ?? '',
                 $entry->discountcode,
                 $notificationtype,
                 $row,

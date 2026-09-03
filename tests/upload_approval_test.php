@@ -16,6 +16,8 @@
 
 namespace mod_facetoface;
 
+use mod_facetoface\local\course_booking_manager as booking_manager;
+
 defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once("$CFG->dirroot/mod/facetoface/lib.php");
@@ -29,7 +31,7 @@ require_once("$CFG->dirroot/mod/facetoface/lib.php");
  * @copyright  2026 Gold Coast Health
  * @author     Yucheng Zhu
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \mod_facetoface\booking_manager
+ * @covers     \mod_facetoface\local\course_booking_manager
  * @covers     \mod_facetoface\booking_manager_bulk_attendance
  * @covers     ::facetoface_user_signup
  */

@@ -19,9 +19,7 @@ namespace mod_facetoface;
 use context_course;
 use context_user;
 use file_storage;
-use Generator;
 use lang_string;
-use mod_facetoface\local\course_booking_upload_helper;
 use moodle_exception;
 
 /**
@@ -72,11 +70,9 @@ class booking_manager {
         if (!$facetoface = $DB->get_record('facetoface', ['id' => $f])) {
             throw new moodle_exception('error:incorrectfacetofaceid', 'facetoface');
         }
-
         if (!$course = $DB->get_record('course', ['id' => $facetoface->course])) {
             throw new moodle_exception('error:coursemisconfigured', 'facetoface');
         }
-
         $this->f = $f;
         $this->facetoface = $facetoface;
         $this->course = $course;
@@ -131,7 +127,7 @@ class booking_manager {
      * Get an iterator for the records.
      * @return Generator
      */
-    private function get_iterator(): Generator {
+    private function get_iterator(): \Generator {
         if (!$this->usefile) {
             foreach ($this->records as $record) {
                 yield $record;
@@ -178,45 +174,199 @@ class booking_manager {
         }
     }
 
-    // GCHLOL: Delegate the branch-specific CSV upload workflow to a local helper so this
-    // third-party file keeps a small, low-conflict surface.
-    /**
-     * Build the helper that owns the branch-specific CSV upload behavior.
-     *
-     * @return course_booking_upload_helper Helper configured with the manager's current upload state.
-     */
-    private function get_upload_helper(): course_booking_upload_helper {
-        return new course_booking_upload_helper(
-            $this->facetoface,
-            $this->course,
-            $this->coursecontext,
-            $this->f,
-            $this->usefile,
-            $this->suppressemail,
-            function(): Generator {
-                return $this->get_iterator();
-            },
-            function(string $username, string $fields): array {
-                return $this->match_users_username($username, $fields);
-            },
-            function(string $type): ?int {
-                return $this->transform_notification_type($type);
-            }
-        );
-    }
-
     /**
      * Validate the records provided to ensure they can be processed without errors.
      *
-     * @param int|null $timenow The current time to use for validation.
-     * @return list<array{0:int|string, 1:string|lang_string}> Validation errors keyed by CSV row.
+     * As there are multiple dependant data points (users, sessions, capacity)
+     * that are checked. They are all in this method.
+     *
+     * @param int $timenow The current time to use for validation.
+     * @return array An array of errors.
      */
     public function validate($timenow = null): array {
-        $validationtime = $timenow === null ? null : (int)$timenow;
+        $errors = [];
+        $sessioncapacitycache = [];
+        $timenow ??= time();
 
-        return $this->get_upload_helper()->validate($validationtime);
+        $usersessions = [];
+
+        // Break into rows and validate the multiple interdependant fields together.
+        foreach ($this->get_iterator() as $index => $entry) {
+            $row = $index + 1;
+
+            // Set defaults for fields with no value.
+            $entry->status = $entry->status ?? '';
+            $entry->notificationtype = $entry->notificationtype ?? '';
+            $entry->discountcode = $entry->discountcode ?? '';
+
+            // Validate and get user.
+            $userids = $this->match_users_username($entry->username, 'id');
+
+            // Multiple matched, ambiguous which is the real one.
+            if (count($userids) > 1) {
+                $errors[] = [$row, new lang_string('error:multipleusersmatched', 'mod_facetoface', $entry->username)];
+            }
+
+            // None matched at all - missing.
+            if (empty($userids)) {
+                $errors[] = [$row, new lang_string('error:userdoesnotexist', 'mod_facetoface', $entry->username)];
+            } else {
+                $userid = current($userids)->id;
+            }
+
+            // Check session exists.
+            $session = facetoface_get_session($entry->session);
+            if (!$session) {
+                $errors[] = [$row, new lang_string('error:sessiondoesnotexist', 'mod_facetoface', $entry->session)];
+            }
+
+            // Check for session overbooking, that is, if it would go over session capacity.
+            if ($session) {
+                // If the session supplied does not link to the face-to-face module expected, then it's invalid.
+                if ($session->facetoface != $this->f) {
+                    $errors[] = [
+                        $row,
+                        new lang_string('error:tryingtoupdatesessionfromanothermodule', 'mod_facetoface', (object) [
+                            'session' => $entry->session,
+                            'f' => $this->f,
+                        ]),
+                    ];
+                }
+                // Don't allow user to cancel a session that has already occurred.
+                if ($entry->status === 'cancelled' && facetoface_has_session_started($session, $timenow)) {
+                    $errors[] = [$row, new lang_string('error:sessionalreadystarted', 'mod_facetoface', $entry->session)];
+                }
+
+                if ($session->datetimeknown
+                    && in_array($entry->status, ['', 'booked'])
+                    && facetoface_has_session_started($session, $timenow)) {
+                    $inprogressstr = get_string('cannotsignupsessioninprogress', 'facetoface');
+                    $overstr = get_string('cannotsignupsessionover', 'facetoface');
+
+                    $errorstring = facetoface_is_session_in_progress($session, $timenow) ? $inprogressstr : $overstr;
+                    $errors[] = [$row, $errorstring];
+                }
+
+                // Set the session capacity if it hasn't been set yet.
+                if ($session->allowoverbook == 0 && !isset($sessioncapacitycache[$session->id])) {
+                    // Total minus current capacity.
+                    $sessioncapacitycache[$session->id]['capacity'] =
+                        $session->capacity - facetoface_get_num_attendees($session->id, MDL_F2F_STATUS_APPROVED);
+                }
+
+                // If the status is not cancelled, then it's considered a booking and it should deduct from the session.
+                if ($session->allowoverbook == 0 && $entry->status !== 'cancelled') {
+                    $sessioncapacitycache[$session->id]['capacity']--;
+                    $sessioncapacitycache[$session->id]['rows'][] = $row;
+                }
+
+                // Don't allow users to signup to another session if the signup type is not multiple.
+                if (isset($userid) && $entry->status !== 'cancelled' && $this->facetoface->signuptype != MOD_FACETOFACE_SIGNUP_MULTIPLE) {
+                    if ($currusersessions = facetoface_get_user_submissions($this->f, $userid)) {
+                        foreach ($currusersessions as $currusersession) {
+                            if ($currusersession->sessionid != $session->id) {
+                                $errors[] = [
+                                    $row,
+                                    new lang_string('error:addalreadysignedupattendee', 'mod_facetoface', $entry->email),
+                                ];
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Check user enrolment into the course.
+            if (isset($userid) && !is_enrolled($this->coursecontext, $userid)) {
+                //$errors[] = [$row, new lang_string('error:userisnotenrolledintocourse', 'mod_facetoface', $entry->username)];
+                $isenrolled = facetoface_enrol_user($this->coursecontext, $this->course->id, $userid);
+                if (!$isenrolled) {
+                    $errors[] = [
+                        $row,
+                        get_string('error:enrolmentfailed', 'mod_facetoface', $entry->username)
+                    ];
+                }
+            }
+
+            // Check to ensure valid notification types are used if set.
+            if (isset($entry->notificationtype)
+                && !in_array(
+                    $this->transform_notification_type($entry->notificationtype),
+                    [MDL_F2F_BOTH, MDL_F2F_TEXT, MDL_F2F_ICAL]
+                )) {
+                $errors[] = [
+                    $row,
+                    new lang_string('error:invalidnotificationtypespecified', 'mod_facetoface', $entry->notificationtype),
+                ];
+            }
+
+            // Check to ensure a valid status is set.
+            if (isset($entry->status) && !in_array(
+                $entry->status,
+                array_merge(facetoface_statuses(), [
+                    '',          // Defaults to booked.
+                    'cancelled', // Alternative to 'user_cancelled'.
+                ])
+            )) {
+                $errors[] = [
+                    $row,
+                    new lang_string('error:invalidstatusspecified', 'mod_facetoface', $entry->status),
+                ];
+            }
+
+            // If the user exists and this isn't a cancellation, we need to store the distinct session for checking at the end.
+            if (isset($userid) && $entry->status !== 'cancelled') {
+                // Set the user sessions if it hasn't been set yet.
+                if (!isset($usersessions[$userid])) {
+                    $usersessions[$userid] = [
+                        'email' => $entry->email,
+                        'rows' => [],
+                        'sessions' => [],
+                    ];
+                }
+
+                $usersessions[$userid]['rows'][] = $row;
+
+                if ($session && !in_array($session->id, $usersessions[$userid]['sessions'])) {
+                    $usersessions[$userid]['sessions'][] = $session->id;
+                }
+            }
+        }
+
+        // If the signup type is not set to multiple, we need to create errors for users being added to multiple sessions.
+        if ($this->facetoface->signuptype != MOD_FACETOFACE_SIGNUP_MULTIPLE) {
+            // Get all users being added to more than 1 session.
+            $doublebookedusers = array_filter($usersessions, function($us) {
+                return count($us['sessions']) > 1;
+            });
+            // Create errors for the user rows.
+            foreach ($doublebookedusers as $details) {
+                $errors[] = [
+                    implode(', ', $details['rows']),
+                    new lang_string('error:multipleusersessions', 'mod_facetoface', $details['email']),
+                ];
+            }
+        }
+
+        // For all sessions that went over capacity, report it.
+        $overcapacitysessions = array_filter($sessioncapacitycache, function ($s) {
+            return $s['capacity'] < 0;
+        });
+        if (!empty($overcapacitysessions)) {
+            foreach ($overcapacitysessions as $sessionid => $details) {
+                $errors[] = [
+                    implode(', ', $details['rows']),
+                    new lang_string(
+                        'error:sessionoverbooked',
+                        'mod_facetoface',
+                        (object) ['session' => $sessionid, 'amount' => -$details['capacity']]
+                    ),
+                ];
+            }
+        }
+
+        return $errors;
     }
-    // GCHLOL ends.
 
     /**
      * Match users for a given email, taking into account case sensitivity.
@@ -260,19 +410,107 @@ class booking_manager {
         return $mapping[strtolower($type)] ?? null;
     }
 
-    // GCHLOL: Delegate the branch-specific CSV processing workflow to the local helper to
-    // avoid keeping large custom logic blocks inside the third-party manager.
     /**
      * Process the bookings in the file.
      *
-     * @param list<array{0:int|string, 1:string|lang_string}> $errors Validation errors from validate().
      * @return bool
      * @throws moodle_exception
      */
     public function process(array $errors) {
-        return $this->get_upload_helper()->process($errors);
+        // Build a set of rows to skip from the error list.
+        $skip = self::extract_rows_to_skip($errors);
+
+        // Records may contain errors; we will skip them.
+        $index = -1;
+        foreach ($this->get_iterator() as $entry) {
+            $index++;
+            $row = $index + 1; // 1-based row index for comparison.
+
+            if (isset($skip[$row])) {
+                continue; // Skip rows with validation errors.
+            }
+
+            $user = current($this->match_users_username($entry->username, '*'));
+            $session = facetoface_get_session($entry->session);
+
+            // Get signup type.
+            if ($entry->status === 'cancelled') {
+                // Handle cancellation.
+                if (facetoface_user_cancel($session, $user->id, true, $cancelerr)) {
+                    // Notify the user of the cancellation if the session hasn't started yet.
+                    $timenow = time();
+                    if (!facetoface_has_session_started($session, $timenow) && !$this->suppressemail) {
+                        facetoface_send_cancellation_notice($this->facetoface, $session, $user->id);
+                    }
+                } else {
+                    throw new \Exception($cancelerr);
+                }
+            } else {
+                // Map status to status code.
+                $statuscode = array_search($entry->status, facetoface_statuses()) ?: MDL_F2F_STATUS_BOOKED;
+
+                // Handle signups.
+                if (in_array($statuscode, [MDL_F2F_STATUS_BOOKED, MDL_F2F_STATUS_WAITLISTED])) {
+                    if ($statuscode === MDL_F2F_STATUS_BOOKED && !$session->datetimeknown) {
+                        // If booked, ensures the status is waitlisted instead, if the datetime is unknown.
+                        $statuscode = MDL_F2F_STATUS_WAITLISTED;
+                    }
+
+                    // Edge case: Re-enrol the user if they are unenrolled after validation.
+                    // Otherwise, it's idempotent for enrolled users.
+                    $coursecontext = context_course::instance($this->course->id);
+                    facetoface_enrol_user($coursecontext, $this->course->id, $user->id);
+
+                    facetoface_user_signup(
+                        $session,
+                        $this->facetoface,
+                        $this->course,
+                        $entry->discountcode ?? '',
+                        $this->transform_notification_type($entry->notificationtype) ?? -1,
+                        $statuscode,
+                        $user->id,
+                        !$this->suppressemail,
+                    );
+
+                    // GCHLOL: Log a successful CSV bulk upload booking for this session user.
+                    \mod_facetoface\event\bulk_booking_created::trigger_from_bulk_upload_if_needed(
+                        (bool) $this->usefile,
+                        $this->facetoface,
+                        $session,
+                        (int) $user->id
+                    );
+                    // GCHLOL ends.
+
+                    continue;
+                }
+
+                // Handle attendance.
+                if (in_array($statuscode, [
+                    MDL_F2F_STATUS_NO_SHOW,
+                    MDL_F2F_STATUS_PARTIALLY_ATTENDED,
+                    MDL_F2F_STATUS_FULLY_ATTENDED,
+                ])) {
+                    $attendees = facetoface_get_attendees($session->id);
+                    // Get matching attendee.
+                    foreach ($attendees as $attendee) {
+                        if ($attendee->username == $entry->username) {
+                            break;
+                        }
+                    }
+
+                    $data = (object) [
+                        's' => $session->id,
+                        'submissionid_' . $attendee->submissionid => $statuscode,
+                    ];
+                    facetoface_take_attendance($data);
+
+                    continue;
+                }
+            }
+        }
+
+        return true;
     }
-    // GCHLOL ends.
 
     /**
      * Stops confirmation emails from being sent
@@ -289,4 +527,35 @@ class booking_manager {
         $this->caseinsensitive = $value;
     }
 
+    /**
+     * Convert the error array into a set of row numbers to skip.
+     *
+     * @param array<int, mixed> $errors Validation errors from validate()
+     * @return array<int, bool> Keys are row numbers to skip (1-based)
+     * @throws moodle_exception When the error format is invalid
+     */
+    private static function extract_rows_to_skip(array $errors): array {
+        $skip = [];
+
+        foreach ($errors as $error) {
+            if (!is_array($error)) {
+                throw new moodle_exception('error:errormustbeanarray', 'mod_facetoface', '', $error);
+            }
+
+            // First element must be an integer row number (1-based from validate()).
+            $row = $error[0];
+            if (!is_numeric($row)) {
+                throw new moodle_exception(
+                    'error:invalidrownumber',
+                    'mod_facetoface',
+                    '',
+                    (object)['value' => $row, 'type' => gettype($row)]
+                );
+            }
+
+            $skip[(int)$row] = true;
+        }
+
+        return $skip;
+    }
 }
