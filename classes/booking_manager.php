@@ -16,10 +16,12 @@
 
 namespace mod_facetoface;
 
-use mod_facetoface\local\course_booking_upload_helper;
 use context_course;
 use context_user;
 use file_storage;
+use Generator;
+use lang_string;
+use mod_facetoface\local\course_booking_upload_helper;
 use moodle_exception;
 
 /**
@@ -129,7 +131,7 @@ class booking_manager {
      * Get an iterator for the records.
      * @return Generator
      */
-    private function get_iterator(): \Generator {
+    private function get_iterator(): Generator {
         if (!$this->usefile) {
             foreach ($this->records as $record) {
                 yield $record;
@@ -191,13 +193,13 @@ class booking_manager {
             $this->f,
             $this->usefile,
             $this->suppressemail,
-            function(): \Generator {
+            function(): Generator {
                 return $this->get_iterator();
             },
             function(string $username, string $fields): array {
                 return $this->match_users_username($username, $fields);
             },
-            function($type) {
+            function(string $type): ?int {
                 return $this->transform_notification_type($type);
             }
         );
@@ -207,10 +209,12 @@ class booking_manager {
      * Validate the records provided to ensure they can be processed without errors.
      *
      * @param int|null $timenow The current time to use for validation.
-     * @return list<array{0:int|string, 1:string|\lang_string}> Validation errors keyed by CSV row.
+     * @return list<array{0:int|string, 1:string|lang_string}> Validation errors keyed by CSV row.
      */
-    public function validate(?int $timenow = null): array {
-        return $this->get_upload_helper()->validate($timenow);
+    public function validate($timenow = null): array {
+        $validationtime = $timenow === null ? null : (int)$timenow;
+
+        return $this->get_upload_helper()->validate($validationtime);
     }
     // GCHLOL ends.
 
@@ -261,11 +265,11 @@ class booking_manager {
     /**
      * Process the bookings in the file.
      *
-     * @param list<array{0:int|string, 1:string|\lang_string}> $errors Validation errors from validate().
+     * @param list<array{0:int|string, 1:string|lang_string}> $errors Validation errors from validate().
      * @return bool
      * @throws moodle_exception
      */
-    public function process(array $errors): bool {
+    public function process(array $errors) {
         return $this->get_upload_helper()->process($errors);
     }
     // GCHLOL ends.
@@ -285,35 +289,4 @@ class booking_manager {
         $this->caseinsensitive = $value;
     }
 
-    /**
-     * Convert the error array into a set of row numbers to skip.
-     *
-     * @param array<int, mixed> $errors Validation errors from validate()
-     * @return array<int, bool> Keys are row numbers to skip (1-based)
-     * @throws moodle_exception When the error format is invalid
-     */
-    private static function extract_rows_to_skip(array $errors): array {
-        $skip = [];
-
-        foreach ($errors as $error) {
-            if (!is_array($error)) {
-                throw new moodle_exception('error:errormustbeanarray', 'mod_facetoface', '', $error);
-            }
-
-            // First element must be an integer row number (1-based from validate()).
-            $row = $error[0];
-            if (!is_numeric($row)) {
-                throw new moodle_exception(
-                    'error:invalidrownumber',
-                    'mod_facetoface',
-                    '',
-                    (object)['value' => $row, 'type' => gettype($row)]
-                );
-            }
-
-            $skip[(int)$row] = true;
-        }
-
-        return $skip;
-    }
 }
