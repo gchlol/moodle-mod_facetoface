@@ -19,6 +19,7 @@ namespace mod_facetoface;
 use lang_string;
 // GCHLOL: Exercise the isolated course upload manager used by upload.php.
 use mod_facetoface\local\course_booking_manager as booking_manager;
+// GCHLOL ends.
 
 /**
  * Test the upload helper class.
@@ -30,7 +31,6 @@ use mod_facetoface\local\course_booking_manager as booking_manager;
  * @covers \mod_facetoface\local\course_booking_manager
  */
 class upload_test extends \advanced_testcase {
-    // GCHLOL ends.
 
     /**
      * This method runs before every test.
@@ -632,7 +632,8 @@ class upload_test extends \advanced_testcase {
         $this->assertNotEmpty(current($users)->timecancelled);
     }
 
-    // GCHLOL: Cover historical bookings, attendance creation, and future-attendance validation.
+    // GCHLOL: Extend the historical-session coverage to include past bookings, waitlist rejection,
+    // attendance uploads for existing and new signups, and future-session attendance validation.
     /**
      * Updates via uploads can be done for previous sessions.
      *

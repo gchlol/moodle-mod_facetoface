@@ -184,7 +184,22 @@ class booking_manager_bulk_attendance {
     }
 
     /**
-     * Validate records while preserving the site-wide uploader's error order and early exits.
+     * Validate the records provided to ensure they can be processed without errors.
+     *
+     * As there are multiple dependent data points (users, sessions, capacity),
+     * we check them in this order for each row:
+     *   1) Session exists (by id)
+     *   2) Face-to-Face activity & Course derived from session
+     *   3) User exists
+     *   4) Existing signup history for booking-style statuses
+     *   5) Session timing rules for cancellations, waitlists, and attendance
+     *   6) Enrollment check
+     *   7) Notification type check
+     *   8) Processable status check
+     *
+     * Once all rows have been checked, we validate them in this order:
+     *   9) Duplicate user/session rows in the uploaded file
+     *   10) Projected session capacity
      *
      * @param int|null $timenow Current time to use for validation.
      * @return list<array{0:int|string, 1:string|lang_string}> Validation errors keyed by CSV row.
@@ -268,7 +283,7 @@ class booking_manager_bulk_attendance {
 
             $userid = current($userids)->id;
 
-            // Reject a second booking-style upload when any signup history already exists.
+            // 4) Reject booking-style rows when any signup history already exists.
             if (!$uploadservice->validate_existing_booking_upload(
                 $row,
                 $username,
@@ -282,7 +297,7 @@ class booking_manager_bulk_attendance {
                 continue;
             }
 
-            // Apply the cancellation, waitlist, and attendance timing rules.
+            // 5) Check timing rules for cancellation, waitlist, and attendance statuses.
             if (!$uploadservice->validate_session_status_rules(
                 $row,
                 $sessionref,
@@ -294,7 +309,7 @@ class booking_manager_bulk_attendance {
                 continue;
             }
 
-            // Auto-enrol staff who are not yet enrolled in the course.
+            // 6) Enrollment check. Auto-enrol staff who are not yet enrolled in the course.
             $coursecontext = context_course::instance($course->id);
             if (!is_enrolled($coursecontext, $userid)) {
                 $isenrolled = facetoface_enrol_user($coursecontext, $course->id, $userid);
@@ -306,7 +321,7 @@ class booking_manager_bulk_attendance {
                 }
             }
 
-            // Check valid notification type.
+            // 7) Check valid notification type.
             $mapped = $this->transform_notification_type($notifytype);
             if ($mapped === null) {
                 $errors[] = [
@@ -315,7 +330,7 @@ class booking_manager_bulk_attendance {
                 ];
             }
 
-            // Check that the status has an implemented processing path.
+            // 8) Check valid processable status.
             if (!$uploadservice->is_processable_status($status)) {
                 $errors[] = [
                     $row,
@@ -323,6 +338,7 @@ class booking_manager_bulk_attendance {
                 ];
             }
 
+            // Cache error-free rows for the cross-row duplicate and capacity checks.
             if (
                 count($errors) === $errorcountbefore &&
                 $uploadservice->is_processable_status($status)
@@ -339,6 +355,8 @@ class booking_manager_bulk_attendance {
             }
         }
 
+        // 9) Report duplicate user/session rows in the uploaded file.
+        // 10) Finally report projected over-capacity rows.
         $uploadservice->validate_unique_rows_and_capacity($validationrows, $errors);
 
         return $errors;
@@ -384,9 +402,11 @@ class booking_manager_bulk_attendance {
     }
 
     /**
-     * Process all rows without validation errors.
+     * Process the bookings in the file.
      *
-     * Attendance rows can create or reactivate a signup before applying attendance.
+     * Rows with blocking validation errors are skipped. Attendance rows are authoritative:
+     * for historical sessions, processing creates or reactivates a booked signup when no active
+     * signup exists, then records attendance, including for cancelled, declined, or requested history.
      *
      * @param list<array{0:int|string, 1:string|lang_string}> $errors Validation errors from validate().
      * @return bool True after all processable rows have been handled.
@@ -396,32 +416,42 @@ class booking_manager_bulk_attendance {
     public function process($errors): bool {
         global $DB;
 
+        // Build a set of rows to skip from the error list.
         $skip = booking_upload_service::extract_rows_to_skip($errors);
         $uploadservice = $this->get_upload_service();
 
         foreach ($this->get_iterator() as $index => $entry) {
             $row = $index + 1;
 
+            // Skip rows that had blocking validation errors.
             if (isset($skip[$row])) {
                 continue;
             }
 
+            // Trim and extract each field (Course/Activity removed; Session is ID).
             $username      = trim($entry->Username);
             $sessionref    = trim($entry->Session);
             $status        = trim($entry->Status ?? '');
             $discount      = trim($entry->{'Discount Code'} ?? '');
             $notifytype    = trim($entry->{'Notification Type'} ?? '');
 
+            // 1) Match the user record.
             $user = current($this->match_users($username, '*'));
+
+            // 2) Fetch the session by ID and derive Face-to-Face + Course.
             $session = facetoface_get_session($sessionref);
             $facetoface = $DB->get_record('facetoface', ['id' => $session->facetoface], '*', MUST_EXIST);
             $course = $DB->get_record('course', ['id' => $facetoface->course], '*', MUST_EXIST);
+
+            // Build the canonical row used by the shared upload workflow.
             $normalisedentry = (object)[
                 'username' => $username,
                 'status' => $status,
                 'discountcode' => $discount,
             ];
 
+            // 3) Map the notification type to its internal code.
+            // 4-7) Delegate cancellation, status mapping, signup, or attendance processing.
             $uploadservice->process_row(
                 $normalisedentry,
                 $session,

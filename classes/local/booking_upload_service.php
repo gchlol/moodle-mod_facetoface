@@ -211,6 +211,9 @@ final class booking_upload_service {
     ): bool {
         $isvalid = true;
 
+        // 5) Booked rows may target sessions which have already started or finished.
+        // Cancellation and waitlisting are rejected once a session has started, while attendance
+        // for a session with known dates is rejected until the session has started.
         if ($status === 'cancelled' && facetoface_has_session_started($session, $timenow)) {
             $errors[] = [
                 $row,
@@ -335,13 +338,17 @@ final class booking_upload_service {
         int $row,
         ?int $notificationtype
     ): void {
+        // 4) Handle cancellation.
         if ($entry->status === 'cancelled') {
             $this->process_cancellation($session, $facetoface, (int)$user->id);
 
             return;
         }
 
+        // 5) Map the status string to its status code.
         $statuscode = static::get_status_code($entry->status);
+
+        // 6) Handle signups (booked or waitlisted).
         if (static::is_booking_status_code($statuscode)) {
             $this->process_signup_row(
                 $session,
@@ -357,6 +364,7 @@ final class booking_upload_service {
             return;
         }
 
+        // 7) Ensure an active signup exists, then handle attendance (no-show / partial / full).
         if (static::is_attendance_status_code($statuscode)) {
             $this->process_attendance_row(
                 $session,
@@ -388,6 +396,7 @@ final class booking_upload_service {
                 throw new moodle_exception('error:errormustbeanarray', 'mod_facetoface', '', $error);
             }
 
+            // The first element can identify one row or a comma-separated list of rows.
             $rows = is_string($error[0]) ? explode(',', $error[0]) : [$error[0]];
             foreach ($rows as $row) {
                 $row = trim((string)$row);
@@ -566,6 +575,8 @@ final class booking_upload_service {
         int $notificationtype,
         int $statuscode
     ): void {
+        // Edge case: Re-enrol the user if they are unenrolled after validation.
+        // Otherwise, it's idempotent for enrolled users.
         facetoface_enrol_user($coursecontext, $course->id, $user->id);
 
         $signupfacetoface = $facetoface;
@@ -743,6 +754,7 @@ final class booking_upload_service {
      * @return int Normalised booking status code.
      */
     private static function normalise_booking_status_code(stdClass $session, int $statuscode): int {
+        // If booked but no datetime known, convert to waitlist.
         if ($statuscode === MDL_F2F_STATUS_BOOKED && !$session->datetimeknown) {
             return MDL_F2F_STATUS_WAITLISTED;
         }

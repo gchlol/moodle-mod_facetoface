@@ -2605,6 +2605,7 @@ function facetoface_check_manageremail($manageremail) {
  *                    and every submission ID to mark as attended
  *                    under the 'submissionid_XXXX' keys where XXXX is
  *                     the ID of the signup
+ * @return bool True when attendance was applied, or false when it could not be applied.
  */
 function facetoface_take_attendance($data) {
     global $USER;

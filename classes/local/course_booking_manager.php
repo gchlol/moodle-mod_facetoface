@@ -135,7 +135,25 @@ final class course_booking_manager {
     }
 
     /**
-     * Validate all configured upload rows.
+     * Validate the records provided to ensure they can be processed without errors.
+     *
+     * The configured Face-to-Face activity and course are loaded before checking the rows.
+     * As there are multiple dependent data points (users, sessions, capacity),
+     * we check them in this order for each row:
+     *   1) Exactly one user matches
+     *   2) Session exists
+     *   3) Session belongs to the configured Face-to-Face activity
+     *   4) Existing signup history for booking-style statuses
+     *   5) Session timing rules for cancellations, waitlists, and attendance
+     *   6) Existing signup in another session for booking rows in single-signup mode
+     *   7) Enrollment check
+     *   8) Notification type check
+     *   9) Processable status check
+     *
+     * Once all rows have been checked, we validate them in this order:
+     *   10) Multiple sessions in the file for booking rows in single-signup mode
+     *   11) Duplicate user/session rows in the uploaded file
+     *   12) Projected session capacity
      *
      * @param int|null $timenow Timestamp to use for validation.
      * @return list<array{0:int|string, 1:string|lang_string}> Validation errors keyed by CSV row.
@@ -150,16 +168,22 @@ final class course_booking_manager {
         $timenow ??= time();
         $uploadservice = $this->get_upload_service();
 
+        // Break into rows and validate the multiple interdependent fields together.
         foreach ($this->get_iterator() as $index => $entry) {
             $row = $index + 1;
             $errorcountbefore = count($errors);
+
+            // Set defaults for fields with no value.
             $entry->status = $entry->status ?? '';
             $entry->notificationtype = $entry->notificationtype ?? '';
             $entry->discountcode = $entry->discountcode ?? '';
             $useridentifier = $this->get_user_identifier($entry);
 
+            // 1) Validate and get the user.
             $userid = null;
             $userids = $this->match_entry_user($entry, 'id');
+
+            // Multiple matched, ambiguous which is the real one.
             if (count($userids) > 1) {
                 $errors[] = [
                     $row,
@@ -167,6 +191,7 @@ final class course_booking_manager {
                 ];
             }
 
+            // None matched at all - missing.
             if (empty($userids)) {
                 $errors[] = [
                     $row,
@@ -178,6 +203,7 @@ final class course_booking_manager {
                 $userid = current($userids)->id;
             }
 
+            // 2) Check the session exists.
             $session = facetoface_get_session($entry->session);
             if (!$session) {
                 $errors[] = [
@@ -186,6 +212,7 @@ final class course_booking_manager {
                 ];
             }
 
+            // 3) Check the session belongs to the configured Face-to-Face activity.
             if ($session && $session->facetoface != $this->facetofaceid) {
                 $errors[] = [
                     $row,
@@ -196,6 +223,7 @@ final class course_booking_manager {
                 ];
             }
 
+            // 4) Reject booking-style rows when any signup history already exists.
             if (
                 $session &&
                 $session->facetoface == $this->facetofaceid &&
@@ -215,6 +243,7 @@ final class course_booking_manager {
             }
 
             if ($session) {
+                // 5) Check timing rules for cancellation, waitlist, and attendance statuses.
                 $uploadservice->validate_session_status_rules(
                     $row,
                     $entry->session,
@@ -224,6 +253,8 @@ final class course_booking_manager {
                     $errors
                 );
 
+                // 6) Don't allow booking rows when the user has a current signup in another session
+                // and the activity is in single-signup mode.
                 if (
                     isset($userid) &&
                     $uploadservice->is_booking_status($entry->status) &&
@@ -248,6 +279,7 @@ final class course_booking_manager {
                 }
             }
 
+            // 7) Enrollment check. Auto-enrol staff who are not yet enrolled in the course.
             if (isset($userid) && !is_enrolled($this->coursecontext, $userid)) {
                 $isenrolled = facetoface_enrol_user($this->coursecontext, $this->course->id, $userid);
                 if (!$isenrolled) {
@@ -258,6 +290,7 @@ final class course_booking_manager {
                 }
             }
 
+            // 8) Check to ensure valid notification types are used.
             if (!in_array(
                 $this->transform_notification_type($entry->notificationtype),
                 [MDL_F2F_BOTH, MDL_F2F_TEXT, MDL_F2F_ICAL],
@@ -273,6 +306,7 @@ final class course_booking_manager {
                 ];
             }
 
+            // 9) Check to ensure a valid, processable status is set.
             if (!$uploadservice->is_processable_status($entry->status)) {
                 $errors[] = [
                     $row,
@@ -280,6 +314,7 @@ final class course_booking_manager {
                 ];
             }
 
+            // Cache error-free rows for the cross-row session, duplicate, and capacity checks.
             if (
                 $session &&
                 isset($userid) &&
@@ -298,17 +333,24 @@ final class course_booking_manager {
             }
         }
 
+        // 10) Check booking rows for multiple sessions when signup type is not multiple.
         if ($this->facetoface->signuptype != MOD_FACETOFACE_SIGNUP_MULTIPLE) {
             $this->validate_multiple_user_sessions($validationrows, $errors, $uploadservice);
         }
 
+        // 11) Report duplicate user/session rows in the uploaded file.
+        // 12) Finally report projected over-capacity rows.
         $uploadservice->validate_unique_rows_and_capacity($validationrows, $errors);
 
         return $errors;
     }
 
     /**
-     * Process all rows without validation errors.
+     * Process the bookings in the file.
+     *
+     * Rows with blocking validation errors are skipped. Attendance rows are authoritative:
+     * for historical sessions, processing creates or reactivates a booked signup when no active
+     * signup exists, then records attendance, including for cancelled, declined, or requested history.
      *
      * @param list<array{0:int|string, 1:string|lang_string}> $errors Validation errors returned by validate(), or none.
      * @return bool True after all processable rows have been handled.
@@ -318,21 +360,32 @@ final class course_booking_manager {
     public function process(array $errors = []): bool {
         $this->ensure_activity_loaded();
 
+        // Build a set of rows to skip from the error list.
         $skip = booking_upload_service::extract_rows_to_skip($errors);
         $uploadservice = $this->get_upload_service();
 
+        // Records may contain errors; we will skip them.
         foreach ($this->get_iterator() as $index => $entry) {
             $row = $index + 1;
+
+            // Skip rows that had blocking validation errors.
             if (isset($skip[$row])) {
                 continue;
             }
 
+            // Set defaults for fields with no value.
             $entry->status = $entry->status ?? '';
             $entry->discountcode = $entry->discountcode ?? '';
             $entry->notificationtype = $entry->notificationtype ?? '';
+
+            // 1) Match the user record.
             $user = current($this->match_entry_user($entry, '*'));
+
+            // 2) Fetch the session; the Face-to-Face activity and course are already loaded.
             $session = facetoface_get_session($entry->session);
 
+            // 3) Map the notification type to its internal code.
+            // 4-7) Delegate cancellation, status mapping, signup, or attendance processing.
             $uploadservice->process_row(
                 $entry,
                 $session,
@@ -513,7 +566,8 @@ final class course_booking_manager {
     }
 
     /**
-     * Validate that one user is not uploaded to multiple sessions in single-signup mode.
+     * Validate that one user is not uploaded to multiple sessions with booking-style statuses
+     * in single-signup mode.
      *
      * @param array<int, array{session:stdClass, userid:int, username:string, status:string, hasactivesignup:bool}>
      *     $validationrows Resolved, processable CSV rows keyed by row number.

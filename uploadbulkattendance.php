@@ -196,6 +196,7 @@ if ($validate) {
 }
 
 
+// 7) Handle confirmed processing, including valid rows from files with validation errors.
 if (
     $process &&
     $fileid
