@@ -67,7 +67,7 @@ class confirm_bookings_form extends moodleform {
             new moodle_url('/mod/facetoface/upload.php', ['f' => $f, 'fileid' => $fileid, 'process' => 1]),
             get_string($confirmbuttonlabel, 'mod_facetoface'),
             'post',
-            true
+            single_button::BUTTON_PRIMARY
         )));
         $htmlbuttons .= $OUTPUT->single_button($backurl, get_string('back'), 'get', ['class' => 'ml-3']);
 

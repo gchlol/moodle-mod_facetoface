@@ -84,7 +84,39 @@ class mod_facetoface_generator extends testing_module_generator {
             throw new coding_exception('Session generator requires $record->facetoface');
         }
 
-        if (!empty($record->timestart) && !empty($record->timefinish)) {
+        if (isset($record->timing)) {
+            $timing = strtolower(trim($record->timing));
+            unset($record->timing);
+
+            $now = time();
+            switch ($timing) {
+                case 'future':
+                    $sessiondates = [(object) [
+                        'timestart' => $now + (DAYSECS * 7),
+                        'timefinish' => $now + (DAYSECS * 7) + HOURSECS,
+                    ]];
+                    break;
+                case 'in_progress':
+                    $sessiondates = [(object) [
+                        'timestart' => $now - HOURSECS,
+                        'timefinish' => $now + HOURSECS,
+                    ]];
+                    break;
+                case 'historical':
+                    $sessiondates = [(object) [
+                        'timestart' => $now - (DAYSECS * 7),
+                        'timefinish' => $now - (DAYSECS * 7) + HOURSECS,
+                    ]];
+                    break;
+                case 'undated':
+                    $sessiondates = [];
+                    break;
+                default:
+                    throw new coding_exception(
+                        'Unknown session timing. Expected future, in_progress, historical, or undated.'
+                    );
+            }
+        } else if (!empty($record->timestart) && !empty($record->timefinish)) {
             $sessiondate = new stdClass();
             $sessiondate->timestart = $record->timestart;
             $sessiondate->timefinish = $record->timefinish;
