@@ -245,14 +245,16 @@ final class course_booking_manager {
 
             if ($session) {
                 // 5) Check timing rules for cancellation, waitlist, and attendance statuses.
-                $uploadservice->validate_session_status_rules(
+                if (!$uploadservice->validate_session_status_rules(
                     $row,
                     $entry->session,
                     $entry->status,
                     $session,
                     $timenow,
                     $errors
-                );
+                )) {
+                    continue;
+                }
 
                 // 6) Don't allow booking rows when the user has a current signup in another session
                 // and the activity is in single-signup mode.

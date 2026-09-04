@@ -652,7 +652,7 @@ class upload_test extends \advanced_testcase {
         // Generate users.
         $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
         $latebooker = $this->getDataGenerator()->create_and_enrol($course, 'student');
-        $latewaitlister = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $latewaitlister = $this->getDataGenerator()->create_user();
         $latecomer = $this->getDataGenerator()->create_and_enrol($course, 'student');
 
         $this->setCurrentTimeStart();
@@ -735,6 +735,16 @@ class upload_test extends \advanced_testcase {
             ),
             'Expecting waitlisting into past sessions to be rejected.'
         );
+        $coursecontext = \context_course::instance($course->id);
+        $this->assertFalse(
+            is_enrolled($coursecontext, $latewaitlister->id, '', true),
+            'A rejected waitlist row must not enrol the user.'
+        );
+        $this->assertTrue($bm->process($errors));
+        $this->assertFalse(
+            is_enrolled($coursecontext, $latewaitlister->id, '', true),
+            'Processing must skip the rejected waitlist row without enrolling the user.'
+        );
 
         // Update the student's attendance after the session finishes.
         $attendanceupdates = [
@@ -814,7 +824,7 @@ class upload_test extends \advanced_testcase {
 
         $course = $this->getDataGenerator()->create_course();
         $facetoface = $generator->create_instance(['course' => $course->id]);
-        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $student = $this->getDataGenerator()->create_user();
 
         $this->setCurrentTimeStart();
         $now = time();
@@ -849,6 +859,16 @@ class upload_test extends \advanced_testcase {
                 new lang_string('error:attendancesessionnotstarted', 'mod_facetoface', $session->id)
             ),
             'Expecting attendance uploads for future sessions to be rejected.'
+        );
+        $coursecontext = \context_course::instance($course->id);
+        $this->assertFalse(
+            is_enrolled($coursecontext, $student->id, '', true),
+            'A rejected attendance row must not enrol the user.'
+        );
+        $this->assertTrue($bm->process($errors));
+        $this->assertFalse(
+            is_enrolled($coursecontext, $student->id, '', true),
+            'Processing must skip the rejected attendance row without enrolling the user.'
         );
     }
     // GCHLOL ends.

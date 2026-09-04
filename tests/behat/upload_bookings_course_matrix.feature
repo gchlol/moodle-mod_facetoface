@@ -196,22 +196,22 @@ Feature: Course builders bulk upload every supported Face-to-Face booking status
       | booked_historical              | historical  | accepted | booked             | 1       | yes      | incomplete | incomplete       | incomplete         | none         |
       | booked_undated                 | undated     | accepted | waitlisted         | 1       | yes      | incomplete | incomplete       | incomplete         | waitlist     |
       | waitlisted_future              | future      | accepted | waitlisted         | 1       | yes      | incomplete | incomplete       | incomplete         | waitlist     |
-      | waitlisted_in_progress         | in_progress | rejected | none               | 0       | yes      | incomplete | incomplete       | incomplete         | none         |
-      | waitlisted_historical          | historical  | rejected | none               | 0       | yes      | incomplete | incomplete       | incomplete         | none         |
+      | waitlisted_in_progress         | in_progress | rejected | none               | 0       | no       | incomplete | incomplete       | incomplete         | none         |
+      | waitlisted_historical          | historical  | rejected | none               | 0       | no       | incomplete | incomplete       | incomplete         | none         |
       | waitlisted_undated             | undated     | accepted | waitlisted         | 1       | yes      | incomplete | incomplete       | incomplete         | waitlist     |
       | cancelled_future               | future      | accepted | cancelled          | 2       | yes      | incomplete | incomplete       | incomplete         | cancellation |
       | cancelled_in_progress          | in_progress | rejected | booked             | 1       | yes      | incomplete | incomplete       | incomplete         | none         |
       | cancelled_historical           | historical  | rejected | booked             | 1       | yes      | incomplete | incomplete       | incomplete         | none         |
       | cancelled_undated              | undated     | accepted | cancelled          | 2       | yes      | incomplete | incomplete       | incomplete         | cancellation |
-      | no_show_future                 | future      | rejected | none               | 0       | yes      | incomplete | incomplete       | incomplete         | none         |
+      | no_show_future                 | future      | rejected | none               | 0       | no       | incomplete | incomplete       | incomplete         | none         |
       | no_show_in_progress            | in_progress | accepted | no_show            | 2       | yes      | incomplete | incomplete       | incomplete         | none         |
       | no_show_historical             | historical  | accepted | no_show            | 2       | yes      | incomplete | incomplete       | incomplete         | none         |
       | no_show_undated                | undated     | accepted (known defect) | no_show            | 2       | yes      | incomplete | incomplete       | incomplete         | confirmation |
-      | partially_attended_future      | future      | rejected | none               | 0       | yes      | incomplete | incomplete       | incomplete         | none         |
+      | partially_attended_future      | future      | rejected | none               | 0       | no       | incomplete | incomplete       | incomplete         | none         |
       | partially_attended_in_progress | in_progress | accepted | partially_attended | 2       | yes      | incomplete | incomplete       | incomplete         | none         |
       | partially_attended_historical  | historical  | accepted | partially_attended | 2       | yes      | incomplete | incomplete       | incomplete         | none         |
       | partially_attended_undated     | undated     | accepted (known defect) | partially_attended | 2       | yes      | incomplete | incomplete       | incomplete         | confirmation |
-      | fully_attended_future          | future      | rejected | none               | 0       | yes      | incomplete | incomplete       | incomplete         | none         |
+      | fully_attended_future          | future      | rejected | none               | 0       | no       | incomplete | incomplete       | incomplete         | none         |
       | fully_attended_in_progress     | in_progress | accepted | fully_attended     | 2       | yes      | complete   | complete         | incomplete         | none         |
       | fully_attended_historical      | historical  | accepted | fully_attended     | 2       | yes      | complete   | complete         | incomplete         | none         |
       | fully_attended_undated         | undated     | accepted (known defect) | fully_attended     | 2       | yes      | complete   | complete         | incomplete         | confirmation |
