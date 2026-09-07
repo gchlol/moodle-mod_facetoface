@@ -196,6 +196,7 @@ if ($validate) {
 }
 
 
+// 7) Handle confirmed processing, including valid rows from files with validation errors.
 if (
     $process &&
     $fileid
@@ -212,26 +213,33 @@ if (
 
     $errors = $manager->validate();
 
-    if (empty($errors)) {
-        $success = $manager->process($errors);
-
-        if ($success) {
-            $event = csv_processed_bulkattendance::create([
-                'context'  => context_system::instance(),
-                'objectid' => 0,
-            ]);
-            $event->trigger();
-
-            redirect(
-                new moodle_url('/mod/facetoface/uploadbulkattendance.php'),
-                get_string('bulkattendanceprocessed', 'mod_facetoface'),
-                null,
-                notification::NOTIFY_SUCCESS
-            );
-        }
+    $success = $manager->process($errors);
+    if (!$success) {
+        display_bulk_upload_errors($errors, $fileid);
     }
 
-    display_bulk_upload_errors_site($errors);
+    $event = csv_processed_bulkattendance::create([
+        'context'  => context_system::instance(),
+        'objectid' => 0,
+    ]);
+    $event->trigger();
+
+    $message = get_string('bulkattendanceprocessed', 'mod_facetoface');
+    if (!empty($errors)) {
+        $skippedrowcount = count(array_unique(array_column($errors, 0)));
+
+        $message = get_string('bulkattendanceprocessedwithskips', 'mod_facetoface', (object)[
+            'processed' => count($manager->get_records()) - $skippedrowcount,
+            'skipped' => $skippedrowcount,
+        ]);
+    }
+
+    redirect(
+        new moodle_url('/mod/facetoface/uploadbulkattendance.php'),
+        $message,
+        null,
+        notification::NOTIFY_SUCCESS
+    );
 }
 
 $uploadform->set_data(['validate' => 1]);

@@ -68,7 +68,7 @@ class confirm_bookings_bulk_attendance_form extends moodleform {
             new moodle_url('/mod/facetoface/uploadbulkattendance.php', [ 'fileid' => $fileid, 'process' => 1]),
             get_string('facetoface:confirmandprocess', 'mod_facetoface'),
             'post',
-            true
+            single_button::BUTTON_PRIMARY
         )));
 
         $htmlbuttons .= $OUTPUT->single_button($backurl, get_string('back'), 'get', ['class' => 'ml-3']);

@@ -29,7 +29,9 @@ require_once($CFG->dirroot . '/mod/facetoface/lib.php');
 use core\output\notification;
 use mod_facetoface\form\upload_bookings_form;
 use mod_facetoface\form\confirm_bookings_form;
-use mod_facetoface\booking_manager;
+// GCHLOL: Keep the historical-upload workflow isolated from the third-party booking manager.
+use mod_facetoface\local\course_booking_manager as booking_manager;
+// GCHLOL ends.
 
 $f = optional_param('f', 0, PARAM_INT); // The facetoface module ID.
 $fileid = optional_param('fileid', 0, PARAM_INT); // The fileid of the file uploaded.

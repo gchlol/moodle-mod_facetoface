@@ -16,8 +16,10 @@
 
 namespace mod_facetoface;
 
-use mod_facetoface\booking_manager;
 use lang_string;
+// GCHLOL: Exercise the isolated course upload manager used by upload.php.
+use mod_facetoface\local\course_booking_manager as booking_manager;
+// GCHLOL ends.
 
 /**
  * Test the upload helper class.
@@ -26,7 +28,7 @@ use lang_string;
  * @author     Kevin Pham <kevinpham@catalyst-au.net>
  * @copyright  Catalyst IT, 2024
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers \mod_facetoface\booking_manager
+ * @covers \mod_facetoface\local\course_booking_manager
  */
 class upload_test extends \advanced_testcase {
 
@@ -98,11 +100,13 @@ class upload_test extends \advanced_testcase {
         ];
         $bm->load_from_array($records);
         $errors = $bm->validate();
+        // GCHLOL: Per-row capacity errors do not report a misleading aggregate amount.
         $expectederr = new lang_string(
             'error:sessionoverbooked',
             'mod_facetoface',
-            (object) ['session' => $nooverbooksession->id, 'amount' => 1]
+            (object)['session' => $nooverbooksession->id]
         );
+        // GCHLOL ends.
         $this->assertCount(1, $errors);
         $this->assertEquals($expectederr, $errors[0][1]);
 
@@ -306,14 +310,16 @@ class upload_test extends \advanced_testcase {
             'Expecting status error, since the status should be either booked or cancelled.'
         );
 
-        $this->assertTrue(
+        // GCHLOL: Rows with their own validation errors must not create cross-session errors.
+        $this->assertFalse(
             $this->check_row_validation_error_exists(
                 $errors,
                 '4, 5, 6, 7',
                 new lang_string('error:multipleusersessions', 'mod_facetoface', $student2->email)
             ),
-            'Expecting multiple sessions error for user when f2f signup type is single.'
+            'Expecting invalid rows to be excluded from cross-session validation.'
         );
+        // GCHLOL ends.
 
         $this->assertTrue(
             $this->check_row_validation_error_exists(
@@ -422,6 +428,7 @@ class upload_test extends \advanced_testcase {
         );
     }
 
+    // GCHLOL: Verify duplicate signups are rejected without altering the original booking.
     /**
      * Tests uploading a booking where the emails should match regardless of case.
      */
@@ -474,9 +481,16 @@ class upload_test extends \advanced_testcase {
         $this->assertEquals(MDL_F2F_ICAL, current($users)->notificationtype);
         $this->assertEquals(MDL_F2F_STATUS_BOOKED, current($users)->statuscode);
 
-        // Re-booking the same user shouldn't cause any isssues. Run the validate again and check.
+        // Re-booking the same user is rejected and leaves the existing booking untouched.
         $errors = $bm->validate();
-        $this->assertEmpty($errors);
+        $this->assertTrue($this->check_row_validation_error_exists(
+            $errors,
+            1,
+            new lang_string('error:useralreadyinsession', 'mod_facetoface', (object)[
+                'user' => $record->email,
+                'session' => $session->id,
+            ])
+        ));
     }
 
     /**
@@ -530,10 +544,18 @@ class upload_test extends \advanced_testcase {
         $this->assertEquals(MDL_F2F_ICAL, current($users)->notificationtype);
         $this->assertEquals(MDL_F2F_STATUS_BOOKED, current($users)->statuscode);
 
-        // Re-booking the same user shouldn't cause any isssues. Run the validate again and check.
+        // Re-booking the same user is rejected and leaves the existing booking untouched.
         $errors = $bm->validate();
-        $this->assertEmpty($errors);
+        $this->assertTrue($this->check_row_validation_error_exists(
+            $errors,
+            1,
+            new lang_string('error:useralreadyinsession', 'mod_facetoface', (object)[
+                'user' => $record->email,
+                'session' => $session->id,
+            ])
+        ));
     }
+    // GCHLOL ends.
 
     /**
      * Test upload processing to ensure the happy path is working as expected, and users can be cancelled from a session.
@@ -610,10 +632,14 @@ class upload_test extends \advanced_testcase {
         $this->assertNotEmpty(current($users)->timecancelled);
     }
 
+    // GCHLOL: Extend the historical-session coverage to include past bookings, waitlist rejection,
+    // attendance uploads for existing and new signups, and future-session attendance validation.
     /**
-     * Updates via uploads can be done for previous sessions, only if they are to update attendance.
+     * Updates via uploads can be done for previous sessions.
      *
-     * Book someone in, then once the session is over, update their attendance. This should work.
+     * Book someone in, then once the session is over, update their attendance. Users can also be
+     * booked directly into past sessions, including with an attendance status even if they were
+     * never signed up while the session was open. Waitlisting into past sessions is rejected.
      */
     public function test_updates_for_previous_sessions() {
         global $DB;
@@ -625,6 +651,9 @@ class upload_test extends \advanced_testcase {
 
         // Generate users.
         $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $latebooker = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $latewaitlister = $this->getDataGenerator()->create_user();
+        $latecomer = $this->getDataGenerator()->create_and_enrol($course, 'student');
 
         $this->setCurrentTimeStart();
         $now = time();
@@ -673,15 +702,48 @@ class upload_test extends \advanced_testcase {
             ],
         );
 
-        // It should detect an error (e.g. cannot book a session in progress).
+        // Booking another user into the session after it has finished is allowed.
+        $bm->load_from_array([
+            (object)[
+                'username' => $latebooker->username,
+                'session' => $session->id,
+                'status' => 'booked',
+            ],
+        ]);
+        $errors = $bm->validate(time() + 1);
+        $this->assertEmpty($errors, 'Expecting bookings into past sessions to be allowed.');
+        $bm->process($errors);
+
+        $attendees = facetoface_get_attendees($session->id);
+        $this->assertArrayHasKey($latebooker->id, $attendees);
+        $this->assertEquals(MDL_F2F_STATUS_BOOKED, $attendees[$latebooker->id]->statuscode);
+
+        // Waitlisting into a session that has already started is rejected.
+        $bm->load_from_array([
+            (object)[
+                'username' => $latewaitlister->username,
+                'session' => $session->id,
+                'status' => 'waitlisted',
+            ],
+        ]);
         $errors = $bm->validate(time() + 1);
         $this->assertTrue(
             $this->check_row_validation_error_exists(
                 $errors,
                 1,
-                get_string('cannotsignupsessionover', 'facetoface')
+                new lang_string('error:cannotwaitliststartedsession', 'mod_facetoface', $session->id)
             ),
-            'Expecting user to not be bookable since the session has started.'
+            'Expecting waitlisting into past sessions to be rejected.'
+        );
+        $coursecontext = \context_course::instance($course->id);
+        $this->assertFalse(
+            is_enrolled($coursecontext, $latewaitlister->id, '', true),
+            'A rejected waitlist row must not enrol the user.'
+        );
+        $this->assertTrue($bm->process($errors));
+        $this->assertFalse(
+            is_enrolled($coursecontext, $latewaitlister->id, '', true),
+            'Processing must skip the rejected waitlist row without enrolling the user.'
         );
 
         // Update the student's attendance after the session finishes.
@@ -725,7 +787,91 @@ class upload_test extends \advanced_testcase {
             $grade = facetoface_get_grade($student->id, $course->id, $facetoface->id);
             $this->assertEquals($update->grade_expected, $grade->grade);
         }
+
+        // A user who was never signed up can be uploaded with an attendance status; they are
+        // booked into the past session first and their attendance is then recorded.
+        $bm->load_from_array([
+            (object)[
+                'username' => $latecomer->username,
+                'session' => $session->id,
+                'status' => 'fully_attended',
+            ],
+        ]);
+        $errors = $bm->validate($timenow);
+        $this->assertEmpty($errors, 'Expecting attendance uploads for unbooked users to be valid.');
+        $bm->process($errors);
+
+        $attendees = facetoface_get_attendees($session->id);
+        $this->assertArrayHasKey($latecomer->id, $attendees);
+        $this->assertEquals(MDL_F2F_STATUS_FULLY_ATTENDED, $attendees[$latecomer->id]->statuscode);
+
+        $grade = facetoface_get_grade($latecomer->id, $course->id, $facetoface->id);
+        $this->assertEquals(100, $grade->grade);
+
+        // The student's attendance must be untouched by the latecomer's row (previously the
+        // attendance upload could be recorded against the wrong attendee).
+        $this->assertEquals(MDL_F2F_STATUS_FULLY_ATTENDED, $attendees[$student->id]->statuscode);
     }
+
+    /**
+     * Attendance statuses cannot be uploaded for sessions that have not started yet.
+     *
+     * @return void
+     */
+    public function test_attendance_rejected_for_future_sessions(): void {
+        /** @var \mod_facetoface_generator $generator */
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_facetoface');
+
+        $course = $this->getDataGenerator()->create_course();
+        $facetoface = $generator->create_instance(['course' => $course->id]);
+        $student = $this->getDataGenerator()->create_user();
+
+        $this->setCurrentTimeStart();
+        $now = time();
+        $session = $generator->create_session([
+            'facetoface' => $facetoface->id,
+            'capacity' => '3',
+            'allowoverbook' => '0',
+            'details' => 'xyz',
+            'duration' => '2',
+            'normalcost' => '111',
+            'discountcost' => '11',
+            'allowcancellations' => '0',
+            'sessiondates' => [
+                ['timestart' => $now + 3 * DAYSECS, 'timefinish' => $now + 3 * DAYSECS + HOURSECS],
+            ],
+        ]);
+
+        $bm = new booking_manager($facetoface->id);
+        $bm->load_from_array([
+            (object)[
+                'username' => $student->username,
+                'session' => $session->id,
+                'status' => 'fully_attended',
+            ],
+        ]);
+
+        $errors = $bm->validate();
+        $this->assertTrue(
+            $this->check_row_validation_error_exists(
+                $errors,
+                1,
+                new lang_string('error:attendancesessionnotstarted', 'mod_facetoface', $session->id)
+            ),
+            'Expecting attendance uploads for future sessions to be rejected.'
+        );
+        $coursecontext = \context_course::instance($course->id);
+        $this->assertFalse(
+            is_enrolled($coursecontext, $student->id, '', true),
+            'A rejected attendance row must not enrol the user.'
+        );
+        $this->assertTrue($bm->process($errors));
+        $this->assertFalse(
+            is_enrolled($coursecontext, $student->id, '', true),
+            'Processing must skip the rejected attendance row without enrolling the user.'
+        );
+    }
+    // GCHLOL ends.
 
     /**
      * Provides values to test_email_suppression
