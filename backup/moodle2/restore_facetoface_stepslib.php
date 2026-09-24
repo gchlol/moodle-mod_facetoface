@@ -38,6 +38,7 @@ class restore_facetoface_activity_structure_step extends restore_activity_struct
         $userinfo = $this->get_setting_value('userinfo');
 
         $paths[] = new restore_path_element('facetoface', '/activity/facetoface');
+        $paths[] = new restore_path_element('facetoface_session_field', '/activity/facetoface/session_fields/session_field');
         $paths[] = new restore_path_element('facetoface_session', '/activity/facetoface/sessions/session');
         $paths[] = new restore_path_element(
             'facetoface_sessions_dates',
@@ -45,11 +46,7 @@ class restore_facetoface_activity_structure_step extends restore_activity_struct
         );
         $paths[] = new restore_path_element(
             'facetoface_session_data',
-            '/activity/facetoface/sessions/session/session_data/session_data_element'
-        );
-        $paths[] = new restore_path_element(
-            'facetoface_session_field',
-            '/activity/facetoface/sessions/session/session_field/session_field_element'
+            '/activity/facetoface/sessions/session/session_data/data'
         );
         if ($userinfo) {
             $paths[] = new restore_path_element(
@@ -147,7 +144,16 @@ class restore_facetoface_activity_structure_step extends restore_activity_struct
         $oldid = $data->id;
 
         $data->sessionid = $this->get_new_parentid('facetoface_session');
-        $data->fieldid = $this->get_mappingid('facetoface_session_field');
+
+        $fieldid = $this->get_mappingid('facetoface_session_field', $data->fieldid);
+        if (!$fieldid && $this->task->is_samesite()
+                && $DB->record_exists('facetoface_session_field', ['id' => $data->fieldid])) {
+            $fieldid = $data->fieldid;
+        }
+        if (!$fieldid) {
+            return;
+        }
+        $data->fieldid = $fieldid;
 
         // Insert the entry record.
         $newitemid = $DB->insert_record('facetoface_session_data', $data);
@@ -160,8 +166,11 @@ class restore_facetoface_activity_structure_step extends restore_activity_struct
         $data = (object) $data;
         $oldid = $data->id;
 
-        // Insert the entry record.
-        $newitemid = $DB->insert_record('facetoface_session_field', $data);
+        $fieldid = $DB->get_field('facetoface_session_field', 'id', ['shortname' => $data->shortname]);
+        if (!$fieldid) {
+            $fieldid = $DB->insert_record('facetoface_session_field', $data);
+        }
+        $this->set_mapping('facetoface_session_field', $oldid, $fieldid);
     }
 
     protected function process_facetoface_sessions_dates($data) {
