@@ -2838,10 +2838,22 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
         $course = $DB->get_record('course', ['id' => $record->course], '*', MUST_EXIST);
         $completion = new \completion_info($course);
         $cm = get_coursemodule_from_instance('facetoface', $record->id, $course->id);
-        if ($completion->is_enabled($cm)) {
-            // Update/create completion data
-            $completion->update_state($cm, COMPLETION_UNKNOWN, $record->userid, false);
-            $meetscompletioncriteria = $grading >= $record->completionattendance;
+
+        // GCHLOL - YZ - Ensure no completion updates without activity completion.
+        if ($completion->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC) {
+            $meetscompletioncriteria = ( // Support the fully attended and partially attended completion criteria.
+                $grading >= 100 || // Fully attended
+                ( // Partially attended
+                    $record->completionattendance == MDL_F2F_STATUS_PARTIALLY_ATTENDED &&
+                    $grading >= 50
+                )
+            );
+
+            // Avoid archiving or renewing an old completion when this attendance does not qualify.
+            $possibleresult = $meetscompletioncriteria ? COMPLETION_UNKNOWN : COMPLETION_INCOMPLETE;
+            $completion->update_state($cm, $possibleresult, $record->userid, false);
+            // GCHLOL end - YZ - Ensure no completion updates without activity completion.
+
             if ($record->datetimeknown && get_config('facetoface', 'sessioncompletiondate') && $meetscompletioncriteria) {
                 $criterias = $completion->get_criteria(4); // 4 = completion_criteria_activity
                 foreach($criterias as $criterion) {
