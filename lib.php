@@ -2841,7 +2841,7 @@ function facetoface_take_individual_attendance($submissionid, $grading) {
 
         // GCHLOL - YZ - Ensure no completion updates without activity completion.
         if ($completion->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC) {
-            $meetscompletioncriteria = (
+            $meetscompletioncriteria = ( // Support the fully attended and partially attended completion criteria.
                 $grading >= 100 || // Fully attended
                 ( // Partially attended
                     $record->completionattendance == MDL_F2F_STATUS_PARTIALLY_ATTENDED &&
