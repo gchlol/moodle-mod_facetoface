@@ -50,6 +50,19 @@ class custom_completion extends \core_completion\activity_custom_completion {
                  WHERE fsu.userid = :userid AND cm.id = :cmid
                        AND fsus.statuscode >= f.completionattendance";
 
+        // GCHLOL: Only count attendance from the learner's current recompletion cycle, so a recalculation cannot
+        // complete the activity again from a session that started before their archived course completion.
+        if ($DB->get_manager()->table_exists('local_recompletion_cc')) {
+            $sql .= "
+                       AND NOT EXISTS (
+                               SELECT 1
+                                 FROM {facetoface_sessions_dates} fsd
+                                 JOIN {local_recompletion_cc} rcc ON rcc.course = cm.course AND rcc.userid = fsu.userid
+                                WHERE fsd.sessionid = fs.id AND fsd.timestart <= rcc.timecompleted
+                           )";
+        }
+        // GCHLOL ends.
+
         if ($DB->record_exists_sql($sql, $params)) {
             return COMPLETION_COMPLETE;
         } else {

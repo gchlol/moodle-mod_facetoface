@@ -30,6 +30,7 @@ require_once($CFG->dirroot . '/completion/criteria/completion_criteria_activity.
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers ::facetoface_take_attendance
  * @covers ::facetoface_take_individual_attendance
+ * @covers \mod_facetoface\completion\custom_completion
  */
 class attendance_completion_test extends \advanced_testcase {
     /** Set up an attendance-only completion environment. */
@@ -47,11 +48,15 @@ class attendance_completion_test extends \advanced_testcase {
      *
      * @param int $requiredattendance Required attendance status.
      * @param int $tracking Completion tracking mode.
+     * @param bool $usegrade Whether "Receive a grade" (any grade) is also required.
+     * @param bool $view Whether "View the activity" is also required.
      * @return \stdClass
      */
     private function create_fixture(
         int $requiredattendance = MDL_F2F_STATUS_FULLY_ATTENDED,
-        int $tracking = COMPLETION_TRACKING_AUTOMATIC
+        int $tracking = COMPLETION_TRACKING_AUTOMATIC,
+        bool $usegrade = false,
+        bool $view = false
     ): \stdClass {
         $generator = $this->getDataGenerator();
         $course = $generator->create_course(['enablecompletion' => 1]);
@@ -60,17 +65,21 @@ class attendance_completion_test extends \advanced_testcase {
             'course' => $course->id,
             'completion' => $tracking,
             'completionattendance' => $requiredattendance,
-            'completiongradeitemnumber' => null,
-            'completionusegrade' => 0,
+            'completiongradeitemnumber' => $usegrade ? 0 : null,
+            'completionusegrade' => (int) $usegrade,
             'completionpassgrade' => 0,
-            'completionview' => 0,
+            'completionview' => $view ? COMPLETION_VIEW_REQUIRED : 0,
             'signuptype' => MOD_FACETOFACE_SIGNUP_MULTIPLE,
             'multiplesignupmethod' => MOD_FACETOFACE_SIGNUP_MULTIPLE_PER_SESSION,
             'usercalentry' => 0,
             'showoncalendar' => 0,
         ]);
         $cm = get_coursemodule_from_instance('facetoface', $facetoface->id, $course->id);
-        $this->assertNull($cm->completiongradeitemnumber);
+        if ($usegrade) {
+            $this->assertEquals(0, $cm->completiongradeitemnumber);
+        } else {
+            $this->assertNull($cm->completiongradeitemnumber);
+        }
         $criterion = new \completion_criteria_activity();
         $criteria = (object) ['id' => $course->id, 'criteria_activity' => [$cm->id => 1]];
         $criterion->update_config($criteria);
@@ -130,6 +139,39 @@ class attendance_completion_test extends \advanced_testcase {
         ]);
         \cache::make('core', 'completion')->purge();
         \cache::make('core', 'coursecompletion')->purge();
+    }
+
+    /**
+     * Reset the learner the way Recompletion does: archive the course completion, then delete completion data.
+     *
+     * @param \stdClass $fixture Course fixture.
+     */
+    private function archive_and_reset(\stdClass $fixture): void {
+        global $DB;
+        if (!$DB->get_manager()->table_exists('local_recompletion_cc')) {
+            $this->markTestSkipped('Archived resets require Recompletion.');
+        }
+        $coursecompletion = $DB->get_record('course_completions', [
+            'course' => $fixture->course->id, 'userid' => $fixture->student->id,
+        ], '*', MUST_EXIST);
+        $this->assertNotEmpty($coursecompletion->timecompleted);
+        unset($coursecompletion->id);
+        $DB->insert_record('local_recompletion_cc', $coursecompletion);
+        $fixture->completion->delete_all_completion_data();
+    }
+
+    /**
+     * Assert the learner has neither activity, criterion nor course completion.
+     *
+     * @param \stdClass $fixture Course fixture.
+     */
+    private function assert_not_completed(\stdClass $fixture): void {
+        global $DB;
+        $actual = $fixture->completion->get_data($fixture->cm, false, $fixture->student->id);
+        $this->assertEquals(COMPLETION_INCOMPLETE, $actual->completionstate);
+        $params = ['course' => $fixture->course->id, 'userid' => $fixture->student->id];
+        $this->assertEmpty($DB->get_field('course_completions', 'timecompleted', $params));
+        $this->assertFalse($DB->record_exists('course_completion_crit_compl', $params));
     }
 
     /**
@@ -345,5 +387,127 @@ class attendance_completion_test extends \advanced_testcase {
         $actual = $fixture->completion->get_data($fixture->cm, false, $fixture->student->id);
         $this->assertEquals(COMPLETION_COMPLETE, $actual->completionstate);
         $this->assertEquals($before->timemodified, $actual->timemodified);
+    }
+
+    /**
+     * Attendance-only completion, and attendance plus "Receive a grade" (any grade).
+     *
+     * @return array
+     */
+    public static function grade_requirement_provider(): array {
+        return [
+            'attendance only' => [false],
+            'receive a grade' => [true],
+        ];
+    }
+
+    /**
+     * Attendance which cannot meet the full-attendance rule, with and without "Receive a grade".
+     *
+     * @return array
+     */
+    public static function insufficient_graded_attendance_provider(): array {
+        return [
+            'no show' => [MDL_F2F_STATUS_NO_SHOW, false],
+            'no show, receive a grade' => [MDL_F2F_STATUS_NO_SHOW, true],
+            'partial' => [MDL_F2F_STATUS_PARTIALLY_ATTENDED, false],
+            'partial, receive a grade' => [MDL_F2F_STATUS_PARTIALLY_ATTENDED, true],
+        ];
+    }
+
+    /**
+     * An archived reset must not be undone when the gradebook recalculates after an unsuccessful later session.
+     *
+     * @dataProvider insufficient_graded_attendance_provider
+     * @param int $status Later attendance status.
+     * @param bool $usegrade Whether "Receive a grade" is required.
+     */
+    public function test_unsuccessful_attendance_does_not_recomplete_after_archived_reset(int $status, bool $usegrade): void {
+        $fixture = $this->create_fixture(MDL_F2F_STATUS_FULLY_ATTENDED, COMPLETION_TRACKING_AUTOMATIC, $usegrade);
+        $old = $this->create_signup($fixture, time() - 60 * DAYSECS);
+        $this->take_attendance($old, MDL_F2F_STATUS_FULLY_ATTENDED);
+        $this->archive_and_reset($fixture);
+        $new = $this->create_signup($fixture, time() - DAYSECS);
+
+        $this->take_attendance($new, $status);
+
+        $this->assert_not_completed($fixture);
+    }
+
+    /**
+     * Recalculating every learner, as saving unlocked completion settings does, must ignore a previous cycle.
+     *
+     * @dataProvider grade_requirement_provider
+     * @param bool $usegrade Whether "Receive a grade" is required.
+     */
+    public function test_recalculation_does_not_recomplete_after_archived_reset(bool $usegrade): void {
+        $fixture = $this->create_fixture(MDL_F2F_STATUS_FULLY_ATTENDED, COMPLETION_TRACKING_AUTOMATIC, $usegrade);
+        $old = $this->create_signup($fixture, time() - 60 * DAYSECS);
+        $this->take_attendance($old, MDL_F2F_STATUS_FULLY_ATTENDED);
+        $this->archive_and_reset($fixture);
+
+        $fixture->completion->reset_all_state($fixture->cm);
+
+        $this->assert_not_completed($fixture);
+    }
+
+    /**
+     * A No show from the site admin bulk attendance upload must not recomplete after an archived reset either.
+     *
+     * @covers \mod_facetoface\booking_manager_bulk_attendance
+     */
+    public function test_uploaded_no_show_does_not_recomplete_after_archived_reset(): void {
+        $fixture = $this->create_fixture(MDL_F2F_STATUS_FULLY_ATTENDED, COMPLETION_TRACKING_AUTOMATIC, true);
+        $old = $this->create_signup($fixture, time() - 60 * DAYSECS);
+        $this->take_attendance($old, MDL_F2F_STATUS_FULLY_ATTENDED);
+        $this->archive_and_reset($fixture);
+        $new = $this->create_signup($fixture, time() - DAYSECS);
+        $upload = new booking_manager_bulk_attendance();
+        $upload->suppress_email();
+        $upload->load_from_array([(object) [
+            'Username' => $fixture->student->username,
+            'Session' => (string) $new->session->id,
+            'Status' => 'no_show',
+        ]]);
+        $errors = $upload->validate();
+        $this->assertEmpty($errors);
+
+        $this->assertTrue($upload->process($errors));
+
+        $this->assert_not_completed($fixture);
+    }
+
+    /** Opening the activity when "View the activity" is also required must not recomplete after an archived reset. */
+    public function test_viewing_does_not_recomplete_after_archived_reset(): void {
+        $fixture = $this->create_fixture(MDL_F2F_STATUS_FULLY_ATTENDED, COMPLETION_TRACKING_AUTOMATIC, false, true);
+        $fixture->completion->set_module_viewed($fixture->cm, $fixture->student->id);
+        $old = $this->create_signup($fixture, time() - 60 * DAYSECS);
+        $this->take_attendance($old, MDL_F2F_STATUS_FULLY_ATTENDED);
+        $this->archive_and_reset($fixture);
+
+        $fixture->completion->set_module_viewed($fixture->cm, $fixture->student->id);
+
+        $this->assert_not_completed($fixture);
+    }
+
+    /**
+     * Full attendance at a session in the new cycle still recompletes at that session's finish time.
+     *
+     * @dataProvider grade_requirement_provider
+     * @param bool $usegrade Whether "Receive a grade" is required.
+     */
+    public function test_qualifying_attendance_recompletes_after_archived_reset(bool $usegrade): void {
+        $fixture = $this->create_fixture(MDL_F2F_STATUS_FULLY_ATTENDED, COMPLETION_TRACKING_AUTOMATIC, $usegrade);
+        $old = $this->create_signup($fixture, time() - 60 * DAYSECS);
+        $this->take_attendance($old, MDL_F2F_STATUS_FULLY_ATTENDED);
+        $this->archive_and_reset($fixture);
+        $new = $this->create_signup($fixture, time() - DAYSECS);
+
+        $this->take_attendance($new, MDL_F2F_STATUS_FULLY_ATTENDED);
+
+        [$activity, $criterion, $course] = $this->completion_records($fixture);
+        $this->assertContains((int) $activity->completionstate, [COMPLETION_COMPLETE, COMPLETION_COMPLETE_PASS]);
+        $this->assertEquals($new->finish, $criterion->timecompleted);
+        $this->assertEquals($new->finish, $course->timecompleted);
     }
 }
