@@ -19,6 +19,8 @@ namespace mod_facetoface;
 use context_course;
 use context_user;
 use file_storage;
+use mod_facetoface\event\confirmation_sent;
+use mod_facetoface\local\email_sent_helper;
 use moodle_exception;
 use Generator;
 use Exception;
@@ -417,6 +419,23 @@ class booking_manager_bulk_attendance {
      * @throws Exception If cancellation fails.
      */
     public function process($errors): bool {
+        $source = $this->usefile ? confirmation_sent::SOURCE_BOOK_VIA_UPLOAD : confirmation_sent::SOURCE_BOOK_OTHERS;
+        $emaillog = email_sent_helper::open_batch($source);
+        try {
+            return $this->process_records($errors);
+
+        } finally {
+            $emaillog->close();
+        }
+    }
+
+    /**
+     * Process upload rows while collecting successful confirmation email recipients.
+     *
+     * @param array<int, array{int|string, string}> $errors Validation errors identifying rows to skip.
+     * @return bool
+     */
+    private function process_records(array $errors): bool {
         global $DB;
 
         // Build a set of rows to skip from the error list.
