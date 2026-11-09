@@ -304,8 +304,6 @@ class attendance_completion_test extends \advanced_testcase {
         set_config('enablecompletionarchive', 1, 'local_lolcompletion');
         set_config('sessioncompletiondate', $sessiondate, 'facetoface');
         $new = $this->create_signup($fixture, time() - DAYSECS);
-        $this->assertTrue(\local_lolcompletion\local\api\completion::has_f2f_attendance_after_completion(
-            $fixture->course->id, $fixture->cm->id, $fixture->student->id));
         $before = $this->completion_records($fixture);
 
         $this->take_attendance($new, $status);

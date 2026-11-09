@@ -46,6 +46,13 @@ class backup_facetoface_activity_structure_step extends backup_activity_structur
             'attendancesheetshowlogo', 'attendancesheetcolumns',
         ]);
 
+        $sessionfields = new backup_nested_element('session_fields');
+
+        $sessionfield = new backup_nested_element('session_field', ['id'], [
+            'name', 'shortname', 'type', 'possiblevalues', 'required', 'defaultvalue', 'isfilter',
+            'showinsummary', 'visibleto',
+        ]);
+
         $sessions = new backup_nested_element('sessions');
 
         $session = new backup_nested_element('session', ['id'], [
@@ -85,6 +92,9 @@ class backup_facetoface_activity_structure_step extends backup_activity_structur
         ]);
 
         // Build the tree.
+        $facetoface->add_child($sessionfields);
+        $sessionfields->add_child($sessionfield);
+
         $facetoface->add_child($sessions);
         $sessions->add_child($session);
 
@@ -105,6 +115,16 @@ class backup_facetoface_activity_structure_step extends backup_activity_structur
 
         // Define sources.
         $facetoface->set_source_table('facetoface', ['id' => backup::VAR_ACTIVITYID]);
+
+        $sessionfield->set_source_sql('
+            SELECT f.*
+              FROM {facetoface_session_field} f
+             WHERE f.id IN (
+                   SELECT d.fieldid
+                     FROM {facetoface_session_data} d
+                     JOIN {facetoface_sessions} s ON s.id = d.sessionid
+                    WHERE s.facetoface = ?
+             )', [backup::VAR_PARENTID]);
 
         $session->set_source_table('facetoface_sessions', ['facetoface' => backup::VAR_PARENTID]);
 

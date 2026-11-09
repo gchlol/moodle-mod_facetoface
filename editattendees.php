@@ -97,7 +97,7 @@ if (optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) {
 
     $userstoassign = $potentialuserselector->get_selected_users();
     if (!empty($userstoassign)) {
-        foreach ($userstoassign as $adduser) {
+        foreach (\mod_facetoface\local\email_sent_helper::batch($userstoassign) as $adduser) { // GCHLOL: Group confirmation logs.
             if (!$adduser = clean_param($adduser->id, PARAM_INT)) {
                 continue; // Invalid userid.
             }
