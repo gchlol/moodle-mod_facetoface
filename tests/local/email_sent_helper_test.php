@@ -19,6 +19,7 @@ namespace mod_facetoface\local;
 use mod_facetoface\booking_manager;
 use mod_facetoface\booking_manager_bulk_attendance;
 use mod_facetoface\event\confirmation_sent;
+use mod_facetoface\event\confirmation_suppressed;
 use mod_facetoface\event\reminder_sent;
 
 defined('MOODLE_INTERNAL') || die();
@@ -27,7 +28,7 @@ global $CFG;
 require_once("$CFG->dirroot/mod/facetoface/lib.php");
 
 /**
- * Tests for confirmation and reminder email log events.
+ * Tests for confirmation and reminder email log events, including suppressed confirmations.
  *
  * @package    mod_facetoface
  * @copyright  2026 Gold Coast Health
@@ -35,7 +36,9 @@ require_once("$CFG->dirroot/mod/facetoface/lib.php");
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers \mod_facetoface\local\email_sent_helper
  * @covers \mod_facetoface\event\email_sent
+ * @covers \mod_facetoface\event\confirmation_email
  * @covers \mod_facetoface\event\confirmation_sent
+ * @covers \mod_facetoface\event\confirmation_suppressed
  * @covers \mod_facetoface\event\reminder_sent
  */
 final class email_sent_helper_test extends \advanced_testcase {
@@ -49,24 +52,28 @@ final class email_sent_helper_test extends \advanced_testcase {
     }
 
     /**
-     * Confirmation and reminder emails for the same session produce distinct events.
+     * Sent confirmations, suppressed confirmations and reminders for the same session produce distinct events.
      */
     public function test_flush_keeps_confirmation_and_reminder_groups_separate(): void {
         [$course, $facetoface, $session] = $this->create_fixture();
         $first = $this->getDataGenerator()->create_and_enrol($course, 'student');
         $second = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $third = $this->getDataGenerator()->create_and_enrol($course, 'student');
         $batch = new email_sent_helper(confirmation_sent::SOURCE_BOOK_VIA_UPLOAD);
         $events = $this->redirectEvents();
 
         $batch->record_confirmation($facetoface, $session, (int)$first->id);
         $batch->record_reminder($facetoface, $session, (int)$second->id);
+        $batch->record_confirmation($facetoface, $session, (int)$third->id, true);
         $batch->flush();
         $batch->flush();
 
         $confirmations = $this->get_email_events($events, confirmation_sent::class);
+        $suppressions = $this->get_email_events($events, confirmation_suppressed::class);
         $reminders = $this->get_email_events($events, reminder_sent::class);
-        $this->assertCount(2, $events->get_events());
+        $this->assertCount(3, $events->get_events());
         $this->assertCount(1, $confirmations);
+        $this->assertCount(1, $suppressions);
         $this->assertCount(1, $reminders);
         $this->assertSame(
             [
@@ -75,8 +82,15 @@ final class email_sent_helper_test extends \advanced_testcase {
             ],
             $confirmations[0]->other
         );
+        $this->assertSame(
+            [
+                'userids' => [ (int)$third->id ],
+                'source' => 'book_via_upload',
+            ],
+            $suppressions[0]->other
+        );
         $this->assertSame([ 'userids' => [ (int)$second->id ] ], $reminders[0]->other);
-        foreach ([ $confirmations[0], $reminders[0] ] as $event) {
+        foreach ([ $confirmations[0], $suppressions[0], $reminders[0] ] as $event) {
             $this->assertSame('c', $event->crud);
             $this->assertSame(\core\event\base::LEVEL_OTHER, $event->edulevel);
             $this->assertSame('facetoface_sessions', $event->objecttable);
@@ -92,6 +106,39 @@ final class email_sent_helper_test extends \advanced_testcase {
         }
 
         $this->assertDebuggingNotCalled();
+    }
+
+    /**
+     * Sent and suppressed confirmation logs need a supported booking source.
+     *
+     * @dataProvider confirmation_event_provider
+     * @param string $eventclass The confirmation event class.
+     */
+    public function test_confirmation_events_require_booking_source(string $eventclass): void {
+        [, $facetoface, $session] = $this->create_fixture();
+
+        $this->expectException(\coding_exception::class);
+        $this->expectExceptionMessage('A supported confirmation booking source must be set in other.');
+        $eventclass::create([
+            'context' => \context_module::instance($facetoface->cmid),
+            'objectid' => $session->id,
+            'other' => [
+                'userids' => [ 2 ],
+                'source' => 'unknown',
+            ],
+        ]);
+    }
+
+    /**
+     * Confirmation event classes.
+     *
+     * @return array<string, array{string}> Test cases.
+     */
+    public static function confirmation_event_provider(): array {
+        return [
+            'sent' => [ confirmation_sent::class ],
+            'suppressed' => [ confirmation_suppressed::class ],
+        ];
     }
 
     /**
@@ -155,7 +202,9 @@ final class email_sent_helper_test extends \advanced_testcase {
     }
 
     /**
-     * A batched booking loop logs all successful attendees when it ends and omits suppressed recipients.
+     * A batched booking loop logs all successful attendees when it ends and omits recipients Moodle does not email.
+     *
+     * The attendee booked without a notification is logged separately, as a suppressed confirmation.
      */
     public function test_booking_others_batches_only_emailed_attendees(): void {
         [$course, $facetoface, $session] = $this->create_fixture();
@@ -186,7 +235,190 @@ final class email_sent_helper_test extends \advanced_testcase {
         $this->assertSame([ (int)$first->id, (int)$second->id ], $logs[0]->other['userids']);
         $this->assertSame('book_others', $logs[0]->other['source']);
         $this->assertStringContainsString("user ids '$first->id, $second->id'", $logs[0]->get_description());
+        $suppressions = $this->get_email_events($events, confirmation_suppressed::class);
+        $this->assertCount(1, $suppressions);
+        $this->assertSame([ (int)$silent->id ], $suppressions[0]->other['userids']);
         $this->assertDebuggingNotCalled();
+    }
+
+    /**
+     * A batched booking loop that suppresses notifications logs its attendees as one suppressed event per session.
+     */
+    public function test_booking_others_batches_suppressed_confirmations(): void {
+        global $USER;
+
+        [$course, $facetoface, $session] = $this->create_fixture();
+        $secondsession = $this->create_session($facetoface, time() + 3 * DAYSECS);
+        $first = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $second = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $emails = $this->redirectEmails();
+        $events = $this->redirectEvents();
+
+        foreach (email_sent_helper::batch([ $second, $first, $first ]) as $user) {
+            foreach ($user === $first ? [ $session, $secondsession ] : [ $session ] as $target) {
+                $this->assertTrue(facetoface_user_signup(
+                    $target,
+                    $facetoface,
+                    $course,
+                    '',
+                    MDL_F2F_TEXT,
+                    MDL_F2F_STATUS_BOOKED,
+                    $user->id,
+                    false
+                ));
+            }
+
+            $this->assertEmpty($this->get_email_events($events, confirmation_suppressed::class));
+        }
+
+        $this->assertEmpty($emails->get_messages());
+        $this->assertEmpty($this->get_email_events($events, confirmation_sent::class));
+        $logs = $this->get_email_events($events, confirmation_suppressed::class);
+        $this->assertCount(2, $logs);
+        $bysession = [];
+        foreach ($logs as $event) {
+            $bysession[$event->objectid] = $event;
+            $this->assertSame((int)$USER->id, (int)$event->userid);
+            $this->assertSame((int)$course->id, (int)$event->courseid);
+            $this->assertSame((int)$facetoface->cmid, (int)$event->contextinstanceid);
+            $this->assertSame('book_others', $event->other['source']);
+            $this->assertSame('Confirmation email suppressed', $event::get_name());
+            $this->assertEquals($facetoface, $event->get_record_snapshot('facetoface', $facetoface->id));
+        }
+
+        $this->assertSame([ (int)$first->id, (int)$second->id ], $bysession[$session->id]->other['userids']);
+        $this->assertSame([ (int)$first->id ], $bysession[$secondsession->id]->other['userids']);
+        $this->assertSame(
+            "A confirmation email was suppressed for attendees with user ids '$first->id, $second->id' following booking " .
+                "others via the GUI for session with id '$session->id' in the facetoface instance with the course module " .
+                "id '$facetoface->cmid'.",
+            $bysession[$session->id]->get_description()
+        );
+        $this->assertEquals(
+            $secondsession,
+            $bysession[$secondsession->id]->get_record_snapshot('facetoface_sessions', $secondsession->id)
+        );
+        $this->assertDebuggingNotCalled();
+    }
+
+    /**
+     * A signup is not logged as suppressed unless "Suppress email notification" stopped a confirmation that would be sent.
+     *
+     * Each case except "notified" books without a notification, as the ticked box does. The suppressed confirmation
+     * must be logged only if the same booking with the box unticked would send a confirmation and log it as sent.
+     *
+     * @dataProvider unsuppressed_confirmation_provider
+     * @param string $reason Why no confirmation is logged as suppressed.
+     */
+    public function test_confirmations_that_would_not_be_sent_are_not_logged_as_suppressed(string $reason): void {
+        global $CFG, $DB;
+
+        [$course, $facetoface, $session] = $this->create_fixture();
+        $status = MDL_F2F_STATUS_BOOKED;
+        $fields = [];
+        if ($reason === 'waitlisted') {
+            $status = MDL_F2F_STATUS_WAITLISTED;
+
+        } else if ($reason === 'approval required') {
+            set_config('enableapprovals', 1, 'facetoface');
+            $facetoface->approvalreqd = 1;
+
+        } else if ($reason === 'started session') {
+            $session = $this->create_session($facetoface, time() - HOURSECS);
+
+        } else if ($reason === 'missing subject') {
+            $facetoface->confirmationsubject = '';
+
+        } else if ($reason === 'missing body') {
+            $facetoface->confirmationmessage = '';
+
+        } else if ($reason === 'suspended') {
+            $fields['suspended'] = 1;
+
+        } else if ($reason === 'nologin') {
+            $fields['auth'] = 'nologin';
+
+        } else if ($reason === 'invalid domain') {
+            $fields['email'] = 'attendee@example.invalid';
+
+        } else if ($reason === 'invalid address') {
+            $fields['email'] = 'invalid-address';
+
+        } else if ($reason === 'over bounce threshold') {
+            set_config('handlebounces', 1);
+        }
+
+        $user = $this->getDataGenerator()->create_and_enrol($course, 'student', $fields);
+        if ($reason === 'no address') {
+            $DB->set_field('user', 'email', '', [ 'id' => $user->id ]);
+
+        } else if ($reason === 'over bounce threshold') {
+            set_user_preference('email_bounce_count', 10, $user);
+            set_user_preference('email_send_count', 10, $user);
+
+        } else if ($reason === 'site suppression') {
+            $CFG->noemailever = true;
+        }
+
+        $emails = $this->redirectEmails();
+        $events = $this->redirectEvents();
+        $signup = function () use ($session, $facetoface, $course, $status, $user, $reason): void {
+            $this->assertTrue(facetoface_user_signup(
+                $session,
+                $facetoface,
+                $course,
+                '',
+                MDL_F2F_TEXT,
+                $status,
+                $user->id,
+                $reason === 'notified'
+            ));
+        };
+        try {
+            if ($reason === 'no batch') {
+                // As when signing up for all sessions at once, which never notifies the attendee.
+                $signup();
+
+            } else {
+                foreach (email_sent_helper::batch([ $user ]) as $unused) {
+                    $signup();
+                }
+            }
+
+        } finally {
+            if ($reason === 'site suppression') {
+                unset($CFG->noemailever);
+            }
+        }
+
+        $this->assertEmpty($this->get_email_events($events, confirmation_suppressed::class));
+        $this->assertCount($reason === 'notified' ? 1 : 0, $emails->get_messages());
+        $this->assertCount($reason === 'notified' ? 1 : 0, $this->get_email_events($events, confirmation_sent::class));
+        $this->assertDebuggingNotCalled();
+    }
+
+    /**
+     * Signups that notify the attendee, or that would send no confirmation even with "Suppress email notification" unticked.
+     *
+     * @return array<string, array{string}> Test cases.
+     */
+    public static function unsuppressed_confirmation_provider(): array {
+        return [
+            'notified' => [ 'notified' ],
+            'no batch' => [ 'no batch' ],
+            'waitlisted' => [ 'waitlisted' ],
+            'approval required' => [ 'approval required' ],
+            'started session' => [ 'started session' ],
+            'missing subject' => [ 'missing subject' ],
+            'missing body' => [ 'missing body' ],
+            'suspended' => [ 'suspended' ],
+            'nologin' => [ 'nologin' ],
+            'invalid domain' => [ 'invalid domain' ],
+            'invalid address' => [ 'invalid address' ],
+            'no address' => [ 'no address' ],
+            'over bounce threshold' => [ 'over bounce threshold' ],
+            'site suppression' => [ 'site suppression' ],
+        ];
     }
 
     /**
@@ -327,6 +559,7 @@ final class email_sent_helper_test extends \advanced_testcase {
 
         $this->assertSame([ (int)$first->id, (int)$second->id ], $bysession[$session->id]->other['userids']);
         $this->assertSame([ (int)$first->id ], $bysession[$secondsession->id]->other['userids']);
+        $this->assertEmpty($this->get_email_events($events, confirmation_suppressed::class));
         $this->assertDebuggingNotCalled();
     }
 
@@ -345,20 +578,28 @@ final class email_sent_helper_test extends \advanced_testcase {
     }
 
     /**
-     * The upload suppression setting produces no emails and no email log.
+     * The upload suppression setting sends no emails and logs the attendees it stopped emailing, grouped by session.
      *
      * @dataProvider upload_provider
      * @param bool $sitelevel Whether to use the site administration upload processor.
      * @param bool $usefile Whether to read a real uploaded CSV file.
      */
-    public function test_upload_email_suppression_does_not_log(bool $sitelevel, bool $usefile): void {
+    public function test_upload_email_suppression_logs_suppressed_confirmations(bool $sitelevel, bool $usefile): void {
         [$course, $facetoface, $session] = $this->create_fixture();
-        $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $secondsession = $this->create_session($facetoface, time() + 3 * DAYSECS);
+        $first = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $second = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $suspended = $this->getDataGenerator()->create_and_enrol($course, 'student', [ 'suspended' => 1 ]);
         $manager = $this->create_upload_manager(
             $facetoface,
             $sitelevel,
             $usefile,
-            [ [ $user, $session ] ]
+            [
+                [ $second, $session ],
+                [ $suspended, $session ],
+                [ $first, $secondsession ],
+                [ $first, $session ],
+            ]
         );
         $manager->suppress_email();
         $emails = $this->redirectEmails();
@@ -368,6 +609,18 @@ final class email_sent_helper_test extends \advanced_testcase {
 
         $this->assertEmpty($emails->get_messages());
         $this->assertEmpty($this->get_email_events($events, confirmation_sent::class));
+        $logs = $this->get_email_events($events, confirmation_suppressed::class);
+        $this->assertCount(2, $logs);
+        $bysession = [];
+        foreach ($logs as $event) {
+            $bysession[$event->objectid] = $event;
+            $this->assertSame($usefile ? 'book_via_upload' : 'book_others', $event->other['source']);
+            $this->assertStringContainsString($usefile ? 'CSV upload' : 'booking others via the GUI', $event->get_description());
+        }
+
+        // Moodle would not email the suspended attendee even without suppression, so it is not logged.
+        $this->assertSame([ (int)$first->id, (int)$second->id ], $bysession[$session->id]->other['userids']);
+        $this->assertSame([ (int)$first->id ], $bysession[$secondsession->id]->other['userids']);
         $this->assertDebuggingNotCalled();
     }
 

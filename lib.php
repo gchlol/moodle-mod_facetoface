@@ -2191,6 +2191,11 @@ function facetoface_user_signup($session, $facetoface, $course, $discountcode,
         }
     }
 
+    // GCHLOL: Log the confirmation email that "Suppress email notification" stopped, if one would have been sent.
+    \mod_facetoface\local\email_sent_helper::log_suppressed_confirmation($facetoface, $session, $userid, $newstatus,
+        $notifyuser, $timenow);
+    // GCHLOL ends.
+
     return true;
 }
 

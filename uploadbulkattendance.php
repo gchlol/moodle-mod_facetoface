@@ -210,6 +210,12 @@ if (
         exit;
     }
 
+    // Apply the options selected at confirm time, as upload.php does.
+    $confirmdata = $confirmform->get_data();
+    if (!empty($confirmdata->suppressemail)) {
+        $manager->suppress_email();
+    }
+
     $errors = $manager->validate();
 
     if (empty($errors)) {

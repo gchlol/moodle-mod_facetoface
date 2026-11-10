@@ -17,7 +17,7 @@
 namespace mod_facetoface\event;
 
 /**
- * Shared metadata and validation for emails sent to session attendees.
+ * Shared metadata and validation for the logs of emails sent to, or suppressed for, session attendees.
  *
  * @package    mod_facetoface
  * @copyright  2026 Gold Coast Health
@@ -46,7 +46,7 @@ abstract class email_sent extends \core\event\base {
     }
 
     /**
-     * Describe the emailed attendees, including logs restored without user mappings.
+     * Describe the logged attendees, including logs restored without user mappings.
      *
      * @return string The attendee IDs or an explanation when they are unavailable.
      */
@@ -55,7 +55,7 @@ abstract class email_sent extends \core\event\base {
     }
 
     /**
-     * Validate the emailed attendees and module context.
+     * Validate the logged attendees and module context.
      *
      * @return void
      * @throws \coding_exception If the module context or attendee IDs are invalid.
@@ -71,7 +71,7 @@ abstract class email_sent extends \core\event\base {
             empty($this->other['userids']) ||
             !is_array($this->other['userids'])
         ) {
-            throw new \coding_exception('A nonempty array of emailed attendee user IDs must be set in other.');
+            throw new \coding_exception('A nonempty array of attendee user IDs must be set in other.');
         }
 
         foreach ($this->other['userids'] as $userid) {
@@ -79,7 +79,7 @@ abstract class email_sent extends \core\event\base {
                 !is_int($userid) ||
                 $userid <= 0
             ) {
-                throw new \coding_exception('Emailed attendee user IDs must be positive integers.');
+                throw new \coding_exception('Attendee user IDs must be positive integers.');
             }
         }
     }

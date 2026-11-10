@@ -16,14 +16,17 @@
 
 namespace mod_facetoface\local;
 
+use mod_facetoface\event\confirmation_email;
 use mod_facetoface\event\confirmation_sent;
+use mod_facetoface\event\confirmation_suppressed;
 use mod_facetoface\event\reminder_sent;
 
 /**
- * Collect successful attendee emails into session log events.
+ * Collect the attendee emails that were sent or suppressed into session log events.
  *
  * Confirmation emails sent while a batch is open are logged as one event per session when the batch closes.
- * Confirmation emails sent while no batch is open are logged at once.
+ * Confirmation emails sent while no batch is open are logged at once. Suppressed confirmation emails are
+ * logged only in a batch, because only the booking pages that open one let the booker suppress them.
  *
  * @package    mod_facetoface
  * @copyright  2026 Gold Coast Health
@@ -44,7 +47,7 @@ class email_sent_helper {
     private ?self $previous = null;
 
     /**
-     * Pending groups of successful emails, keyed by message type and session ID.
+     * Pending groups of sent or suppressed emails, keyed by event class and session ID.
      *
      * @var array<string, array{
      *     eventclass: string,
@@ -65,7 +68,7 @@ class email_sent_helper {
     }
 
     /**
-     * Batch the confirmation emails sent while a booking loop runs.
+     * Batch the confirmation emails sent or suppressed while a booking loop runs.
      *
      * Loop over the returned generator instead of the items. The batch opens when the loop starts and closes
      * when the loop ends, breaks or is left by an exception, so each session's emails are logged as one event.
@@ -102,7 +105,7 @@ class email_sent_helper {
     }
 
     /**
-     * Open a batch that collects the confirmation emails sent until it closes.
+     * Open a batch that collects the confirmation emails sent or suppressed until it closes.
      *
      * @param string $source The booking source for confirmation emails.
      * @return self The open batch, which the caller must close.
@@ -223,6 +226,54 @@ class email_sent_helper {
     }
 
     /**
+     * Log a signup's confirmation email as suppressed if the booker stopped one that would have been sent.
+     *
+     * facetoface_user_signup() calls this after each signup. Only the attendees page and the booking uploads let
+     * the booker tick "Suppress email notification", and they book inside a batch, where a signup leaves the
+     * attendee unnotified only when that box is ticked. Signups outside a batch, such as signing up for all
+     * sessions at once, are not logged. The attendee is logged only if, with the box unticked, a confirmation
+     * would have been sent and logged as sent: the attendee is booked rather than waitlisted or awaiting
+     * approval, the session has not started, the activity has a confirmation subject and message, and Moodle
+     * would email the attendee.
+     *
+     * @param \stdClass $facetoface The Face-to-Face activity record.
+     * @param \stdClass $session The session record.
+     * @param int $userid The attendee ID.
+     * @param int $status The attendee's new signup status.
+     * @param bool $notifyuser Whether the signup notified the attendee.
+     * @param int $timenow The signup time.
+     * @return void
+     */
+    public static function log_suppressed_confirmation(
+        \stdClass $facetoface,
+        \stdClass $session,
+        int $userid,
+        int $status,
+        bool $notifyuser,
+        int $timenow
+    ): void {
+        global $DB;
+
+        if (
+            static::$openbatch === null ||
+            $notifyuser ||
+            $status !== MDL_F2F_STATUS_BOOKED ||
+            facetoface_has_session_started($session, $timenow) ||
+            empty($facetoface->confirmationsubject) ||
+            empty($facetoface->confirmationmessage)
+        ) {
+            return;
+        }
+
+        $user = $DB->get_record('user', [ 'id' => $userid ]);
+        if (!$user || !static::would_email_be_sent($user)) {
+            return;
+        }
+
+        static::$openbatch->record_confirmation($facetoface, $session, $userid, true);
+    }
+
+    /**
      * Distinguish a delivered email from Moodle's successful suppression responses.
      *
      * Call this only after email_to_user() returns true. This checks the conditions
@@ -253,6 +304,34 @@ class email_sent_helper {
         }
 
         return substr($email, -8) !== '.invalid';
+    }
+
+    /**
+     * Predict whether email_to_user() would send an email to the user.
+     *
+     * This checks the conditions under which that API fails before calling the mailer,
+     * then the conditions that was_email_sent() checks. A mailer failure cannot be predicted.
+     *
+     * @param \stdClass $user The user record.
+     * @return bool Whether an email to the user would be handed to the mailer.
+     */
+    private static function would_email_be_sent(\stdClass $user): bool {
+        global $CFG;
+
+        if (
+            empty($user->email) ||
+            !empty($user->deleted) ||
+            over_bounce_threshold($user)
+        ) {
+            return false;
+        }
+
+        $email = $user->email;
+        if (email_should_be_diverted($email)) {
+            $email = $CFG->divertallemailsto;
+        }
+
+        return validate_email($email) && static::was_email_sent($user);
     }
 
     /**
@@ -304,15 +383,16 @@ class email_sent_helper {
     }
 
     /**
-     * Record an attendee whose confirmation email was sent successfully.
+     * Record an attendee whose confirmation email was sent successfully or suppressed by the booker.
      *
      * @param \stdClass $facetoface The Face-to-Face activity record.
      * @param \stdClass $session The session record.
-     * @param int $userid The emailed attendee ID.
+     * @param int $userid The attendee ID.
+     * @param bool $suppressed Whether the booker suppressed the email instead of it being sent.
      * @return void
      * @throws \coding_exception If the booking source is unsupported.
      */
-    public function record_confirmation(\stdClass $facetoface, \stdClass $session, int $userid): void {
+    public function record_confirmation(\stdClass $facetoface, \stdClass $session, int $userid, bool $suppressed = false): void {
         $sources = [
             confirmation_sent::SOURCE_SELF_SIGN_UP,
             confirmation_sent::SOURCE_BOOK_OTHERS,
@@ -323,7 +403,7 @@ class email_sent_helper {
         }
 
         $this->record(
-            confirmation_sent::class,
+            $suppressed ? confirmation_suppressed::class : confirmation_sent::class,
             $facetoface,
             $session,
             $userid
@@ -348,7 +428,7 @@ class email_sent_helper {
     }
 
     /**
-     * Emit one event for each message type and session with successful emails.
+     * Emit one event for each event class and session with sent or suppressed emails.
      *
      * @return void
      */
@@ -368,7 +448,7 @@ class email_sent_helper {
 
             $other = [ 'userids' => $userids ];
             $eventclass = $group['eventclass'];
-            if ($eventclass === confirmation_sent::class) {
+            if (is_subclass_of($eventclass, confirmation_email::class)) {
                 $other['source'] = $this->source;
             }
 
@@ -385,12 +465,12 @@ class email_sent_helper {
     }
 
     /**
-     * Add a successful email to its session group, omitting duplicate attendees.
+     * Add a sent or suppressed email to its session group, omitting duplicate attendees.
      *
      * @param string $eventclass The email event class.
      * @param \stdClass $facetoface The Face-to-Face activity record.
      * @param \stdClass $session The session record.
-     * @param int $userid The emailed attendee ID.
+     * @param int $userid The attendee ID.
      * @return void
      * @throws \coding_exception If the attendee ID is invalid.
      */
@@ -401,7 +481,7 @@ class email_sent_helper {
         int $userid
     ): void {
         if ($userid <= 0) {
-            throw new \coding_exception('An emailed attendee user ID must be a positive integer.');
+            throw new \coding_exception('An attendee user ID must be a positive integer.');
         }
 
         $key = "$eventclass:" . (int)$session->id;
