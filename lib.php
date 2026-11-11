@@ -1026,6 +1026,9 @@ function facetoface_cron() {
         }
     }
 
+    // GCHLOL: Log the reminder emails this run sent to attendees.
+    \mod_facetoface\local\email_sent_helper::log_reminders($signupsdata, $timenow);
+    // GCHLOL ends.
     print "\n";
     return true;
 }
@@ -2188,6 +2191,11 @@ function facetoface_user_signup($session, $facetoface, $course, $discountcode,
         }
     }
 
+    // GCHLOL: Log the confirmation email that "Suppress email notification" stopped, if one would have been sent.
+    \mod_facetoface\local\email_sent_helper::log_suppressed_confirmation($facetoface, $session, $userid, $newstatus,
+        $notifyuser, $timenow);
+    // GCHLOL ends.
+
     return true;
 }
 
@@ -2460,6 +2468,9 @@ function facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
         && !email_to_user($user, $from, $postsubject, $posttext)) {
         $emailerror = true; // GCHLOL: Ignore error if invalid email.
     }
+    // GCHLOL: Note whether the attendee was emailed, for the "Confirmation email sent" log.
+    \mod_facetoface\local\email_sent_helper::count_attendee_notice($user, $emailerror);
+    // GCHLOL ends.
 
     // GCHLOL: Show error notifcation, this way avoids multiple error messages.
     if ($emailerror) {
@@ -2527,8 +2538,10 @@ function facetoface_send_confirmation_notice($facetoface, $session, $userid, $no
     // Set invite bit.
     $notificationtype |= MDL_F2F_INVITE;
 
-    return facetoface_send_notice($postsubject, $posttext, $posttextmgrheading,
-                                  $notificationtype, $facetoface, $session, $userid);
+    // GCHLOL: Send the confirmation and log successful attendee delivery.
+    return \mod_facetoface\local\email_sent_helper::send_confirmation_notice($postsubject, $posttext, $posttextmgrheading,
+                                  $notificationtype, $facetoface, $session, $userid, $iswaitlisted);
+    // GCHLOL ends.
 }
 
 /**

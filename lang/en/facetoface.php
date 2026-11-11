@@ -846,6 +846,11 @@ $string['eventaddsession'] = 'Session added';
 // GCHLOL: Add the localised event name for CSV bulk upload booking logs.
 $string['eventbulkbookingcreated'] = 'Bulk booking created';
 // GCHLOL ends.
+// GCHLOL: Add event names for sent and suppressed attendee emails.
+$string['eventconfirmationsent'] = 'Confirmation email sent';
+$string['eventconfirmationsuppressed'] = 'Confirmation email suppressed';
+$string['eventremindersent'] = 'Reminder email sent';
+// GCHLOL ends.
 $string['eventcsvprocessed'] = 'CSV processed';
 $string['updatevalidrows'] = 'Upload only rows with no errors';
 $string['error:errormustbeanarray'] = 'Error must be an array. Currently, it is \'{$a}\'.';

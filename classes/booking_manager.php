@@ -422,7 +422,8 @@ class booking_manager {
 
         // Records may contain errors; we will skip them.
         $index = -1;
-        foreach ($this->get_iterator() as $entry) {
+        // GCHLOL: Log the confirmation emails these rows send as one "Confirmation email sent" entry per session.
+        foreach (\mod_facetoface\local\email_sent_helper::upload_batch($this->get_iterator(), $this->usefile) as $entry) {
             $index++;
             $row = $index + 1; // 1-based row index for comparison.
 
