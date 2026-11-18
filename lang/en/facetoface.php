@@ -1000,6 +1000,9 @@ $string['csvuploadhelp:time'] = 'HH:MM';
 $string['csvuploadhelp:num'] = 'Number';
 $string['csvuploadhelp:mins'] = 'Minutes';
 $string['csvuploadhelp:text'] = 'Text';
+$string['csvuploadhelp:sessionvisibility'] = 'Session Visibility';
+$string['csvuploadhelp:zeroorone'] = '0 (Hide) or 1 (Show). Blank or no column defaults to 1.';
+$string['error:invalidsessionvisibility'] = 'Session Visibility must be 0 (hide) or 1 (show). Value provided was "{$a}".';
 // Bulk Upload Bookings.
 $string['uploadbulkbookings'] = 'Upload Bookings for Any Courses';
 $string['facetoface:uploadbookingsextfiledesc'] = "
