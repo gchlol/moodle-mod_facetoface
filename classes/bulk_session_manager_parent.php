@@ -328,6 +328,14 @@ abstract class bulk_session_manager_parent {
 
             return;
         }
+
+        // Session Visibility is an optional column. If given, it must be 0 (hide) or 1 (show). Blank means show.
+        $visibility = $record['Session Visibility'] ?? '';
+        if (!in_array($visibility, ['', '0', '1'], true)) {
+            $this->errors[] = [$index, get_string('error:invalidsessionvisibility', 'facetoface', s($visibility))];
+
+            return;
+        }
     }
 
     // Parse CSV and Write to SQL
@@ -472,7 +480,15 @@ abstract class bulk_session_manager_parent {
             $session->details = $record['Details'];
         }
 
+        // Trim to match validate(), which only trims its own copy of each record.
         $session->visible = 1;
+        if (
+            isset($record['Session Visibility']) &&
+            trim($record['Session Visibility']) === '0'
+        ) {
+            $session->visible = 0;
+        }
+
         $session->timecreated = time();
         $session->timemodified = time();
 

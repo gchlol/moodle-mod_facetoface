@@ -170,6 +170,7 @@ abstract class bulk_session_upload_form_parent extends moodleform {
             ['field' => 'csvuploadhelp:cost',                 'requirement' => 'csvuploadhelp:optional',  'format' => 'csvuploadhelp:num'],
             ['field' => 'csvuploadhelp:discount',             'requirement' => 'csvuploadhelp:optional',  'format' => 'csvuploadhelp:num'],
             ['field' => 'csvuploadhelp:details',              'requirement' => 'csvuploadhelp:optional',  'format' => 'csvuploadhelp:text'],
+            ['field' => 'csvuploadhelp:sessionvisibility',    'requirement' => 'csvuploadhelp:optional',  'format' => 'csvuploadhelp:zeroorone'],
             ['field' => 'csvuploadhelp:customfieldfacility',  'requirement' => 'csvuploadhelp:optional',  'format' => 'csvuploadhelp:text'],
             ['field' => 'csvuploadhelp:customfieldlocation',  'requirement' => 'csvuploadhelp:optional',  'format' => 'csvuploadhelp:text'],
             ['field' => 'csvuploadhelp:customfieldroom',      'requirement' => 'csvuploadhelp:optional',  'format' => 'csvuploadhelp:text']
