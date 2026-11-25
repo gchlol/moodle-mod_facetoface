@@ -113,7 +113,7 @@ function handle_bulk_session_validation(
     Closure $makeconfirmform,
     bulk_session_manager_parent $manager,
     Closure $bulkuploaderrorhandler
-): bool {
+): void {
     global $OUTPUT;
 
     $uploaddata = $uploadform->get_data();
@@ -169,8 +169,6 @@ function handle_bulk_session_validation(
     $confirmform->display();
 
     echo $OUTPUT->footer();
-
-    //exit;
 }
 
 /**
